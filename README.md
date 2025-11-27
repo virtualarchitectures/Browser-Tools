@@ -21,7 +21,7 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 
 ### Text and documents
 
-*More tools coming soon...*
+- **[Text Diff Tool](text-diff.html)** — compare two text blocks and highlight added and removed content
 
 ### Data utilities
 

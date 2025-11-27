@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Text Diff Tool</title>
+        <style>
+            * {
+                box-sizing: border-box;
+            }
+            body {
+                font-family:
+                    Helvetica,
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    Arial,
+                    sans-serif;
+                line-height: 1.6;
+                max-width: 980px;
+                margin: 0 auto;
+                padding: 20px;
+                color: #24292e;
+                background: #ffffff;
+            }
+            h1 {
+                border-bottom: 1px solid #eaecef;
+                padding-bottom: 0.3em;
+                margin-top: 0;
+                font-size: 32px;
+                font-weight: 600;
+            }
+            .input-section {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 16px;
+                margin-bottom: 16px;
+            }
+            .input-group {
+                display: flex;
+                flex-direction: column;
+            }
+            label {
+                font-size: 14px;
+                font-weight: 400;
+                margin-bottom: 8px;
+                color: #24292e;
+            }
+            textarea {
+                width: 100%;
+                height: 200px;
+                font-family:
+                    "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
+                    monospace;
+                font-size: 16px;
+                padding: 12px;
+                border: 1px solid #e1e4e8;
+                border-radius: 6px;
+                background: #ffffff;
+                color: #24292e;
+                resize: vertical;
+            }
+            textarea:focus {
+                outline: none;
+                border-color: #0366d6;
+            }
+            .button-section {
+                text-align: center;
+                margin-bottom: 24px;
+            }
+            button {
+                background: #0366d6;
+                color: #fff;
+                padding: 8px 16px;
+                border-radius: 6px;
+                border: 1px solid rgba(27, 31, 35, 0.15);
+                cursor: pointer;
+                font-size: 14px;
+                line-height: 20px;
+                font-family:
+                    Helvetica,
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    Arial,
+                    sans-serif;
+            }
+            button:hover {
+                background: #0256c5;
+            }
+            .results-section {
+                display: block;
+            }
+            .results-header {
+                font-size: 14px;
+                font-weight: 400;
+                margin-bottom: 12px;
+                color: #24292e;
+            }
+            .diff-container {
+                background: #f6f8fa;
+                border: 1px solid #e1e4e8;
+                border-radius: 6px;
+                padding: 16px;
+                font-family:
+                    "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
+                    monospace;
+                font-size: 14px;
+                line-height: 1.6;
+                white-space: pre-wrap;
+                word-wrap: break-word;
+                overflow-x: auto;
+                min-height: 250px;
+                resize: vertical;
+                overflow-y: auto;
+            }
+            .removed {
+                background-color: #ffdce0;
+                color: #cb2431;
+                text-decoration: line-through;
+                font-weight: 600;
+            }
+            .added {
+                background-color: #cdffd8;
+                color: #176f2c;
+                font-weight: 600;
+            }
+            .legend {
+                display: flex;
+                gap: 16px;
+                margin-bottom: 12px;
+                font-size: 14px;
+                padding: 12px;
+                background: #ffffff;
+                border-radius: 6px;
+                border: 1px solid #e1e4e8;
+            }
+            .legend-item {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            .legend-box {
+                width: 20px;
+                height: 20px;
+                border-radius: 3px;
+                border: 1px solid #e1e4e8;
+            }
+            .legend-box.removed {
+                background-color: #ffdce0;
+            }
+            .legend-box.added {
+                background-color: #cdffd8;
+            }
+            .back-link {
+                display: inline-block;
+                margin-bottom: 16px;
+                color: #0366d6;
+                text-decoration: none;
+                font-size: 14px;
+            }
+            .back-link:hover {
+                text-decoration: underline;
+            }
+            .instruction {
+                font-size: 13px;
+                color: #586069;
+                margin-bottom: 16px;
+                padding: 12px;
+                background: #f6f8fa;
+                border-radius: 6px;
+                border: 1px solid #e1e4e8;
+            }
+            @media (max-width: 768px) {
+                .input-section {
+                    grid-template-columns: 1fr;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <a href="index.html" class="back-link">← Back to Browser Tools</a>
+
+        <h1>Text Diff Tool</h1>
+
+        <p class="instruction">
+            Paste your text into both boxes below and click "Compare texts" to
+            see the differences. Removed text will be highlighted in red, and
+            added text will be highlighted in green.
+        </p>
+
+        <div class="input-section">
+            <div class="input-group">
+                <label for="text1">Original text</label>
+                <textarea
+                    id="text1"
+                    placeholder="Paste your original text here..."
+                ></textarea>
+            </div>
+            <div class="input-group">
+                <label for="text2">Modified text</label>
+                <textarea
+                    id="text2"
+                    placeholder="Paste your modified text here..."
+                ></textarea>
+            </div>
+        </div>
+
+        <div class="button-section">
+            <button id="compareBtn">Compare texts</button>
+        </div>
+
+        <div class="results-section" id="results">
+            <div class="results-header">Difference view</div>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-box removed"></div>
+                    <span>Removed</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-box added"></div>
+                    <span>Added</span>
+                </div>
+            </div>
+            <div class="diff-container" id="diffOutput"></div>
+        </div>
+
+        <script type="module">
+            const text1Input = document.getElementById("text1");
+            const text2Input = document.getElementById("text2");
+            const compareBtn = document.getElementById("compareBtn");
+            const resultsSection = document.getElementById("results");
+            const diffOutput = document.getElementById("diffOutput");
+
+            function computeDiff(text1, text2) {
+                const len1 = text1.length;
+                const len2 = text2.length;
+
+                // Create a matrix for dynamic programming
+                const matrix = Array(len1 + 1)
+                    .fill(null)
+                    .map(() => Array(len2 + 1).fill(0));
+
+                // Fill the matrix with LCS lengths
+                for (let i = 1; i <= len1; i++) {
+                    for (let j = 1; j <= len2; j++) {
+                        if (text1[i - 1] === text2[j - 1]) {
+                            matrix[i][j] = matrix[i - 1][j - 1] + 1;
+                        } else {
+                            matrix[i][j] = Math.max(
+                                matrix[i - 1][j],
+                                matrix[i][j - 1],
+                            );
+                        }
+                    }
+                }
+
+                // Backtrack to find the diff
+                const diff = [];
+                let i = len1;
+                let j = len2;
+
+                while (i > 0 || j > 0) {
+                    if (i > 0 && j > 0 && text1[i - 1] === text2[j - 1]) {
+                        diff.unshift({ type: "equal", char: text1[i - 1] });
+                        i--;
+                        j--;
+                    } else if (
+                        j > 0 &&
+                        (i === 0 || matrix[i][j - 1] >= matrix[i - 1][j])
+                    ) {
+                        diff.unshift({ type: "added", char: text2[j - 1] });
+                        j--;
+                    } else if (i > 0) {
+                        diff.unshift({ type: "removed", char: text1[i - 1] });
+                        i--;
+                    }
+                }
+
+                return diff;
+            }
+
+            function escapeHtml(text) {
+                const div = document.createElement("div");
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            function renderDiff(diff) {
+                let html = "";
+
+                for (const item of diff) {
+                    const escapedChar = escapeHtml(item.char);
+
+                    if (item.type === "removed") {
+                        html += `<span class="removed">${escapedChar}</span>`;
+                    } else if (item.type === "added") {
+                        html += `<span class="added">${escapedChar}</span>`;
+                    } else {
+                        html += escapedChar;
+                    }
+                }
+
+                return html;
+            }
+
+            compareBtn.addEventListener("click", () => {
+                const text1 = text1Input.value;
+                const text2 = text2Input.value;
+
+                if (!text1 && !text2) {
+                    alert("Please enter text in at least one field");
+                    return;
+                }
+
+                const diff = computeDiff(text1, text2);
+                const html = renderDiff(diff);
+
+                diffOutput.innerHTML = html;
+
+                // Scroll to results
+                resultsSection.scrollIntoView({
+                    behavior: "smooth",
+                    block: "nearest",
+                });
+            });
+        </script>
+    </body>
+</html>
