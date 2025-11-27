@@ -31,6 +31,10 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 
 *More tools coming soon...*
 
+### Forensics
+
+- **[Email Header Analysis](email-header-analysis.html)** — analyse and highlight email headers with syntax highlighting for IPs, emails, and URLs
+
 ### Miscellaneous
 
 *More tools coming soon...*

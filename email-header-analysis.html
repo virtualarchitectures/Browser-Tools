@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Email Header Analysis</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 20px;
+        font-family: Helvetica, Arial, sans-serif;
+        background: #f5f5f5;
+        color: #333;
+      }
+
+      h1 {
+        margin: 0 0 20px 0;
+        font-size: 24px;
+        font-weight: 500;
+        color: #2c3e50;
+      }
+
+      .back-link {
+        display: inline-block;
+        margin-bottom: 15px;
+        color: #3498db;
+        text-decoration: none;
+        font-size: 14px;
+      }
+
+      .back-link:hover {
+        text-decoration: underline;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+
+      .panel {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .editor-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        align-items: start;
+      }
+
+      .editor-section {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+      }
+
+      .section-title {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 10px;
+        color: #555;
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 500px;
+        padding: 12px;
+        font-family: "Courier New", monospace;
+        font-size: 16px;
+        border: 2px solid #ddd;
+        border-radius: 4px;
+        resize: vertical;
+        line-height: 1.5;
+      }
+
+      textarea:focus {
+        outline: none;
+        border-color: #3498db;
+      }
+
+      .output {
+        width: 100%;
+        min-height: 500px;
+        height: 500px;
+        padding: 12px;
+        font-family: "Courier New", monospace;
+        font-size: 16px;
+        border: 2px solid #ddd;
+        border-radius: 4px;
+        background: #fafafa;
+        overflow-y: auto;
+        overflow-x: auto;
+        line-height: 1.5;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        resize: vertical;
+      }
+
+      .actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+        flex-wrap: wrap;
+      }
+
+      .btn {
+        padding: 10px 20px;
+        font-size: 14px;
+        font-family: Helvetica, Arial, sans-serif;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        background: #3498db;
+        color: white;
+        transition: background 0.2s;
+      }
+
+      .btn:hover {
+        background: #2980b9;
+      }
+
+      .btn.secondary {
+        background: #95a5a6;
+      }
+
+      .btn.secondary:hover {
+        background: #7f8c8d;
+      }
+
+      input[type="file"] {
+        display: none;
+      }
+
+      label.file-btn {
+        padding: 10px 20px;
+        font-size: 14px;
+        font-family: Helvetica, Arial, sans-serif;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        background: #27ae60;
+        color: white;
+        transition: background 0.2s;
+        display: inline-block;
+      }
+
+      label.file-btn:hover {
+        background: #229954;
+      }
+
+      .options {
+        margin-top: 20px;
+        padding: 15px;
+        background: #f9f9f9;
+        border-radius: 4px;
+      }
+
+      .option-group {
+        margin-bottom: 10px;
+      }
+
+      .option-group:last-child {
+        margin-bottom: 0;
+      }
+
+      .option-label {
+        font-size: 14px;
+        color: #555;
+      }
+
+      label.checkbox-label {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        font-size: 14px;
+        color: #555;
+      }
+
+      label.checkbox-label input[type="checkbox"] {
+        margin-right: 8px;
+      }
+
+      .legend {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 10px;
+        margin-top: 10px;
+      }
+
+      .info {
+        font-size: 13px;
+        color: #7f8c8d;
+        margin-top: 10px;
+      }
+
+      .hl-common-header {
+        color: #e74c3c;
+        font-weight: 600;
+      }
+
+      .hl-other-header {
+        color: #9b59b6;
+        font-weight: 600;
+      }
+
+      .hl-x-header {
+        color: #16a085;
+        font-weight: 600;
+      }
+
+      .hl-ipv4 {
+        background: #fff3cd;
+        color: #856404;
+        padding: 2px 4px;
+        border-radius: 3px;
+      }
+
+      .hl-ipv6 {
+        background: #d1ecf1;
+        color: #0c5460;
+        padding: 2px 4px;
+        border-radius: 3px;
+      }
+
+      .hl-email {
+        color: #3498db;
+        text-decoration: underline;
+      }
+
+      .hl-url {
+        color: #2980b9;
+        text-decoration: underline;
+      }
+
+      @media (max-width: 968px) {
+        .editor-container {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <a href="index.html" class="back-link">← Back to Tools</a>
+
+      <h1>Email Header Analysis</h1>
+
+      <div class="panel">
+        <div class="editor-container">
+          <div class="editor-section">
+            <div class="section-title">Input (Plain Text)</div>
+            <textarea
+              id="input"
+              placeholder="Paste your email headers here..."
+            ></textarea>
+            <div class="actions">
+              <label for="fileInput" class="file-btn">Load from File</label>
+              <input type="file" id="fileInput" accept=".eml,.msg,.txt" />
+              <button class="btn secondary" id="clearBtn">Clear</button>
+            </div>
+          </div>
+
+          <div class="editor-section">
+            <div class="section-title">Output (Highlighted)</div>
+            <div class="output" id="output"></div>
+          </div>
+        </div>
+
+        <div class="options">
+          <div class="option-group">
+            <div class="option-label">Highlight Options:</div>
+            <div class="legend">
+              <label class="checkbox-label">
+                <input type="checkbox" id="highlightCommon" checked />
+                <span class="hl-common-header">Common Headers</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" id="highlightOther" checked />
+                <span class="hl-other-header">Other Headers</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" id="highlightX" checked />
+                <span class="hl-x-header">X-Headers</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" id="highlightIPv4" checked />
+                <span class="hl-ipv4">IPv4 Addresses</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" id="highlightIPv6" checked />
+                <span class="hl-ipv6">IPv6 Addresses</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" id="highlightEmail" checked />
+                <span class="hl-email">Email Addresses</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" id="highlightURL" checked />
+                <span class="hl-url">URLs</span>
+              </label>
+            </div>
+          </div>
+          <div class="info">
+            This tool highlights email headers based on RFC specifications.
+            Supports .eml, .msg, and plain text formats.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module">
+      const input = document.getElementById("input");
+      const output = document.getElementById("output");
+      const fileInput = document.getElementById("fileInput");
+      const clearBtn = document.getElementById("clearBtn");
+
+      const highlightCommon = document.getElementById("highlightCommon");
+      const highlightOther = document.getElementById("highlightOther");
+      const highlightX = document.getElementById("highlightX");
+      const highlightIPv4 = document.getElementById("highlightIPv4");
+      const highlightIPv6 = document.getElementById("highlightIPv6");
+      const highlightEmail = document.getElementById("highlightEmail");
+      const highlightURL = document.getElementById("highlightURL");
+
+      const commonHeaders = [
+        "A-IM",
+        "Accept",
+        "Accept-Additions",
+        "Accept-Charset",
+        "Accept-Datetime",
+        "Accept-Encoding",
+        "Accept-Features",
+        "Accept-Language",
+        "Accept-Patch",
+        "Accept-Ranges",
+        "Age",
+        "Allow",
+        "ALPN",
+        "Also-Control",
+        "Alt-Svc",
+        "Alt-Used",
+        "Alternate-Recipient",
+        "Alternates",
+        "Apply-To-Redirect-Ref",
+        "Approved",
+        "Archive",
+        "Archived-At",
+        "Article-Names",
+        "Article-Updates",
+        "Authentication-Control",
+        "Authentication-Info",
+        "Authentication-Results",
+        "Authorization",
+        "Auto-Submitted",
+        "Autoforwarded",
+        "Autosubmitted",
+        "Base",
+        "Bcc",
+        "Body",
+        "C-Ext",
+        "C-Man",
+        "C-Opt",
+        "C-PEP",
+        "C-PEP-Info",
+        "Cache-Control",
+        "CalDAV-Timezones",
+        "Cc",
+        "Close",
+        "Comments",
+        "Connection",
+        "Content-Alternative",
+        "Content-Base",
+        "Content-Description",
+        "Content-Disposition",
+        "Content-Duration",
+        "Content-Encoding",
+        "Content-features",
+        "Content-ID",
+        "Content-Identifier",
+        "Content-Language",
+        "Content-Length",
+        "Content-Location",
+        "Content-MD5",
+        "Content-Range",
+        "Content-Return",
+        "Content-Script-Type",
+        "Content-Style-Type",
+        "Content-Transfer-Encoding",
+        "Content-Type",
+        "Content-Version",
+        "Control",
+        "Conversion",
+        "Conversion-With-Loss",
+        "Cookie",
+        "Cookie2",
+        "DASL",
+        "DAV",
+        "DL-Expansion-History",
+        "Date",
+        "Date-Received",
+        "Default-Style",
+        "Deferred-Delivery",
+        "Delivery-Date",
+        "Delta-Base",
+        "Depth",
+        "Derived-From",
+        "Destination",
+        "Differential-ID",
+        "Digest",
+        "Discarded-X400-IPMS-Extensions",
+        "Discarded-X400-MTS-Extensions",
+        "Disclose-Recipients",
+        "Disposition-Notification-Options",
+        "Disposition-Notification-To",
+        "Distribution",
+        "DKIM-Signature",
+        "Downgraded-Bcc",
+        "Downgraded-Cc",
+        "Downgraded-Disposition-Notification-To",
+        "Downgraded-Final-Recipient",
+        "Downgraded-From",
+        "Downgraded-In-Reply-To",
+        "Downgraded-Mail-From",
+        "Downgraded-Message-Id",
+        "Downgraded-Original-Recipient",
+        "Downgraded-Rcpt-To",
+        "Downgraded-References",
+        "Downgraded-Reply-To",
+        "Downgraded-Resent-Bcc",
+        "Downgraded-Resent-Cc",
+        "Downgraded-Resent-From",
+        "Downgraded-Resent-Reply-To",
+        "Downgraded-Resent-Sender",
+        "Downgraded-Resent-To",
+        "Downgraded-Return-Path",
+        "Downgraded-Sender",
+        "Downgraded-To",
+        "Encoding",
+        "Encrypted",
+        "ETag",
+        "Expect",
+        "Expires",
+        "Expiry-Date",
+        "Ext",
+        "Followup-To",
+        "Forwarded",
+        "From",
+        "Generate-Delivery-Report",
+        "GetProfile",
+        "Hobareg",
+        "Host",
+        "HTTP2-Settings",
+        "IM",
+        "If",
+        "If-Match",
+        "If-Modified-Since",
+        "If-None-Match",
+        "If-Range",
+        "If-Schedule-Tag-Match",
+        "If-Unmodified-Since",
+        "Importance",
+        "In-Reply-To",
+        "Incomplete-Copy",
+        "Injection-Date",
+        "Injection-Info",
+        "Keep-Alive",
+        "Keywords",
+        "Label",
+        "Language",
+        "Last-Modified",
+        "Latest-Delivery-Time",
+        "Lines",
+        "Link",
+        "List-Archive",
+        "List-Help",
+        "List-ID",
+        "List-Owner",
+        "List-Post",
+        "List-Subscribe",
+        "List-Unsubscribe",
+        "List-Unsubscribe-Post",
+        "Location",
+        "Lock-Token",
+        "Man",
+        "Max-Forwards",
+        "Memento-Datetime",
+        "Message-Context",
+        "Message-ID",
+        "Message-Type",
+        "Meter",
+        "MIME-Version",
+        "MMHS-Exempted-Address",
+        "MMHS-Extended-Authorisation-Info",
+        "MMHS-Subject-Indicator-Codes",
+        "MMHS-Handling-Instructions",
+        "MMHS-Message-Instructions",
+        "MMHS-Codress-Message-Indicator",
+        "MMHS-Originator-Reference",
+        "MMHS-Primary-Precedence",
+        "MMHS-Copy-Precedence",
+        "MMHS-Message-Type",
+        "MMHS-Other-Recipients-Indicator-To",
+        "MMHS-Other-Recipients-Indicator-CC",
+        "MMHS-Acp127-Message-Identifier",
+        "MMHS-Originator-PLAD",
+        "MT-Priority",
+        "Negotiate",
+        "Newsgroups",
+        "NNTP-Posting-Date",
+        "NNTP-Posting-Host",
+        "Obsoletes",
+        "Opt",
+        "Optional-WWW-Authenticate",
+        "Ordering-Type",
+        "Organization",
+        "Origin",
+        "Original-Encoded-Information-Types",
+        "Original-From",
+        "Original-Message-ID",
+        "Original-Recipient",
+        "Original-Sender",
+        "Originator-Return-Address",
+        "Original-Subject",
+        "Overwrite",
+        "P3P",
+        "Path",
+        "PEP",
+        "PICS-Label",
+        "Pep-Info",
+        "Position",
+        "Posting-Version",
+        "Pragma",
+        "Prefer",
+        "Preference-Applied",
+        "Prevent-NonDelivery-Report",
+        "Priority",
+        "ProfileObject",
+        "Protocol",
+        "Protocol-Info",
+        "Protocol-Query",
+        "Protocol-Request",
+        "Proxy-Authenticate",
+        "Proxy-Authentication-Info",
+        "Proxy-Authorization",
+        "Proxy-Features",
+        "Proxy-Instruction",
+        "Public",
+        "Public-Key-Pins",
+        "Public-Key-Pins-Report-Only",
+        "Range",
+        "Received",
+        "Received-SPF",
+        "Redirect-Ref",
+        "References",
+        "Referer",
+        "Relay-Version",
+        "Reply-By",
+        "Reply-To",
+        "Require-Recipient-Valid-Since",
+        "Resent-Bcc",
+        "Resent-Cc",
+        "Resent-Date",
+        "Resent-From",
+        "Resent-Message-ID",
+        "Resent-Reply-To",
+        "Resent-Sender",
+        "Resent-To",
+        "Retry-After",
+        "Return-Path",
+        "Safe",
+        "Schedule-Reply",
+        "Schedule-Tag",
+        "Sec-WebSocket-Accept",
+        "Sec-WebSocket-Extensions",
+        "Sec-WebSocket-Key",
+        "Sec-WebSocket-Protocol",
+        "Sec-WebSocket-Version",
+        "Security-Scheme",
+        "See-Also",
+        "Sender",
+        "Sensitivity",
+        "Server",
+        "Set-Cookie",
+        "Set-Cookie2",
+        "SetProfile",
+        "SLUG",
+        "SoapAction",
+        "Solicitation",
+        "Status-URI",
+        "Strict-Transport-Security",
+        "Subject",
+        "Summary",
+        "Supersedes",
+        "Surrogate-Capability",
+        "Surrogate-Control",
+        "TCN",
+        "TE",
+        "Timeout",
+        "To",
+        "Topic",
+        "Trailer",
+        "Transfer-Encoding",
+        "TTL",
+        "Urgency",
+        "URI",
+        "Upgrade",
+        "User-Agent",
+        "Variant-Vary",
+        "Vary",
+        "VBR-Info",
+        "Via",
+        "WWW-Authenticate",
+        "Want-Digest",
+        "Warning",
+        "X400-Content-Identifier",
+        "X400-Content-Return",
+        "X400-Content-Type",
+        "X400-MTS-Identifier",
+        "X400-Originator",
+        "X400-Received",
+        "X400-Recipients",
+        "X400-Trace",
+        "X-Frame-Options",
+        "Xref",
+      ];
+
+      const otherHeaders = [
+        "Delivered-To",
+        "Errors-To",
+        "Precedence",
+        "Thread-Index",
+        "Thread-Topic",
+      ];
+
+      function escapeHtml(text) {
+        const map = {
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#039;",
+        };
+        return text.replace(/[&<>"']/g, (m) => map[m]);
+      }
+
+      function highlightText(text) {
+        if (!text) return "";
+
+        let highlighted = escapeHtml(text);
+
+        if (highlightIPv6.checked) {
+          const ipv6Regex =
+            /((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])){3}))|:)))/g;
+          highlighted = highlighted.replace(
+            ipv6Regex,
+            (match) => `<span class="hl-ipv6">${match}</span>`
+          );
+        }
+
+        if (highlightIPv4.checked) {
+          const ipv4Regex =
+            /\b(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\b/g;
+          highlighted = highlighted.replace(
+            ipv4Regex,
+            (match) => `<span class="hl-ipv4">${match}</span>`
+          );
+        }
+
+        if (highlightURL.checked) {
+          const urlRegex = /\b(?:https?|ftp):\/\/[^\s<>"{}|\\^`\[\]]+/gi;
+          highlighted = highlighted.replace(
+            urlRegex,
+            (match) => `<span class="hl-url">${match}</span>`
+          );
+        }
+
+        if (highlightEmail.checked) {
+          const emailRegex =
+            /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g;
+          highlighted = highlighted.replace(
+            emailRegex,
+            (match) => `<span class="hl-email">${match}</span>`
+          );
+        }
+
+        const lines = highlighted.split("\n");
+        const processedLines = lines.map((line) => {
+          if (highlightX.checked) {
+            const xHeaderMatch = line.match(/^(X-[^:]+)(:)/i);
+            if (xHeaderMatch) {
+              return line.replace(
+                /^(X-[^:]+)(:)/i,
+                '<span class="hl-x-header">$1$2</span>'
+              );
+            }
+          }
+
+          if (highlightCommon.checked) {
+            for (const header of commonHeaders) {
+              const regex = new RegExp(`^\\b(${header})\\b(:)`, "i");
+              if (regex.test(line)) {
+                return line.replace(
+                  regex,
+                  '<span class="hl-common-header">$1$2</span>'
+                );
+              }
+            }
+          }
+
+          if (highlightOther.checked) {
+            for (const header of otherHeaders) {
+              const regex = new RegExp(`^\\b(${header})\\b(:)`, "i");
+              if (regex.test(line)) {
+                return line.replace(
+                  regex,
+                  '<span class="hl-other-header">$1$2</span>'
+                );
+              }
+            }
+          }
+
+          return line;
+        });
+
+        return processedLines.join("\n");
+      }
+
+      function updateOutput() {
+        const text = input.value;
+        output.innerHTML = highlightText(text);
+      }
+
+      function clearInput() {
+        input.value = "";
+        updateOutput();
+      }
+
+      function loadFromFile(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          input.value = e.target.result;
+          updateOutput();
+        };
+        reader.readAsText(file);
+      }
+
+      input.addEventListener("input", updateOutput);
+      fileInput.addEventListener("change", loadFromFile);
+      clearBtn.addEventListener("click", clearInput);
+
+      highlightCommon.addEventListener("change", updateOutput);
+      highlightOther.addEventListener("change", updateOutput);
+      highlightX.addEventListener("change", updateOutput);
+      highlightIPv4.addEventListener("change", updateOutput);
+      highlightIPv6.addEventListener("change", updateOutput);
+      highlightEmail.addEventListener("change", updateOutput);
+      highlightURL.addEventListener("change", updateOutput);
+
+      updateOutput();
+    </script>
+  </body>
+</html>
