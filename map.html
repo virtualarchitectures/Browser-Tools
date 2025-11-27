@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GeoJSON Map Viewer</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      color: #24292e;
+      background: #f6f8fa;
+    }
+    body.fullscreen {
+      padding: 0;
+      overflow: hidden;
+    }
+    h1 {
+      margin: 0 0 20px 0;
+      font-size: 28px;
+      font-weight: 600;
+    }
+    .controls {
+      background: white;
+      border: 1px solid #e1e4e8;
+      border-radius: 6px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    body.fullscreen .controls {
+      display: none;
+    }
+    input[type="file"] {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      border: 2px dashed #d1d5da;
+      border-radius: 6px;
+      background: #fafbfc;
+      cursor: pointer;
+      margin-bottom: 15px;
+    }
+    input[type="file"]::file-selector-button {
+      padding: 8px 16px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #24292e;
+      background: white;
+      border: 1px solid #d1d5da;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-right: 12px;
+      font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    }
+    input[type="file"]::file-selector-button:hover {
+      background: #f3f4f6;
+      border-color: #959da5;
+    }
+    .btn {
+      display: inline-block;
+      padding: 8px 16px;
+      font-size: 14px;
+      font-weight: 500;
+      color: white;
+      background: #0366d6;
+      border: 1px solid rgba(27,31,35,0.15);
+      border-radius: 6px;
+      cursor: pointer;
+      text-align: center;
+      font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      margin-right: 8px;
+    }
+    .btn:hover {
+      background: #0256c2;
+    }
+    .btn.secondary {
+      background: #6a737d;
+      color: white;
+    }
+    .btn.secondary:hover {
+      background: #586069;
+    }
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .panel {
+      background: white;
+      border: 1px solid #e1e4e8;
+      border-radius: 6px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    body.fullscreen .panel {
+      display: none;
+    }
+    .map-container {
+      background: white;
+      border: 1px solid #e1e4e8;
+      border-radius: 6px;
+      overflow: hidden;
+      position: relative;
+    }
+    body.fullscreen .map-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border: none;
+      border-radius: 0;
+      z-index: 9999;
+    }
+    #map {
+      width: 100%;
+      height: 600px;
+      background: #e8e8e8;
+    }
+    body.fullscreen #map {
+      height: 100vh;
+    }
+    .fullscreen-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 1000;
+      background: white;
+      border: 2px solid rgba(0,0,0,0.2);
+      border-radius: 4px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-size: 18px;
+      box-shadow: 0 1px 5px rgba(0,0,0,0.2);
+    }
+    .fullscreen-btn:hover {
+      background: #f4f4f4;
+    }
+    .info {
+      font-size: 14px;
+      color: #586069;
+      margin-top: 10px;
+    }
+    .properties-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      font-size: 14px;
+    }
+    .properties-table th,
+    .properties-table td {
+      text-align: left;
+      padding: 8px 12px;
+      border-bottom: 1px solid #e1e4e8;
+    }
+    .properties-table th {
+      background: #f6f8fa;
+      font-weight: 600;
+      color: #24292e;
+    }
+    .properties-table tr:last-child td {
+      border-bottom: none;
+    }
+    .properties-table td {
+      color: #586069;
+    }
+    .feature-item {
+      padding: 10px;
+      margin-bottom: 8px;
+      background: #f6f8fa;
+      border: 1px solid #e1e4e8;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .feature-item:hover {
+      background: #ebedef;
+      border-color: #d1d5da;
+    }
+    .feature-item.selected {
+      background: #ddf4ff;
+      border-color: #0969da;
+    }
+    .feature-type {
+      font-weight: 600;
+      color: #0366d6;
+      margin-right: 8px;
+    }
+    .back-link {
+      display: inline-block;
+      color: #0366d6;
+      text-decoration: none;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+    .back-link:hover {
+      text-decoration: underline;
+    }
+    h2 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-top: 0;
+      margin-bottom: 15px;
+    }
+    .empty-state {
+      text-align: center;
+      color: #586069;
+      padding: 40px 20px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <a href="index.html" class="back-link">← Back to Browser Tools</a>
+
+  <h1>GeoJSON Map Viewer</h1>
+
+  <div class="controls">
+    <input type="file" id="fileInput" accept=".geojson,.json" />
+    <div class="info" id="fileStatus">No file loaded</div>
+    <div style="margin-top: 15px;">
+      <button class="btn secondary" id="clearBtn" disabled>Clear Map</button>
+    </div>
+  </div>
+
+  <div class="map-container">
+    <button class="fullscreen-btn" id="fullscreenBtn" title="Toggle fullscreen">⛶</button>
+    <div id="map"></div>
+  </div>
+
+  <div class="panel" id="propertiesPanel" style="display: none;">
+    <h2>GeoJSON Properties</h2>
+    <div id="featuresList"></div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script type="module">
+const fileInput = document.getElementById('fileInput');
+const fileStatus = document.getElementById('fileStatus');
+const clearBtn = document.getElementById('clearBtn');
+const fullscreenBtn = document.getElementById('fullscreenBtn');
+const propertiesPanel = document.getElementById('propertiesPanel');
+const featuresList = document.getElementById('featuresList');
+
+// Initialize map
+const map = L.map('map').setView([0, 0], 2);
+
+// Add OpenStreetMap tiles
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  maxZoom: 19
+}).addTo(map);
+
+let geojsonLayer = null;
+let currentGeoJSON = null;
+let selectedFeature = null;
+
+// Handle file upload
+fileInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    loadGeoJSON(file);
+  }
+});
+
+// Handle drag and drop
+const mapContainer = document.querySelector('.map-container');
+mapContainer.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+});
+
+mapContainer.addEventListener('drop', (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+
+  const file = e.dataTransfer.files[0];
+  if (file && (file.name.endsWith('.geojson') || file.name.endsWith('.json'))) {
+    loadGeoJSON(file);
+  }
+});
+
+function loadGeoJSON(file) {
+  const reader = new FileReader();
+
+  reader.onload = (e) => {
+    try {
+      const geojson = JSON.parse(e.target.result);
+      currentGeoJSON = geojson;
+      displayGeoJSON(geojson);
+      displayProperties(geojson);
+      fileStatus.textContent = `Loaded: ${file.name}`;
+      clearBtn.disabled = false;
+    } catch (error) {
+      fileStatus.textContent = `Error: Invalid GeoJSON file`;
+      console.error('Error parsing GeoJSON:', error);
+    }
+  };
+
+  reader.readAsText(file);
+}
+
+function displayGeoJSON(geojson) {
+  // Remove existing layer
+  if (geojsonLayer) {
+    map.removeLayer(geojsonLayer);
+  }
+
+  // Add new GeoJSON layer
+  geojsonLayer = L.geoJSON(geojson, {
+    style: function(feature) {
+      return {
+        color: '#0366d6',
+        weight: 2,
+        opacity: 0.8,
+        fillOpacity: 0.3
+      };
+    },
+    pointToLayer: function(feature, latlng) {
+      return L.circleMarker(latlng, {
+        radius: 6,
+        fillColor: '#0366d6',
+        color: '#fff',
+        weight: 2,
+        opacity: 1,
+        fillOpacity: 0.8
+      });
+    },
+    onEachFeature: function(feature, layer) {
+      // Add click handler
+      layer.on('click', function() {
+        highlightFeature(feature, layer);
+      });
+
+      // Add popup with properties
+      if (feature.properties) {
+        let popupContent = '<strong>Properties:</strong><br>';
+        for (const [key, value] of Object.entries(feature.properties)) {
+          popupContent += `<strong>${key}:</strong> ${value}<br>`;
+        }
+        layer.bindPopup(popupContent);
+      }
+    }
+  }).addTo(map);
+
+  // Fit map to GeoJSON bounds
+  map.fitBounds(geojsonLayer.getBounds());
+}
+
+function highlightFeature(feature, layer) {
+  selectedFeature = feature;
+
+  // Reset all styles
+  if (geojsonLayer) {
+    geojsonLayer.eachLayer(function(l) {
+      geojsonLayer.resetStyle(l);
+    });
+  }
+
+  // Highlight selected feature
+  if (layer.setStyle) {
+    layer.setStyle({
+      color: '#d73a49',
+      weight: 3,
+      fillOpacity: 0.5
+    });
+  }
+
+  // Update properties display
+  updatePropertiesDisplay();
+}
+
+function displayProperties(geojson) {
+  propertiesPanel.style.display = 'block';
+  featuresList.innerHTML = '';
+
+  if (!geojson.features || geojson.features.length === 0) {
+    featuresList.innerHTML = '<div class="empty-state">No features found in GeoJSON</div>';
+    return;
+  }
+
+  geojson.features.forEach((feature, index) => {
+    const featureDiv = document.createElement('div');
+    featureDiv.className = 'feature-item';
+    featureDiv.dataset.index = index;
+
+    const type = feature.geometry ? feature.geometry.type : 'Unknown';
+    const featureType = document.createElement('span');
+    featureType.className = 'feature-type';
+    featureType.textContent = type;
+    featureDiv.appendChild(featureType);
+
+    if (feature.properties) {
+      const propCount = Object.keys(feature.properties).length;
+      const propText = document.createTextNode(`(${propCount} ${propCount === 1 ? 'property' : 'properties'})`);
+      featureDiv.appendChild(propText);
+
+      const table = document.createElement('table');
+      table.className = 'properties-table';
+      table.style.display = 'none';
+      table.style.marginTop = '10px';
+
+      for (const [key, value] of Object.entries(feature.properties)) {
+        const row = table.insertRow();
+        const cellKey = row.insertCell(0);
+        const cellValue = row.insertCell(1);
+        cellKey.innerHTML = `<strong>${key}</strong>`;
+        cellValue.textContent = JSON.stringify(value);
+      }
+
+      featureDiv.appendChild(table);
+    }
+
+    featureDiv.addEventListener('click', () => {
+      // Toggle selection
+      document.querySelectorAll('.feature-item').forEach(item => {
+        item.classList.remove('selected');
+        const table = item.querySelector('.properties-table');
+        if (table) table.style.display = 'none';
+      });
+
+      featureDiv.classList.add('selected');
+      const table = featureDiv.querySelector('.properties-table');
+      if (table) table.style.display = 'table';
+
+      // Zoom to feature
+      const layers = [];
+      geojsonLayer.eachLayer(function(layer) {
+        layers.push(layer);
+      });
+
+      if (layers[index]) {
+        const layer = layers[index];
+        if (layer.getBounds) {
+          map.fitBounds(layer.getBounds());
+        } else if (layer.getLatLng) {
+          map.setView(layer.getLatLng(), 15);
+        }
+        highlightFeature(feature, layer);
+      }
+    });
+
+    featuresList.appendChild(featureDiv);
+  });
+}
+
+function updatePropertiesDisplay() {
+  // This function can be used to update a separate properties display if needed
+}
+
+// Clear map
+clearBtn.addEventListener('click', () => {
+  if (geojsonLayer) {
+    map.removeLayer(geojsonLayer);
+    geojsonLayer = null;
+  }
+  currentGeoJSON = null;
+  selectedFeature = null;
+  fileStatus.textContent = 'No file loaded';
+  fileInput.value = '';
+  clearBtn.disabled = true;
+  propertiesPanel.style.display = 'none';
+  map.setView([0, 0], 2);
+});
+
+// Fullscreen toggle
+fullscreenBtn.addEventListener('click', () => {
+  document.body.classList.toggle('fullscreen');
+
+  if (document.body.classList.contains('fullscreen')) {
+    fullscreenBtn.textContent = '⛶';
+    fullscreenBtn.title = 'Exit fullscreen';
+  } else {
+    fullscreenBtn.textContent = '⛶';
+    fullscreenBtn.title = 'Toggle fullscreen';
+  }
+
+  // Invalidate map size to handle resize
+  setTimeout(() => {
+    map.invalidateSize();
+  }, 100);
+});
+
+// Handle escape key to exit fullscreen
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && document.body.classList.contains('fullscreen')) {
+    fullscreenBtn.click();
+  }
+});
+  </script>
+</body>
+</html>
