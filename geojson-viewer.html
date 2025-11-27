@@ -35,66 +35,26 @@
                 font-weight: 600;
             }
             .controls {
-                background: white;
-                border: 1px solid #e1e4e8;
-                border-radius: 6px;
-                padding: 20px;
-                margin-bottom: 20px;
+                display: flex;
+                gap: 0;
+                align-items: center;
             }
             body.fullscreen .controls {
                 display: none;
             }
             input[type="file"] {
-                display: block;
-                width: 100%;
-                padding: 10px;
-                font-size: 16px;
-                font-family:
-                    Helvetica,
-                    -apple-system,
-                    BlinkMacSystemFont,
-                    "Segoe UI",
-                    Arial,
-                    sans-serif;
-                border: 2px dashed #d1d5da;
-                border-radius: 6px;
-                background: #fafbfc;
-                cursor: pointer;
-                margin-bottom: 15px;
-            }
-            input[type="file"]::file-selector-button {
-                padding: 8px 16px;
-                font-size: 14px;
-                font-weight: 500;
-                color: #24292e;
-                background: white;
-                border: 1px solid #d1d5da;
-                border-radius: 6px;
-                cursor: pointer;
-                margin-right: 12px;
-                font-family:
-                    Helvetica,
-                    -apple-system,
-                    BlinkMacSystemFont,
-                    "Segoe UI",
-                    Arial,
-                    sans-serif;
-            }
-            input[type="file"]::file-selector-button:hover {
-                background: #f3f4f6;
-                border-color: #959da5;
+                display: none;
             }
             .btn {
-                display: inline-block;
-                padding: 8px 16px;
-                font-size: 14px;
-                font-weight: 500;
-                color: white;
                 background: #0366d6;
-                border: 1px solid rgba(27, 31, 35, 0.15);
+                color: #fff;
+                padding: 8px 12px;
                 border-radius: 6px;
+                border: 1px solid rgba(27, 31, 35, 0.15);
                 cursor: pointer;
-                text-align: center;
+                font-size: 14px;
+                line-height: 20px;
+                text-decoration: none;
                 font-family:
                     Helvetica,
                     -apple-system,
@@ -102,28 +62,28 @@
                     "Segoe UI",
                     Arial,
                     sans-serif;
-                margin-right: 8px;
             }
             .btn:hover {
-                background: #0256c2;
+                background: #0256c5;
             }
             .btn.secondary {
-                background: #6a737d;
-                color: white;
+                background: #fafbfc;
+                color: #24292e;
+                border: 1px solid rgba(27, 31, 35, 0.15);
             }
             .btn.secondary:hover {
-                background: #586069;
+                background: #f3f4f6;
             }
             .btn:disabled {
                 opacity: 0.5;
                 cursor: not-allowed;
             }
             .panel {
-                background: white;
-                border: 1px solid #e1e4e8;
+                background: #f6f8fa;
+                padding: 16px;
                 border-radius: 6px;
-                padding: 20px;
-                margin-bottom: 20px;
+                border: 1px solid #e1e4e8;
+                margin-bottom: 16px;
             }
             body.fullscreen .panel {
                 display: none;
@@ -134,6 +94,7 @@
                 border-radius: 6px;
                 overflow: hidden;
                 position: relative;
+                margin-bottom: 16px;
             }
             body.fullscreen .map-container {
                 position: fixed;
@@ -153,10 +114,9 @@
             body.fullscreen #map {
                 height: 100vh;
             }
-            .fullscreen-btn {
+            .map-btn {
                 position: absolute;
                 top: 10px;
-                right: 10px;
                 z-index: 1000;
                 background: white;
                 border: 2px solid rgba(0, 0, 0, 0.2);
@@ -165,14 +125,32 @@
                 cursor: pointer;
                 font-size: 18px;
                 box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
+                font-family:
+                    Helvetica,
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    Arial,
+                    sans-serif;
             }
-            .fullscreen-btn:hover {
+            .map-btn:hover {
                 background: #f4f4f4;
+            }
+            .map-btn:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+                background: #f4f4f4;
+            }
+            .fullscreen-btn {
+                right: 10px;
+            }
+            .zoom-extents-btn {
+                right: 60px;
             }
             .info {
                 font-size: 14px;
-                color: #586069;
-                margin-top: 10px;
+                color: #24292e;
+                font-weight: 500;
             }
             .back-link {
                 display: inline-block;
@@ -239,11 +217,24 @@
 
         <h1>GeoJSON Map Viewer</h1>
 
-        <div class="controls">
-            <input type="file" id="fileInput" accept=".geojson,.json" />
-            <div class="info" id="fileStatus">No file loaded</div>
-            <div style="margin-top: 15px">
-                <button class="btn secondary" id="clearBtn" disabled>
+        <div class="panel">
+            <div class="controls">
+                <input
+                    type="file"
+                    id="fileInput"
+                    accept=".geojson,.json"
+                    style="display: none"
+                />
+                <label for="fileInput" class="btn">Browse</label>
+                <span id="fileStatus" class="info" style="margin-left: 8px"
+                    >No file selected</span
+                >
+                <button
+                    class="btn secondary"
+                    id="clearBtn"
+                    disabled
+                    style="margin-left: auto"
+                >
                     Clear Map
                 </button>
             </div>
@@ -251,7 +242,15 @@
 
         <div class="map-container">
             <button
-                class="fullscreen-btn"
+                class="map-btn zoom-extents-btn"
+                id="zoomExtentsBtn"
+                title="Zoom to extents"
+                disabled
+            >
+                ⤡
+            </button>
+            <button
+                class="map-btn fullscreen-btn"
                 id="fullscreenBtn"
                 title="Toggle fullscreen"
             >
@@ -263,7 +262,7 @@
         <div class="panel" id="propertiesPanel">
             <h2>GeoJSON Properties</h2>
             <div id="propertiesDisplay" class="empty-state">
-                No file loaded. Upload a GeoJSON file to view properties.
+                No file selected. Upload a GeoJSON file to view properties.
             </div>
         </div>
 
@@ -272,6 +271,7 @@
             const fileInput = document.getElementById("fileInput");
             const fileStatus = document.getElementById("fileStatus");
             const clearBtn = document.getElementById("clearBtn");
+            const zoomExtentsBtn = document.getElementById("zoomExtentsBtn");
             const fullscreenBtn = document.getElementById("fullscreenBtn");
             const propertiesPanel = document.getElementById("propertiesPanel");
             const propertiesDisplay =
@@ -345,8 +345,9 @@
                         currentGeoJSON = normalized;
                         displayGeoJSON(normalized);
                         displayProperties(normalized);
-                        fileStatus.textContent = `Loaded: ${file.name}`;
+                        fileStatus.textContent = `Selected: ${file.name}`;
                         clearBtn.disabled = false;
+                        zoomExtentsBtn.disabled = false;
                     } catch (error) {
                         fileStatus.textContent = `Error: Invalid GeoJSON file`;
                         console.error("Error parsing GeoJSON:", error);
@@ -496,7 +497,16 @@
                             }
                         });
 
-                        const sortedKeys = Array.from(propertyKeys).sort();
+                        // Sort keys, but ensure 'id' or 'ID' comes first
+                        let sortedKeys = Array.from(propertyKeys).sort();
+                        const idIndex = sortedKeys.findIndex(
+                            (key) => key.toLowerCase() === "id",
+                        );
+                        if (idIndex > -1) {
+                            const idKey = sortedKeys[idIndex];
+                            sortedKeys.splice(idIndex, 1);
+                            sortedKeys.unshift(idKey);
+                        }
 
                         // Create table
                         const table = document.createElement("table");
@@ -571,6 +581,13 @@
                     });
             }
 
+            // Zoom to extents
+            zoomExtentsBtn.addEventListener("click", () => {
+                if (geojsonLayer) {
+                    map.fitBounds(geojsonLayer.getBounds());
+                }
+            });
+
             // Clear map
             clearBtn.addEventListener("click", () => {
                 if (geojsonLayer) {
@@ -579,11 +596,12 @@
                 }
                 currentGeoJSON = null;
                 allFeatures = [];
-                fileStatus.textContent = "No file loaded";
+                fileStatus.textContent = "No file selected";
                 fileInput.value = "";
                 clearBtn.disabled = true;
+                zoomExtentsBtn.disabled = true;
                 propertiesDisplay.innerHTML =
-                    '<div class="empty-state">No file loaded. Upload a GeoJSON file to view properties.</div>';
+                    '<div class="empty-state">No file selected. Upload a GeoJSON file to view properties.</div>';
                 map.setView([0, 0], 2);
             });
 
