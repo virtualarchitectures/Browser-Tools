@@ -23,6 +23,10 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 
 - **[Text Diff Tool](text-diff.html)** — compare two text blocks and highlight added and removed content
 
+### Maps and spatial data
+
+- **[GeoJSON Viewer](geojson-viewer.html)** — visualize and explore GeoJSON files on an interactive map
+
 ### Data utilities
 
 *More tools coming soon...*
