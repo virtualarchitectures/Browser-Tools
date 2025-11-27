@@ -291,6 +291,25 @@
             </span>
         </div>
 
+        <div
+            style="
+                margin-top: 10px;
+                display: flex;
+                gap: 12px;
+                align-items: center;
+                flex-wrap: wrap;
+            "
+        >
+            <label
+                ><input id="coordsSpace" type="checkbox" checked /> Use natural
+                image pixels for coordinates</label
+            >
+            <span class="small"
+                >(if unchecked, coordinates are relative to displayed image
+                size)</span
+            >
+        </div>
+
         <div class="panel" style="margin-top: 16px">
             <textarea id="output" readonly></textarea>
 
@@ -313,6 +332,7 @@
             const clearImageBtn = document.getElementById("clearImage");
             const copyBtn = document.getElementById("copy");
             const downloadBtn = document.getElementById("download");
+            const coordsSpaceCheckbox = document.getElementById("coordsSpace");
 
             fileInput.addEventListener("change", (e) => {
                 const f = e.target.files && e.target.files[0];
@@ -394,7 +414,11 @@
                 const clampedX = Math.max(0, Math.min(rect.width, dx));
                 const clampedY = Math.max(0, Math.min(rect.height, dy));
 
-                if (photo.naturalWidth && photo.naturalHeight) {
+                if (
+                    coordsSpaceCheckbox.checked &&
+                    photo.naturalWidth &&
+                    photo.naturalHeight
+                ) {
                     const scaleX = photo.naturalWidth / rect.width;
                     const scaleY = photo.naturalHeight / rect.height;
                     return {
@@ -435,21 +459,41 @@
             }
 
             function coordsToDisplayX(x) {
-                if (photo.naturalWidth && photo.clientWidth) {
-                    return Math.round(
-                        (x / photo.naturalWidth) * photo.clientWidth,
+                const rect = photo.getBoundingClientRect();
+                const viewerRect = viewer.getBoundingClientRect();
+                const offsetX = rect.left - viewerRect.left;
+
+                if (
+                    coordsSpaceCheckbox.checked &&
+                    photo.naturalWidth &&
+                    photo.clientWidth
+                ) {
+                    return (
+                        offsetX +
+                        Math.round((x / photo.naturalWidth) * photo.clientWidth)
                     );
                 }
-                return x;
+                return offsetX + x;
             }
 
             function coordsToDisplayY(y) {
-                if (photo.naturalHeight && photo.clientHeight) {
-                    return Math.round(
-                        (y / photo.naturalHeight) * photo.clientHeight,
+                const rect = photo.getBoundingClientRect();
+                const viewerRect = viewer.getBoundingClientRect();
+                const offsetY = rect.top - viewerRect.top;
+
+                if (
+                    coordsSpaceCheckbox.checked &&
+                    photo.naturalHeight &&
+                    photo.clientHeight
+                ) {
+                    return (
+                        offsetY +
+                        Math.round(
+                            (y / photo.naturalHeight) * photo.clientHeight,
+                        )
                     );
                 }
-                return y;
+                return offsetY + y;
             }
 
             function refreshMarkers() {
@@ -571,6 +615,9 @@
             });
 
             window.addEventListener("resize", () => refreshMarkers());
+            coordsSpaceCheckbox.addEventListener("change", () =>
+                refreshMarkers(),
+            );
 
             renderOutput();
         </script>
