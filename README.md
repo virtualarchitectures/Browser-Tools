@@ -11,7 +11,7 @@ A collection of browser-based HTML+JavaScript tools for various tasks. All tools
 
 ## Usage
 
-Simply open `index.html` in your browser to access the tool directory, or navigate directly to any tool's HTML file.
+Simply open [https://virtualarchitectures.github.io/Browser-Tools/](https://virtualarchitectures.github.io/Browser-Tools/) in your browser to access the tool directory, or navigate directly to any tool's HTML file.
 
 ## Available Tools
 
