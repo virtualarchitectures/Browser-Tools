@@ -257,8 +257,120 @@
 
       @media (max-width: 968px) {
         .editor-container {
-          grid-template-columns: 1fr;
+          flex-direction: column;
         }
+      }
+
+      .collapsible-section {
+        margin-top: 20px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        overflow: hidden;
+      }
+
+      .collapsible-header {
+        background: #0366d6;
+        color: white;
+        padding: 12px 15px;
+        cursor: pointer;
+        user-select: none;
+        display: flex;
+        align-items: center;
+        font-size: 16px;
+        font-weight: 600;
+      }
+
+      .collapsible-header:hover {
+        background: #0256c5;
+      }
+
+      .collapsible-header::before {
+        content: "▼";
+        margin-right: 8px;
+        font-size: 12px;
+        transition: transform 0.2s;
+      }
+
+      .collapsible-header.collapsed::before {
+        transform: rotate(-90deg);
+      }
+
+      .collapsible-content {
+        max-height: 500px;
+        transition: max-height 0.3s ease;
+        overflow: hidden;
+      }
+
+      .collapsible-content.collapsed {
+        max-height: 0;
+      }
+
+      .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+      }
+
+      .data-table th,
+      .data-table td {
+        padding: 10px 15px;
+        text-align: left;
+        border-bottom: 1px solid #e0e0e0;
+        font-size: 14px;
+        word-wrap: break-word;
+        word-break: break-word;
+      }
+
+      .data-table th {
+        background: #f8f9fa;
+        font-weight: 600;
+        color: #333;
+      }
+
+      .data-table tr:last-child td {
+        border-bottom: none;
+      }
+
+      .data-table tr:hover {
+        background: #f5f5f5;
+      }
+
+      .data-table td:first-child {
+        color: #0078d4;
+        font-weight: 600;
+      }
+
+      .table-wrapper {
+        overflow-x: auto;
+        overflow-y: auto;
+        max-height: 400px;
+      }
+
+      #otherHeadersTable {
+        table-layout: fixed;
+      }
+
+      #otherHeadersTable th:first-child,
+      #otherHeadersTable td:first-child {
+        width: 50px;
+      }
+
+      #otherHeadersTable th:nth-child(2),
+      #otherHeadersTable td:nth-child(2) {
+        width: 150px;
+      }
+
+      #otherHeadersTable th:nth-child(3),
+      #otherHeadersTable td:nth-child(3) {
+        width: auto;
+        white-space: normal;
+      }
+
+      .no-data {
+        padding: 20px 15px;
+        text-align: center;
+        color: #999;
+        font-style: italic;
       }
     </style>
   </head>
@@ -327,6 +439,73 @@
           <div class="info">
             This tool highlights email headers based on RFC specifications.
             Supports .eml, .msg, and plain text formats.
+          </div>
+        </div>
+
+        <!-- Collapsible Tables Section -->
+        <div
+          class="collapsible-section"
+          id="summarySection"
+          style="display: none"
+        >
+          <div class="collapsible-header" id="summaryHeader">Summary</div>
+          <div class="collapsible-content" id="summaryContent">
+            <div class="table-wrapper">
+              <table class="data-table" id="summaryTable">
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="collapsible-section"
+          id="receivedSection"
+          style="display: none"
+        >
+          <div class="collapsible-header" id="receivedHeader">
+            Received headers
+          </div>
+          <div class="collapsible-content" id="receivedContent">
+            <div class="table-wrapper">
+              <table class="data-table" id="receivedTable">
+                <thead>
+                  <tr>
+                    <th>Hop</th>
+                    <th>Submitting host</th>
+                    <th>Receiving host</th>
+                    <th>Time</th>
+                    <th>Delay</th>
+                    <th>Type</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="collapsible-section"
+          id="otherHeadersSection"
+          style="display: none"
+        >
+          <div class="collapsible-header" id="otherHeadersHeader">
+            Other headers
+          </div>
+          <div class="collapsible-content" id="otherHeadersContent">
+            <div class="table-wrapper">
+              <table class="data-table" id="otherHeadersTable">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Header</th>
+                    <th>Value</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
@@ -757,6 +936,7 @@
       function clearInput() {
         input.value = "";
         updateOutput();
+        parseHeaders("");
       }
 
       function loadFromFile(event) {
@@ -767,6 +947,7 @@
         reader.onload = (e) => {
           input.value = e.target.result;
           updateOutput();
+          parseHeaders(e.target.result);
         };
         reader.readAsText(file);
       }
@@ -784,6 +965,278 @@
       highlightURL.addEventListener("change", updateOutput);
 
       updateOutput();
+
+      // Collapsible functionality
+      function toggleCollapsible(header, content) {
+        header.addEventListener("click", () => {
+          header.classList.toggle("collapsed");
+          content.classList.toggle("collapsed");
+        });
+      }
+
+      const summaryHeader = document.getElementById("summaryHeader");
+      const summaryContent = document.getElementById("summaryContent");
+      const receivedHeader = document.getElementById("receivedHeader");
+      const receivedContent = document.getElementById("receivedContent");
+      const otherHeadersHeader = document.getElementById("otherHeadersHeader");
+      const otherHeadersContent = document.getElementById(
+        "otherHeadersContent"
+      );
+
+      toggleCollapsible(summaryHeader, summaryContent);
+      toggleCollapsible(receivedHeader, receivedContent);
+      toggleCollapsible(otherHeadersHeader, otherHeadersContent);
+
+      // Parse email headers and populate tables
+      function parseHeaders(text) {
+        if (!text.trim()) {
+          document.getElementById("summarySection").style.display = "none";
+          document.getElementById("receivedSection").style.display = "none";
+          document.getElementById("otherHeadersSection").style.display = "none";
+          return;
+        }
+
+        const lines = text.split("\n");
+        const headers = {};
+        let currentHeader = null;
+        let currentValue = "";
+
+        for (const line of lines) {
+          // Stop parsing at the first blank line (end of headers)
+          if (line.trim() === "" && currentHeader) {
+            break;
+          }
+
+          if (line.match(/^[A-Za-z0-9-]+:/)) {
+            if (currentHeader) {
+              if (!headers[currentHeader]) {
+                headers[currentHeader] = [];
+              }
+              headers[currentHeader].push(currentValue.trim());
+            }
+            const colonIndex = line.indexOf(":");
+            currentHeader = line.substring(0, colonIndex).trim();
+            currentValue = line.substring(colonIndex + 1).trim();
+          } else if (currentHeader && line.trim()) {
+            currentValue += " " + line.trim();
+          }
+        }
+
+        if (currentHeader) {
+          if (!headers[currentHeader]) {
+            headers[currentHeader] = [];
+          }
+          headers[currentHeader].push(currentValue.trim());
+        }
+
+        populateSummary(headers);
+        populateReceived(headers);
+        populateOtherHeaders(headers);
+      }
+
+      // Decode RFC 2047 encoded headers (like Subject)
+      function decodeHeader(value) {
+        // Decode =?charset?encoding?text?= format
+        const encodedWordRegex = /=\?([^?]+)\?([BQ])\?([^?]*)\?=/gi;
+        return value.replace(
+          encodedWordRegex,
+          (match, charset, encoding, text) => {
+            try {
+              if (encoding.toUpperCase() === "B") {
+                // Base64 decoding
+                return decodeURIComponent(escape(atob(text)));
+              } else if (encoding.toUpperCase() === "Q") {
+                // Quoted-printable decoding
+                text = text.replace(/_/g, " ");
+                text = text.replace(/=([0-9A-F]{2})/g, (m, hex) => {
+                  return String.fromCharCode(parseInt(hex, 16));
+                });
+                return text;
+              }
+            } catch (e) {
+              return match;
+            }
+            return match;
+          }
+        );
+      }
+
+      function populateSummary(headers) {
+        const summaryTable = document
+          .getElementById("summaryTable")
+          .getElementsByTagName("tbody")[0];
+        summaryTable.innerHTML = "";
+
+        const summaryFields = {
+          Subject: "Subject",
+          "Message-ID": "Message Id",
+          Date: "Creation time",
+          From: "From",
+          To: "To",
+        };
+
+        let hasData = false;
+        for (const [key, label] of Object.entries(summaryFields)) {
+          if (headers[key] && headers[key].length > 0) {
+            hasData = true;
+            const row = summaryTable.insertRow();
+            const cell1 = row.insertCell(0);
+            const cell2 = row.insertCell(1);
+            cell1.textContent = label;
+            // Decode the header value (especially for Subject)
+            cell2.textContent = decodeHeader(headers[key][0]);
+          }
+        }
+
+        document.getElementById("summarySection").style.display = hasData
+          ? "block"
+          : "none";
+      }
+
+      function populateReceived(headers) {
+        const receivedTable = document
+          .getElementById("receivedTable")
+          .getElementsByTagName("tbody")[0];
+        receivedTable.innerHTML = "";
+
+        if (!headers["Received"] || headers["Received"].length === 0) {
+          document.getElementById("receivedSection").style.display = "none";
+          return;
+        }
+
+        document.getElementById("receivedSection").style.display = "block";
+
+        // Reverse the order (most recent first)
+        const received = [...headers["Received"]].reverse();
+        let previousTime = null;
+
+        received.forEach((value, index) => {
+          const row = receivedTable.insertRow();
+
+          // Hop number
+          row.insertCell(0).textContent = index + 1;
+
+          // Extract submitting host (from) - get everything after "from" until "by"
+          let fromText = "";
+          const fromMatch = value.match(/from\s+(.+?)\s+by\s+/i);
+          if (fromMatch) {
+            fromText = fromMatch[1].trim();
+          }
+          row.insertCell(1).textContent = fromText;
+
+          // Extract receiving host (by) - get everything after "by" until "with" or "id" or ";"
+          let byText = "";
+          const byMatch = value.match(/by\s+(.+?)(?:\s+with|\s+id|\s+\(|;)/i);
+          if (byMatch) {
+            byText = byMatch[1].trim();
+          } else {
+            // Fallback if no match
+            const bySimpleMatch = value.match(/by\s+([^\s]+)/i);
+            if (bySimpleMatch) {
+              byText = bySimpleMatch[1];
+            }
+          }
+          row.insertCell(2).textContent = byText;
+
+          // Extract time - everything after the semicolon
+          const dateMatch = value.match(/;\s*(.+)$/);
+          const timeText = dateMatch ? dateMatch[1].trim() : "";
+
+          // Format date if possible
+          let formattedDate = timeText;
+          try {
+            const parsedDate = new Date(timeText);
+            if (!isNaN(parsedDate.getTime())) {
+              formattedDate = parsedDate.toLocaleString("en-US", {
+                month: "numeric",
+                day: "numeric",
+                year: "numeric",
+                hour: "numeric",
+                minute: "numeric",
+                second: "numeric",
+                hour12: true,
+              });
+            }
+          } catch (e) {
+            // Keep original if parsing fails
+          }
+          row.insertCell(3).textContent = formattedDate;
+
+          // Calculate delay
+          const delayCell = row.insertCell(4);
+          if (previousTime && timeText) {
+            try {
+              const currentDate = new Date(timeText);
+              const prevDate = new Date(previousTime);
+              const diffMs = Math.abs(currentDate - prevDate);
+              const diffSeconds = Math.floor(diffMs / 1000);
+              if (diffSeconds === 0) {
+                delayCell.textContent = "0 seconds";
+              } else if (diffSeconds === 1) {
+                delayCell.textContent = "1 second";
+              } else {
+                delayCell.textContent = diffSeconds + " seconds";
+              }
+            } catch (e) {
+              delayCell.textContent = "";
+            }
+          } else {
+            delayCell.textContent = "";
+          }
+          previousTime = timeText;
+
+          // Extract type (protocol)
+          const withMatch = value.match(/with\s+([^\s]+)/i);
+          row.insertCell(5).textContent = withMatch
+            ? withMatch[1].toUpperCase()
+            : "";
+        });
+      }
+
+      function populateOtherHeaders(headers) {
+        const otherHeadersTable = document
+          .getElementById("otherHeadersTable")
+          .getElementsByTagName("tbody")[0];
+        otherHeadersTable.innerHTML = "";
+
+        const excludeHeaders = [
+          "Subject",
+          "Message-ID",
+          "Date",
+          "From",
+          "To",
+          "Received",
+        ];
+        let rowNum = 1;
+        let hasData = false;
+        const seenHeaders = new Set();
+
+        for (const [key, values] of Object.entries(headers)) {
+          if (!excludeHeaders.includes(key)) {
+            // Only show the first occurrence of each header
+            if (!seenHeaders.has(key)) {
+              seenHeaders.add(key);
+              hasData = true;
+              const row = otherHeadersTable.insertRow();
+              row.insertCell(0).textContent = rowNum++;
+              row.insertCell(1).textContent = key;
+              row.insertCell(2).textContent = decodeHeader(values[0]);
+            }
+          }
+        }
+
+        document.getElementById("otherHeadersSection").style.display = hasData
+          ? "block"
+          : "none";
+      }
+
+      // Update parseHeaders when input changes
+      input.addEventListener("input", () => {
+        parseHeaders(input.value);
+      });
+
+      // Initial parse
+      parseHeaders(input.value);
     </script>
   </body>
 </html>
