@@ -169,21 +169,26 @@
                 margin-bottom: 15px;
             }
             h3 {
-                font-size: 16px;
-                font-weight: 600;
-                margin-top: 20px;
-                margin-bottom: 10px;
-                color: #0366d6;
+                background: #0366d6;
+                color: white;
+                padding: 12px 15px;
                 cursor: pointer;
                 user-select: none;
+                display: flex;
+                align-items: center;
+                font-size: 16px;
+                font-weight: 600;
+                margin-top: 0;
+                margin-bottom: 0;
+                border-radius: 4px 4px 0 0;
             }
             h3:hover {
-                color: #0256c5;
+                background: #0256c5;
             }
             h3::before {
-                content: "▼ ";
-                display: inline-block;
-                margin-right: 6px;
+                content: "▼";
+                margin-right: 8px;
+                font-size: 12px;
                 transition: transform 0.2s;
             }
             h3.collapsed::before {
@@ -197,18 +202,24 @@
             }
             .feature-type-section {
                 margin-bottom: 30px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                overflow: hidden;
             }
             .feature-type-section .properties-table {
-                transition: all 0.3s ease;
+                max-height: 500px;
+                transition: max-height 0.3s ease;
+                overflow: auto;
             }
             .feature-type-section.collapsed .properties-table {
-                display: none;
+                max-height: 0;
+                overflow: hidden;
             }
             .properties-table {
                 width: 100%;
                 border-collapse: collapse;
+                margin-top: 0;
                 font-size: 14px;
-                margin-top: 10px;
             }
             .properties-table th {
                 background: #f6f8fa;
