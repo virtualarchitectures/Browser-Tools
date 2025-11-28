@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PDF Metadata Viewer</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Arial, sans-serif;
+        line-height: 1.6;
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 20px;
+        color: #24292e;
+        background: #ffffff;
+      }
+      h1 {
+        border-bottom: 1px solid #eaecef;
+        padding-bottom: 0.3em;
+        margin-top: 0;
+        font-size: 32px;
+        font-weight: 600;
+      }
+      .controls {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+        justify-content: space-between;
+      }
+      input[type="file"] {
+        font-size: 16px;
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Arial, sans-serif;
+        color: transparent;
+        width: auto;
+        display: none;
+      }
+      input[type="file"]::file-selector-button {
+        margin-right: 0;
+        padding: 6px 12px;
+        background: #fafbfc;
+        color: #24292e;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Arial, sans-serif;
+      }
+      input[type="file"]::file-selector-button:hover {
+        background: #f3f4f6;
+      }
+      .btn {
+        background: #fafbfc;
+        color: #24292e;
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+        cursor: pointer;
+        font-size: 14px;
+        line-height: 20px;
+        text-decoration: none;
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Arial, sans-serif;
+      }
+      .btn:hover {
+        background: #f3f4f6;
+      }
+      .btn.primary {
+        background: #0366d6;
+        color: #fff;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+      }
+      .btn.primary:hover {
+        background: #0256c5;
+      }
+      .btn.secondary {
+        background: #fafbfc;
+        color: #24292e;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+      }
+      .btn.secondary:hover {
+        background: #f3f4f6;
+      }
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .btn.secondary:disabled:hover {
+        background: #fafbfc;
+      }
+      .btn.primary:disabled:hover {
+        background: #0366d6;
+      }
+      .panel {
+        background: #f6f8fa;
+        padding: 16px;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+        margin-bottom: 16px;
+      }
+      .panel h2 {
+        margin-top: 0;
+        margin-bottom: 12px;
+        font-size: 20px;
+        font-weight: 600;
+        color: #24292e;
+      }
+      .panel pre {
+        background: #ffffff;
+        padding: 12px;
+        overflow-x: auto;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
+          monospace;
+        font-size: 14px;
+        color: #24292e;
+        margin: 0;
+        min-height: 250px;
+      }
+      .actions {
+        margin-top: 12px;
+        display: flex;
+        gap: 8px;
+      }
+      label.btn {
+        display: inline-block;
+        margin: 0;
+      }
+      .back-link {
+        display: inline-block;
+        margin-bottom: 16px;
+        color: #0366d6;
+        text-decoration: none;
+        font-size: 14px;
+      }
+      .back-link:hover {
+        text-decoration: underline;
+      }
+      .info {
+        font-size: 13px;
+        color: #586069;
+        margin-bottom: 12px;
+      }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist/build/pdf.min.js"></script>
+    <script type="module">
+      const fileInput = document.getElementById("fileInput");
+      const metadataPanel = document.getElementById("metadataPanel");
+      const metadataOutput = document.getElementById("metadataOutput");
+      const copyBtn = document.getElementById("copyBtn");
+      const downloadBtn = document.getElementById("downloadBtn");
+      const clearBtn = document.getElementById("clearBtn");
+
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        "https://cdn.jsdelivr.net/npm/pdfjs-dist/build/pdf.worker.min.js";
+
+      fileInput.addEventListener("change", async () => {
+        const file = fileInput.files[0];
+        if (!file) return;
+        if (file.type !== "application/pdf") {
+          alert("Please select a PDF file.");
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = async function (e) {
+          const arrayBuffer = e.target.result;
+          try {
+            const pdfDoc = await pdfjsLib.getDocument({
+              data: arrayBuffer,
+            }).promise;
+            const meta = await pdfDoc.getMetadata();
+            const pageCount = pdfDoc.numPages;
+            const pdfInfo = pdfDoc.pdfInfo || {};
+
+            // Get file size in a readable format
+            const formatFileSize = (bytes) => {
+              if (bytes === 0) return "0 Bytes";
+              const k = 1024;
+              const sizes = ["Bytes", "KB", "MB", "GB"];
+              const i = Math.floor(Math.log(bytes) / Math.log(k));
+              return (
+                Math.round((bytes / Math.pow(k, i)) * 100) / 100 +
+                " " +
+                sizes[i]
+              );
+            };
+
+            // Get permissions
+            const permissions = await pdfDoc.getPermissions();
+            const permissionFlags = {
+              printing: permissions
+                ? permissions.includes(2) || permissions.includes(4)
+                : "Unknown",
+              modifying: permissions ? permissions.includes(8) : "Unknown",
+              copying: permissions ? permissions.includes(16) : "Unknown",
+              annotating: permissions ? permissions.includes(32) : "Unknown",
+            };
+
+            // Get page dimensions from first page
+            let pageDimensions = "N/A";
+            try {
+              const firstPage = await pdfDoc.getPage(1);
+              const viewport = firstPage.getViewport({
+                scale: 1,
+              });
+              pageDimensions = `${Math.round(viewport.width)} x ${Math.round(
+                viewport.height
+              )} pts`;
+            } catch (err) {
+              console.error("Could not get page dimensions:", err);
+            }
+
+            // Check for bookmarks/outline
+            let hasBookmarks = false;
+            try {
+              const outline = await pdfDoc.getOutline();
+              hasBookmarks = outline && outline.length > 0;
+            } catch (err) {
+              console.error("Could not check bookmarks:", err);
+            }
+
+            // Check for JavaScript
+            let hasJavaScript = false;
+            try {
+              const js = await pdfDoc.getJavaScript();
+              hasJavaScript = js && js.length > 0;
+            } catch (err) {
+              console.error("Could not check JavaScript:", err);
+            }
+
+            // Check for attachments
+            let hasAttachments = false;
+            let attachmentCount = 0;
+            try {
+              const attachments = await pdfDoc.getAttachments();
+              if (attachments) {
+                attachmentCount = Object.keys(attachments).length;
+                hasAttachments = attachmentCount > 0;
+              }
+            } catch (err) {
+              console.error("Could not check attachments:", err);
+            }
+
+            const info = {
+              fileName: file.name,
+              fileSize: formatFileSize(file.size),
+              fileSizeBytes: file.size,
+              pdfVersion: pdfInfo.PDFFormatVersion || "N/A",
+              pageCount,
+              pageDimensions: pageDimensions,
+              title: meta.info.Title || "N/A",
+              author: meta.info.Author || "N/A",
+              subject: meta.info.Subject || "N/A",
+              keywords: meta.info.Keywords || "N/A",
+              creator: meta.info.Creator || "N/A",
+              producer: meta.info.Producer || "N/A",
+              creationDate: meta.info.CreationDate || "N/A",
+              modDate: meta.info.ModDate || "N/A",
+              copyright: meta.info.Copyright || "N/A",
+              language: meta.info.Language || "N/A",
+              trapped: meta.info.Trapped || "N/A",
+              linearized: pdfDoc.loadingParams?.disableRange
+                ? false
+                : pdfInfo.IsLinearized || false,
+              security: {
+                encrypted: meta.info.IsEncrypted || false,
+                permissions: permissions
+                  ? permissionFlags
+                  : "No restrictions or unknown",
+              },
+              features: {
+                hasBookmarks,
+                hasJavaScript,
+                hasAttachments,
+                attachmentCount: hasAttachments ? attachmentCount : 0,
+              },
+            };
+            metadataOutput.textContent = JSON.stringify(info, null, 2);
+            downloadBtn.disabled = false;
+            copyBtn.disabled = false;
+          } catch (err) {
+            alert("Error reading PDF: " + err.message);
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      });
+
+      copyBtn.addEventListener("click", () => {
+        const text = metadataOutput.textContent;
+        if (!text) return;
+        navigator.clipboard.writeText(text).catch((err) => {
+          alert("Could not copy: " + err);
+        });
+      });
+
+      downloadBtn.addEventListener("click", () => {
+        const data = metadataOutput.textContent;
+        const blob = new Blob([data], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "metadata.json";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      });
+
+      clearBtn.addEventListener("click", () => {
+        metadataOutput.textContent = "";
+        fileInput.value = "";
+        downloadBtn.disabled = true;
+        copyBtn.disabled = true;
+      });
+    </script>
+  </head>
+  <body>
+    <a href="index.html" class="back-link">← Back to Browser Tools</a>
+
+    <h1>PDF Metadata Viewer</h1>
+    <div class="controls">
+      <div>
+        <label for="fileInput" class="btn primary">Load PDF</label>
+        <input type="file" id="fileInput" accept="application/pdf" />
+      </div>
+      <button class="btn secondary" id="clearBtn">Clear</button>
+    </div>
+    <div class="panel" id="metadataPanel">
+      <h2>Metadata</h2>
+      <pre id="metadataOutput"></pre>
+      <div class="info">
+        Upload a PDF file to extract and view its metadata information including
+        title, author, creation date, and more.
+      </div>
+      <div class="actions">
+        <button class="btn primary" id="downloadBtn" disabled>
+          Download JSON
+        </button>
+        <button class="btn primary" id="copyBtn" disabled>
+          Copy to Clipboard
+        </button>
+      </div>
+    </div>
+  </body>
+</html>

@@ -21,6 +21,7 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 
 ### Text and documents
 
+- **[PDF Metadata Viewer](pdf-metadata.html)** — extract and view PDF metadata including title, author, dates, permissions, and security settings
 - **[Text Diff Tool](text-diff.html)** — compare two text blocks and highlight added and removed content
 
 ### Maps and spatial data
