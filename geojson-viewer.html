@@ -191,12 +191,12 @@
         border-radius: 4px;
         overflow: hidden;
       }
-      .feature-type-section .properties-table {
+      .table-content {
         max-height: 500px;
         transition: max-height 0.3s ease;
         overflow: auto;
       }
-      .feature-type-section.collapsed .properties-table {
+      .table-content.collapsed {
         max-height: 0;
         overflow: hidden;
       }
@@ -491,13 +491,17 @@
             const heading = document.createElement("h3");
             heading.textContent = `${type} (${featuresByType[type].length})`;
 
+            section.appendChild(heading);
+
+            // Create table content wrapper
+            const tableContent = document.createElement("div");
+            tableContent.className = "table-content";
+
             // Add click handler to toggle collapse
             heading.addEventListener("click", () => {
-              section.classList.toggle("collapsed");
+              tableContent.classList.toggle("collapsed");
               heading.classList.toggle("collapsed");
             });
-
-            section.appendChild(heading);
 
             const features = featuresByType[type];
 
@@ -586,7 +590,8 @@
             });
 
             table.appendChild(tbody);
-            section.appendChild(table);
+            tableContent.appendChild(table);
+            section.appendChild(tableContent);
             propertiesDisplay.appendChild(section);
           });
       }
