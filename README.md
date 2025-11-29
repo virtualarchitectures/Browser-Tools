@@ -17,6 +17,7 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 
 ### Image and media
 
+- **[EXIF Data Viewer](exif-viewer.html)** — extract and view EXIF metadata from photos including camera settings, GPS location, and timestamps
 - **[Pixel Coordinates](pixel-coords.html)** — click on images to capture and record pixel coordinates
 
 ### Text and documents
