@@ -166,12 +166,26 @@
                 text-decoration: underline;
             }
             .info {
-                font-size: 13px;
                 color: #586069;
                 margin-bottom: 12px;
             }
-            .preview-container {
+            .media-container {
+                display: flex;
+                gap: 16px;
                 margin-bottom: 16px;
+                flex-wrap: wrap;
+            }
+            .preview-container {
+                flex: 1;
+                min-width: 300px;
+                display: none;
+            }
+            .preview-container h2 {
+                margin-top: 0;
+                margin-bottom: 12px;
+                font-size: 20px;
+                font-weight: 600;
+                color: #24292e;
                 text-align: center;
             }
             .preview-container img {
@@ -180,9 +194,12 @@
                 border-radius: 6px;
                 border: 1px solid #e1e4e8;
                 background: #ffffff;
+                display: block;
+                margin: 0 auto;
             }
             .map-container {
-                margin-bottom: 16px;
+                flex: 1;
+                min-width: 300px;
                 display: none;
             }
             .map-container h2 {
@@ -191,6 +208,7 @@
                 font-size: 20px;
                 font-weight: 600;
                 color: #24292e;
+                text-align: center;
             }
             #map {
                 height: 400px;
@@ -548,17 +566,16 @@
             <button class="btn secondary" id="clearBtn">Clear</button>
         </div>
 
-        <div
-            class="preview-container"
-            id="previewContainer"
-            style="display: none"
-        >
-            <img id="imagePreview" alt="Image preview" />
-        </div>
+        <div class="media-container">
+            <div class="preview-container" id="previewContainer">
+                <h2>Image</h2>
+                <img id="imagePreview" alt="Image preview" />
+            </div>
 
-        <div class="map-container" id="mapContainer">
-            <h2>Location</h2>
-            <div id="map"></div>
+            <div class="map-container" id="mapContainer">
+                <h2>Location</h2>
+                <div id="map"></div>
+            </div>
         </div>
 
         <div class="panel">
