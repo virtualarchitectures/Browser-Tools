@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>EXIF Data Viewer</title>
+        <style>
+            * {
+                box-sizing: border-box;
+            }
+            body {
+                font-family:
+                    Helvetica,
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    Arial,
+                    sans-serif;
+                line-height: 1.6;
+                max-width: 980px;
+                margin: 0 auto;
+                padding: 20px;
+                color: #24292e;
+                background: #ffffff;
+            }
+            h1 {
+                border-bottom: 1px solid #eaecef;
+                padding-bottom: 0.3em;
+                margin-top: 0;
+                font-size: 32px;
+                font-weight: 600;
+            }
+            .controls {
+                display: flex;
+                gap: 8px;
+                align-items: center;
+                margin-bottom: 16px;
+                flex-wrap: wrap;
+                justify-content: space-between;
+            }
+            input[type="file"] {
+                font-size: 16px;
+                font-family:
+                    Helvetica,
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    Arial,
+                    sans-serif;
+                color: transparent;
+                width: auto;
+                display: none;
+            }
+            input[type="file"]::file-selector-button {
+                margin-right: 0;
+                padding: 6px 12px;
+                background: #fafbfc;
+                color: #24292e;
+                border: 1px solid rgba(27, 31, 35, 0.15);
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 14px;
+                font-family:
+                    Helvetica,
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    Arial,
+                    sans-serif;
+            }
+            input[type="file"]::file-selector-button:hover {
+                background: #f3f4f6;
+            }
+            .btn {
+                background: #fafbfc;
+                color: #24292e;
+                padding: 8px 12px;
+                border-radius: 6px;
+                border: 1px solid rgba(27, 31, 35, 0.15);
+                cursor: pointer;
+                font-size: 14px;
+                line-height: 20px;
+                text-decoration: none;
+                font-family:
+                    Helvetica,
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    Arial,
+                    sans-serif;
+            }
+            .btn:hover {
+                background: #f3f4f6;
+            }
+            .btn.primary {
+                background: #0366d6;
+                color: #fff;
+                border: 1px solid rgba(27, 31, 35, 0.15);
+            }
+            .btn.primary:hover {
+                background: #0256c5;
+            }
+            .btn.secondary {
+                background: #fafbfc;
+                color: #24292e;
+                border: 1px solid rgba(27, 31, 35, 0.15);
+            }
+            .btn.secondary:hover {
+                background: #f3f4f6;
+            }
+            .btn:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+            .btn.secondary:disabled:hover {
+                background: #fafbfc;
+            }
+            .btn.primary:disabled:hover {
+                background: #0366d6;
+            }
+            .panel {
+                background: #f6f8fa;
+                padding: 16px;
+                border-radius: 6px;
+                border: 1px solid #e1e4e8;
+                margin-bottom: 16px;
+            }
+            .panel h2 {
+                margin-top: 0;
+                margin-bottom: 12px;
+                font-size: 20px;
+                font-weight: 600;
+                color: #24292e;
+            }
+            .panel pre {
+                background: #ffffff;
+                padding: 12px;
+                overflow-x: auto;
+                border-radius: 6px;
+                border: 1px solid #e1e4e8;
+                font-family:
+                    "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
+                    monospace;
+                font-size: 14px;
+                color: #24292e;
+                margin: 0;
+                min-height: 250px;
+            }
+            .actions {
+                margin-top: 12px;
+                display: flex;
+                gap: 8px;
+            }
+            label.btn {
+                display: inline-block;
+                margin: 0;
+            }
+            .back-link {
+                display: inline-block;
+                margin-bottom: 16px;
+                color: #0366d6;
+                text-decoration: none;
+                font-size: 14px;
+            }
+            .back-link:hover {
+                text-decoration: underline;
+            }
+            .info {
+                font-size: 13px;
+                color: #586069;
+                margin-bottom: 12px;
+            }
+            .preview-container {
+                margin-bottom: 16px;
+                text-align: center;
+            }
+            .preview-container img {
+                max-width: 100%;
+                max-height: 400px;
+                border-radius: 6px;
+                border: 1px solid #e1e4e8;
+                background: #ffffff;
+            }
+        </style>
+        <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
+        <script type="module">
+            const fileInput = document.getElementById("fileInput");
+            const exifOutput = document.getElementById("exifOutput");
+            const copyBtn = document.getElementById("copyBtn");
+            const downloadBtn = document.getElementById("downloadBtn");
+            const clearBtn = document.getElementById("clearBtn");
+            const previewContainer =
+                document.getElementById("previewContainer");
+            const imagePreview = document.getElementById("imagePreview");
+
+            const formatFileSize = (bytes) => {
+                if (bytes === 0) return "0 Bytes";
+                const k = 1024;
+                const sizes = ["Bytes", "KB", "MB", "GB"];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return (
+                    Math.round((bytes / Math.pow(k, i)) * 100) / 100 +
+                    " " +
+                    sizes[i]
+                );
+            };
+
+            const formatDate = (dateString) => {
+                if (!dateString) return "N/A";
+                // EXIF date format: "YYYY:MM:DD HH:MM:SS"
+                const parts = dateString.split(" ");
+                if (parts.length === 2) {
+                    const datePart = parts[0].replace(/:/g, "-");
+                    return `${datePart} ${parts[1]}`;
+                }
+                return dateString;
+            };
+
+            const extractExifData = (img, file) => {
+                return new Promise((resolve) => {
+                    EXIF.getData(img, function () {
+                        const allTags = EXIF.getAllTags(this);
+
+                        // Basic file info
+                        const fileInfo = {
+                            fileName: file.name,
+                            fileSize: formatFileSize(file.size),
+                            fileSizeBytes: file.size,
+                            fileType: file.type,
+                            lastModified: new Date(
+                                file.lastModified,
+                            ).toISOString(),
+                        };
+
+                        // Image dimensions
+                        const imageInfo = {
+                            width: img.naturalWidth,
+                            height: img.naturalHeight,
+                            aspectRatio: (
+                                img.naturalWidth / img.naturalHeight
+                            ).toFixed(2),
+                        };
+
+                        // Camera info
+                        const cameraInfo = {
+                            make: allTags.Make || "N/A",
+                            model: allTags.Model || "N/A",
+                            software: allTags.Software || "N/A",
+                            orientation: allTags.Orientation || "N/A",
+                        };
+
+                        // Photo settings
+                        const photoSettings = {
+                            dateTime: formatDate(allTags.DateTime) || "N/A",
+                            dateTimeOriginal:
+                                formatDate(allTags.DateTimeOriginal) || "N/A",
+                            dateTimeDigitized:
+                                formatDate(allTags.DateTimeDigitized) || "N/A",
+                            exposureTime: allTags.ExposureTime
+                                ? `${allTags.ExposureTime}s`
+                                : "N/A",
+                            fNumber: allTags.FNumber
+                                ? `f/${allTags.FNumber}`
+                                : "N/A",
+                            iso: allTags.ISOSpeedRatings || "N/A",
+                            focalLength: allTags.FocalLength
+                                ? `${allTags.FocalLength}mm`
+                                : "N/A",
+                            focalLengthIn35mm: allTags.FocalLengthIn35mmFilm
+                                ? `${allTags.FocalLengthIn35mmFilm}mm`
+                                : "N/A",
+                            flash:
+                                allTags.Flash !== undefined
+                                    ? allTags.Flash
+                                    : "N/A",
+                            whiteBalance:
+                                allTags.WhiteBalance !== undefined
+                                    ? allTags.WhiteBalance
+                                    : "N/A",
+                            exposureProgram:
+                                allTags.ExposureProgram !== undefined
+                                    ? allTags.ExposureProgram
+                                    : "N/A",
+                            meteringMode:
+                                allTags.MeteringMode !== undefined
+                                    ? allTags.MeteringMode
+                                    : "N/A",
+                            exposureBias:
+                                allTags.ExposureBiasValue !== undefined
+                                    ? allTags.ExposureBiasValue
+                                    : "N/A",
+                            shutterSpeed:
+                                allTags.ShutterSpeedValue !== undefined
+                                    ? allTags.ShutterSpeedValue
+                                    : "N/A",
+                            aperture:
+                                allTags.ApertureValue !== undefined
+                                    ? allTags.ApertureValue
+                                    : "N/A",
+                            brightness:
+                                allTags.BrightnessValue !== undefined
+                                    ? allTags.BrightnessValue
+                                    : "N/A",
+                            colorSpace:
+                                allTags.ColorSpace !== undefined
+                                    ? allTags.ColorSpace
+                                    : "N/A",
+                        };
+
+                        // GPS info
+                        const gpsInfo = {
+                            latitude: allTags.GPSLatitude || "N/A",
+                            latitudeRef: allTags.GPSLatitudeRef || "N/A",
+                            longitude: allTags.GPSLongitude || "N/A",
+                            longitudeRef: allTags.GPSLongitudeRef || "N/A",
+                            altitude: allTags.GPSAltitude || "N/A",
+                            altitudeRef: allTags.GPSAltitudeRef || "N/A",
+                            timestamp: allTags.GPSTimeStamp || "N/A",
+                            datestamp: allTags.GPSDateStamp || "N/A",
+                        };
+
+                        // Additional metadata
+                        const additionalInfo = {
+                            imageDescription: allTags.ImageDescription || "N/A",
+                            artist: allTags.Artist || "N/A",
+                            copyright: allTags.Copyright || "N/A",
+                            userComment: allTags.UserComment || "N/A",
+                            pixelXDimension: allTags.PixelXDimension || "N/A",
+                            pixelYDimension: allTags.PixelYDimension || "N/A",
+                            xResolution: allTags.XResolution || "N/A",
+                            yResolution: allTags.YResolution || "N/A",
+                            resolutionUnit: allTags.ResolutionUnit || "N/A",
+                            compression: allTags.Compression || "N/A",
+                            photometricInterpretation:
+                                allTags.PhotometricInterpretation || "N/A",
+                        };
+
+                        const result = {
+                            fileInfo,
+                            imageInfo,
+                            cameraInfo,
+                            photoSettings,
+                            gpsInfo,
+                            additionalInfo,
+                            rawExifData: allTags,
+                        };
+
+                        resolve(result);
+                    });
+                });
+            };
+
+            fileInput.addEventListener("change", async () => {
+                const file = fileInput.files[0];
+                if (!file) return;
+
+                // Check if file is an image
+                if (!file.type.startsWith("image/")) {
+                    alert("Please select an image file.");
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = async function (e) {
+                    const img = new Image();
+                    img.onload = async function () {
+                        try {
+                            const exifData = await extractExifData(img, file);
+                            exifOutput.textContent = JSON.stringify(
+                                exifData,
+                                null,
+                                2,
+                            );
+                            downloadBtn.disabled = false;
+                            copyBtn.disabled = false;
+
+                            // Show image preview
+                            imagePreview.src = e.target.result;
+                            previewContainer.style.display = "block";
+                        } catch (err) {
+                            alert("Error reading EXIF data: " + err.message);
+                        }
+                    };
+                    img.onerror = function () {
+                        alert("Error loading image.");
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+
+            copyBtn.addEventListener("click", () => {
+                const text = exifOutput.textContent;
+                if (!text) return;
+                navigator.clipboard.writeText(text).catch((err) => {
+                    alert("Could not copy: " + err);
+                });
+            });
+
+            downloadBtn.addEventListener("click", () => {
+                const data = exifOutput.textContent;
+                const blob = new Blob([data], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "exif-data.json";
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
+
+            clearBtn.addEventListener("click", () => {
+                exifOutput.textContent = "";
+                fileInput.value = "";
+                downloadBtn.disabled = true;
+                copyBtn.disabled = true;
+                imagePreview.src = "";
+                previewContainer.style.display = "none";
+            });
+        </script>
+    </head>
+    <body>
+        <a href="index.html" class="back-link">← Back to Browser Tools</a>
+
+        <h1>EXIF Data Viewer</h1>
+        <div class="controls">
+            <div>
+                <label for="fileInput" class="btn primary">Load Image</label>
+                <input type="file" id="fileInput" accept="image/*" />
+            </div>
+            <button class="btn secondary" id="clearBtn">Clear</button>
+        </div>
+
+        <div
+            class="preview-container"
+            id="previewContainer"
+            style="display: none"
+        >
+            <img id="imagePreview" alt="Image preview" />
+        </div>
+
+        <div class="panel">
+            <h2>EXIF Data</h2>
+            <pre id="exifOutput"></pre>
+            <div class="info">
+                Upload an image file (JPEG, PNG, TIFF, etc.) to extract and view
+                its EXIF metadata including camera settings, GPS coordinates,
+                timestamps, and more.
+            </div>
+            <div class="actions">
+                <button class="btn primary" id="downloadBtn" disabled>
+                    Download JSON
+                </button>
+                <button class="btn primary" id="copyBtn" disabled>
+                    Copy to Clipboard
+                </button>
+            </div>
+        </div>
+    </body>
+</html>
