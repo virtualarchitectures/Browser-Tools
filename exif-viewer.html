@@ -181,7 +181,34 @@
                 border: 1px solid #e1e4e8;
                 background: #ffffff;
             }
+            .map-container {
+                margin-bottom: 16px;
+                display: none;
+            }
+            .map-container h2 {
+                margin-top: 0;
+                margin-bottom: 12px;
+                font-size: 20px;
+                font-weight: 600;
+                color: #24292e;
+            }
+            #map {
+                height: 400px;
+                border-radius: 6px;
+                border: 1px solid #e1e4e8;
+            }
         </style>
+        <link
+            rel="stylesheet"
+            href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+            integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+            crossorigin=""
+        />
+        <script
+            src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+            crossorigin=""
+        ></script>
         <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
         <script type="module">
             const fileInput = document.getElementById("fileInput");
@@ -192,6 +219,10 @@
             const previewContainer =
                 document.getElementById("previewContainer");
             const imagePreview = document.getElementById("imagePreview");
+            const mapContainer = document.getElementById("mapContainer");
+            const mapElement = document.getElementById("map");
+            let map = null;
+            let marker = null;
 
             const formatFileSize = (bytes) => {
                 if (bytes === 0) return "0 Bytes";
@@ -214,6 +245,72 @@
                     return `${datePart} ${parts[1]}`;
                 }
                 return dateString;
+            };
+
+            const convertDMSToDD = (degrees, minutes, seconds, direction) => {
+                let dd = degrees + minutes / 60 + seconds / 3600;
+                if (direction === "S" || direction === "W") {
+                    dd = dd * -1;
+                }
+                return dd;
+            };
+
+            const parseGPSCoordinates = (gpsData) => {
+                if (
+                    !gpsData.latitude ||
+                    gpsData.latitude === "N/A" ||
+                    !gpsData.longitude ||
+                    gpsData.longitude === "N/A"
+                ) {
+                    return null;
+                }
+
+                const lat = convertDMSToDD(
+                    gpsData.latitude[0],
+                    gpsData.latitude[1],
+                    gpsData.latitude[2],
+                    gpsData.latitudeRef,
+                );
+                const lng = convertDMSToDD(
+                    gpsData.longitude[0],
+                    gpsData.longitude[1],
+                    gpsData.longitude[2],
+                    gpsData.longitudeRef,
+                );
+
+                return { lat, lng };
+            };
+
+            const initMap = (lat, lng, fileName) => {
+                mapContainer.style.display = "block";
+
+                // Use setTimeout to ensure the container is visible before initializing
+                setTimeout(() => {
+                    if (map) {
+                        map.remove();
+                    }
+
+                    map = L.map("map").setView([lat, lng], 13);
+
+                    L.tileLayer(
+                        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                        {
+                            attribution:
+                                '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                            maxZoom: 19,
+                        },
+                    ).addTo(map);
+
+                    marker = L.marker([lat, lng])
+                        .addTo(map)
+                        .bindPopup(
+                            `<b>${fileName}</b><br>Lat: ${lat.toFixed(6)}<br>Lng: ${lng.toFixed(6)}`,
+                        )
+                        .openPopup();
+
+                    // Invalidate size to ensure proper rendering
+                    map.invalidateSize();
+                }, 100);
             };
 
             const extractExifData = (img, file) => {
@@ -377,6 +474,20 @@
                             // Show image preview
                             imagePreview.src = e.target.result;
                             previewContainer.style.display = "block";
+
+                            // Show map if GPS coordinates are available
+                            const coords = parseGPSCoordinates(
+                                exifData.gpsInfo,
+                            );
+                            if (coords) {
+                                initMap(coords.lat, coords.lng, file.name);
+                            } else {
+                                mapContainer.style.display = "none";
+                                if (map) {
+                                    map.remove();
+                                    map = null;
+                                }
+                            }
                         } catch (err) {
                             alert("Error reading EXIF data: " + err.message);
                         }
@@ -417,6 +528,11 @@
                 copyBtn.disabled = true;
                 imagePreview.src = "";
                 previewContainer.style.display = "none";
+                mapContainer.style.display = "none";
+                if (map) {
+                    map.remove();
+                    map = null;
+                }
             });
         </script>
     </head>
@@ -438,6 +554,11 @@
             style="display: none"
         >
             <img id="imagePreview" alt="Image preview" />
+        </div>
+
+        <div class="map-container" id="mapContainer">
+            <h2>Location</h2>
+            <div id="map"></div>
         </div>
 
         <div class="panel">
