@@ -1,0 +1,1700 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Favicon Generator</title>
+        <style>
+            * {
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family:
+                    Helvetica,
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    Arial,
+                    sans-serif;
+                line-height: 1.6;
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 20px;
+                color: #24292e;
+                background: #ffffff;
+            }
+
+            h1 {
+                border-bottom: 1px solid #eaecef;
+                padding-bottom: 0.3em;
+                margin-top: 0;
+                font-size: 32px;
+                font-weight: 600;
+                margin-bottom: 40px;
+            }
+
+            .back-link {
+                display: inline-block;
+                margin-bottom: 16px;
+                color: #0366d6;
+                text-decoration: none;
+                font-size: 14px;
+            }
+
+            .back-link:hover {
+                text-decoration: underline;
+            }
+
+            input[type="file"] {
+                font-size: 16px;
+                font-family:
+                    Helvetica,
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    Arial,
+                    sans-serif;
+                color: transparent;
+                width: auto;
+                display: none;
+            }
+
+            .btn {
+                background: #0366d6;
+                color: #fff;
+                padding: 8px 12px;
+                border-radius: 6px;
+                border: 1px solid rgba(27, 31, 35, 0.15);
+                cursor: pointer;
+                font-size: 14px;
+                line-height: 20px;
+                text-decoration: none;
+                font-family:
+                    Helvetica,
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    Arial,
+                    sans-serif;
+                display: inline-block;
+            }
+
+            .btn:hover {
+                background: #0256c5;
+            }
+
+            .btn.secondary {
+                background: #fafbfc;
+                color: #24292e;
+                border: 1px solid rgba(27, 31, 35, 0.15);
+            }
+
+            .btn.secondary:hover {
+                background: #f3f4f6;
+            }
+
+            .small {
+                font-size: 14px;
+                color: #24292e;
+                margin-left: 8px;
+                font-weight: 500;
+            }
+
+            .options {
+                margin-top: 12px;
+                margin-bottom: 12px;
+                padding: 12px;
+                background: #ffffff;
+                border-radius: 6px;
+                border: 1px solid #e1e4e8;
+                display: flex;
+                align-items: center;
+                gap: 0;
+            }
+
+            .preview-section {
+                margin-bottom: 40px;
+            }
+
+            .preview-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 20px;
+                margin-top: 20px;
+            }
+
+            .preview-card {
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                padding: 20px;
+            }
+
+            .preview-card h3 {
+                margin-bottom: 15px;
+                color: #333;
+                font-size: 1.1em;
+            }
+
+            .preview-display {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+                border-radius: 6px;
+                margin-bottom: 15px;
+                min-height: 100px;
+            }
+
+            .light-theme {
+                background: #ffffff;
+                border: 1px solid #e0e0e0;
+            }
+
+            .dark-theme {
+                background: #1a1a1a;
+                border: 1px solid #333;
+            }
+
+            .preview-display img {
+                max-width: 64px;
+                max-height: 64px;
+            }
+
+            .section {
+                margin-bottom: 40px;
+                padding: 30px;
+                border: 1px solid #e0e0e0;
+                border-radius: 8px;
+            }
+
+            .icons-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 20px;
+                margin-bottom: 40px;
+            }
+
+            .icons-grid .section {
+                margin-bottom: 0;
+            }
+
+            .apple-layout {
+                display: grid;
+                grid-template-columns: auto 1fr;
+                gap: 30px;
+                align-items: start;
+                margin-top: 20px;
+            }
+
+            .apple-preview-wrapper {
+                flex-shrink: 0;
+            }
+
+            .apple-controls-wrapper {
+                flex: 1;
+            }
+
+            .manifest-layout {
+                display: grid;
+                grid-template-columns: auto 1fr;
+                gap: 30px;
+                align-items: start;
+                margin-top: 20px;
+            }
+
+            .manifest-preview-wrapper {
+                flex-shrink: 0;
+            }
+
+            .manifest-controls-wrapper {
+                flex: 1;
+            }
+
+            .android-preview-single {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                border-radius: 12px;
+                padding: 20px;
+                text-align: center;
+                display: inline-block;
+            }
+
+            .android-preview-single h4 {
+                margin-bottom: 15px;
+                color: #555;
+                font-size: 0.9em;
+            }
+
+            .android-icon-display {
+                display: inline-block;
+            }
+
+            .android-icon-display .icon-circle {
+                width: 120px;
+                height: 120px;
+                border-radius: 50%;
+                background: #000000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0 auto 8px;
+            }
+
+            .android-icon-display img {
+                width: 100%;
+                height: 100%;
+                border-radius: 50%;
+                display: block;
+            }
+
+            .android-icon-display span {
+                font-size: 13px;
+                color: white;
+                display: block;
+                text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            }
+
+            .section h2 {
+                margin-bottom: 10px;
+                color: #333;
+                font-size: 1.5em;
+            }
+
+            .section-description {
+                color: #666;
+                margin-bottom: 20px;
+                font-size: 0.95em;
+            }
+
+            .option-group {
+                margin-bottom: 20px;
+            }
+
+            .radio-option {
+                display: block;
+                margin-bottom: 15px;
+            }
+
+            .radio-option input[type="radio"] {
+                margin-right: 8px;
+            }
+
+            .radio-option label {
+                cursor: pointer;
+                font-size: 1em;
+            }
+
+            .controls {
+                margin-left: 28px;
+                margin-top: 10px;
+                padding: 15px;
+                background: #f9f9f9;
+                border-radius: 6px;
+                display: none;
+            }
+
+            .controls.active {
+                display: block;
+            }
+
+            .control-row {
+                margin-bottom: 15px;
+            }
+
+            .control-row label {
+                display: inline-block;
+                min-width: 120px;
+                color: #555;
+                font-size: 0.95em;
+            }
+
+            .control-row input[type="range"] {
+                width: 200px;
+                vertical-align: middle;
+            }
+
+            .control-row input[type="color"] {
+                width: 50px;
+                height: 30px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                cursor: pointer;
+            }
+
+            .control-row input[type="text"] {
+                padding: 8px 12px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                font-size: 1em;
+                width: 300px;
+            }
+
+            .checkbox-option {
+                display: block;
+                margin-bottom: 10px;
+            }
+
+            .checkbox-option input[type="checkbox"] {
+                margin-right: 8px;
+            }
+
+            .checkbox-option label {
+                cursor: pointer;
+            }
+
+            .preview-container {
+                display: flex;
+                gap: 20px;
+                margin-top: 20px;
+            }
+
+            .preview-item {
+                flex: 1;
+                text-align: center;
+            }
+
+            .preview-item h4 {
+                margin-bottom: 10px;
+                color: #555;
+                font-size: 0.9em;
+            }
+
+            .preview-box {
+                padding: 20px;
+                border-radius: 8px;
+                min-height: 120px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .manifest-preview {
+                background: #f5f5f5;
+                border: 1px solid #ddd;
+                border-radius: 6px;
+                padding: 15px;
+                margin-top: 20px;
+                overflow-x: auto;
+            }
+
+            .manifest-preview pre {
+                margin: 0;
+                font-family: "Courier New", monospace;
+                font-size: 0.9em;
+                color: #333;
+            }
+
+            .download-section {
+                margin-top: 40px;
+                padding: 30px;
+                background: #f0f8ff;
+                border-radius: 8px;
+                text-align: center;
+            }
+
+            .download-btn {
+                display: inline-block;
+                padding: 15px 30px;
+                background: #28a745;
+                color: white;
+                border: none;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 1.1em;
+                transition: background 0.3s;
+            }
+
+            .download-btn:hover {
+                background: #218838;
+            }
+
+            .download-btn:disabled {
+                background: #ccc;
+                cursor: not-allowed;
+            }
+
+            .value-display {
+                display: inline-block;
+                min-width: 40px;
+                text-align: right;
+                color: #666;
+                font-size: 0.9em;
+            }
+
+            .apple-preview {
+                display: inline-block;
+                padding: 20px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                border-radius: 12px;
+            }
+
+            .apple-preview img {
+                display: block;
+                border-radius: 22.5%;
+            }
+
+            .android-preview {
+                display: flex;
+                gap: 20px;
+                margin-top: 20px;
+            }
+
+            .android-screen {
+                flex: 1;
+                background: #fff;
+                border: 1px solid #ddd;
+                border-radius: 12px;
+                padding: 15px;
+                text-align: center;
+            }
+
+            .android-screen h4 {
+                margin-bottom: 10px;
+                color: #555;
+                font-size: 0.9em;
+            }
+
+            .android-icon-grid {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+                padding: 20px;
+                border-radius: 8px;
+            }
+
+            .android-icon-item {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 5px;
+            }
+
+            .android-icon-item img {
+                width: 64px;
+                height: 64px;
+                border-radius: 50%;
+            }
+
+            .android-icon-item span {
+                font-size: 0.75em;
+                color: #666;
+            }
+
+            .hidden {
+                display: none;
+            }
+        </style>
+    </head>
+    <body>
+        <a href="index.html" class="back-link">← Back to Browser Tools</a>
+
+        <h1>Favicon generator</h1>
+
+        <!-- Upload Section -->
+        <div class="options">
+            <input
+                id="imageUpload"
+                type="file"
+                accept="image/*"
+                style="display: none"
+            />
+            <label for="imageUpload" class="btn">Browse</label>
+            <span id="file-status" class="small" style="margin-left: 8px"
+                >No file selected</span
+            >
+            <button
+                id="clearImage"
+                class="btn secondary"
+                style="margin-left: auto"
+            >
+                Clear image
+            </button>
+        </div>
+
+        <div id="mainContent">
+            <!-- Preview Section -->
+            <div class="preview-section">
+                <h2>Classic and SVG favicons</h2>
+                <div class="preview-grid">
+                    <div class="preview-card">
+                        <h3>Browser</h3>
+                        <h4
+                            style="
+                                color: #666;
+                                font-size: 0.9em;
+                                margin-bottom: 10px;
+                            "
+                        >
+                            Light theme
+                        </h4>
+                        <div class="preview-display light-theme">
+                            <img
+                                id="previewLight"
+                                src=""
+                                alt="Light theme preview"
+                            />
+                        </div>
+                        <h4
+                            style="
+                                color: #666;
+                                font-size: 0.9em;
+                                margin-bottom: 10px;
+                            "
+                        >
+                            Dark theme
+                        </h4>
+                        <div class="preview-display dark-theme">
+                            <img
+                                id="previewDark"
+                                src=""
+                                alt="Dark theme preview"
+                            />
+                        </div>
+                    </div>
+                    <div class="preview-card">
+                        <h3>Google Result Page</h3>
+                        <h4
+                            style="
+                                color: #666;
+                                font-size: 0.9em;
+                                margin-bottom: 10px;
+                            "
+                        >
+                            Light theme
+                        </h4>
+                        <div class="preview-display light-theme">
+                            <div style="text-align: left">
+                                <div
+                                    style="
+                                        display: flex;
+                                        align-items: center;
+                                        gap: 8px;
+                                        margin-bottom: 5px;
+                                    "
+                                >
+                                    <img
+                                        id="previewGoogleLight"
+                                        src=""
+                                        alt="Google preview"
+                                        style="
+                                            width: 26px;
+                                            height: 26px;
+                                            border-radius: 50%;
+                                        "
+                                    />
+                                    <div>
+                                        <div
+                                            style="
+                                                font-size: 0.85em;
+                                                color: #666;
+                                            "
+                                        >
+                                            Example
+                                        </div>
+                                        <div
+                                            style="
+                                                font-size: 0.75em;
+                                                color: #999;
+                                            "
+                                        >
+                                            https://example.com
+                                        </div>
+                                    </div>
+                                </div>
+                                <div
+                                    style="
+                                        font-size: 1.1em;
+                                        color: #1a0dab;
+                                        margin-bottom: 3px;
+                                    "
+                                >
+                                    Lorem Ipsum
+                                </div>
+                                <div style="font-size: 0.85em; color: #545454">
+                                    Lorem ipsum dolor sit amet, consectetur
+                                    adipiscing elit...
+                                </div>
+                            </div>
+                        </div>
+                        <h4
+                            style="
+                                color: #666;
+                                font-size: 0.9em;
+                                margin-bottom: 10px;
+                            "
+                        >
+                            Dark theme
+                        </h4>
+                        <div class="preview-display dark-theme">
+                            <div style="text-align: left">
+                                <div
+                                    style="
+                                        display: flex;
+                                        align-items: center;
+                                        gap: 8px;
+                                        margin-bottom: 5px;
+                                    "
+                                >
+                                    <img
+                                        id="previewGoogleDark"
+                                        src=""
+                                        alt="Google preview"
+                                        style="
+                                            width: 26px;
+                                            height: 26px;
+                                            border-radius: 50%;
+                                        "
+                                    />
+                                    <div>
+                                        <div
+                                            style="
+                                                font-size: 0.85em;
+                                                color: #bdc1c6;
+                                            "
+                                        >
+                                            Example
+                                        </div>
+                                        <div
+                                            style="
+                                                font-size: 0.75em;
+                                                color: #999;
+                                            "
+                                        >
+                                            https://example.com
+                                        </div>
+                                    </div>
+                                </div>
+                                <div
+                                    style="
+                                        font-size: 1.1em;
+                                        color: #8ab4f8;
+                                        margin-bottom: 3px;
+                                    "
+                                >
+                                    Lorem Ipsum
+                                </div>
+                                <div style="font-size: 0.85em; color: #bdc1c6">
+                                    Lorem ipsum dolor sit amet, consectetur
+                                    adipiscing elit...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Regular and Dark Icon Sections Side by Side -->
+            <div class="icons-grid">
+                <!-- Regular Icon Section -->
+                <div class="section">
+                    <h2>Regular icon</h2>
+                    <p class="section-description">
+                        The regular icon is displayed in most situations.
+                    </p>
+
+                    <div class="option-group">
+                        <div class="radio-option">
+                            <input
+                                type="radio"
+                                id="regularAsIs"
+                                name="regularIcon"
+                                value="asis"
+                                checked
+                            />
+                            <label for="regularAsIs">Use the icon as is</label>
+                        </div>
+                        <div class="radio-option">
+                            <input
+                                type="radio"
+                                id="regularWithBg"
+                                name="regularIcon"
+                                value="withbg"
+                            />
+                            <label for="regularWithBg"
+                                >Add a plain background and margins</label
+                            >
+                            <div id="regularControls" class="controls">
+                                <div class="control-row">
+                                    <label for="regularCorners"
+                                        >Corners radius</label
+                                    >
+                                    <input
+                                        type="range"
+                                        id="regularCorners"
+                                        min="0"
+                                        max="50"
+                                        value="0"
+                                    />
+                                    <span
+                                        class="value-display"
+                                        id="regularCornersValue"
+                                        >0%</span
+                                    >
+                                </div>
+                                <div class="control-row">
+                                    <label for="regularColor">Color</label>
+                                    <input
+                                        type="color"
+                                        id="regularColor"
+                                        value="#ffffff"
+                                    />
+                                </div>
+                                <div class="control-row">
+                                    <label for="regularMargin"
+                                        >Image size</label
+                                    >
+                                    <input
+                                        type="range"
+                                        id="regularMargin"
+                                        min="20"
+                                        max="100"
+                                        value="100"
+                                    />
+                                    <span
+                                        class="value-display"
+                                        id="regularMarginValue"
+                                        >100%</span
+                                    >
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dark Icon Section -->
+                <div class="section">
+                    <h2>Dark icon</h2>
+                    <p class="section-description">
+                        In dark themes, your icon is different.
+                    </p>
+
+                    <div class="option-group">
+                        <div class="radio-option">
+                            <input
+                                type="radio"
+                                id="darkAsIs"
+                                name="darkIcon"
+                                value="asis"
+                                checked
+                            />
+                            <label for="darkAsIs">Use the icon as is</label>
+                        </div>
+                        <div class="radio-option">
+                            <input
+                                type="radio"
+                                id="darkWithBg"
+                                name="darkIcon"
+                                value="withbg"
+                            />
+                            <label for="darkWithBg"
+                                >Add a plain background and margins</label
+                            >
+                            <div id="darkControls" class="controls">
+                                <div class="control-row">
+                                    <label for="darkCorners"
+                                        >Corners radius</label
+                                    >
+                                    <input
+                                        type="range"
+                                        id="darkCorners"
+                                        min="0"
+                                        max="50"
+                                        value="0"
+                                    />
+                                    <span
+                                        class="value-display"
+                                        id="darkCornersValue"
+                                        >0%</span
+                                    >
+                                </div>
+                                <div class="control-row">
+                                    <label for="darkColor">Color</label>
+                                    <input
+                                        type="color"
+                                        id="darkColor"
+                                        value="#ffffff"
+                                    />
+                                </div>
+                                <div class="control-row">
+                                    <label for="darkMargin">Image size</label>
+                                    <input
+                                        type="range"
+                                        id="darkMargin"
+                                        min="20"
+                                        max="100"
+                                        value="100"
+                                    />
+                                    <span
+                                        class="value-display"
+                                        id="darkMarginValue"
+                                        >100%</span
+                                    >
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Apple Touch Icon Section -->
+            <div class="section">
+                <h2>Apple Touch Icon</h2>
+
+                <div class="apple-layout">
+                    <div class="apple-preview-wrapper">
+                        <h4 style="margin-bottom: 10px; color: #555">
+                            iOS Preview
+                        </h4>
+                        <div class="apple-preview">
+                            <img
+                                id="applePreview"
+                                src=""
+                                alt="Apple icon preview"
+                                style="width: 120px; height: 120px"
+                            />
+                            <div
+                                id="appleAppName"
+                                style="
+                                    color: white;
+                                    font-size: 13px;
+                                    margin-top: 8px;
+                                    text-align: center;
+                                    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+                                "
+                            ></div>
+                        </div>
+                        <p
+                            style="
+                                margin-top: 10px;
+                                font-size: 0.85em;
+                                color: #666;
+                            "
+                        >
+                            If empty, iOS will use the page title
+                        </p>
+                    </div>
+
+                    <div class="apple-controls-wrapper">
+                        <div class="option-group">
+                            <div class="radio-option">
+                                <input
+                                    type="radio"
+                                    id="appleAsIs"
+                                    name="appleIcon"
+                                    value="asis"
+                                    checked
+                                />
+                                <label for="appleAsIs"
+                                    >Use the icon as is</label
+                                >
+                            </div>
+                            <div class="radio-option">
+                                <input
+                                    type="radio"
+                                    id="appleWithBg"
+                                    name="appleIcon"
+                                    value="withbg"
+                                />
+                                <label for="appleWithBg"
+                                    >Add a plain background and margins</label
+                                >
+                                <div id="appleControls" class="controls">
+                                    <div class="control-row">
+                                        <label for="appleColor">Color</label>
+                                        <input
+                                            type="color"
+                                            id="appleColor"
+                                            value="#ffffff"
+                                        />
+                                    </div>
+                                    <div class="control-row">
+                                        <label for="appleMargin"
+                                            >Image size</label
+                                        >
+                                        <input
+                                            type="range"
+                                            id="appleMargin"
+                                            min="20"
+                                            max="100"
+                                            value="100"
+                                        />
+                                        <span
+                                            class="value-display"
+                                            id="appleMarginValue"
+                                            >100%</span
+                                        >
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="control-row" style="margin-top: 20px">
+                            <label for="appleName">App name</label>
+                            <input
+                                type="text"
+                                id="appleName"
+                                placeholder="MyWebSite"
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Web App Manifest Section -->
+            <div class="section">
+                <h2>Web app manifest</h2>
+
+                <div class="manifest-layout">
+                    <div class="manifest-preview-wrapper">
+                        <h4 style="margin-bottom: 10px; color: #555">
+                            Android Preview
+                        </h4>
+                        <div class="android-preview-single">
+                            <div class="android-icon-display">
+                                <div class="icon-circle">
+                                    <img
+                                        id="manifestPreview192"
+                                        src=""
+                                        alt="App icon"
+                                    />
+                                </div>
+                                <span id="manifestAppName1"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="manifest-controls-wrapper">
+                        <div class="option-group">
+                            <div class="radio-option">
+                                <input
+                                    type="radio"
+                                    id="manifestAsIs"
+                                    name="manifestIcon"
+                                    value="asis"
+                                    checked
+                                />
+                                <label for="manifestAsIs"
+                                    >Use the icon as is</label
+                                >
+                            </div>
+                            <div class="radio-option">
+                                <input
+                                    type="radio"
+                                    id="manifestWithBg"
+                                    name="manifestIcon"
+                                    value="withbg"
+                                />
+                                <label for="manifestWithBg"
+                                    >Add a plain background and margins</label
+                                >
+                                <div id="manifestControls" class="controls">
+                                    <div class="control-row">
+                                        <label for="manifestBgColor"
+                                            >Color</label
+                                        >
+                                        <input
+                                            type="color"
+                                            id="manifestBgColor"
+                                            value="#ffffff"
+                                        />
+                                    </div>
+                                    <div class="control-row">
+                                        <label for="manifestMargin"
+                                            >Image size</label
+                                        >
+                                        <input
+                                            type="range"
+                                            id="manifestMargin"
+                                            min="20"
+                                            max="100"
+                                            value="100"
+                                        />
+                                        <span
+                                            class="value-display"
+                                            id="manifestMarginValue"
+                                            >100%</span
+                                        >
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="control-row" style="margin-top: 20px">
+                            <label for="manifestName">Name</label>
+                            <input
+                                type="text"
+                                id="manifestName"
+                                placeholder="MyWebSite"
+                            />
+                        </div>
+                        <div class="control-row">
+                            <label for="manifestShortName">Short name</label>
+                            <input
+                                type="text"
+                                id="manifestShortName"
+                                placeholder="MySite"
+                            />
+                        </div>
+                        <div class="control-row">
+                            <label for="manifestThemeColor">Theme color</label>
+                            <input
+                                type="color"
+                                id="manifestThemeColor"
+                                value="#ffffff"
+                            />
+                        </div>
+                        <div class="control-row">
+                            <label for="manifestBgColorGlobal"
+                                >Background color</label
+                            >
+                            <input
+                                type="color"
+                                id="manifestBgColorGlobal"
+                                value="#ffffff"
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Manifest Code Section -->
+            <div class="section">
+                <h2>site.webmanifest</h2>
+                <div class="manifest-preview">
+                    <pre id="manifestCode">
+{
+  "name": "",
+  "short_name": "",
+  "icons": [
+    {
+      "src": "/web-app-manifest-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/web-app-manifest-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "theme_color": "#ffffff",
+  "background_color": "#ffffff",
+  "display": "standalone"
+}</pre
+                    >
+                </div>
+            </div>
+
+            <!-- Download Section -->
+            <div class="download-section">
+                <h2 style="margin-bottom: 20px">Ready to Download</h2>
+                <button id="downloadBtn" class="download-btn">
+                    Download Favicon Package
+                </button>
+            </div>
+        </div>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+        <script>
+            let originalImage = null;
+            const fileInput = document.getElementById("imageUpload");
+            const fileStatus = document.getElementById("file-status");
+
+            // Drag and drop on body
+            document.body.addEventListener("dragover", function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+
+            document.body.addEventListener("drop", function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const files = e.dataTransfer.files;
+                if (files.length > 0 && files[0].type.startsWith("image/")) {
+                    loadImageFromFile(files[0]);
+                }
+            });
+
+            // Paste image
+            document.addEventListener("paste", function (e) {
+                const items = e.clipboardData.items;
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].type.indexOf("image") !== -1) {
+                        const file = items[i].getAsFile();
+                        loadImageFromFile(file);
+                        break;
+                    }
+                }
+            });
+
+            function loadImageFromFile(file) {
+                fileStatus.textContent = file.name;
+                const reader = new FileReader();
+                reader.onload = function (event) {
+                    const img = new Image();
+                    img.onload = function () {
+                        originalImage = img;
+                        updateAllPreviews();
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+
+            // Create placeholder icon on page load
+            function createPlaceholderIcon() {
+                const canvas = document.createElement("canvas");
+                canvas.width = 128;
+                canvas.height = 128;
+                const ctx = canvas.getContext("2d");
+
+                // Transparent background (no background fill)
+
+                // Draw a simple icon shape
+                ctx.fillStyle = "#999";
+                ctx.beginPath();
+                ctx.arc(64, 64, 40, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Draw text
+                ctx.fillStyle = "#fff";
+                ctx.font = "bold 16px sans-serif";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText("ICON", 64, 64);
+
+                const img = new Image();
+                img.src = canvas.toDataURL("image/png");
+                return img;
+            }
+
+            // Initialize with placeholder
+            window.addEventListener("DOMContentLoaded", function () {
+                originalImage = createPlaceholderIcon();
+                originalImage.onload = function () {
+                    updateAllPreviews();
+                };
+            });
+
+            // Upload handler
+            fileInput.addEventListener("change", function (e) {
+                const file = e.target.files[0];
+                if (file) {
+                    loadImageFromFile(file);
+                }
+            });
+
+            // Clear image handler
+            document
+                .getElementById("clearImage")
+                .addEventListener("click", function () {
+                    originalImage = createPlaceholderIcon();
+                    originalImage.onload = function () {
+                        updateAllPreviews();
+                    };
+                    fileStatus.textContent = "No file selected";
+                    fileInput.value = "";
+                });
+
+            // Radio button handlers
+            document
+                .querySelectorAll('input[name="regularIcon"]')
+                .forEach((radio) => {
+                    radio.addEventListener("change", function () {
+                        document
+                            .getElementById("regularControls")
+                            .classList.toggle(
+                                "active",
+                                this.value === "withbg",
+                            );
+                        updateAllPreviews();
+                    });
+                });
+
+            document
+                .querySelectorAll('input[name="darkIcon"]')
+                .forEach((radio) => {
+                    radio.addEventListener("change", function () {
+                        document
+                            .getElementById("darkControls")
+                            .classList.toggle(
+                                "active",
+                                this.value === "withbg",
+                            );
+                        updateAllPreviews();
+                    });
+                });
+
+            document
+                .querySelectorAll('input[name="appleIcon"]')
+                .forEach((radio) => {
+                    radio.addEventListener("change", function () {
+                        document
+                            .getElementById("appleControls")
+                            .classList.toggle(
+                                "active",
+                                this.value === "withbg",
+                            );
+                        updateAllPreviews();
+                    });
+                });
+
+            document
+                .querySelectorAll('input[name="manifestIcon"]')
+                .forEach((radio) => {
+                    radio.addEventListener("change", function () {
+                        document
+                            .getElementById("manifestControls")
+                            .classList.toggle(
+                                "active",
+                                this.value === "withbg",
+                            );
+                        updateAllPreviews();
+                    });
+                });
+
+            // Range input handlers
+            ["regular", "dark", "apple", "manifest"].forEach((type) => {
+                const marginInput = document.getElementById(`${type}Margin`);
+                if (marginInput) {
+                    marginInput.addEventListener("input", function () {
+                        document.getElementById(
+                            `${type}MarginValue`,
+                        ).textContent = this.value + "%";
+                        updateAllPreviews();
+                    });
+                }
+            });
+
+            document
+                .getElementById("regularCorners")
+                .addEventListener("input", function () {
+                    document.getElementById("regularCornersValue").textContent =
+                        this.value + "%";
+                    updateAllPreviews();
+                });
+
+            document
+                .getElementById("darkCorners")
+                .addEventListener("input", function () {
+                    document.getElementById("darkCornersValue").textContent =
+                        this.value + "%";
+                    updateAllPreviews();
+                });
+
+            // Color and checkbox handlers
+            [
+                "regularColor",
+                "regularCorners",
+                "darkColor",
+                "darkCorners",
+                "appleColor",
+                "manifestBgColor",
+                "manifestThemeColor",
+                "manifestBgColorGlobal",
+            ].forEach((id) => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.addEventListener("input", updateAllPreviews);
+                    element.addEventListener("change", updateAllPreviews);
+                }
+            });
+
+            // Manifest text inputs
+            document
+                .getElementById("manifestName")
+                .addEventListener("input", function () {
+                    document.getElementById("manifestAppName1").textContent =
+                        this.value || "App";
+                    updateManifestPreview();
+                });
+
+            // Apple app name input
+            document
+                .getElementById("appleName")
+                .addEventListener("input", function () {
+                    document.getElementById("appleAppName").textContent =
+                        this.value;
+                });
+
+            document
+                .getElementById("manifestShortName")
+                .addEventListener("input", updateManifestPreview);
+
+            // Initialize sliders on page load (moved into main DOMContentLoaded above)
+
+            function createCanvas(size, applySettings, type) {
+                const canvas = document.createElement("canvas");
+                canvas.width = size;
+                canvas.height = size;
+                const ctx = canvas.getContext("2d");
+
+                applySettings(ctx, canvas);
+
+                return canvas;
+            }
+
+            function drawIconWithSettings(
+                ctx,
+                canvas,
+                imageSize,
+                bgColor,
+                corners = 0,
+            ) {
+                const size = canvas.width;
+
+                // Draw background with optional rounded corners
+                ctx.fillStyle = bgColor;
+                if (corners > 0) {
+                    const radius = (size * corners) / 100;
+                    ctx.beginPath();
+                    ctx.moveTo(radius, 0);
+                    ctx.lineTo(size - radius, 0);
+                    ctx.quadraticCurveTo(size, 0, size, radius);
+                    ctx.lineTo(size, size - radius);
+                    ctx.quadraticCurveTo(size, size, size - radius, size);
+                    ctx.lineTo(radius, size);
+                    ctx.quadraticCurveTo(0, size, 0, size - radius);
+                    ctx.lineTo(0, radius);
+                    ctx.quadraticCurveTo(0, 0, radius, 0);
+                    ctx.closePath();
+                    ctx.fill();
+                } else {
+                    ctx.fillRect(0, 0, size, size);
+                }
+
+                // Calculate image position and size
+                const imgSize = (size * imageSize) / 100;
+                const offset = (size - imgSize) / 2;
+
+                // Draw image
+                ctx.drawImage(originalImage, offset, offset, imgSize, imgSize);
+            }
+
+            function updateAllPreviews() {
+                if (!originalImage) return;
+
+                updateRegularIcon();
+                updateDarkIcon();
+                updateAppleIcon();
+                updateManifestIcon();
+                updateManifestPreview();
+            }
+
+            function updateRegularIcon() {
+                const useAsIs = document.getElementById("regularAsIs").checked;
+
+                const canvas = createCanvas(32, (ctx, canvas) => {
+                    if (useAsIs) {
+                        ctx.drawImage(originalImage, 0, 0, 32, 32);
+                    } else {
+                        const color =
+                            document.getElementById("regularColor").value;
+                        const margin = parseInt(
+                            document.getElementById("regularMargin").value,
+                        );
+                        const corners = parseInt(
+                            document.getElementById("regularCorners").value,
+                        );
+                        drawIconWithSettings(
+                            ctx,
+                            canvas,
+                            margin,
+                            color,
+                            corners,
+                        );
+                    }
+                });
+
+                const dataUrl = canvas.toDataURL();
+                document.getElementById("previewLight").src = dataUrl;
+                document.getElementById("previewGoogleLight").src = dataUrl;
+            }
+
+            function updateDarkIcon() {
+                const useAsIs = document.getElementById("darkAsIs").checked;
+
+                const canvas = createCanvas(32, (ctx, canvas) => {
+                    if (useAsIs) {
+                        ctx.drawImage(originalImage, 0, 0, 32, 32);
+                    } else {
+                        const color =
+                            document.getElementById("darkColor").value;
+                        const margin = parseInt(
+                            document.getElementById("darkMargin").value,
+                        );
+                        const corners = parseInt(
+                            document.getElementById("darkCorners").value,
+                        );
+                        drawIconWithSettings(
+                            ctx,
+                            canvas,
+                            margin,
+                            color,
+                            corners,
+                        );
+                    }
+                });
+
+                const dataUrl = canvas.toDataURL();
+                document.getElementById("previewDark").src = dataUrl;
+                document.getElementById("previewGoogleDark").src = dataUrl;
+            }
+
+            function updateAppleIcon() {
+                const useAsIs = document.getElementById("appleAsIs").checked;
+
+                const canvas = createCanvas(180, (ctx, canvas) => {
+                    if (useAsIs) {
+                        // When "as is", use black background
+                        drawIconWithSettings(ctx, canvas, 100, "#000000", 0);
+                    } else {
+                        const color =
+                            document.getElementById("appleColor").value;
+                        const margin = parseInt(
+                            document.getElementById("appleMargin").value,
+                        );
+                        drawIconWithSettings(ctx, canvas, margin, color, 0);
+                    }
+                });
+
+                document.getElementById("applePreview").src =
+                    canvas.toDataURL();
+            }
+
+            function updateManifestIcon() {
+                const useAsIs = document.getElementById("manifestAsIs").checked;
+
+                // 192x192 icon
+                const canvas192 = createCanvas(192, (ctx, canvas) => {
+                    if (useAsIs) {
+                        ctx.drawImage(originalImage, 0, 0, 192, 192);
+                    } else {
+                        const color =
+                            document.getElementById("manifestBgColor").value;
+                        const margin = parseInt(
+                            document.getElementById("manifestMargin").value,
+                        );
+                        drawIconWithSettings(ctx, canvas, margin, color, 0);
+                    }
+                });
+
+                document.getElementById("manifestPreview192").src =
+                    canvas192.toDataURL();
+            }
+
+            function updateManifestPreview() {
+                const name =
+                    document.getElementById("manifestName").value ||
+                    "MyWebSite";
+                const shortName =
+                    document.getElementById("manifestShortName").value ||
+                    "MySite";
+                const themeColor =
+                    document.getElementById("manifestThemeColor").value;
+                const bgColor = document.getElementById(
+                    "manifestBgColorGlobal",
+                ).value;
+
+                const manifest = {
+                    name: name,
+                    short_name: shortName,
+                    icons: [
+                        {
+                            src: "/web-app-manifest-192x192.png",
+                            sizes: "192x192",
+                            type: "image/png",
+                            purpose: "maskable",
+                        },
+                        {
+                            src: "/web-app-manifest-512x512.png",
+                            sizes: "512x512",
+                            type: "image/png",
+                            purpose: "maskable",
+                        },
+                    ],
+                    theme_color: themeColor,
+                    background_color: bgColor,
+                    display: "standalone",
+                };
+
+                document.getElementById("manifestCode").textContent =
+                    JSON.stringify(manifest, null, 2);
+            }
+
+            // Download functionality
+            document
+                .getElementById("downloadBtn")
+                .addEventListener("click", async function () {
+                    if (!originalImage) return;
+
+                    const zip = new JSZip();
+                    const faviconFolder = zip.folder("favicon");
+
+                    // Generate regular favicon (32x32 and 96x96)
+                    const regularUseAsIs =
+                        document.getElementById("regularAsIs").checked;
+
+                    // favicon-96x96.png
+                    const favicon96 = createCanvas(96, (ctx, canvas) => {
+                        if (regularUseAsIs) {
+                            ctx.drawImage(originalImage, 0, 0, 96, 96);
+                        } else {
+                            const color =
+                                document.getElementById("regularColor").value;
+                            const margin = parseInt(
+                                document.getElementById("regularMargin").value,
+                            );
+                            const corners = parseInt(
+                                document.getElementById("regularCorners").value,
+                            );
+                            drawIconWithSettings(
+                                ctx,
+                                canvas,
+                                margin,
+                                color,
+                                corners,
+                            );
+                        }
+                    });
+
+                    // Convert canvas to blob and add to zip
+                    const favicon96Blob = await canvasToBlob(favicon96);
+                    faviconFolder.file("favicon-96x96.png", favicon96Blob);
+
+                    // favicon.svg
+                    const svgContent = generateSVG(
+                        originalImage,
+                        regularUseAsIs,
+                    );
+                    faviconFolder.file("favicon.svg", svgContent);
+
+                    // Apple Touch Icon (180x180)
+                    const appleUseAsIs =
+                        document.getElementById("appleAsIs").checked;
+                    const appleCanvas = createCanvas(180, (ctx, canvas) => {
+                        if (appleUseAsIs) {
+                            // When "as is", use black background
+                            drawIconWithSettings(
+                                ctx,
+                                canvas,
+                                100,
+                                "#000000",
+                                0,
+                            );
+                        } else {
+                            const color =
+                                document.getElementById("appleColor").value;
+                            const margin = parseInt(
+                                document.getElementById("appleMargin").value,
+                            );
+                            drawIconWithSettings(ctx, canvas, margin, color, 0);
+                        }
+                    });
+
+                    const appleTouchBlob = await canvasToBlob(appleCanvas);
+                    faviconFolder.file("apple-touch-icon.png", appleTouchBlob);
+
+                    // Web App Manifest Icons
+                    const manifestUseAsIs =
+                        document.getElementById("manifestAsIs").checked;
+
+                    // 192x192
+                    const manifest192 = createCanvas(192, (ctx, canvas) => {
+                        if (manifestUseAsIs) {
+                            ctx.drawImage(originalImage, 0, 0, 192, 192);
+                        } else {
+                            const color =
+                                document.getElementById(
+                                    "manifestBgColor",
+                                ).value;
+                            const margin = parseInt(
+                                document.getElementById("manifestMargin").value,
+                            );
+                            drawIconWithSettings(ctx, canvas, margin, color, 0);
+                        }
+                    });
+
+                    const manifest192Blob = await canvasToBlob(manifest192);
+                    faviconFolder.file(
+                        "web-app-manifest-192x192.png",
+                        manifest192Blob,
+                    );
+
+                    // 512x512
+                    const manifest512 = createCanvas(512, (ctx, canvas) => {
+                        if (manifestUseAsIs) {
+                            ctx.drawImage(originalImage, 0, 0, 512, 512);
+                        } else {
+                            const color =
+                                document.getElementById(
+                                    "manifestBgColor",
+                                ).value;
+                            const margin = parseInt(
+                                document.getElementById("manifestMargin").value,
+                            );
+                            drawIconWithSettings(ctx, canvas, margin, color, 0);
+                        }
+                    });
+
+                    const manifest512Blob = await canvasToBlob(manifest512);
+                    faviconFolder.file(
+                        "web-app-manifest-512x512.png",
+                        manifest512Blob,
+                    );
+
+                    // site.webmanifest
+                    const manifestContent =
+                        document.getElementById("manifestCode").textContent;
+                    faviconFolder.file("site.webmanifest", manifestContent);
+
+                    // Generate zip and download
+                    const zipBlob = await zip.generateAsync({ type: "blob" });
+                    const url = URL.createObjectURL(zipBlob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = "favicon-package.zip";
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                });
+
+            function canvasToBlob(canvas) {
+                return new Promise((resolve) => {
+                    canvas.toBlob(resolve);
+                });
+            }
+
+            function generateSVG(image, useAsIs) {
+                // Create a simple SVG representation
+                const canvas = document.createElement("canvas");
+                canvas.width = 32;
+                canvas.height = 32;
+                const ctx = canvas.getContext("2d");
+
+                if (useAsIs) {
+                    ctx.drawImage(image, 0, 0, 32, 32);
+                } else {
+                    const color = document.getElementById("regularColor").value;
+                    const margin = parseInt(
+                        document.getElementById("regularMargin").value,
+                    );
+                    const corners = parseInt(
+                        document.getElementById("regularCorners").value,
+                    );
+                    drawIconWithSettings(ctx, canvas, margin, color, corners);
+                }
+
+                const dataUrl = canvas.toDataURL();
+
+                return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+    <image href="${dataUrl}" width="32" height="32"/>
+</svg>`;
+            }
+        </script>
+    </body>
+</html>
