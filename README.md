@@ -15,24 +15,24 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 
 ## Available Tools
 
+### Digital forensics
+
+- **[Email Header Analysis](email-header-analysis.html)** — analyse and highlight email headers with syntax highlighting for IPs, emails, and URLs
+
 ### Image and media
 
 - **[EXIF Data Viewer](exif-viewer.html)** — extract and view EXIF metadata from photos including camera settings, GPS location, and timestamps
 - **[Pixel Coordinates](pixel-coords.html)** — click on images to capture and record pixel coordinates
+
+### Maps and spatial data
+
+- **[GeoJSON Viewer](geojson-viewer.html)** — visualize and explore GeoJSON files on an interactive map
 
 ### Text and documents
 
 - **[PDF Metadata Viewer](pdf-metadata.html)** — extract and view PDF metadata including title, author, dates, permissions, and security settings
 - **[Text Diff Tool](text-diff.html)** — compare two text blocks and highlight added and removed content
 
-### Maps and spatial data
-
-- **[GeoJSON Viewer](geojson-viewer.html)** — visualize and explore GeoJSON files on an interactive map
-
-### Digital Forensics
-
-- **[Email Header Analysis](email-header-analysis.html)** — analyse and highlight email headers with syntax highlighting for IPs, emails, and URLs
-
-### Web Development
+### Web development
 
 - **[Favicon Generator](favicon-generator.html)** — generate favicons in multiple sizes and formats including SVG, ICO, Apple Touch Icons, and Android icons
