@@ -179,6 +179,17 @@
                 margin-bottom: 0;
             }
 
+            .apple-manifest-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 20px;
+                margin-bottom: 40px;
+            }
+
+            .apple-manifest-grid .section {
+                margin-bottom: 0;
+            }
+
             .apple-layout {
                 display: grid;
                 grid-template-columns: auto 1fr;
@@ -837,221 +848,232 @@
             </div>
 
             <!-- Apple Touch Icon Section -->
-            <div class="section">
-                <h2>Apple Touch Icon</h2>
+            <div class="apple-manifest-grid">
+                <div class="section">
+                    <h2>Apple Touch Icon</h2>
 
-                <div class="apple-layout">
-                    <div class="apple-preview-wrapper">
-                        <h4 style="margin-bottom: 10px; color: #555">
-                            iOS Preview
-                        </h4>
-                        <div class="apple-preview">
-                            <img
-                                id="applePreview"
-                                src=""
-                                alt="Apple icon preview"
-                                style="width: 120px; height: 120px"
-                            />
-                            <div
-                                id="appleAppName"
-                                style="
-                                    color: white;
-                                    font-size: 13px;
-                                    margin-top: 8px;
-                                    text-align: center;
-                                    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-                                "
-                            ></div>
-                        </div>
-                        <p
-                            style="
-                                margin-top: 10px;
-                                font-size: 0.85em;
-                                color: #666;
-                            "
-                        >
-                            If empty, iOS will use the page title
-                        </p>
-                    </div>
-
-                    <div class="apple-controls-wrapper">
-                        <div class="option-group">
-                            <div class="radio-option">
-                                <input
-                                    type="radio"
-                                    id="appleAsIs"
-                                    name="appleIcon"
-                                    value="asis"
-                                    checked
+                    <div class="apple-layout">
+                        <div class="apple-preview-wrapper">
+                            <h4 style="margin-bottom: 10px; color: #555">
+                                iOS Preview
+                            </h4>
+                            <div class="apple-preview">
+                                <img
+                                    id="applePreview"
+                                    src=""
+                                    alt="Apple icon preview"
+                                    style="width: 120px; height: 120px"
                                 />
-                                <label for="appleAsIs"
-                                    >Use the icon as is</label
-                                >
+                                <div
+                                    id="appleAppName"
+                                    style="
+                                        color: white;
+                                        font-size: 13px;
+                                        margin-top: 8px;
+                                        text-align: center;
+                                        text-shadow: 0 1px 3px
+                                            rgba(0, 0, 0, 0.3);
+                                    "
+                                ></div>
                             </div>
-                            <div class="radio-option">
-                                <input
-                                    type="radio"
-                                    id="appleWithBg"
-                                    name="appleIcon"
-                                    value="withbg"
-                                />
-                                <label for="appleWithBg"
-                                    >Add a plain background and margins</label
-                                >
-                                <div id="appleControls" class="controls">
-                                    <div class="control-row">
-                                        <label for="appleColor">Color</label>
-                                        <input
-                                            type="color"
-                                            id="appleColor"
-                                            value="#ffffff"
-                                        />
-                                    </div>
-                                    <div class="control-row">
-                                        <label for="appleMargin"
-                                            >Image size</label
-                                        >
-                                        <input
-                                            type="range"
-                                            id="appleMargin"
-                                            min="20"
-                                            max="100"
-                                            value="100"
-                                        />
-                                        <span
-                                            class="value-display"
-                                            id="appleMarginValue"
-                                            >100%</span
-                                        >
+                            <p
+                                style="
+                                    margin-top: 10px;
+                                    font-size: 0.85em;
+                                    color: #666;
+                                "
+                            >
+                                If empty, iOS will use the page title
+                            </p>
+                        </div>
+
+                        <div class="apple-controls-wrapper">
+                            <div class="option-group">
+                                <div class="radio-option">
+                                    <input
+                                        type="radio"
+                                        id="appleAsIs"
+                                        name="appleIcon"
+                                        value="asis"
+                                        checked
+                                    />
+                                    <label for="appleAsIs"
+                                        >Use the icon as is</label
+                                    >
+                                </div>
+                                <div class="radio-option">
+                                    <input
+                                        type="radio"
+                                        id="appleWithBg"
+                                        name="appleIcon"
+                                        value="withbg"
+                                    />
+                                    <label for="appleWithBg"
+                                        >Add a plain background and
+                                        margins</label
+                                    >
+                                    <div id="appleControls" class="controls">
+                                        <div class="control-row">
+                                            <label for="appleColor"
+                                                >Color</label
+                                            >
+                                            <input
+                                                type="color"
+                                                id="appleColor"
+                                                value="#ffffff"
+                                            />
+                                        </div>
+                                        <div class="control-row">
+                                            <label for="appleMargin"
+                                                >Image size</label
+                                            >
+                                            <input
+                                                type="range"
+                                                id="appleMargin"
+                                                min="20"
+                                                max="100"
+                                                value="100"
+                                            />
+                                            <span
+                                                class="value-display"
+                                                id="appleMarginValue"
+                                                >100%</span
+                                            >
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <div class="control-row" style="margin-top: 20px">
-                            <label for="appleName">App name</label>
-                            <input
-                                type="text"
-                                id="appleName"
-                                placeholder="MyWebSite"
-                            />
+                            <div class="control-row" style="margin-top: 20px">
+                                <label for="appleName">App name</label>
+                                <input
+                                    type="text"
+                                    id="appleName"
+                                    placeholder="MyWebSite"
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Web App Manifest Section -->
-            <div class="section">
-                <h2>Web app manifest</h2>
+                <!-- Web App Manifest Section -->
+                <div class="section">
+                    <h2>Web app manifest</h2>
 
-                <div class="manifest-layout">
-                    <div class="manifest-preview-wrapper">
-                        <h4 style="margin-bottom: 10px; color: #555">
-                            Android Preview
-                        </h4>
-                        <div class="android-preview-single">
-                            <div class="android-icon-display">
-                                <div class="icon-circle">
-                                    <img
-                                        id="manifestPreview192"
-                                        src=""
-                                        alt="App icon"
+                    <div class="manifest-layout">
+                        <div class="manifest-preview-wrapper">
+                            <h4 style="margin-bottom: 10px; color: #555">
+                                Android Preview
+                            </h4>
+                            <div class="android-preview-single">
+                                <div class="android-icon-display">
+                                    <div class="icon-circle">
+                                        <img
+                                            id="manifestPreview192"
+                                            src=""
+                                            alt="App icon"
+                                        />
+                                    </div>
+                                    <span id="manifestAppName1"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="manifest-controls-wrapper">
+                            <div class="option-group">
+                                <div class="radio-option">
+                                    <input
+                                        type="radio"
+                                        id="manifestAsIs"
+                                        name="manifestIcon"
+                                        value="asis"
+                                        checked
                                     />
+                                    <label for="manifestAsIs"
+                                        >Use the icon as is</label
+                                    >
                                 </div>
-                                <span id="manifestAppName1"></span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="manifest-controls-wrapper">
-                        <div class="option-group">
-                            <div class="radio-option">
-                                <input
-                                    type="radio"
-                                    id="manifestAsIs"
-                                    name="manifestIcon"
-                                    value="asis"
-                                    checked
-                                />
-                                <label for="manifestAsIs"
-                                    >Use the icon as is</label
-                                >
-                            </div>
-                            <div class="radio-option">
-                                <input
-                                    type="radio"
-                                    id="manifestWithBg"
-                                    name="manifestIcon"
-                                    value="withbg"
-                                />
-                                <label for="manifestWithBg"
-                                    >Add a plain background and margins</label
-                                >
-                                <div id="manifestControls" class="controls">
-                                    <div class="control-row">
-                                        <label for="manifestBgColor"
-                                            >Color</label
-                                        >
-                                        <input
-                                            type="color"
-                                            id="manifestBgColor"
-                                            value="#ffffff"
-                                        />
-                                    </div>
-                                    <div class="control-row">
-                                        <label for="manifestMargin"
-                                            >Image size</label
-                                        >
-                                        <input
-                                            type="range"
-                                            id="manifestMargin"
-                                            min="20"
-                                            max="100"
-                                            value="100"
-                                        />
-                                        <span
-                                            class="value-display"
-                                            id="manifestMarginValue"
-                                            >100%</span
-                                        >
+                                <div class="radio-option">
+                                    <input
+                                        type="radio"
+                                        id="manifestWithBg"
+                                        name="manifestIcon"
+                                        value="withbg"
+                                    />
+                                    <label for="manifestWithBg"
+                                        >Add a plain background and
+                                        margins</label
+                                    >
+                                    <div id="manifestControls" class="controls">
+                                        <div class="control-row">
+                                            <label for="manifestBgColor"
+                                                >Color</label
+                                            >
+                                            <input
+                                                type="color"
+                                                id="manifestBgColor"
+                                                value="#ffffff"
+                                            />
+                                        </div>
+                                        <div class="control-row">
+                                            <label for="manifestMargin"
+                                                >Image size</label
+                                            >
+                                            <input
+                                                type="range"
+                                                id="manifestMargin"
+                                                min="20"
+                                                max="100"
+                                                value="100"
+                                            />
+                                            <span
+                                                class="value-display"
+                                                id="manifestMarginValue"
+                                                >100%</span
+                                            >
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <div class="control-row" style="margin-top: 20px">
-                            <label for="manifestName">Name</label>
-                            <input
-                                type="text"
-                                id="manifestName"
-                                placeholder="MyWebSite"
-                            />
-                        </div>
-                        <div class="control-row">
-                            <label for="manifestShortName">Short name</label>
-                            <input
-                                type="text"
-                                id="manifestShortName"
-                                placeholder="MySite"
-                            />
-                        </div>
-                        <div class="control-row">
-                            <label for="manifestThemeColor">Theme color</label>
-                            <input
-                                type="color"
-                                id="manifestThemeColor"
-                                value="#ffffff"
-                            />
-                        </div>
-                        <div class="control-row">
-                            <label for="manifestBgColorGlobal"
-                                >Background color</label
-                            >
-                            <input
-                                type="color"
-                                id="manifestBgColorGlobal"
-                                value="#ffffff"
-                            />
+                            <div class="control-row" style="margin-top: 20px">
+                                <label for="manifestName">Name</label>
+                                <input
+                                    type="text"
+                                    id="manifestName"
+                                    placeholder="MyWebSite"
+                                />
+                            </div>
+                            <div class="control-row">
+                                <label for="manifestShortName"
+                                    >Short name</label
+                                >
+                                <input
+                                    type="text"
+                                    id="manifestShortName"
+                                    placeholder="MySite"
+                                />
+                            </div>
+                            <div class="control-row">
+                                <label for="manifestThemeColor"
+                                    >Theme color</label
+                                >
+                                <input
+                                    type="color"
+                                    id="manifestThemeColor"
+                                    value="#ffffff"
+                                />
+                            </div>
+                            <div class="control-row">
+                                <label for="manifestBgColorGlobal"
+                                    >Background color</label
+                                >
+                                <input
+                                    type="color"
+                                    id="manifestBgColorGlobal"
+                                    value="#ffffff"
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>
