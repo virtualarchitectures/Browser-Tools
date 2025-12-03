@@ -39,4 +39,4 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 
 ### Miscellaneous
 
-*More tools coming soon...*
+- **[Favicon Generator](favicon-generator.html)** — generate favicons in multiple sizes and formats including SVG, ICO, Apple Touch Icons, and Android icons
