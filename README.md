@@ -29,14 +29,10 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 
 - **[GeoJSON Viewer](geojson-viewer.html)** — visualize and explore GeoJSON files on an interactive map
 
-### Data utilities
-
-*More tools coming soon...*
-
-### Forensics
+### Digital Forensics
 
 - **[Email Header Analysis](email-header-analysis.html)** — analyse and highlight email headers with syntax highlighting for IPs, emails, and URLs
 
-### Miscellaneous
+### Web Development
 
 - **[Favicon Generator](favicon-generator.html)** — generate favicons in multiple sizes and formats including SVG, ICO, Apple Touch Icons, and Android icons

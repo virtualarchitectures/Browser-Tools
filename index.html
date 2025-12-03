@@ -1,273 +1,318 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Browser Tools</title>
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-    body {
-      font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-      line-height: 1.6;
-      max-width: 980px;
-      margin: 0 auto;
-      padding: 20px;
-      color: #24292e;
-    }
-    h1 {
-      border-bottom: 1px solid #eaecef;
-      padding-bottom: 0.3em;
-    }
-    h2 {
-      border-bottom: 1px solid #eaecef;
-      padding-bottom: 0.3em;
-      margin-top: 24px;
-    }
-    a {
-      color: #0366d6;
-      text-decoration: none;
-    }
-    a:hover {
-      text-decoration: underline;
-    }
-    code {
-      background-color: rgba(27,31,35,0.05);
-      border-radius: 3px;
-      padding: 0.2em 0.4em;
-    }
-    #search-box {
-      width: 100%;
-      padding: 12px;
-      font-size: 16px;
-      border: 2px solid #e1e4e8;
-      border-radius: 6px;
-      margin-bottom: 24px;
-      font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-    }
-    #search-box:focus {
-      outline: none;
-      border-color: #0366d6;
-    }
-    .search-container {
-      position: relative;
-      margin-bottom: 24px;
-    }
-    .search-info {
-      font-size: 14px;
-      color: #586069;
-      margin-bottom: 16px;
-    }
-    ul {
-      list-style: none;
-      padding: 0;
-    }
-    li {
-      margin-bottom: 0.5em;
-    }
-    .tool-item {
-      transition: opacity 0.2s;
-    }
-    .tool-item.hidden {
-      display: none;
-    }
-    .search-results {
-      display: none;
-      border: 2px solid #e1e4e8;
-      border-radius: 6px;
-      padding: 16px;
-      margin-bottom: 24px;
-      background-color: #f6f8fa;
-    }
-    .search-results.visible {
-      display: block;
-    }
-    .search-results h3 {
-      margin-top: 0;
-      margin-bottom: 12px;
-      font-size: 16px;
-      color: #24292e;
-    }
-    .search-results ul {
-      margin: 0;
-    }
-    .search-results li {
-      margin-bottom: 8px;
-    }
-    .no-results {
-      display: none;
-      padding: 20px;
-      text-align: center;
-      color: #586069;
-      font-style: italic;
-    }
-    .no-results.visible {
-      display: block;
-    }
-    .all-tools {
-      display: block;
-    }
-    .footer {
-      margin-top: 48px;
-      padding-top: 24px;
-      border-top: 1px solid #eaecef;
-      text-align: center;
-      font-size: 14px;
-      color: #586069;
-    }
-    .footer a {
-      color: #0366d6;
-      font-weight: 500;
-    }
-  </style>
-</head>
-<body>
-  <h1>Browser Tools</h1>
-  <p></p>A collection of browser-based HTML+JavaScript tools for various tasks. All tools run entirely in your browser with no server-side processing.</p>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Browser Tools</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Arial, sans-serif;
+        line-height: 1.6;
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 20px;
+        color: #24292e;
+      }
+      h1 {
+        border-bottom: 1px solid #eaecef;
+        padding-bottom: 0.3em;
+      }
+      h2 {
+        border-bottom: 1px solid #eaecef;
+        padding-bottom: 0.3em;
+        margin-top: 24px;
+      }
+      a {
+        color: #0366d6;
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+      code {
+        background-color: rgba(27, 31, 35, 0.05);
+        border-radius: 3px;
+        padding: 0.2em 0.4em;
+      }
+      #search-box {
+        width: 100%;
+        padding: 12px;
+        font-size: 16px;
+        border: 2px solid #e1e4e8;
+        border-radius: 6px;
+        margin-bottom: 24px;
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Arial, sans-serif;
+      }
+      #search-box:focus {
+        outline: none;
+        border-color: #0366d6;
+      }
+      .search-container {
+        position: relative;
+        margin-bottom: 24px;
+      }
+      .search-info {
+        font-size: 14px;
+        color: #586069;
+        margin-bottom: 16px;
+      }
+      ul {
+        list-style: none;
+        padding: 0;
+      }
+      li {
+        margin-bottom: 0.5em;
+      }
+      .tool-item {
+        transition: opacity 0.2s;
+      }
+      .tool-item.hidden {
+        display: none;
+      }
+      .search-results {
+        display: none;
+        border: 2px solid #e1e4e8;
+        border-radius: 6px;
+        padding: 16px;
+        margin-bottom: 24px;
+        background-color: #f6f8fa;
+      }
+      .search-results.visible {
+        display: block;
+      }
+      .search-results h3 {
+        margin-top: 0;
+        margin-bottom: 12px;
+        font-size: 16px;
+        color: #24292e;
+      }
+      .search-results ul {
+        margin: 0;
+      }
+      .search-results li {
+        margin-bottom: 8px;
+      }
+      .no-results {
+        display: none;
+        padding: 20px;
+        text-align: center;
+        color: #586069;
+        font-style: italic;
+      }
+      .no-results.visible {
+        display: block;
+      }
+      .all-tools {
+        display: block;
+      }
+      .footer {
+        margin-top: 48px;
+        padding-top: 24px;
+        border-top: 1px solid #eaecef;
+        text-align: center;
+        font-size: 14px;
+        color: #586069;
+      }
+      .footer a {
+        color: #0366d6;
+        font-weight: 500;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Browser Tools</h1>
+    <p>
+      A collection of browser-based HTML+JavaScript tools for various tasks. All
+      tools run entirely in your browser with no server-side processing.
+    </p>
 
-  <div class="search-container">
-    <input type="text" id="search-box" placeholder="Search tools..." autocomplete="off">
-    <div class="search-info" id="search-info"></div>
-  </div>
+    <div class="search-container">
+      <input
+        type="text"
+        id="search-box"
+        placeholder="Search tools..."
+        autocomplete="off"
+      />
+      <div class="search-info" id="search-info"></div>
+    </div>
 
-  <div class="search-results" id="search-results">
-    <h3>Search Results</h3>
-    <ul id="results-list"></ul>
-  </div>
+    <div class="search-results" id="search-results">
+      <h3>Search Results</h3>
+      <ul id="results-list"></ul>
+    </div>
 
-  <div class="no-results" id="no-results">
-    No tools found matching your search.
-  </div>
+    <div class="no-results" id="no-results">
+      No tools found matching your search.
+    </div>
 
-  <div class="all-tools" id="all-tools">
-    <h2>Image and media</h2>
-    <ul id="image-section">
-      <li class="tool-item" data-keywords="exif metadata photo camera gps location image jpg jpeg viewer extract settings date time exposure iso focal length">
-        <a href="exif-viewer.html">EXIF Data Viewer</a> — extract and view EXIF metadata from photos including camera settings, GPS location, and timestamps
-      </li>
-      <li class="tool-item" data-keywords="click coordinates pixel image points marker position xy">
-        <a href="pixel-coords.html">Pixel Coordinates</a> — click on images to capture and record pixel coordinates
-      </li>
-    </ul>
+    <div class="all-tools" id="all-tools">
+      <h2>Image and media</h2>
+      <ul id="image-section">
+        <li
+          class="tool-item"
+          data-keywords="exif metadata photo camera gps location image jpg jpeg viewer extract settings date time exposure iso focal length"
+        >
+          <a href="exif-viewer.html">EXIF Data Viewer</a> — extract and view
+          EXIF metadata from photos including camera settings, GPS location, and
+          timestamps
+        </li>
+        <li
+          class="tool-item"
+          data-keywords="click coordinates pixel image points marker position xy"
+        >
+          <a href="pixel-coords.html">Pixel Coordinates</a> — click on images to
+          capture and record pixel coordinates
+        </li>
+      </ul>
 
-    <h2>Text and documents</h2>
-    <ul id="text-section">
-      <li class="tool-item" data-keywords="pdf metadata extract viewer title author date permissions security encryption copyright language filesize pages document properties info">
-        <a href="pdf-metadata.html">PDF Metadata Viewer</a> — extract and view PDF metadata including title, author, dates, permissions, and security settings
-      </li>
-      <li class="tool-item" data-keywords="compare difference changes added removed highlight text compare diff comparison">
-        <a href="text-diff.html">Text Diff Tool</a> — compare two text blocks and highlight added and removed content
-      </li>
-    </ul>
+      <h2>Text and documents</h2>
+      <ul id="text-section">
+        <li
+          class="tool-item"
+          data-keywords="pdf metadata extract viewer title author date permissions security encryption copyright language filesize pages document properties info"
+        >
+          <a href="pdf-metadata.html">PDF Metadata Viewer</a> — extract and view
+          PDF metadata including title, author, dates, permissions, and security
+          settings
+        </li>
+        <li
+          class="tool-item"
+          data-keywords="compare difference changes added removed highlight text compare diff comparison"
+        >
+          <a href="text-diff.html">Text Diff Tool</a> — compare two text blocks
+          and highlight added and removed content
+        </li>
+      </ul>
 
-    <h2>Maps and spatial data</h2>
-    <ul id="maps-section">
-      <li class="tool-item" data-keywords="geojson map visualization geographic spatial location coordinates gis mapping viewer interactive">
-        <a href="geojson-viewer.html">GeoJSON Viewer</a> — visualize and explore GeoJSON files on an interactive map
-      </li>
-    </ul>
+      <h2>Maps and spatial data</h2>
+      <ul id="maps-section">
+        <li
+          class="tool-item"
+          data-keywords="geojson map visualization geographic spatial location coordinates gis mapping viewer interactive"
+        >
+          <a href="geojson-viewer.html">GeoJSON Viewer</a> — visualize and
+          explore GeoJSON files on an interactive map
+        </li>
+      </ul>
 
-    <h2>Data utilities</h2>
-    <ul id="data-section">
-      <li class="tool-item placeholder" data-keywords="">
-        <em>More tools coming soon...</em>
-      </li>
-    </ul>
+      <h2>Digital Forensics</h2>
+      <ul id="osint-section">
+        <li
+          class="tool-item"
+          data-keywords="email header analysis parse highlight ip address url syntax mime smtp received from authentication spf dkim"
+        >
+          <a href="email-header-analysis.html">Email Header Analysis</a>
+          — analyse and highlight email headers with syntax highlighting for
+          IPs, emails, and URLs
+        </li>
+      </ul>
 
-    <h2>Forensics</h2>
-    <ul id="osint-section">
-      <li class="tool-item" data-keywords="email header analysis parse highlight ip address url syntax mime smtp received from authentication spf dkim">
-        <a href="email-header-analysis.html">Email Header Analysis</a> — analyse and highlight email headers with syntax highlighting for IPs, emails, and URLs
-      </li>
-    </ul>
+      <h2>Web Development</h2>
+      <ul id="misc-section">
+        <li
+          class="tool-item"
+          data-keywords="favicon icon generator apple touch android chrome web app ico svg png sizes 16x16 32x32 180x180 192x192 512x512 website browser tab"
+        >
+          <a href="favicon-generator.html">Favicon Generator</a> — generate
+          favicons in multiple sizes and formats including SVG, ICO, Apple Touch
+          Icons, and Android icons
+        </li>
+      </ul>
+    </div>
 
-    <h2>Miscellaneous</h2>
-    <ul id="misc-section">
-      <li class="tool-item" data-keywords="favicon icon generator apple touch android chrome web app ico svg png sizes 16x16 32x32 180x180 192x192 512x512 website browser tab">
-        <a href="favicon-generator.html">Favicon Generator</a> — generate favicons in multiple sizes and formats including SVG, ICO, Apple Touch Icons, and Android icons
-      </li>
-    </ul>
-  </div>
+    <div class="footer">
+      <p>
+        View the source code and contribute on
+        <a
+          href="https://github.com/virtualarchitectures/Browser-Tools"
+          target="_blank"
+          rel="noopener noreferrer"
+          >GitHub</a
+        >
+      </p>
+    </div>
 
-  <div class="footer">
-    <p>View the source code and contribute on <a href="https://github.com/virtualarchitectures/Browser-Tools" target="_blank" rel="noopener noreferrer">GitHub</a></p>
-  </div>
+    <script type="module">
+      const searchBox = document.getElementById("search-box");
+      const searchInfo = document.getElementById("search-info");
+      const noResults = document.getElementById("no-results");
+      const searchResults = document.getElementById("search-results");
+      const resultsList = document.getElementById("results-list");
+      const allTools = document.getElementById("all-tools");
+      const toolItems = document.querySelectorAll(".tool-item");
 
-  <script type="module">
-const searchBox = document.getElementById('search-box');
-const searchInfo = document.getElementById('search-info');
-const noResults = document.getElementById('no-results');
-const searchResults = document.getElementById('search-results');
-const resultsList = document.getElementById('results-list');
-const allTools = document.getElementById('all-tools');
-const toolItems = document.querySelectorAll('.tool-item');
+      function performSearch() {
+        const query = searchBox.value.toLowerCase().trim();
 
-function performSearch() {
-  const query = searchBox.value.toLowerCase().trim();
+        if (!query) {
+          // Show all tools section, hide search results
+          allTools.classList.remove("hidden");
+          searchResults.classList.remove("visible");
+          noResults.classList.remove("visible");
+          searchInfo.textContent = "";
+          return;
+        }
 
-  if (!query) {
-    // Show all tools section, hide search results
-    allTools.classList.remove('hidden');
-    searchResults.classList.remove('visible');
-    noResults.classList.remove('visible');
-    searchInfo.textContent = '';
-    return;
-  }
+        // Keep all tools visible, show search results above
+        searchResults.classList.add("visible");
 
-  // Keep all tools visible, show search results above
-  searchResults.classList.add('visible');
+        // Clear previous results
+        resultsList.innerHTML = "";
 
-  // Clear previous results
-  resultsList.innerHTML = '';
+        let matchCount = 0;
 
-  let matchCount = 0;
+        toolItems.forEach((item) => {
+          // Skip placeholder items
+          if (item.classList.contains("placeholder")) {
+            return;
+          }
 
-  toolItems.forEach(item => {
-    // Skip placeholder items
-    if (item.classList.contains('placeholder')) {
-      return;
-    }
+          const text = item.textContent.toLowerCase();
+          const keywords = item.getAttribute("data-keywords") || "";
+          const searchableText = text + " " + keywords.toLowerCase();
 
-    const text = item.textContent.toLowerCase();
-    const keywords = item.getAttribute('data-keywords') || '';
-    const searchableText = text + ' ' + keywords.toLowerCase();
+          if (searchableText.includes(query)) {
+            // Clone the item and add it to results
+            const clone = item.cloneNode(true);
+            clone.classList.remove("hidden");
+            resultsList.appendChild(clone);
+            matchCount++;
+          }
+        });
 
-    if (searchableText.includes(query)) {
-      // Clone the item and add it to results
-      const clone = item.cloneNode(true);
-      clone.classList.remove('hidden');
-      resultsList.appendChild(clone);
-      matchCount++;
-    }
-  });
+        if (matchCount === 0) {
+          searchResults.classList.remove("visible");
+          noResults.classList.add("visible");
+          searchInfo.textContent = "";
+        } else {
+          noResults.classList.remove("visible");
+          searchInfo.textContent = `Found ${matchCount} tool${
+            matchCount === 1 ? "" : "s"
+          }`;
+        }
+      }
 
-  if (matchCount === 0) {
-    searchResults.classList.remove('visible');
-    noResults.classList.add('visible');
-    searchInfo.textContent = '';
-  } else {
-    noResults.classList.remove('visible');
-    searchInfo.textContent = `Found ${matchCount} tool${matchCount === 1 ? '' : 's'}`;
-  }
-}
+      // Search on input
+      searchBox.addEventListener("input", performSearch);
 
-// Search on input
-searchBox.addEventListener('input', performSearch);
-
-// Focus search box on "/" key
-document.addEventListener('keydown', (e) => {
-  if (e.key === '/' && document.activeElement !== searchBox) {
-    e.preventDefault();
-    searchBox.focus();
-  }
-  // Clear search on Escape
-  if (e.key === 'Escape' && document.activeElement === searchBox) {
-    searchBox.value = '';
-    performSearch();
-    searchBox.blur();
-  }
-});
-  </script>
-</body>
+      // Focus search box on "/" key
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "/" && document.activeElement !== searchBox) {
+          e.preventDefault();
+          searchBox.focus();
+        }
+        // Clear search on Escape
+        if (e.key === "Escape" && document.activeElement === searchBox) {
+          searchBox.value = "";
+          performSearch();
+          searchBox.blur();
+        }
+      });
+    </script>
+  </body>
 </html>
