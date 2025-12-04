@@ -371,6 +371,26 @@
         reader.readAsText(file);
       }
 
+      // Helper function to get color from feature properties
+      function getFeatureColor(feature) {
+        if (feature && feature.properties) {
+          // Check for 'color' or 'colour' field (case-insensitive)
+          for (const key in feature.properties) {
+            if (
+              key.toLowerCase() === "color" ||
+              key.toLowerCase() === "colour"
+            ) {
+              const color = feature.properties[key];
+              if (color && typeof color === "string") {
+                return color;
+              }
+            }
+          }
+        }
+        // Default color if none found
+        return "#0366d6";
+      }
+
       function displayGeoJSON(geojson) {
         // Remove existing layer
         if (geojsonLayer) {
@@ -382,17 +402,19 @@
         // Add new GeoJSON layer
         geojsonLayer = L.geoJSON(geojson, {
           style: function (feature) {
+            const featureColor = getFeatureColor(feature);
             return {
-              color: "#0366d6",
+              color: featureColor,
               weight: 2,
               opacity: 0.8,
               fillOpacity: 0.3,
             };
           },
           pointToLayer: function (feature, latlng) {
+            const featureColor = getFeatureColor(feature);
             return L.circleMarker(latlng, {
               radius: 6,
-              fillColor: "#0366d6",
+              fillColor: featureColor,
               color: "#fff",
               weight: 2,
               opacity: 1,
