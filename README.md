@@ -41,4 +41,4 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 
 ## Acknowledgement
 
-This set of tools has been developed using a range of agentic coding tools. This collection was inspired by Simon Willison's experiment in prompt-driven development, using LLMs to develop his own set of standalone HTML + Javascript tools. Simon's code lives on GitHub in [simonw/tools](https://github.com/simonw/tools) and many of his tools used the Claude custom instructions [described here](https://simonwillison.net/2024/Dec/19/one-shot-python-tools/#custom-instructions).
+This set of tools has been developed using a range of agentic coding tools. This collection was inspired by [Simon Willison's](ttps://simonwillison.net/) experiment in prompt-driven development, using LLMs to develop his own set of standalone HTML + Javascript tools. Simon's code lives on GitHub in [simonw/tools](https://github.com/simonw/tools) and many of his tools used the Claude custom instructions [described here](https://simonwillison.net/2024/Dec/19/one-shot-python-tools/#custom-instructions).
