@@ -504,6 +504,7 @@
       let originalImage = null;
       let originalWidth = 0;
       let originalHeight = 0;
+      let originalFileName = "";
       let isLocked = true;
       let currentMode = "percentage";
       let resizedCanvas = null;
@@ -569,6 +570,7 @@
             originalImage = img;
             originalWidth = img.naturalWidth;
             originalHeight = img.naturalHeight;
+            originalFileName = file.name;
 
             // Display original image
             originalViewer.innerHTML = "";
@@ -600,6 +602,7 @@
         originalImage = null;
         originalWidth = 0;
         originalHeight = 0;
+        originalFileName = "";
         originalViewer.innerHTML =
           '<div class="viewer-placeholder">Drop an image here or use "Choose Image" button</div>';
         resizedViewer.innerHTML =
@@ -849,8 +852,23 @@
           const a = document.createElement("a");
           const width = resizedCanvas.width;
           const height = resizedCanvas.height;
+
+          // Generate filename from original name
+          let filename = "resized";
+          let extension = "png";
+
+          if (originalFileName) {
+            const lastDot = originalFileName.lastIndexOf(".");
+            if (lastDot > 0) {
+              filename = originalFileName.substring(0, lastDot);
+              extension = originalFileName.substring(lastDot + 1);
+            } else {
+              filename = originalFileName;
+            }
+          }
+
           a.href = url;
-          a.download = `resized-${width}x${height}.png`;
+          a.download = `${filename}-resized-${width}x${height}.${extension}`;
           document.body.appendChild(a);
           a.click();
           document.body.removeChild(a);
