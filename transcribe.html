@@ -416,20 +416,27 @@
       }
 
       .current-file {
-        padding: 12px;
+        padding: 8px 12px;
         background: #f6f8fa;
         border: 1px solid #e1e4e8;
         border-radius: 6px;
-        font-size: 13px;
+        font-size: 14px;
         margin-bottom: 12px;
         word-break: break-all;
         color: #586069;
+        min-height: 38px;
         transition: background 0.2s, border-color 0.2s, color 0.2s;
       }
 
       .current-file.success {
         background: #d1f4e0;
         border-color: #28a745;
+        color: #24292e;
+      }
+
+      .current-file.error {
+        background: #ffdce0;
+        border-color: #d73a49;
         color: #24292e;
       }
 
@@ -471,6 +478,18 @@
 
     <h1>Transcription Tool</h1>
 
+    <p
+      style="color: #586069; font-size: 14px; line-height: 1.6; margin: 16px 0"
+    >
+      Your transcript is automatically saved every 5 seconds to your browser's
+      local storage. This data persists indefinitely until you clear your
+      browser data or site cookies. Transcripts are only accessible in this
+      browser on this device. For permanent backup, use the Export buttons
+      below. To clear saved data, click the Clear button in the transcript
+      toolbar or use your browser's "Clear browsing data" option and select
+      "Cookies and site data."
+    </p>
+
     <div class="container">
       <div class="main-content">
         <div class="media-panel">
@@ -498,7 +517,38 @@
             </div>
           </div>
 
-          <div class="current-file hidden" id="current-file"></div>
+          <div
+            style="
+              display: flex;
+              gap: 8px;
+              align-items: center;
+              margin-bottom: 12px;
+            "
+          >
+            <div
+              class="current-file"
+              id="current-file"
+              style="flex: 1; margin-bottom: 0"
+            ></div>
+            <button
+              id="clear-media-btn"
+              class="hidden"
+              style="
+                padding: 8px 12px;
+                background: #0366d6;
+                color: white;
+                border: 1px solid rgba(27, 31, 35, 0.15);
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 14px;
+                line-height: 20px;
+                font-family: Helvetica, Arial, sans-serif;
+                white-space: nowrap;
+              "
+            >
+              Clear
+            </button>
+          </div>
 
           <div class="media-container hidden" id="media-container">
             <video id="media-player" controls></video>
@@ -544,7 +594,6 @@
               <li><code>Ctrl+↓</code> - Speed down</li>
               <li><code>Ctrl+B</code> - Bold</li>
               <li><code>Ctrl+I</code> - Italic</li>
-              <li><code>Ctrl+S</code> - Save</li>
             </ul>
           </div>
         </div>
@@ -569,7 +618,6 @@
           <div class="export-toolbar">
             <button id="export-txt">Export as Text</button>
             <button id="export-md">Export as Markdown</button>
-            <button id="save-btn">Save</button>
           </div>
         </div>
       </div>
@@ -586,6 +634,7 @@
         youtubeUrl: document.getElementById("youtube-url"),
         loadYoutubeBtn: document.getElementById("load-youtube"),
         currentFile: document.getElementById("current-file"),
+        clearMediaBtn: document.getElementById("clear-media-btn"),
         mediaContainer: document.getElementById("media-container"),
         youtubeContainer: document.getElementById("youtube-container"),
         mediaPlayer: document.getElementById("media-player"),
@@ -603,7 +652,6 @@
         wordCount: document.getElementById("word-count"),
         exportTxt: document.getElementById("export-txt"),
         exportMd: document.getElementById("export-md"),
-        saveBtn: document.getElementById("save-btn"),
       };
 
       // Load YouTube IFrame API
@@ -641,14 +689,15 @@
       }
 
       // Show status message in current file area
-      function showStatus(message, temporary = true) {
+      function showStatus(message, temporary = true, isError = false) {
         elements.currentFile.textContent = message;
         elements.currentFile.classList.remove("hidden");
-        elements.currentFile.classList.add("success");
+        elements.currentFile.classList.remove("success", "error");
+        elements.currentFile.classList.add(isError ? "error" : "success");
 
         if (temporary) {
           setTimeout(() => {
-            elements.currentFile.classList.remove("success");
+            elements.currentFile.classList.remove("success", "error");
             // Reset to show current file if media is loaded
             if (mediaElement && mediaElement.src) {
               const fileName =
@@ -656,12 +705,12 @@
               if (fileName) {
                 elements.currentFile.textContent = `Current file: ${fileName}`;
               } else {
-                elements.currentFile.classList.add("hidden");
+                elements.currentFile.textContent = "";
               }
-            } else if (isYouTube && youtubePlayer) {
-              elements.currentFile.textContent = "Current: YouTube video";
+            } else if (isYouTube) {
+              elements.currentFile.textContent = "Current file: YouTube Video";
             } else {
-              elements.currentFile.classList.add("hidden");
+              elements.currentFile.textContent = "";
             }
           }, 2000);
         }
@@ -807,6 +856,7 @@
         elements.currentFile.textContent = `Current file: ${file.name}`;
         elements.currentFile.setAttribute("data-filename", file.name);
         elements.currentFile.classList.remove("hidden");
+        elements.clearMediaBtn.classList.remove("hidden");
 
         enableControls();
         showStatus("Media file loaded!");
@@ -863,8 +913,10 @@
             events: {
               onReady: (event) => {
                 enableControls();
-                elements.currentFile.textContent = "Current: YouTube video";
+                elements.currentFile.textContent =
+                  "Current file: YouTube Video";
                 elements.currentFile.classList.remove("hidden");
+                elements.clearMediaBtn.classList.remove("hidden");
 
                 showStatus("YouTube video loaded!");
 
@@ -876,6 +928,45 @@
               },
             },
           });
+        }
+      });
+
+      // Clear Media button
+      elements.clearMediaBtn.addEventListener("click", () => {
+        if (confirm("Are you sure you want to clear the loaded media?")) {
+          // Stop and clear YouTube
+          if (isYouTube && youtubePlayer) {
+            youtubePlayer.stopVideo();
+            youtubePlayer.destroy();
+            youtubePlayer = null;
+          }
+          isYouTube = false;
+          elements.youtubeContainer.classList.add("hidden");
+          elements.youtubeUrl.value = "";
+
+          // Clear local media
+          if (mediaElement) {
+            mediaElement.pause();
+            mediaElement.src = "";
+          }
+          elements.mediaContainer.classList.add("hidden");
+          elements.fileInput.value = "";
+
+          // Clear file display and hide clear media button
+          elements.currentFile.textContent = "";
+          elements.currentFile.removeAttribute("data-filename");
+          elements.clearMediaBtn.classList.add("hidden");
+
+          // Disable controls
+          elements.playPauseBtn.disabled = true;
+          elements.rewindBtn.disabled = true;
+          elements.forwardBtn.disabled = true;
+          elements.speedSlider.disabled = true;
+          elements.timeDisplay.textContent = "0:00 / 0:00";
+          elements.speedSlider.value = "1.0";
+          elements.speedValue.textContent = "1.0";
+
+          showStatus("Media cleared!", true, false);
         }
       });
 
@@ -973,7 +1064,11 @@
         if (confirm("Are you sure you want to clear the transcript?")) {
           elements.transcriptEditor.innerHTML = "";
           updateWordCount();
-          saveToStorage();
+          localStorage.setItem(
+            "transcript",
+            elements.transcriptEditor.innerHTML
+          );
+          showStatus("Transcript deleted!", true, true);
         }
       });
 
@@ -1085,8 +1180,6 @@
         showStatus("Exported as Markdown file!");
       });
 
-      elements.saveBtn.addEventListener("click", saveToStorage);
-
       // Keyboard shortcuts
       document.addEventListener("keydown", (e) => {
         // ESC - Play/Pause
@@ -1133,12 +1226,6 @@
           elements.speedSlider.value = newSpeed;
           elements.speedValue.textContent = newSpeed.toFixed(2);
           setPlaybackSpeed(newSpeed);
-        }
-
-        // Ctrl+S - Save
-        if (e.ctrlKey && e.key === "s") {
-          e.preventDefault();
-          saveToStorage();
         }
 
         // Ctrl+B - Bold
