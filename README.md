@@ -38,3 +38,7 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 ### Web development
 
 - **[Favicon Generator](favicon-generator.html)** — generate favicons in multiple sizes and formats including SVG, ICO, Apple Touch Icons, and Android icons
+
+## Acknowledgement
+
+This set of tools has been developed using a range of agentic coding tools. This collection was inspired by Simon Willison's experiment in prompt-driven development, using LLMs to develop his own set of standalone HTML + Javascript tools. Simon's code lives on GitHub in [simonw/tools](https://github.com/simonw/tools) and many of his tools used the Claude custom instructions [described here](https://simonwillison.net/2024/Dec/19/one-shot-python-tools/#custom-instructions).
