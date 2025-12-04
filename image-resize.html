@@ -1,0 +1,715 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Image Resize Tool</title>
+        <style>
+            * {
+                box-sizing: border-box;
+            }
+            body {
+                font-family:
+                    Helvetica,
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    Arial,
+                    sans-serif;
+                line-height: 1.6;
+                max-width: 980px;
+                margin: 0 auto;
+                padding: 20px;
+                color: #24292e;
+                background: #ffffff;
+            }
+            h1 {
+                border-bottom: 1px solid #eaecef;
+                padding-bottom: 0.3em;
+                margin-top: 0;
+                font-size: 32px;
+                font-weight: 600;
+            }
+            .controls {
+                display: flex;
+                gap: 8px;
+                align-items: center;
+                margin-bottom: 16px;
+                flex-wrap: wrap;
+            }
+            input[type="file"] {
+                display: none;
+            }
+            .btn {
+                background: #0366d6;
+                color: #fff;
+                padding: 8px 12px;
+                border-radius: 6px;
+                border: 1px solid rgba(27, 31, 35, 0.15);
+                cursor: pointer;
+                font-size: 14px;
+                line-height: 20px;
+                text-decoration: none;
+                font-family: inherit;
+                transition: background 0.2s;
+            }
+            .btn:hover {
+                background: #0256c5;
+            }
+            .btn:disabled {
+                background: #94d3a2;
+                cursor: not-allowed;
+                opacity: 0.6;
+            }
+            .btn.secondary {
+                background: #fafbfc;
+                color: #24292e;
+                border: 1px solid rgba(27, 31, 35, 0.15);
+            }
+            .btn.secondary:hover {
+                background: #f3f4f6;
+            }
+            label.btn {
+                display: inline-block;
+                margin: 0;
+            }
+            .panel {
+                background: #f6f8fa;
+                border: 1px solid #d1d5da;
+                border-radius: 6px;
+                padding: 16px;
+                margin-bottom: 16px;
+            }
+            .resize-panel {
+                background: #2d333b;
+                border: 1px solid #444c56;
+                border-radius: 6px;
+                padding: 16px;
+                margin-bottom: 16px;
+                color: #adbac7;
+            }
+            .resize-title {
+                font-size: 16px;
+                font-weight: 600;
+                margin: 0 0 12px 0;
+                color: #adbac7;
+            }
+            .resize-mode {
+                display: flex;
+                gap: 16px;
+                margin-bottom: 16px;
+            }
+            .radio-label {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                cursor: pointer;
+                color: #adbac7;
+            }
+            .radio-label input[type="radio"] {
+                cursor: pointer;
+            }
+            .resize-inputs {
+                display: grid;
+                grid-template-columns: 1fr auto 1fr;
+                gap: 12px;
+                align-items: center;
+                margin-bottom: 16px;
+            }
+            .input-group {
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+            }
+            .input-label {
+                font-size: 12px;
+                font-weight: 500;
+                color: #768390;
+            }
+            .resize-input {
+                background: #22272e;
+                border: 1px solid #444c56;
+                border-radius: 6px;
+                padding: 8px 10px;
+                color: #adbac7;
+                font-size: 14px;
+                font-family: inherit;
+                width: 100%;
+            }
+            .resize-input:focus {
+                outline: none;
+                border-color: #539bf5;
+                box-shadow: 0 0 0 3px rgba(83, 155, 245, 0.3);
+            }
+            .resize-input:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+            .lock-btn {
+                background: #373e47;
+                border: 1px solid #444c56;
+                border-radius: 6px;
+                padding: 8px 12px;
+                cursor: pointer;
+                color: #adbac7;
+                font-size: 18px;
+                line-height: 1;
+                transition: all 0.2s;
+                min-width: 42px;
+                height: 42px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-top: 18px;
+            }
+            .lock-btn:hover {
+                background: #444c56;
+            }
+            .lock-btn.locked {
+                background: #316dca;
+                border-color: #539bf5;
+                color: white;
+            }
+            .lock-btn.locked:hover {
+                background: #2d5daf;
+            }
+            .ratio-section {
+                margin-top: 16px;
+                padding-top: 16px;
+                border-top: 1px solid #444c56;
+            }
+            .ratio-display {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                margin-bottom: 12px;
+            }
+            .ratio-text {
+                font-size: 14px;
+                color: #768390;
+            }
+            .ratio-value {
+                font-weight: 600;
+                color: #adbac7;
+                font-family: 'Courier New', monospace;
+            }
+            .ratio-inputs {
+                display: grid;
+                grid-template-columns: 1fr auto 1fr;
+                gap: 12px;
+                align-items: center;
+            }
+            .ratio-separator {
+                color: #768390;
+                font-size: 18px;
+                font-weight: 600;
+            }
+            .viewer-container {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 16px;
+                margin-bottom: 16px;
+            }
+            .viewer-wrapper {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+            }
+            .viewer-label {
+                font-size: 14px;
+                font-weight: 600;
+                color: #24292e;
+            }
+            .viewer {
+                border: 2px dashed #d1d5da;
+                border-radius: 6px;
+                min-height: 300px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: #f6f8fa;
+                position: relative;
+                overflow: auto;
+            }
+            .viewer.drag-over {
+                border-color: #0366d6;
+                background: #f1f8ff;
+            }
+            .viewer img {
+                max-width: 100%;
+                max-height: 500px;
+                display: block;
+            }
+            .viewer-placeholder {
+                color: #586069;
+                text-align: center;
+                padding: 20px;
+            }
+            .info {
+                background: #fff3cd;
+                border: 1px solid #ffc107;
+                border-radius: 6px;
+                padding: 12px;
+                margin-bottom: 16px;
+                font-size: 14px;
+                color: #856404;
+            }
+            .info strong {
+                display: block;
+                margin-bottom: 4px;
+            }
+            .dimension-info {
+                display: flex;
+                gap: 16px;
+                font-size: 13px;
+                color: #586069;
+                margin-top: 8px;
+            }
+            .back-link {
+                color: #0366d6;
+                text-decoration: none;
+                font-size: 14px;
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                margin-bottom: 16px;
+            }
+            .back-link:hover {
+                text-decoration: underline;
+            }
+            @media (max-width: 768px) {
+                .viewer-container {
+                    grid-template-columns: 1fr;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <a href="index.html" class="back-link">← Back to Tools</a>
+
+        <h1>Image Resize Tool</h1>
+
+        <div class="controls">
+            <label for="fileInput" class="btn secondary">Choose Image</label>
+            <input type="file" id="fileInput" accept="image/*" />
+            <span id="fileStatus"></span>
+            <button id="clearImageBtn" class="btn secondary" style="display:none;">Clear Image</button>
+        </div>
+
+        <div id="originalInfo" class="panel" style="display:none;">
+            <strong>Original Dimensions:</strong>
+            <span id="originalDimensions"></span>
+        </div>
+
+        <div id="resizePanel" class="resize-panel" style="display:none;">
+            <h3 class="resize-title">Resize</h3>
+
+            <div class="resize-mode">
+                <label class="radio-label">
+                    <input type="radio" name="resizeMode" value="percentage" checked />
+                    <span>Percentage</span>
+                </label>
+                <label class="radio-label">
+                    <input type="radio" name="resizeMode" value="pixels" />
+                    <span>Pixels</span>
+                </label>
+            </div>
+
+            <div class="resize-inputs">
+                <div class="input-group">
+                    <label class="input-label">Horizontal</label>
+                    <input type="number" id="horizontalInput" class="resize-input" value="100" min="1" />
+                </div>
+
+                <button id="lockBtn" class="lock-btn locked" title="Lock aspect ratio">
+                    🔒
+                </button>
+
+                <div class="input-group">
+                    <label class="input-label">Vertical</label>
+                    <input type="number" id="verticalInput" class="resize-input" value="100" min="1" />
+                </div>
+            </div>
+
+            <div class="ratio-section">
+                <div class="ratio-display">
+                    <span class="ratio-text">Output Ratio:</span>
+                    <span class="ratio-value" id="ratioDisplay">1:1</span>
+                </div>
+
+                <div class="ratio-inputs">
+                    <div class="input-group">
+                        <label class="input-label">Ratio Width</label>
+                        <input type="number" id="ratioWidth" class="resize-input" placeholder="e.g., 16" min="1" step="0.01" />
+                    </div>
+
+                    <div class="ratio-separator">:</div>
+
+                    <div class="input-group">
+                        <label class="input-label">Ratio Height</label>
+                        <input type="number" id="ratioHeight" class="resize-input" placeholder="e.g., 9" min="1" step="0.01" />
+                    </div>
+                </div>
+
+                <div style="margin-top: 12px;">
+                    <button id="applyRatioBtn" class="btn" style="width: 100%;" disabled>Apply Ratio to Image</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="viewer-container">
+            <div class="viewer-wrapper">
+                <div class="viewer-label">Original</div>
+                <div id="originalViewer" class="viewer">
+                    <div class="viewer-placeholder">
+                        Drop an image here or use "Choose Image" button
+                    </div>
+                </div>
+                <div id="originalDimensionInfo" class="dimension-info" style="display:none;"></div>
+            </div>
+
+            <div class="viewer-wrapper">
+                <div class="viewer-label">Resized Preview</div>
+                <div id="resizedViewer" class="viewer">
+                    <div class="viewer-placeholder">
+                        Preview will appear here
+                    </div>
+                </div>
+                <div id="resizedDimensionInfo" class="dimension-info" style="display:none;"></div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="downloadBtn" class="btn" style="display:none;">Download Resized Image</button>
+        </div>
+
+        <script>
+            // DOM Elements
+            const fileInput = document.getElementById('fileInput');
+            const fileStatus = document.getElementById('fileStatus');
+            const clearImageBtn = document.getElementById('clearImageBtn');
+            const originalViewer = document.getElementById('originalViewer');
+            const resizedViewer = document.getElementById('resizedViewer');
+            const originalInfo = document.getElementById('originalInfo');
+            const originalDimensions = document.getElementById('originalDimensions');
+            const originalDimensionInfo = document.getElementById('originalDimensionInfo');
+            const resizedDimensionInfo = document.getElementById('resizedDimensionInfo');
+            const resizePanel = document.getElementById('resizePanel');
+            const horizontalInput = document.getElementById('horizontalInput');
+            const verticalInput = document.getElementById('verticalInput');
+            const lockBtn = document.getElementById('lockBtn');
+            const ratioDisplay = document.getElementById('ratioDisplay');
+            const ratioWidth = document.getElementById('ratioWidth');
+            const ratioHeight = document.getElementById('ratioHeight');
+            const applyRatioBtn = document.getElementById('applyRatioBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+
+            // State
+            let originalImage = null;
+            let originalWidth = 0;
+            let originalHeight = 0;
+            let isLocked = true;
+            let currentMode = 'percentage';
+            let resizedCanvas = null;
+            let isUpdatingFromRatio = false;
+
+            // Radio buttons
+            const radioButtons = document.querySelectorAll('input[name="resizeMode"]');
+
+            // Event Listeners
+            fileInput.addEventListener('change', handleFileSelect);
+            clearImageBtn.addEventListener('click', clearImage);
+            originalViewer.addEventListener('dragover', handleDragOver);
+            originalViewer.addEventListener('dragleave', handleDragLeave);
+            originalViewer.addEventListener('drop', handleDrop);
+            lockBtn.addEventListener('click', toggleLock);
+            horizontalInput.addEventListener('input', handleHorizontalChange);
+            verticalInput.addEventListener('input', handleVerticalChange);
+            ratioWidth.addEventListener('input', handleRatioInputChange);
+            ratioHeight.addEventListener('input', handleRatioInputChange);
+            applyRatioBtn.addEventListener('click', applyRatioToImage);
+            downloadBtn.addEventListener('click', downloadResizedImage);
+
+            radioButtons.forEach(radio => {
+                radio.addEventListener('change', handleModeChange);
+            });
+
+            function handleFileSelect(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    loadImage(file);
+                }
+            }
+
+            function handleDragOver(e) {
+                e.preventDefault();
+                originalViewer.classList.add('drag-over');
+            }
+
+            function handleDragLeave(e) {
+                e.preventDefault();
+                originalViewer.classList.remove('drag-over');
+            }
+
+            function handleDrop(e) {
+                e.preventDefault();
+                originalViewer.classList.remove('drag-over');
+
+                const file = e.dataTransfer.files[0];
+                if (file && file.type.startsWith('image/')) {
+                    loadImage(file);
+                }
+            }
+
+            function loadImage(file) {
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        originalImage = img;
+                        originalWidth = img.naturalWidth;
+                        originalHeight = img.naturalHeight;
+
+                        // Display original image
+                        originalViewer.innerHTML = '';
+                        originalViewer.appendChild(img);
+
+                        // Update UI
+                        fileStatus.textContent = `${file.name} loaded`;
+                        clearImageBtn.style.display = 'inline-block';
+                        originalInfo.style.display = 'block';
+                        originalDimensions.textContent = `${originalWidth} × ${originalHeight} pixels`;
+                        originalDimensionInfo.style.display = 'flex';
+                        originalDimensionInfo.textContent = `${originalWidth} × ${originalHeight} px`;
+                        resizePanel.style.display = 'block';
+
+                        // Reset inputs
+                        horizontalInput.value = currentMode === 'percentage' ? 100 : originalWidth;
+                        verticalInput.value = currentMode === 'percentage' ? 100 : originalHeight;
+                        isLocked = true;
+                        updateLockButton();
+
+                        // Initial resize
+                        updateResize();
+                    };
+                    img.src = e.target.result;
+                };
+
+                reader.readAsDataURL(file);
+            }
+
+            function clearImage() {
+                originalImage = null;
+                originalWidth = 0;
+                originalHeight = 0;
+                originalViewer.innerHTML = '<div class="viewer-placeholder">Drop an image here or use "Choose Image" button</div>';
+                resizedViewer.innerHTML = '<div class="viewer-placeholder">Preview will appear here</div>';
+                fileInput.value = '';
+                fileStatus.textContent = '';
+                clearImageBtn.style.display = 'none';
+                originalInfo.style.display = 'none';
+                originalDimensionInfo.style.display = 'none';
+                resizedDimensionInfo.style.display = 'none';
+                resizePanel.style.display = 'none';
+                downloadBtn.style.display = 'none';
+                ratioWidth.value = '';
+                ratioHeight.value = '';
+                applyRatioBtn.disabled = true;
+            }
+
+            function toggleLock() {
+                isLocked = !isLocked;
+                updateLockButton();
+            }
+
+            function updateLockButton() {
+                if (isLocked) {
+                    lockBtn.classList.add('locked');
+                    lockBtn.textContent = '🔒';
+                    lockBtn.title = 'Unlock aspect ratio';
+                } else {
+                    lockBtn.classList.remove('locked');
+                    lockBtn.textContent = '🔓';
+                    lockBtn.title = 'Lock aspect ratio';
+                }
+            }
+
+            function handleModeChange(e) {
+                currentMode = e.target.value;
+
+                if (originalImage) {
+                    if (currentMode === 'percentage') {
+                        horizontalInput.value = 100;
+                        verticalInput.value = 100;
+                    } else {
+                        horizontalInput.value = originalWidth;
+                        verticalInput.value = originalHeight;
+                    }
+                    updateResize();
+                }
+            }
+
+            function handleHorizontalChange() {
+                if (isLocked && originalImage && !isUpdatingFromRatio) {
+                    const horizontal = parseFloat(horizontalInput.value) || 0;
+
+                    if (currentMode === 'percentage') {
+                        verticalInput.value = horizontal;
+                    } else {
+                        const aspectRatio = originalHeight / originalWidth;
+                        verticalInput.value = Math.round(horizontal * aspectRatio);
+                    }
+                }
+                updateResize();
+            }
+
+            function handleVerticalChange() {
+                if (isLocked && originalImage && !isUpdatingFromRatio) {
+                    const vertical = parseFloat(verticalInput.value) || 0;
+
+                    if (currentMode === 'percentage') {
+                        horizontalInput.value = vertical;
+                    } else {
+                        const aspectRatio = originalWidth / originalHeight;
+                        horizontalInput.value = Math.round(vertical * aspectRatio);
+                    }
+                }
+                updateResize();
+            }
+
+            function updateResize() {
+                if (!originalImage) return;
+
+                let newWidth, newHeight;
+
+                if (currentMode === 'percentage') {
+                    const horizontalPercent = parseFloat(horizontalInput.value) || 100;
+                    const verticalPercent = parseFloat(verticalInput.value) || 100;
+                    newWidth = Math.round(originalWidth * (horizontalPercent / 100));
+                    newHeight = Math.round(originalHeight * (verticalPercent / 100));
+                } else {
+                    newWidth = parseInt(horizontalInput.value) || originalWidth;
+                    newHeight = parseInt(verticalInput.value) || originalHeight;
+                }
+
+                // Create canvas for resizing
+                const canvas = document.createElement('canvas');
+                canvas.width = newWidth;
+                canvas.height = newHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(originalImage, 0, 0, newWidth, newHeight);
+
+                // Display resized image
+                resizedCanvas = canvas;
+                canvas.toBlob(blob => {
+                    const url = URL.createObjectURL(blob);
+                    const img = new Image();
+                    img.onload = function() {
+                        resizedViewer.innerHTML = '';
+                        resizedViewer.appendChild(img);
+                        resizedDimensionInfo.style.display = 'flex';
+                        resizedDimensionInfo.textContent = `${newWidth} × ${newHeight} px`;
+                        downloadBtn.style.display = 'inline-block';
+                        URL.revokeObjectURL(url);
+                    };
+                    img.src = url;
+                });
+
+                // Update ratio display
+                updateRatioDisplay(newWidth, newHeight);
+            }
+
+            function updateRatioDisplay(width, height) {
+                const gcd = getGCD(width, height);
+                const ratioW = width / gcd;
+                const ratioH = height / gcd;
+
+                // Format ratio nicely
+                if (ratioW === ratioH) {
+                    ratioDisplay.textContent = '1:1';
+                } else if (ratioW % 1 === 0 && ratioH % 1 === 0 && ratioW < 100 && ratioH < 100) {
+                    ratioDisplay.textContent = `${ratioW}:${ratioH}`;
+                } else {
+                    ratioDisplay.textContent = `${ratioW.toFixed(2)}:${ratioH.toFixed(2)}`;
+                }
+            }
+
+            function getGCD(a, b) {
+                return b === 0 ? a : getGCD(b, a % b);
+            }
+
+            function handleRatioInputChange() {
+                const w = parseFloat(ratioWidth.value);
+                const h = parseFloat(ratioHeight.value);
+
+                applyRatioBtn.disabled = !(w > 0 && h > 0 && originalImage);
+            }
+
+            function applyRatioToImage() {
+                if (!originalImage) return;
+
+                const targetRatioW = parseFloat(ratioWidth.value);
+                const targetRatioH = parseFloat(ratioHeight.value);
+
+                if (!targetRatioW || !targetRatioH) return;
+
+                isUpdatingFromRatio = true;
+
+                const targetRatio = targetRatioW / targetRatioH;
+                const currentRatio = originalWidth / originalHeight;
+
+                if (currentMode === 'percentage') {
+                    // In percentage mode, we'll adjust to fit the target ratio
+                    // keeping one dimension at 100%
+                    if (targetRatio > currentRatio) {
+                        // Wider ratio - keep width at 100%, reduce height
+                        horizontalInput.value = 100;
+                        verticalInput.value = (100 * currentRatio / targetRatio).toFixed(2);
+                    } else {
+                        // Taller ratio - keep height at 100%, reduce width
+                        verticalInput.value = 100;
+                        horizontalInput.value = (100 * targetRatio / currentRatio).toFixed(2);
+                    }
+                } else {
+                    // In pixels mode, we'll calculate new dimensions maintaining the target ratio
+                    // and trying to keep the size similar to original
+                    let newWidth, newHeight;
+
+                    if (targetRatio > currentRatio) {
+                        // Wider ratio - base on original width
+                        newWidth = originalWidth;
+                        newHeight = Math.round(originalWidth / targetRatio);
+                    } else {
+                        // Taller ratio - base on original height
+                        newHeight = originalHeight;
+                        newWidth = Math.round(originalHeight * targetRatio);
+                    }
+
+                    horizontalInput.value = newWidth;
+                    verticalInput.value = newHeight;
+                }
+
+                isUpdatingFromRatio = false;
+                updateResize();
+            }
+
+            function downloadResizedImage() {
+                if (!resizedCanvas) return;
+
+                resizedCanvas.toBlob(blob => {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    const width = resizedCanvas.width;
+                    const height = resizedCanvas.height;
+                    a.href = url;
+                    a.download = `resized-${width}x${height}.png`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, 'image/png');
+            }
+        </script>
+    </body>
+</html>
