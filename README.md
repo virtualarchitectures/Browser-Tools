@@ -22,6 +22,7 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 ### Image and media
 
 - **[EXIF Data Viewer](exif-viewer.html)** — extract and view EXIF metadata from photos including camera settings, GPS location, and timestamps
+- **[Image Resize Tool](image-resize.html)** — resize images by percentage or pixels with precise scale factor control for copying scale factor to other images
 - **[Pixel Coordinates](pixel-coords.html)** — click on images to capture and record pixel coordinates
 - **[Transcription Tool](transcribe.html)** — transcribe audio and video files with keyboard shortcuts, timestamps, and speed control
 
