@@ -30,12 +30,26 @@
                 font-size: 32px;
                 font-weight: 600;
             }
+            .file-controls {
+                background: #f6f8fa;
+                padding: 16px;
+                border-radius: 6px;
+                border: 1px solid #e1e4e8;
+                margin-bottom: 16px;
+                display: flex;
+                align-items: center;
+                gap: 0;
+            }
             .controls {
                 display: flex;
                 gap: 8px;
                 align-items: center;
                 margin-bottom: 16px;
                 flex-wrap: wrap;
+            }
+            .small {
+                font-size: 13px;
+                color: #586069;
             }
             input[type="file"] {
                 display: none;
@@ -81,18 +95,18 @@
                 margin-bottom: 16px;
             }
             .resize-panel {
-                background: #2d333b;
-                border: 1px solid #444c56;
+                background: #f6f8fa;
+                border: 1px solid #d1d5da;
                 border-radius: 6px;
                 padding: 16px;
                 margin-bottom: 16px;
-                color: #adbac7;
+                color: #24292e;
             }
             .resize-title {
                 font-size: 16px;
                 font-weight: 600;
                 margin: 0 0 12px 0;
-                color: #adbac7;
+                color: #24292e;
             }
             .resize-mode {
                 display: flex;
@@ -104,7 +118,7 @@
                 align-items: center;
                 gap: 6px;
                 cursor: pointer;
-                color: #adbac7;
+                color: #24292e;
             }
             .radio-label input[type="radio"] {
                 cursor: pointer;
@@ -124,34 +138,34 @@
             .input-label {
                 font-size: 12px;
                 font-weight: 500;
-                color: #768390;
+                color: #586069;
             }
             .resize-input {
-                background: #22272e;
-                border: 1px solid #444c56;
+                background: #ffffff;
+                border: 1px solid #d1d5da;
                 border-radius: 6px;
                 padding: 8px 10px;
-                color: #adbac7;
+                color: #24292e;
                 font-size: 14px;
                 font-family: inherit;
                 width: 100%;
             }
             .resize-input:focus {
                 outline: none;
-                border-color: #539bf5;
-                box-shadow: 0 0 0 3px rgba(83, 155, 245, 0.3);
+                border-color: #0366d6;
+                box-shadow: 0 0 0 3px rgba(3, 102, 214, 0.3);
             }
             .resize-input:disabled {
                 opacity: 0.5;
                 cursor: not-allowed;
             }
             .lock-btn {
-                background: #373e47;
-                border: 1px solid #444c56;
+                background: #fafbfc;
+                border: 1px solid #d1d5da;
                 border-radius: 6px;
                 padding: 8px 12px;
                 cursor: pointer;
-                color: #adbac7;
+                color: #24292e;
                 font-size: 18px;
                 line-height: 1;
                 transition: all 0.2s;
@@ -163,46 +177,90 @@
                 margin-top: 18px;
             }
             .lock-btn:hover {
-                background: #444c56;
+                background: #f3f4f6;
             }
             .lock-btn.locked {
-                background: #316dca;
-                border-color: #539bf5;
+                background: #0366d6;
+                border-color: #0366d6;
                 color: white;
             }
             .lock-btn.locked:hover {
-                background: #2d5daf;
+                background: #0256c5;
             }
             .ratio-section {
                 margin-top: 16px;
                 padding-top: 16px;
-                border-top: 1px solid #444c56;
+                border-top: 1px solid #d1d5da;
             }
             .ratio-display {
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                margin-bottom: 12px;
-            }
-            .ratio-text {
-                font-size: 14px;
-                color: #768390;
-            }
-            .ratio-value {
-                font-weight: 600;
-                color: #adbac7;
-                font-family: 'Courier New', monospace;
-            }
-            .ratio-inputs {
                 display: grid;
-                grid-template-columns: 1fr auto 1fr;
+                grid-template-columns: 1fr 1fr;
                 gap: 12px;
-                align-items: center;
+                margin-bottom: 16px;
             }
-            .ratio-separator {
-                color: #768390;
-                font-size: 18px;
+            .scale-item {
+                background: #ffffff;
+                border: 1px solid #d1d5da;
+                border-radius: 6px;
+                padding: 12px;
+            }
+            .scale-label {
+                font-size: 12px;
+                color: #586069;
+                margin-bottom: 4px;
+            }
+            .scale-value {
                 font-weight: 600;
+                color: #0366d6;
+                font-family: "Courier New", monospace;
+                font-size: 16px;
+            }
+            .scale-info {
+                font-size: 12px;
+                color: #586069;
+                line-height: 1.5;
+            }
+            .scale-factor-input {
+                background: #ffffff;
+                border: 1px solid #d1d5da;
+                border-radius: 6px;
+                padding: 12px;
+                color: #24292e;
+                font-size: 14px;
+                font-family: "Courier New", monospace;
+                width: 100%;
+                resize: vertical;
+                min-height: 42px;
+            }
+            .scale-factor-input:focus {
+                outline: none;
+                border-color: #0366d6;
+                box-shadow: 0 0 0 3px rgba(3, 102, 214, 0.3);
+            }
+            .copy-scale-btn {
+                background: #238636;
+                color: white;
+                padding: 8px 16px;
+                border-radius: 6px;
+                border: none;
+                cursor: pointer;
+                font-size: 13px;
+                font-weight: 600;
+                transition: background 0.2s;
+                margin-top: 8px;
+            }
+            .copy-scale-btn:hover {
+                background: #2ea043;
+            }
+            .button-container {
+                display: flex;
+                justify-content: center;
+                gap: 8px;
+                margin-top: 12px;
+            }
+            .download-controls {
+                display: flex;
+                justify-content: flex-end;
             }
             .viewer-container {
                 display: grid;
@@ -289,70 +347,118 @@
 
         <h1>Image Resize Tool</h1>
 
-        <div class="controls">
-            <label for="fileInput" class="btn secondary">Choose Image</label>
+        <div class="file-controls">
+            <label for="fileInput" class="btn">Choose Image</label>
             <input type="file" id="fileInput" accept="image/*" />
-            <span id="fileStatus"></span>
-            <button id="clearImageBtn" class="btn secondary" style="display:none;">Clear Image</button>
+            <span id="fileStatus" class="small" style="margin-left: 8px"
+                >No file selected</span
+            >
+            <button
+                id="clearImageBtn"
+                class="btn secondary"
+                style="margin-left: auto"
+                disabled
+            >
+                Clear Image
+            </button>
         </div>
 
-        <div id="originalInfo" class="panel" style="display:none;">
-            <strong>Original Dimensions:</strong>
-            <span id="originalDimensions"></span>
-        </div>
-
-        <div id="resizePanel" class="resize-panel" style="display:none;">
+        <div id="resizePanel" class="resize-panel">
             <h3 class="resize-title">Resize</h3>
 
             <div class="resize-mode">
                 <label class="radio-label">
-                    <input type="radio" name="resizeMode" value="percentage" checked />
+                    <input
+                        type="radio"
+                        name="resizeMode"
+                        value="percentage"
+                        checked
+                    />
                     <span>Percentage</span>
                 </label>
                 <label class="radio-label">
                     <input type="radio" name="resizeMode" value="pixels" />
                     <span>Pixels</span>
                 </label>
+                <label class="radio-label">
+                    <input type="radio" name="resizeMode" value="scalefactor" />
+                    <span>Scale Factor</span>
+                </label>
             </div>
 
-            <div class="resize-inputs">
+            <div class="resize-inputs" id="standardInputs">
                 <div class="input-group">
                     <label class="input-label">Horizontal</label>
-                    <input type="number" id="horizontalInput" class="resize-input" value="100" min="1" />
+                    <input
+                        type="number"
+                        id="horizontalInput"
+                        class="resize-input"
+                        value=""
+                        min="1"
+                        placeholder="100"
+                    />
                 </div>
 
-                <button id="lockBtn" class="lock-btn locked" title="Lock aspect ratio">
+                <button
+                    id="lockBtn"
+                    class="lock-btn locked"
+                    title="Lock aspect ratio"
+                >
                     🔒
                 </button>
 
                 <div class="input-group">
                     <label class="input-label">Vertical</label>
-                    <input type="number" id="verticalInput" class="resize-input" value="100" min="1" />
+                    <input
+                        type="number"
+                        id="verticalInput"
+                        class="resize-input"
+                        value=""
+                        min="1"
+                        placeholder="100"
+                    />
+                </div>
+            </div>
+
+            <div id="scaleFactorInputContainer" style="display: none">
+                <div class="input-group">
+                    <label class="input-label">Paste Scale Factor Values</label>
+                    <textarea
+                        id="scaleFactorInput"
+                        class="scale-factor-input"
+                        placeholder='{"width": 83.16024844720497, "height": 83.16024844720497}'
+                    ></textarea>
+                </div>
+                <div class="button-container">
+                    <button id="applyScaleFactorBtn" class="btn">
+                        Apply Scale Factor
+                    </button>
                 </div>
             </div>
 
             <div class="ratio-section">
-                <div class="ratio-display">
-                    <span class="ratio-text">Output Ratio:</span>
-                    <span class="ratio-value" id="ratioDisplay">1:1</span>
+                <div class="input-group">
+                    <label class="input-label">Scale Factor (JSON)</label>
+                    <textarea
+                        id="scaleFactorDisplay"
+                        class="scale-factor-input"
+                        readonly
+                        style="
+                            min-height: 42px;
+                            background: #ffffff;
+                            cursor: text;
+                        "
+                    ></textarea>
                 </div>
 
-                <div class="ratio-inputs">
-                    <div class="input-group">
-                        <label class="input-label">Ratio Width</label>
-                        <input type="number" id="ratioWidth" class="resize-input" placeholder="e.g., 16" min="1" step="0.01" />
-                    </div>
-
-                    <div class="ratio-separator">:</div>
-
-                    <div class="input-group">
-                        <label class="input-label">Ratio Height</label>
-                        <input type="number" id="ratioHeight" class="resize-input" placeholder="e.g., 9" min="1" step="0.01" />
-                    </div>
+                <div class="scale-info">
+                    Copy this scale factor and paste into Scale Factor mode to
+                    apply exact scaling to other images.
                 </div>
-
-                <div style="margin-top: 12px;">
-                    <button id="applyRatioBtn" class="btn" style="width: 100%;" disabled>Apply Ratio to Image</button>
+                <div class="button-container">
+                    <button id="copyScaleBtn" class="copy-scale-btn">
+                        Copy Scale Factor
+                    </button>
                 </div>
             </div>
         </div>
@@ -365,7 +471,7 @@
                         Drop an image here or use "Choose Image" button
                     </div>
                 </div>
-                <div id="originalDimensionInfo" class="dimension-info" style="display:none;"></div>
+                <div id="originalDimensionInfo" class="dimension-info"></div>
             </div>
 
             <div class="viewer-wrapper">
@@ -375,63 +481,78 @@
                         Preview will appear here
                     </div>
                 </div>
-                <div id="resizedDimensionInfo" class="dimension-info" style="display:none;"></div>
+                <div id="resizedDimensionInfo" class="dimension-info"></div>
             </div>
         </div>
 
-        <div class="controls">
-            <button id="downloadBtn" class="btn" style="display:none;">Download Resized Image</button>
+        <div class="download-controls">
+            <button id="downloadBtn" class="btn" style="display: none">
+                Download Resized Image
+            </button>
         </div>
 
         <script>
             // DOM Elements
-            const fileInput = document.getElementById('fileInput');
-            const fileStatus = document.getElementById('fileStatus');
-            const clearImageBtn = document.getElementById('clearImageBtn');
-            const originalViewer = document.getElementById('originalViewer');
-            const resizedViewer = document.getElementById('resizedViewer');
-            const originalInfo = document.getElementById('originalInfo');
-            const originalDimensions = document.getElementById('originalDimensions');
-            const originalDimensionInfo = document.getElementById('originalDimensionInfo');
-            const resizedDimensionInfo = document.getElementById('resizedDimensionInfo');
-            const resizePanel = document.getElementById('resizePanel');
-            const horizontalInput = document.getElementById('horizontalInput');
-            const verticalInput = document.getElementById('verticalInput');
-            const lockBtn = document.getElementById('lockBtn');
-            const ratioDisplay = document.getElementById('ratioDisplay');
-            const ratioWidth = document.getElementById('ratioWidth');
-            const ratioHeight = document.getElementById('ratioHeight');
-            const applyRatioBtn = document.getElementById('applyRatioBtn');
-            const downloadBtn = document.getElementById('downloadBtn');
+            const fileInput = document.getElementById("fileInput");
+            const fileStatus = document.getElementById("fileStatus");
+            const clearImageBtn = document.getElementById("clearImageBtn");
+            const originalViewer = document.getElementById("originalViewer");
+            const resizedViewer = document.getElementById("resizedViewer");
+            const originalDimensionInfo = document.getElementById(
+                "originalDimensionInfo",
+            );
+            const resizedDimensionInfo = document.getElementById(
+                "resizedDimensionInfo",
+            );
+            const resizePanel = document.getElementById("resizePanel");
+            const horizontalInput = document.getElementById("horizontalInput");
+            const verticalInput = document.getElementById("verticalInput");
+            const lockBtn = document.getElementById("lockBtn");
+            const scaleFactorDisplay =
+                document.getElementById("scaleFactorDisplay");
+            const downloadBtn = document.getElementById("downloadBtn");
+            const standardInputs = document.getElementById("standardInputs");
+            const scaleFactorInputContainer = document.getElementById(
+                "scaleFactorInputContainer",
+            );
+            const scaleFactorInput =
+                document.getElementById("scaleFactorInput");
+            const applyScaleFactorBtn = document.getElementById(
+                "applyScaleFactorBtn",
+            );
+            const copyScaleBtn = document.getElementById("copyScaleBtn");
 
             // State
             let originalImage = null;
             let originalWidth = 0;
             let originalHeight = 0;
             let isLocked = true;
-            let currentMode = 'percentage';
+            let currentMode = "percentage";
             let resizedCanvas = null;
-            let isUpdatingFromRatio = false;
+            let isUpdatingFromScale = false;
+            let storedHorizontalScale = 100;
+            let storedVerticalScale = 100;
 
             // Radio buttons
-            const radioButtons = document.querySelectorAll('input[name="resizeMode"]');
+            const radioButtons = document.querySelectorAll(
+                'input[name="resizeMode"]',
+            );
 
             // Event Listeners
-            fileInput.addEventListener('change', handleFileSelect);
-            clearImageBtn.addEventListener('click', clearImage);
-            originalViewer.addEventListener('dragover', handleDragOver);
-            originalViewer.addEventListener('dragleave', handleDragLeave);
-            originalViewer.addEventListener('drop', handleDrop);
-            lockBtn.addEventListener('click', toggleLock);
-            horizontalInput.addEventListener('input', handleHorizontalChange);
-            verticalInput.addEventListener('input', handleVerticalChange);
-            ratioWidth.addEventListener('input', handleRatioInputChange);
-            ratioHeight.addEventListener('input', handleRatioInputChange);
-            applyRatioBtn.addEventListener('click', applyRatioToImage);
-            downloadBtn.addEventListener('click', downloadResizedImage);
+            fileInput.addEventListener("change", handleFileSelect);
+            clearImageBtn.addEventListener("click", clearImage);
+            originalViewer.addEventListener("dragover", handleDragOver);
+            originalViewer.addEventListener("dragleave", handleDragLeave);
+            originalViewer.addEventListener("drop", handleDrop);
+            lockBtn.addEventListener("click", toggleLock);
+            horizontalInput.addEventListener("input", handleHorizontalChange);
+            verticalInput.addEventListener("input", handleVerticalChange);
+            downloadBtn.addEventListener("click", downloadResizedImage);
+            applyScaleFactorBtn.addEventListener("click", applyScaleFactor);
+            copyScaleBtn.addEventListener("click", copyScaleToClipboard);
 
-            radioButtons.forEach(radio => {
-                radio.addEventListener('change', handleModeChange);
+            radioButtons.forEach((radio) => {
+                radio.addEventListener("change", handleModeChange);
             });
 
             function handleFileSelect(e) {
@@ -443,20 +564,20 @@
 
             function handleDragOver(e) {
                 e.preventDefault();
-                originalViewer.classList.add('drag-over');
+                originalViewer.classList.add("drag-over");
             }
 
             function handleDragLeave(e) {
                 e.preventDefault();
-                originalViewer.classList.remove('drag-over');
+                originalViewer.classList.remove("drag-over");
             }
 
             function handleDrop(e) {
                 e.preventDefault();
-                originalViewer.classList.remove('drag-over');
+                originalViewer.classList.remove("drag-over");
 
                 const file = e.dataTransfer.files[0];
-                if (file && file.type.startsWith('image/')) {
+                if (file && file.type.startsWith("image/")) {
                     loadImage(file);
                 }
             }
@@ -464,29 +585,27 @@
             function loadImage(file) {
                 const reader = new FileReader();
 
-                reader.onload = function(e) {
+                reader.onload = function (e) {
                     const img = new Image();
-                    img.onload = function() {
+                    img.onload = function () {
                         originalImage = img;
                         originalWidth = img.naturalWidth;
                         originalHeight = img.naturalHeight;
 
                         // Display original image
-                        originalViewer.innerHTML = '';
+                        originalViewer.innerHTML = "";
                         originalViewer.appendChild(img);
 
                         // Update UI
                         fileStatus.textContent = `${file.name} loaded`;
-                        clearImageBtn.style.display = 'inline-block';
-                        originalInfo.style.display = 'block';
-                        originalDimensions.textContent = `${originalWidth} × ${originalHeight} pixels`;
-                        originalDimensionInfo.style.display = 'flex';
+                        clearImageBtn.disabled = false;
                         originalDimensionInfo.textContent = `${originalWidth} × ${originalHeight} px`;
-                        resizePanel.style.display = 'block';
 
                         // Reset inputs
-                        horizontalInput.value = currentMode === 'percentage' ? 100 : originalWidth;
-                        verticalInput.value = currentMode === 'percentage' ? 100 : originalHeight;
+                        horizontalInput.value =
+                            currentMode === "percentage" ? 100 : originalWidth;
+                        verticalInput.value =
+                            currentMode === "percentage" ? 100 : originalHeight;
                         isLocked = true;
                         updateLockButton();
 
@@ -503,19 +622,22 @@
                 originalImage = null;
                 originalWidth = 0;
                 originalHeight = 0;
-                originalViewer.innerHTML = '<div class="viewer-placeholder">Drop an image here or use "Choose Image" button</div>';
-                resizedViewer.innerHTML = '<div class="viewer-placeholder">Preview will appear here</div>';
-                fileInput.value = '';
-                fileStatus.textContent = '';
-                clearImageBtn.style.display = 'none';
-                originalInfo.style.display = 'none';
-                originalDimensionInfo.style.display = 'none';
-                resizedDimensionInfo.style.display = 'none';
-                resizePanel.style.display = 'none';
-                downloadBtn.style.display = 'none';
-                ratioWidth.value = '';
-                ratioHeight.value = '';
-                applyRatioBtn.disabled = true;
+                originalViewer.innerHTML =
+                    '<div class="viewer-placeholder">Drop an image here or use "Choose Image" button</div>';
+                resizedViewer.innerHTML =
+                    '<div class="viewer-placeholder">Preview will appear here</div>';
+                fileInput.value = "";
+                fileStatus.textContent = "No file selected";
+                clearImageBtn.disabled = true;
+                originalDimensionInfo.textContent = "";
+                resizedDimensionInfo.textContent = "";
+                horizontalInput.value = "";
+                verticalInput.value = "";
+                scaleFactorInput.value = "";
+                downloadBtn.style.display = "none";
+                storedHorizontalScale = 100;
+                storedVerticalScale = 100;
+                scaleFactorDisplay.value = "";
             }
 
             function toggleLock() {
@@ -525,54 +647,67 @@
 
             function updateLockButton() {
                 if (isLocked) {
-                    lockBtn.classList.add('locked');
-                    lockBtn.textContent = '🔒';
-                    lockBtn.title = 'Unlock aspect ratio';
+                    lockBtn.classList.add("locked");
+                    lockBtn.textContent = "🔒";
+                    lockBtn.title = "Unlock aspect ratio";
                 } else {
-                    lockBtn.classList.remove('locked');
-                    lockBtn.textContent = '🔓';
-                    lockBtn.title = 'Lock aspect ratio';
+                    lockBtn.classList.remove("locked");
+                    lockBtn.textContent = "🔓";
+                    lockBtn.title = "Lock aspect ratio";
                 }
             }
 
             function handleModeChange(e) {
                 currentMode = e.target.value;
 
-                if (originalImage) {
-                    if (currentMode === 'percentage') {
-                        horizontalInput.value = 100;
-                        verticalInput.value = 100;
-                    } else {
-                        horizontalInput.value = originalWidth;
-                        verticalInput.value = originalHeight;
+                // Toggle UI visibility based on mode
+                if (currentMode === "scalefactor") {
+                    standardInputs.style.display = "none";
+                    scaleFactorInputContainer.style.display = "block";
+                } else {
+                    standardInputs.style.display = "grid";
+                    scaleFactorInputContainer.style.display = "none";
+
+                    if (originalImage) {
+                        if (currentMode === "percentage") {
+                            horizontalInput.value = 100;
+                            verticalInput.value = 100;
+                        } else {
+                            horizontalInput.value = originalWidth;
+                            verticalInput.value = originalHeight;
+                        }
+                        updateResize();
                     }
-                    updateResize();
                 }
             }
 
             function handleHorizontalChange() {
-                if (isLocked && originalImage && !isUpdatingFromRatio) {
+                if (isLocked && originalImage && !isUpdatingFromScale) {
                     const horizontal = parseFloat(horizontalInput.value) || 0;
 
-                    if (currentMode === 'percentage') {
+                    if (currentMode === "percentage") {
                         verticalInput.value = horizontal;
                     } else {
                         const aspectRatio = originalHeight / originalWidth;
-                        verticalInput.value = Math.round(horizontal * aspectRatio);
+                        verticalInput.value = Math.round(
+                            horizontal * aspectRatio,
+                        );
                     }
                 }
                 updateResize();
             }
 
             function handleVerticalChange() {
-                if (isLocked && originalImage && !isUpdatingFromRatio) {
+                if (isLocked && originalImage && !isUpdatingFromScale) {
                     const vertical = parseFloat(verticalInput.value) || 0;
 
-                    if (currentMode === 'percentage') {
+                    if (currentMode === "percentage") {
                         horizontalInput.value = vertical;
                     } else {
                         const aspectRatio = originalWidth / originalHeight;
-                        horizontalInput.value = Math.round(vertical * aspectRatio);
+                        horizontalInput.value = Math.round(
+                            vertical * aspectRatio,
+                        );
                     }
                 }
                 updateResize();
@@ -583,123 +718,174 @@
 
                 let newWidth, newHeight;
 
-                if (currentMode === 'percentage') {
-                    const horizontalPercent = parseFloat(horizontalInput.value) || 100;
-                    const verticalPercent = parseFloat(verticalInput.value) || 100;
-                    newWidth = Math.round(originalWidth * (horizontalPercent / 100));
-                    newHeight = Math.round(originalHeight * (verticalPercent / 100));
+                if (currentMode === "percentage") {
+                    const horizontalPercent =
+                        parseFloat(horizontalInput.value) || 100;
+                    const verticalPercent =
+                        parseFloat(verticalInput.value) || 100;
+
+                    // Store the scale factors
+                    storedHorizontalScale = horizontalPercent;
+                    storedVerticalScale = verticalPercent;
+
+                    newWidth = Math.round(
+                        originalWidth * (horizontalPercent / 100),
+                    );
+                    newHeight = Math.round(
+                        originalHeight * (verticalPercent / 100),
+                    );
                 } else {
-                    newWidth = parseInt(horizontalInput.value) || originalWidth;
-                    newHeight = parseInt(verticalInput.value) || originalHeight;
+                    const inputWidth =
+                        parseInt(horizontalInput.value) || originalWidth;
+                    const inputHeight =
+                        parseInt(verticalInput.value) || originalHeight;
+
+                    // Calculate and store scale factors from input values
+                    storedHorizontalScale = (inputWidth / originalWidth) * 100;
+                    storedVerticalScale = (inputHeight / originalHeight) * 100;
+
+                    newWidth = inputWidth;
+                    newHeight = inputHeight;
                 }
 
                 // Create canvas for resizing
-                const canvas = document.createElement('canvas');
+                const canvas = document.createElement("canvas");
                 canvas.width = newWidth;
                 canvas.height = newHeight;
-                const ctx = canvas.getContext('2d');
+                const ctx = canvas.getContext("2d");
                 ctx.drawImage(originalImage, 0, 0, newWidth, newHeight);
 
                 // Display resized image
                 resizedCanvas = canvas;
-                canvas.toBlob(blob => {
+                canvas.toBlob((blob) => {
                     const url = URL.createObjectURL(blob);
                     const img = new Image();
-                    img.onload = function() {
-                        resizedViewer.innerHTML = '';
+                    img.onload = function () {
+                        resizedViewer.innerHTML = "";
                         resizedViewer.appendChild(img);
-                        resizedDimensionInfo.style.display = 'flex';
                         resizedDimensionInfo.textContent = `${newWidth} × ${newHeight} px`;
-                        downloadBtn.style.display = 'inline-block';
+                        downloadBtn.style.display = "inline-block";
                         URL.revokeObjectURL(url);
                     };
                     img.src = url;
                 });
 
-                // Update ratio display
-                updateRatioDisplay(newWidth, newHeight);
+                // Update scale factor display
+                updateScaleDisplay();
             }
 
-            function updateRatioDisplay(width, height) {
-                const gcd = getGCD(width, height);
-                const ratioW = width / gcd;
-                const ratioH = height / gcd;
-
-                // Format ratio nicely
-                if (ratioW === ratioH) {
-                    ratioDisplay.textContent = '1:1';
-                } else if (ratioW % 1 === 0 && ratioH % 1 === 0 && ratioW < 100 && ratioH < 100) {
-                    ratioDisplay.textContent = `${ratioW}:${ratioH}`;
-                } else {
-                    ratioDisplay.textContent = `${ratioW.toFixed(2)}:${ratioH.toFixed(2)}`;
-                }
+            function updateScaleDisplay() {
+                const scaleData = {
+                    width: storedHorizontalScale,
+                    height: storedVerticalScale,
+                };
+                scaleFactorDisplay.value = JSON.stringify(scaleData);
             }
 
-            function getGCD(a, b) {
-                return b === 0 ? a : getGCD(b, a % b);
-            }
-
-            function handleRatioInputChange() {
-                const w = parseFloat(ratioWidth.value);
-                const h = parseFloat(ratioHeight.value);
-
-                applyRatioBtn.disabled = !(w > 0 && h > 0 && originalImage);
-            }
-
-            function applyRatioToImage() {
+            function applyScaleFactor() {
                 if (!originalImage) return;
 
-                const targetRatioW = parseFloat(ratioWidth.value);
-                const targetRatioH = parseFloat(ratioHeight.value);
+                try {
+                    const scaleData = JSON.parse(scaleFactorInput.value.trim());
 
-                if (!targetRatioW || !targetRatioH) return;
-
-                isUpdatingFromRatio = true;
-
-                const targetRatio = targetRatioW / targetRatioH;
-                const currentRatio = originalWidth / originalHeight;
-
-                if (currentMode === 'percentage') {
-                    // In percentage mode, we'll adjust to fit the target ratio
-                    // keeping one dimension at 100%
-                    if (targetRatio > currentRatio) {
-                        // Wider ratio - keep width at 100%, reduce height
-                        horizontalInput.value = 100;
-                        verticalInput.value = (100 * currentRatio / targetRatio).toFixed(2);
-                    } else {
-                        // Taller ratio - keep height at 100%, reduce width
-                        verticalInput.value = 100;
-                        horizontalInput.value = (100 * targetRatio / currentRatio).toFixed(2);
-                    }
-                } else {
-                    // In pixels mode, we'll calculate new dimensions maintaining the target ratio
-                    // and trying to keep the size similar to original
-                    let newWidth, newHeight;
-
-                    if (targetRatio > currentRatio) {
-                        // Wider ratio - base on original width
-                        newWidth = originalWidth;
-                        newHeight = Math.round(originalWidth / targetRatio);
-                    } else {
-                        // Taller ratio - base on original height
-                        newHeight = originalHeight;
-                        newWidth = Math.round(originalHeight * targetRatio);
+                    if (
+                        typeof scaleData.width !== "number" ||
+                        typeof scaleData.height !== "number"
+                    ) {
+                        alert(
+                            'Invalid scale factor format. Expected: {"width": number, "height": number}',
+                        );
+                        return;
                     }
 
-                    horizontalInput.value = newWidth;
-                    verticalInput.value = newHeight;
+                    // Store the exact scale factors
+                    storedHorizontalScale = scaleData.width;
+                    storedVerticalScale = scaleData.height;
+
+                    // Calculate pixel dimensions
+                    const newWidth = Math.round(
+                        originalWidth * (scaleData.width / 100),
+                    );
+                    const newHeight = Math.round(
+                        originalHeight * (scaleData.height / 100),
+                    );
+
+                    // Create canvas for resizing
+                    const canvas = document.createElement("canvas");
+                    canvas.width = newWidth;
+                    canvas.height = newHeight;
+                    const ctx = canvas.getContext("2d");
+                    ctx.drawImage(originalImage, 0, 0, newWidth, newHeight);
+
+                    // Display resized image
+                    resizedCanvas = canvas;
+                    canvas.toBlob((blob) => {
+                        const url = URL.createObjectURL(blob);
+                        const img = new Image();
+                        img.onload = function () {
+                            resizedViewer.innerHTML = "";
+                            resizedViewer.appendChild(img);
+                            resizedDimensionInfo.textContent = `${newWidth} × ${newHeight} px`;
+                            downloadBtn.style.display = "inline-block";
+                            URL.revokeObjectURL(url);
+                        };
+                        img.src = url;
+                    });
+
+                    // Update scale factor display
+                    updateScaleDisplay();
+                } catch (e) {
+                    alert(
+                        'Invalid JSON format. Please paste a valid scale factor like:\n{"width": 83.1602, "height": 83.1602}',
+                    );
                 }
+            }
 
-                isUpdatingFromRatio = false;
-                updateResize();
+            async function copyScaleToClipboard() {
+                const scaleData = JSON.stringify({
+                    width: storedHorizontalScale,
+                    height: storedVerticalScale,
+                });
+
+                try {
+                    await navigator.clipboard.writeText(scaleData);
+                    const originalText = copyScaleBtn.textContent;
+                    copyScaleBtn.textContent = "Copied!";
+                    copyScaleBtn.style.background = "#1a7f37";
+                    setTimeout(() => {
+                        copyScaleBtn.textContent = originalText;
+                        copyScaleBtn.style.background = "#238636";
+                    }, 2000);
+                } catch (err) {
+                    // Fallback for older browsers
+                    const textarea = document.createElement("textarea");
+                    textarea.value = scaleData;
+                    textarea.style.position = "fixed";
+                    textarea.style.opacity = "0";
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    try {
+                        document.execCommand("copy");
+                        copyScaleBtn.textContent = "Copied!";
+                        setTimeout(() => {
+                            copyScaleBtn.textContent = "Copy Scale Factor";
+                        }, 2000);
+                    } catch (err2) {
+                        alert(
+                            "Failed to copy. Please copy manually:\n" +
+                                scaleData,
+                        );
+                    }
+                    document.body.removeChild(textarea);
+                }
             }
 
             function downloadResizedImage() {
                 if (!resizedCanvas) return;
 
-                resizedCanvas.toBlob(blob => {
+                resizedCanvas.toBlob((blob) => {
                     const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
+                    const a = document.createElement("a");
                     const width = resizedCanvas.width;
                     const height = resizedCanvas.height;
                     a.href = url;
@@ -708,7 +894,7 @@
                     a.click();
                     document.body.removeChild(a);
                     URL.revokeObjectURL(url);
-                }, 'image/png');
+                }, "image/png");
             }
         </script>
     </body>
