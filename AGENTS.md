@@ -31,6 +31,7 @@ All tools must run entirely in the browser:
 ### File Structure
 
 Each tool should typically be:
+
 - A single, self-contained HTML file
 - Include all CSS in a `<style>` tag
 - Include all JavaScript in a `<script>` tag
@@ -39,6 +40,7 @@ Each tool should typically be:
 ### Code Style
 
 **HTML:**
+
 ```html
 <!DOCTYPE html>
 <html lang="en">
@@ -60,6 +62,7 @@ Each tool should typically be:
 ```
 
 **JavaScript:**
+
 - Use modern ES6+ syntax (const/let, arrow functions, async/await, etc.)
 - Use browser-native APIs (FileReader, Blob, Canvas, etc.)
 - Prefer functional approaches where appropriate
@@ -67,6 +70,7 @@ Each tool should typically be:
 - Use descriptive variable and function names
 
 **CSS:**
+
 - Use system fonts for performance and consistency
 - Responsive design with mobile-first approach
 - Simple, clean styling
@@ -75,6 +79,7 @@ Each tool should typically be:
 ### Dependencies
 
 **Minimal External Dependencies:**
+
 - Only include external libraries when absolutely necessary
 - Prefer CDN links over npm packages
 - Document why each dependency is needed
@@ -84,6 +89,7 @@ Each tool should typically be:
   - PDF.js for PDF processing
 
 **Unacceptable Dependencies:**
+
 - React, Vue, Angular, Svelte, or any framework
 - jQuery (use vanilla JavaScript instead)
 - Bootstrap (write custom CSS instead)
@@ -99,18 +105,21 @@ Each tool should typically be:
 ### User Experience
 
 **Input Handling:**
+
 - Support drag-and-drop for file inputs
 - Provide clear feedback during processing
 - Show loading states for long operations
 - Handle errors gracefully with user-friendly messages
 
 **Output:**
+
 - Display results clearly and accessibly
 - Provide download capabilities where appropriate
 - Show previews of data when helpful
 - Include copy-to-clipboard functionality when relevant
 
 **Accessibility:**
+
 - Use semantic HTML elements
 - Include appropriate ARIA labels
 - Ensure keyboard navigation works
@@ -147,7 +156,7 @@ Each tool should typically be:
       /* =========================
          CSS Styles
          ========================= */
-      
+
       /* Reset and base styles */
       /* Layout */
       /* Components */
@@ -158,12 +167,12 @@ Each tool should typically be:
     <!-- =========================
          HTML Structure
          ========================= -->
-    
+
     <script>
       /* =========================
          JavaScript
          ========================= */
-      
+
       // State variables
       // Utility functions
       // Event handlers
@@ -179,14 +188,14 @@ Each tool should typically be:
 
 ```javascript
 // Drag and drop
-dropZone.addEventListener('drop', (e) => {
+dropZone.addEventListener("drop", (e) => {
   e.preventDefault();
   const files = e.dataTransfer.files;
   handleFile(files[0]);
 });
 
 // File input
-fileInput.addEventListener('change', (e) => {
+fileInput.addEventListener("change", (e) => {
   handleFile(e.target.files[0]);
 });
 
@@ -207,7 +216,7 @@ function handleFile(file) {
 function downloadFile(content, filename, mimeType) {
   const blob = new Blob([content], { type: mimeType });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = url;
   a.download = filename;
   a.click();
@@ -222,14 +231,14 @@ try {
   // Risky operation
   processData(data);
 } catch (error) {
-  console.error('Error:', error);
-  showError('Failed to process data: ' + error.message);
+  console.error("Error:", error);
+  showError("Failed to process data: " + error.message);
 }
 
 function showError(message) {
-  const errorDiv = document.getElementById('error');
+  const errorDiv = document.getElementById("error");
   errorDiv.textContent = message;
-  errorDiv.style.display = 'block';
+  errorDiv.style.display = "block";
 }
 ```
 
@@ -253,6 +262,7 @@ Before considering a tool complete:
 ## Examples
 
 Good examples from this repository:
+
 - `text-diff.html` - Clean, focused, single-purpose tool
 - `csv-to-json.html` - Good file handling and preview functionality
 - `pixel-coords.html` - Simple, effective use of Canvas API
@@ -260,6 +270,7 @@ Good examples from this repository:
 ## Questions?
 
 When in doubt:
+
 1. **Keep it simple** - The simplest solution is usually the best
 2. **No frameworks** - Vanilla JS can do everything you need
 3. **Self-contained** - One file, no build step
