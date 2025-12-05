@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Link Finder</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Arial, sans-serif;
+        line-height: 1.6;
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 20px;
+        color: #24292e;
+        background: #ffffff;
+      }
+      h1 {
+        border-bottom: 1px solid #eaecef;
+        padding-bottom: 0.3em;
+        margin-top: 0;
+        font-size: 32px;
+        font-weight: 600;
+      }
+      .back-link {
+        display: inline-block;
+        margin-bottom: 16px;
+        color: #0366d6;
+        text-decoration: none;
+        font-size: 14px;
+      }
+      .back-link:hover {
+        text-decoration: underline;
+      }
+      .instruction {
+        font-size: 13px;
+        color: #586069;
+        margin-bottom: 16px;
+        padding: 12px;
+        background: #f6f8fa;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+      }
+      .input-section {
+        margin-bottom: 24px;
+      }
+      label {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 8px;
+        display: block;
+        color: #24292e;
+      }
+      textarea {
+        width: 100%;
+        min-height: 200px;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
+          monospace;
+        font-size: 14px;
+        padding: 12px;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        background: #ffffff;
+        color: #24292e;
+        resize: vertical;
+      }
+      textarea:focus {
+        outline: none;
+        border-color: #0366d6;
+      }
+      .options {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 12px;
+        margin: 16px 0;
+        padding: 12px;
+        background: #f6f8fa;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+      }
+      .option-group {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .option-group input[type="checkbox"] {
+        cursor: pointer;
+      }
+      .option-group label {
+        margin: 0;
+        font-weight: 400;
+        cursor: pointer;
+      }
+      .button-section {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 24px;
+      }
+      button {
+        background: #0366d6;
+        color: #fff;
+        padding: 8px 16px;
+        border-radius: 6px;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+        cursor: pointer;
+        font-size: 14px;
+        line-height: 20px;
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Arial, sans-serif;
+      }
+      button:hover {
+        background: #0256c5;
+      }
+      button.secondary {
+        background: #fafbfc;
+        color: #24292e;
+      }
+      button.secondary:hover {
+        background: #f3f4f6;
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .results-section {
+        margin-top: 24px;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 16px;
+        margin-bottom: 16px;
+        padding: 12px;
+        background: #f6f8fa;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+      }
+      .stat-item {
+        text-align: center;
+      }
+      .stat-number {
+        font-size: 24px;
+        font-weight: 600;
+        color: #0366d6;
+      }
+      .stat-label {
+        font-size: 12px;
+        color: #586069;
+        margin-top: 4px;
+      }
+      .links-container {
+        background: #f6f8fa;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        padding: 16px;
+        max-height: 500px;
+        overflow-y: auto;
+        margin-top: 16px;
+      }
+      .links-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #ffffff;
+        border-radius: 6px;
+        overflow: hidden;
+      }
+      .links-table th {
+        background: #f6f8fa;
+        padding: 8px 12px;
+        text-align: left;
+        font-size: 12px;
+        font-weight: 600;
+        color: #24292e;
+        border-bottom: 1px solid #e1e4e8;
+      }
+      .links-table td {
+        padding: 8px 12px;
+        border-bottom: 1px solid #e1e4e8;
+        font-size: 13px;
+      }
+      .links-table tr:last-child td {
+        border-bottom: none;
+      }
+      .links-table tr:hover {
+        background: #f6f8fa;
+      }
+      .link-url {
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
+          monospace;
+        color: #0366d6;
+        word-break: break-all;
+      }
+      .link-type {
+        color: #586069;
+        font-size: 12px;
+      }
+      .link-actions {
+        display: flex;
+        gap: 4px;
+        flex-shrink: 0;
+      }
+      .link-actions button {
+        padding: 4px 8px;
+        font-size: 12px;
+        background: #fafbfc;
+        color: #24292e;
+      }
+      .link-actions button:hover {
+        background: #f3f4f6;
+      }
+      .empty-state {
+        text-align: center;
+        padding: 40px;
+        color: #586069;
+        font-size: 14px;
+      }
+      .hidden {
+        display: none;
+      }
+      .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 16px;
+        background: #28a745;
+        color: #ffffff;
+        border-radius: 6px;
+        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
+        font-size: 14px;
+        z-index: 1000;
+        animation: slideIn 0.3s ease-out;
+      }
+      .notification.error {
+        background: #d73a49;
+      }
+      @keyframes slideIn {
+        from {
+          transform: translateX(400px);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+      @media (max-width: 768px) {
+        body {
+          padding: 12px;
+        }
+        .button-section {
+          flex-direction: column;
+        }
+        button {
+          width: 100%;
+        }
+        .stats {
+          flex-direction: column;
+        }
+        .link-item {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        .link-actions {
+          width: 100%;
+          justify-content: flex-end;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a href="index.html" class="back-link">← Back to Browser Tools</a>
+
+    <h1>Link Finder</h1>
+
+    <p class="instruction">
+      Paste text containing URLs into the box below. The tool will automatically
+      extract all web links and email addresses. You can copy individual links,
+      open them in a new tab, or download the entire list as a text file.
+    </p>
+
+    <div class="input-section">
+      <label for="textInput">Input text</label>
+      <textarea
+        id="textInput"
+        placeholder="Paste text containing URLs here...
+
+Examples:
+Check out https://example.com for more info
+Visit www.example.org or http://test.com
+Email me at user@example.com"
+        autofocus
+      ></textarea>
+    </div>
+
+    <div class="results-section hidden" id="resultsSection">
+      <label>Results</label>
+
+      <div class="stats">
+        <div class="stat-item">
+          <div class="stat-number" id="totalItems">0</div>
+          <div class="stat-label">Total Items</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number" id="uniqueItems">0</div>
+          <div class="stat-label">Unique Items</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number" id="totalLinks">0</div>
+          <div class="stat-label">Links</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number" id="totalEmails">0</div>
+          <div class="stat-label">Emails</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="options">
+      <div class="option-group">
+        <input type="checkbox" id="includeLinks" checked />
+        <label for="includeLinks">Include links</label>
+      </div>
+      <div class="option-group">
+        <input type="checkbox" id="includeEmails" checked />
+        <label for="includeEmails">Include email addresses</label>
+      </div>
+      <div class="option-group">
+        <input type="checkbox" id="removeDuplicates" />
+        <label for="removeDuplicates">Remove duplicates</label>
+      </div>
+      <div class="option-group">
+        <input type="checkbox" id="sortLinks" />
+        <label for="sortLinks">Sort alphabetically</label>
+      </div>
+    </div>
+
+    <div class="results-section hidden" id="linksSection">
+      <div class="button-section">
+        <button class="secondary" id="clearBtn">Clear</button>
+        <button id="copyAllBtn">Copy List</button>
+        <button id="downloadTxtBtn">Download List</button>
+        <button id="downloadCsvBtn">Download CSV</button>
+      </div>
+
+      <div class="links-container" id="linksContainer">
+        <div class="empty-state">No links found in the text.</div>
+      </div>
+    </div>
+
+    <script>
+      /* =========================
+           JavaScript
+           ========================= */
+
+      // State variables
+      let extractedLinks = [];
+      let originalSequence = new Map(); // Track original document order
+
+      // DOM elements
+      const textInput = document.getElementById("textInput");
+
+      const clearBtn = document.getElementById("clearBtn");
+      const copyAllBtn = document.getElementById("copyAllBtn");
+      const downloadTxtBtn = document.getElementById("downloadTxtBtn");
+      const downloadCsvBtn = document.getElementById("downloadCsvBtn");
+      const resultsSection = document.getElementById("resultsSection");
+      const linksSection = document.getElementById("linksSection");
+      const linksContainer = document.getElementById("linksContainer");
+      const totalItemsEl = document.getElementById("totalItems");
+      const totalLinksEl = document.getElementById("totalLinks");
+      const totalEmailsEl = document.getElementById("totalEmails");
+      const uniqueItemsEl = document.getElementById("uniqueItems");
+      const includeLinksCheckbox = document.getElementById("includeLinks");
+      const includeEmailsCheckbox = document.getElementById("includeEmails");
+      const removeDuplicatesCheckbox =
+        document.getElementById("removeDuplicates");
+      const sortLinksCheckbox = document.getElementById("sortLinks");
+
+      // Utility functions
+
+      /**
+       * Extract URLs and emails from text using regex
+       */
+      function extractLinks(text, includeLinks = true, includeEmails = true) {
+        const items = [];
+
+        // Regex for URLs (http, https, ftp, www)
+        const urlRegex =
+          /(?:(?:https?|ftp):\/\/|www\.)[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)/gi;
+
+        // Regex for email addresses
+        const emailRegex =
+          /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g;
+
+        // Track positions to maintain order
+        const found = [];
+
+        // Extract URLs
+        if (includeLinks) {
+          let match;
+          const regex = new RegExp(urlRegex);
+          while ((match = regex.exec(text)) !== null) {
+            found.push({
+              value: match[0],
+              position: match.index,
+              type: "link",
+            });
+          }
+        }
+
+        // Extract emails
+        if (includeEmails) {
+          let match;
+          const regex = new RegExp(emailRegex);
+          while ((match = regex.exec(text)) !== null) {
+            found.push({
+              value: match[0],
+              position: match.index,
+              type: "email",
+            });
+          }
+        }
+
+        // Sort by position to maintain document order
+        found.sort((a, b) => a.position - b.position);
+
+        // Assign original sequence numbers
+        found.forEach((item, index) => {
+          item.originalSequence = index + 1;
+        });
+
+        return found;
+      }
+
+      /**
+       * Process links based on options
+       */
+      function processLinks(items, removeDuplicates = true, sort = false) {
+        let processed = [...items];
+
+        // Add protocol to links starting with www
+        processed = processed.map((item) => {
+          if (item.type === "link" && item.value.startsWith("www.")) {
+            return { ...item, value: "http://" + item.value };
+          }
+          return item;
+        });
+
+        // Remove duplicates
+        if (removeDuplicates) {
+          const seen = new Set();
+          processed = processed.filter((item) => {
+            const key = item.value.toLowerCase();
+            if (seen.has(key)) {
+              return false;
+            }
+            seen.add(key);
+            return true;
+          });
+        }
+
+        // Sort alphabetically
+        if (sort) {
+          processed.sort((a, b) =>
+            a.value.toLowerCase().localeCompare(b.value.toLowerCase())
+          );
+        } else {
+          // Maintain original document order
+          processed.sort((a, b) => a.originalSequence - b.originalSequence);
+        }
+
+        return processed;
+      }
+
+      /**
+       * Display extracted links in a table
+       */
+      function displayLinks(items) {
+        linksContainer.innerHTML = "";
+
+        if (items.length === 0) {
+          linksContainer.innerHTML =
+            '<div class="empty-state">No links found in the text.</div>';
+          return;
+        }
+
+        const table = document.createElement("table");
+        table.className = "links-table";
+
+        // Create header
+        const thead = document.createElement("thead");
+        const headerRow = document.createElement("tr");
+
+        const headers = ["Seq", "Type", "Link/Email", "Actions"];
+        headers.forEach((headerText) => {
+          const th = document.createElement("th");
+          th.textContent = headerText;
+          headerRow.appendChild(th);
+        });
+
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+
+        // Create body
+        const tbody = document.createElement("tbody");
+
+        items.forEach((item, index) => {
+          const row = document.createElement("tr");
+
+          // Sequence number (original document order)
+          const seqCell = document.createElement("td");
+          seqCell.textContent = item.originalSequence;
+          row.appendChild(seqCell);
+
+          // Type
+          const typeCell = document.createElement("td");
+          typeCell.className = "link-type";
+          typeCell.textContent = item.type === "email" ? "Email" : "Link";
+          row.appendChild(typeCell);
+
+          // Link/Email value
+          const valueCell = document.createElement("td");
+          valueCell.className = "link-url";
+          valueCell.textContent = item.value;
+          row.appendChild(valueCell);
+
+          // Actions
+          const actionsCell = document.createElement("td");
+          const linkActions = document.createElement("div");
+          linkActions.className = "link-actions";
+
+          const openBtn = document.createElement("button");
+          openBtn.textContent = "Open";
+          openBtn.onclick = () => {
+            if (item.type === "email") {
+              window.open(`mailto:${item.value}`, "_blank");
+            } else {
+              window.open(item.value, "_blank");
+            }
+          };
+
+          linkActions.appendChild(openBtn);
+          actionsCell.appendChild(linkActions);
+          row.appendChild(actionsCell);
+
+          tbody.appendChild(row);
+        });
+
+        table.appendChild(tbody);
+        linksContainer.appendChild(table);
+      }
+
+      /**
+       * Update statistics
+       */
+      function updateStats(allItems, processedItems) {
+        const linkCount = allItems.filter(
+          (item) => item.type === "link"
+        ).length;
+        const emailCount = allItems.filter(
+          (item) => item.type === "email"
+        ).length;
+
+        totalItemsEl.textContent = allItems.length;
+        totalLinksEl.textContent = linkCount;
+        totalEmailsEl.textContent = emailCount;
+        uniqueItemsEl.textContent = processedItems.length;
+      }
+
+      /**
+       * Copy text to clipboard
+       */
+      function copyToClipboard(text, message = "Copied to clipboard") {
+        navigator.clipboard
+          .writeText(text)
+          .then(() => {
+            showNotification(message);
+          })
+          .catch((err) => {
+            console.error("Failed to copy:", err);
+            showNotification("Failed to copy", "error");
+          });
+      }
+
+      /**
+       * Show notification
+       */
+      function showNotification(message, type = "success") {
+        const notification = document.createElement("div");
+        notification.className = "notification";
+        if (type === "error") {
+          notification.classList.add("error");
+        }
+        notification.textContent = message;
+
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+          notification.remove();
+        }, 3000);
+      }
+
+      /**
+       * Download links as text file
+       */
+      function downloadLinksAsTxt(items) {
+        const content = items.map((item) => item.value).join("\n");
+        const blob = new Blob([content], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `extracted-links-${Date.now()}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showNotification("Text file downloaded successfully");
+      }
+
+      /**
+       * Download links as CSV file
+       */
+      function downloadLinksAsCsv(items) {
+        // Create CSV header
+        let csv = "Sequence,Type,Link/Email\n";
+
+        // Add data rows
+        items.forEach((item) => {
+          const seq = item.originalSequence;
+          const type = item.type === "email" ? "Email" : "Link";
+          const value = `"${item.value.replace(/"/g, '""')}"`;
+          csv += `${seq},${type},${value}\n`;
+        });
+
+        const blob = new Blob([csv], { type: "text/csv" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `extracted-links-${Date.now()}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showNotification("CSV file downloaded successfully");
+      }
+
+      // Event handlers
+
+      /**
+       * Extract and display links
+       */
+      function extractAndDisplay() {
+        const text = textInput.value.trim();
+
+        if (!text) {
+          resultsSection.classList.add("hidden");
+          linksSection.classList.add("hidden");
+          return;
+        }
+
+        const includeLinks = includeLinksCheckbox.checked;
+        const includeEmails = includeEmailsCheckbox.checked;
+        const removeDuplicates = removeDuplicatesCheckbox.checked;
+        const sort = sortLinksCheckbox.checked;
+
+        // Extract links
+        const rawItems = extractLinks(text, includeLinks, includeEmails);
+
+        // Process links
+        extractedLinks = processLinks(rawItems, removeDuplicates, sort);
+
+        // Display results
+        displayLinks(extractedLinks);
+        updateStats(rawItems, extractedLinks);
+
+        // Show results section
+        resultsSection.classList.remove("hidden");
+        linksSection.classList.remove("hidden");
+      }
+
+      /**
+       * Update display with current options
+       */
+      function updateDisplay() {
+        const text = textInput.value.trim();
+
+        if (!text || resultsSection.classList.contains("hidden")) {
+          return;
+        }
+
+        const includeLinks = includeLinksCheckbox.checked;
+        const includeEmails = includeEmailsCheckbox.checked;
+        const removeDuplicates = removeDuplicatesCheckbox.checked;
+        const sort = sortLinksCheckbox.checked;
+
+        // Extract links
+        const rawItems = extractLinks(text, includeLinks, includeEmails);
+
+        // Process links
+        extractedLinks = processLinks(rawItems, removeDuplicates, sort);
+
+        // Display results
+        displayLinks(extractedLinks);
+        updateStats(rawItems, extractedLinks);
+      }
+
+      /**
+       * Clear button click
+       */
+      clearBtn.addEventListener("click", () => {
+        textInput.value = "";
+        extractedLinks = [];
+        resultsSection.classList.add("hidden");
+        linksSection.classList.add("hidden");
+        textInput.focus();
+      });
+
+      /**
+       * Copy all links button click
+       */
+      copyAllBtn.addEventListener("click", () => {
+        if (extractedLinks.length === 0) {
+          showNotification("No links to copy", "error");
+          return;
+        }
+
+        const allLinks = extractedLinks.map((item) => item.value).join("\n");
+        copyToClipboard(allLinks, "All links copied to clipboard");
+      });
+
+      /**
+       * Download as text button click
+       */
+      downloadTxtBtn.addEventListener("click", () => {
+        if (extractedLinks.length === 0) {
+          showNotification("No links to download", "error");
+          return;
+        }
+
+        downloadLinksAsTxt(extractedLinks);
+      });
+
+      /**
+       * Download as CSV button click
+       */
+      downloadCsvBtn.addEventListener("click", () => {
+        if (extractedLinks.length === 0) {
+          showNotification("No links to download", "error");
+          return;
+        }
+
+        downloadLinksAsCsv(extractedLinks);
+      });
+
+      /**
+       * Auto-extract on input change
+       */
+      textInput.addEventListener("input", () => {
+        extractAndDisplay();
+      });
+
+      /**
+       * Update display when checkboxes change
+       */
+      includeLinksCheckbox.addEventListener("change", updateDisplay);
+      includeEmailsCheckbox.addEventListener("change", updateDisplay);
+      removeDuplicatesCheckbox.addEventListener("change", updateDisplay);
+      sortLinksCheckbox.addEventListener("change", updateDisplay);
+
+      // Initialization
+      textInput.focus();
+    </script>
+  </body>
+</html>
