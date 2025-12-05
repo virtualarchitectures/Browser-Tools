@@ -47,6 +47,59 @@
       .input-section {
         margin-bottom: 24px;
       }
+      .file-upload {
+        margin-bottom: 16px;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .file-upload-left {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .file-upload input[type="file"] {
+        display: none;
+      }
+      .file-upload label {
+        display: inline-block;
+        padding: 8px 16px;
+        background: #0366d6;
+        color: #fff;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        line-height: 20px;
+        font-weight: 400;
+        margin: 0;
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Arial, sans-serif;
+      }
+      .file-upload label:hover {
+        background: #0256c5;
+      }
+      .file-name {
+        font-size: 13px;
+        color: #586069;
+      }
+      .drop-zone {
+        border: 2px dashed #e1e4e8;
+        border-radius: 6px;
+        padding: 20px;
+        text-align: center;
+        color: #586069;
+        font-size: 14px;
+        margin-bottom: 16px;
+        background: #f6f8fa;
+        transition: all 0.2s;
+      }
+      .drop-zone.drag-over {
+        border-color: #0366d6;
+        background: #e6f2ff;
+        color: #0366d6;
+      }
       label {
         font-size: 14px;
         font-weight: 600;
@@ -282,7 +335,24 @@
     </p>
 
     <div class="input-section">
-      <label for="textInput">Input text</label>
+      <div class="file-upload">
+        <div class="file-upload-left">
+          <input
+            type="file"
+            id="fileInput"
+            accept=".txt,.html,.md,.csv,.json"
+          />
+          <label for="fileInput">Load File</label>
+          <span class="file-name" id="fileName"></span>
+        </div>
+        <button class="secondary" id="clearBtn">Clear</button>
+      </div>
+
+      <div class="drop-zone" id="dropZone">
+        Drop a text file here or click to browse
+      </div>
+
+      <label for="textInput">Or paste text directly</label>
       <textarea
         id="textInput"
         placeholder="Paste text containing URLs here...
@@ -339,7 +409,6 @@ Email me at user@example.com"
 
     <div class="results-section hidden" id="linksSection">
       <div class="button-section">
-        <button class="secondary" id="clearBtn">Clear</button>
         <button id="copyAllBtn">Copy List</button>
         <button id="downloadTxtBtn">Download List</button>
         <button id="downloadCsvBtn">Download CSV</button>
@@ -361,7 +430,9 @@ Email me at user@example.com"
 
       // DOM elements
       const textInput = document.getElementById("textInput");
-
+      const fileInput = document.getElementById("fileInput");
+      const fileName = document.getElementById("fileName");
+      const dropZone = document.getElementById("dropZone");
       const clearBtn = document.getElementById("clearBtn");
       const copyAllBtn = document.getElementById("copyAllBtn");
       const downloadTxtBtn = document.getElementById("downloadTxtBtn");
@@ -752,6 +823,61 @@ Email me at user@example.com"
       });
 
       /**
+       * Handle file reading
+       */
+      function handleFile(file) {
+        fileName.textContent = file.name;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          textInput.value = e.target.result;
+          extractAndDisplay();
+        };
+        reader.onerror = () => {
+          showNotification("Failed to read file", "error");
+        };
+        reader.readAsText(file);
+      }
+
+      /**
+       * Handle file selection
+       */
+      fileInput.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          handleFile(file);
+        }
+      });
+
+      /**
+       * Handle file drop
+       */
+      dropZone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropZone.classList.add("drag-over");
+      });
+
+      dropZone.addEventListener("dragleave", () => {
+        dropZone.classList.remove("drag-over");
+      });
+
+      dropZone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropZone.classList.remove("drag-over");
+        const file = e.dataTransfer.files[0];
+        if (file) {
+          handleFile(file);
+        }
+      });
+
+      /**
+       * Allow click on drop zone to trigger file input
+       */
+      dropZone.addEventListener("click", () => {
+        fileInput.click();
+      });
+
+      /**
        * Auto-extract on input change
        */
       textInput.addEventListener("input", () => {
@@ -765,6 +891,13 @@ Email me at user@example.com"
       includeEmailsCheckbox.addEventListener("change", updateDisplay);
       removeDuplicatesCheckbox.addEventListener("change", updateDisplay);
       sortLinksCheckbox.addEventListener("change", updateDisplay);
+
+      /**
+       * Allow click on drop zone to trigger file input
+       */
+      dropZone.addEventListener("click", () => {
+        fileInput.click();
+      });
 
       // Initialization
       textInput.focus();
