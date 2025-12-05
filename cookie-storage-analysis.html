@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cookie & Storage Analysis</title>
+    <style>
+      /* =========================
+         CSS Styles
+         ========================= */
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Arial, sans-serif;
+        line-height: 1.6;
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 20px;
+        color: #24292e;
+        background: #ffffff;
+      }
+
+      h1 {
+        border-bottom: 1px solid #eaecef;
+        padding-bottom: 0.3em;
+        margin-top: 0;
+        font-size: 32px;
+        font-weight: 600;
+      }
+
+      .back-link {
+        display: inline-block;
+        margin-bottom: 16px;
+        color: #0366d6;
+        text-decoration: none;
+        font-size: 14px;
+      }
+
+      .back-link:hover {
+        text-decoration: underline;
+      }
+
+      .info {
+        font-size: 14px;
+        color: #586069;
+        margin-bottom: 24px;
+        padding: 12px;
+        background: #f6f8fa;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+      }
+
+      .actions {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+      }
+
+      .btn {
+        background: #fafbfc;
+        color: #24292e;
+        padding: 8px 16px;
+        border-radius: 6px;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+        cursor: pointer;
+        font-size: 14px;
+        line-height: 20px;
+        text-decoration: none;
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Arial, sans-serif;
+      }
+
+      .btn:hover {
+        background: #f3f4f6;
+      }
+
+      .btn.primary {
+        background: #0366d6;
+        color: #fff;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+      }
+
+      .btn.primary:hover {
+        background: #0256c5;
+      }
+
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+
+      .summary-card {
+        background: #ffffff;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        padding: 16px;
+        text-align: center;
+      }
+
+      .summary-card .number {
+        font-size: 32px;
+        font-weight: 600;
+        color: #0366d6;
+        display: block;
+        margin-bottom: 8px;
+      }
+
+      .summary-card .label {
+        font-size: 14px;
+        color: #586069;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .panel {
+        background: #ffffff;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        margin-bottom: 16px;
+        overflow: visible;
+      }
+
+      .panel h2 {
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0;
+        padding: 16px;
+        background: #f6f8fa;
+        border-bottom: 1px solid #e1e4e8;
+        cursor: pointer;
+        user-select: none;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .panel h2::after {
+        content: "▼";
+        font-size: 12px;
+        color: #586069;
+        transition: transform 0.2s;
+      }
+
+      .panel h2.collapsed::after {
+        transform: rotate(-90deg);
+      }
+
+      .panel-content {
+        padding: 16px;
+        max-height: 2000px;
+        overflow: hidden;
+        transition: max-height 0.3s ease-out;
+      }
+
+      .panel-content.collapsed {
+        max-height: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+      }
+
+      .table-wrapper {
+        overflow-x: auto;
+        overflow-y: visible;
+        margin-bottom: 16px;
+      }
+
+      .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+
+      .data-table th {
+        background: #f6f8fa;
+        color: #24292e;
+        font-weight: 600;
+        padding: 12px;
+        text-align: left;
+        border-bottom: 2px solid #e1e4e8;
+      }
+
+      .data-table td {
+        padding: 12px;
+        border-bottom: 1px solid #e1e4e8;
+        word-break: break-word;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
+          monospace;
+        font-size: 13px;
+      }
+
+      .data-table tr:hover {
+        background: #f6f8fa;
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+
+      .badge.first-party {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .badge.third-party {
+        background: #fff3cd;
+        color: #856404;
+      }
+
+      .badge.session {
+        background: #cce5ff;
+        color: #004085;
+      }
+
+      .badge.persistent {
+        background: #f8d7da;
+        color: #721c24;
+      }
+
+      .badge.secure {
+        background: #d1ecf1;
+        color: #0c5460;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 40px;
+        color: #586069;
+        font-style: italic;
+      }
+
+      .key-value-grid {
+        display: grid;
+        grid-template-columns: minmax(150px, 1fr) 2fr;
+        gap: 8px;
+        font-size: 14px;
+      }
+
+      .key-value-label {
+        font-weight: 600;
+        color: #24292e;
+        padding: 8px;
+        background: #f6f8fa;
+        border-radius: 3px;
+      }
+
+      .key-value-value {
+        padding: 8px;
+        color: #586069;
+        word-break: break-all;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
+          monospace;
+        font-size: 13px;
+      }
+
+      .item-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .item-list li {
+        padding: 12px;
+        margin-bottom: 8px;
+        background: #f6f8fa;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+      }
+
+      .item-header {
+        font-weight: 600;
+        color: #24292e;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .item-details {
+        font-size: 13px;
+        color: #586069;
+        margin-top: 8px;
+      }
+
+      .info-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #0366d6;
+        color: white;
+        font-size: 12px;
+        font-weight: bold;
+        cursor: help;
+        position: relative;
+        flex-shrink: 0;
+      }
+
+      .info-icon:hover {
+        background: #0256c5;
+      }
+
+      .tooltip {
+        visibility: hidden;
+        position: absolute;
+        z-index: 10000;
+        background: #24292e;
+        color: white;
+        padding: 12px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: normal;
+        line-height: 1.5;
+        width: 300px;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        margin-top: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        pointer-events: none;
+      }
+
+      .tooltip::before {
+        content: "";
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border: 6px solid transparent;
+        border-bottom-color: #24292e;
+      }
+
+      .info-icon:hover .tooltip {
+        visibility: visible;
+      }
+
+      .tooltip strong {
+        display: block;
+        margin-bottom: 4px;
+        color: #58a6ff;
+      }
+
+      .panel-header-content {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 1;
+      }
+
+      .warning-box {
+        background: #fff5b1;
+        border: 1px solid #ffc107;
+        color: #856404;
+        padding: 12px;
+        border-radius: 6px;
+        font-size: 13px;
+        margin-bottom: 16px;
+      }
+
+      @media (max-width: 768px) {
+        .key-value-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .actions {
+          flex-direction: column;
+        }
+
+        .btn {
+          width: 100%;
+        }
+
+        .tooltip {
+          width: 250px;
+          font-size: 12px;
+        }
+
+        .data-table {
+          font-size: 12px;
+        }
+
+        .data-table th,
+        .data-table td {
+          padding: 8px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- =========================
+         HTML Structure
+         ========================= -->
+
+    <a href="index.html" class="back-link">← Back to Browser Tools</a>
+
+    <h1>Cookie & Storage Analysis</h1>
+
+    <div class="info">
+      This tool examines all data that websites can store on your device,
+      including cookies, local storage, session storage, IndexedDB databases,
+      cache storage, and service workers. All analysis happens locally in your
+      browser.
+    </div>
+
+    <div class="actions">
+      <button id="refreshBtn" class="btn primary">Refresh Analysis</button>
+      <button id="copyBtn" class="btn">Copy All Data</button>
+      <button id="downloadBtn" class="btn">Download JSON</button>
+    </div>
+
+    <div class="summary-grid" id="summaryGrid"></div>
+
+    <div id="storageData"></div>
+
+    <script>
+      /* =========================
+         JavaScript
+         ========================= */
+
+      // State variables
+      let storageData = {};
+
+      // Utility functions
+      function escapeHtml(text) {
+        const div = document.createElement("div");
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      function formatBytes(bytes) {
+        if (bytes === 0) return "0 Bytes";
+        const k = 1024;
+        const sizes = ["Bytes", "KB", "MB", "GB"];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+      }
+
+      function formatDate(dateString) {
+        if (!dateString) return "Session";
+        const date = new Date(dateString);
+        return date.toLocaleString();
+      }
+
+      function isThirdParty(domain) {
+        const currentDomain = window.location.hostname;
+        return !domain.includes(currentDomain) && domain !== currentDomain;
+      }
+
+      // Cookie analysis
+      function getCookies() {
+        const cookies = [];
+        const cookieString = document.cookie;
+
+        if (!cookieString) {
+          return cookies;
+        }
+
+        const cookiePairs = cookieString.split(";");
+
+        for (const pair of cookiePairs) {
+          const [name, value] = pair.trim().split("=");
+          if (name) {
+            const cookieSize = new Blob([pair]).size;
+            cookies.push({
+              name: name,
+              value: decodeURIComponent(value || ""),
+              domain: window.location.hostname,
+              size: cookieSize,
+              type: "first-party",
+              secure: window.location.protocol === "https:",
+              sameSite: "Unknown (requires server access)",
+            });
+          }
+        }
+
+        return cookies;
+      }
+
+      // LocalStorage analysis
+      function getLocalStorage() {
+        const items = [];
+        try {
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            const value = localStorage.getItem(key);
+            const size = new Blob([key + value]).size;
+            items.push({
+              key: key,
+              value: value,
+              size: size,
+            });
+          }
+        } catch (e) {
+          console.error("Error accessing localStorage:", e);
+        }
+        return items;
+      }
+
+      // SessionStorage analysis
+      function getSessionStorage() {
+        const items = [];
+        try {
+          for (let i = 0; i < sessionStorage.length; i++) {
+            const key = sessionStorage.key(i);
+            const value = sessionStorage.getItem(key);
+            const size = new Blob([key + value]).size;
+            items.push({
+              key: key,
+              value: value,
+              size: size,
+            });
+          }
+        } catch (e) {
+          console.error("Error accessing sessionStorage:", e);
+        }
+        return items;
+      }
+
+      // IndexedDB analysis
+      async function getIndexedDBInfo() {
+        try {
+          const databases = await window.indexedDB.databases();
+          const dbInfo = [];
+
+          for (const db of databases) {
+            dbInfo.push({
+              name: db.name,
+              version: db.version,
+            });
+          }
+
+          return dbInfo;
+        } catch (e) {
+          console.error("Error accessing IndexedDB:", e);
+          return [];
+        }
+      }
+
+      // Service Workers analysis
+      async function getServiceWorkers() {
+        const workers = [];
+        try {
+          if ("serviceWorker" in navigator) {
+            const registrations =
+              await navigator.serviceWorker.getRegistrations();
+            for (const registration of registrations) {
+              workers.push({
+                scope: registration.scope,
+                state: registration.active
+                  ? registration.active.state
+                  : "inactive",
+                scriptURL: registration.active
+                  ? registration.active.scriptURL
+                  : "N/A",
+              });
+            }
+          }
+        } catch (e) {
+          console.error("Error accessing Service Workers:", e);
+        }
+        return workers;
+      }
+
+      // Cache Storage analysis
+      async function getCacheStorage() {
+        const caches = [];
+        try {
+          if ("caches" in window) {
+            const cacheNames = await window.caches.keys();
+            for (const name of cacheNames) {
+              const cache = await window.caches.open(name);
+              const keys = await cache.keys();
+              caches.push({
+                name: name,
+                itemCount: keys.length,
+              });
+            }
+          }
+        } catch (e) {
+          console.error("Error accessing Cache Storage:", e);
+        }
+        return caches;
+      }
+
+      // Storage quota analysis
+      async function getStorageQuota() {
+        try {
+          if (navigator.storage && navigator.storage.estimate) {
+            const estimate = await navigator.storage.estimate();
+            return {
+              usage: estimate.usage,
+              quota: estimate.quota,
+              percentage: ((estimate.usage / estimate.quota) * 100).toFixed(2),
+            };
+          }
+        } catch (e) {
+          console.error("Error accessing storage quota:", e);
+        }
+        return null;
+      }
+
+      // Collect all storage data
+      async function collectStorageData() {
+        const data = {
+          cookies: getCookies(),
+          localStorage: getLocalStorage(),
+          sessionStorage: getSessionStorage(),
+          indexedDB: await getIndexedDBInfo(),
+          serviceWorkers: await getServiceWorkers(),
+          cacheStorage: await getCacheStorage(),
+          storageQuota: await getStorageQuota(),
+        };
+
+        return data;
+      }
+
+      // Display summary cards
+      function displaySummary(data) {
+        const summaryGrid = document.getElementById("summaryGrid");
+        summaryGrid.innerHTML = "";
+
+        const totalCookies = data.cookies.length;
+        const totalLocalStorage = data.localStorage.length;
+        const totalSessionStorage = data.sessionStorage.length;
+        const totalIndexedDB = data.indexedDB.length;
+        const totalServiceWorkers = data.serviceWorkers.length;
+        const totalCaches = data.cacheStorage.length;
+
+        const cards = [
+          { number: totalCookies, label: "Cookies" },
+          { number: totalLocalStorage, label: "LocalStorage Items" },
+          {
+            number: totalSessionStorage,
+            label: "SessionStorage Items",
+          },
+          { number: totalIndexedDB, label: "IndexedDB Databases" },
+          { number: totalServiceWorkers, label: "Service Workers" },
+          { number: totalCaches, label: "Cache Stores" },
+        ];
+
+        cards.forEach((card) => {
+          const cardEl = document.createElement("div");
+          cardEl.className = "summary-card";
+          cardEl.innerHTML = `
+                    <span class="number">${card.number}</span>
+                    <span class="label">${card.label}</span>
+                `;
+          summaryGrid.appendChild(cardEl);
+        });
+
+        // Add storage quota card if available
+        if (data.storageQuota) {
+          const quotaCard = document.createElement("div");
+          quotaCard.className = "summary-card";
+          quotaCard.innerHTML = `
+                    <span class="number">${data.storageQuota.percentage}%</span>
+                    <span class="label">Storage Used</span>
+                `;
+          summaryGrid.appendChild(quotaCard);
+        }
+      }
+
+      // Display cookies
+      function displayCookies(cookies, container) {
+        const tooltipText =
+          "<strong>What are cookies?</strong> Small text files stored by websites to remember your preferences, login status, and track your activity. <strong>Privacy Impact:</strong> Can be used to track you across sessions and websites. Third-party cookies enable cross-site tracking.";
+
+        const panel = createPanel(
+          "Cookies",
+          cookies.length,
+          tooltipText,
+          container
+        );
+        const content = panel.querySelector(".panel-content");
+
+        if (cookies.length === 0) {
+          content.innerHTML = `<div class="empty-state">No cookies found</div>`;
+          return;
+        }
+
+        const tableWrapper = document.createElement("div");
+        tableWrapper.className = "table-wrapper";
+
+        const table = document.createElement("table");
+        table.className = "data-table";
+
+        table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Value</th>
+                        <th>Domain</th>
+                        <th>Type</th>
+                        <th>Size</th>
+                        <th>Secure</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${cookies
+                      .map(
+                        (cookie) => `
+                        <tr>
+                            <td>${escapeHtml(cookie.name)}</td>
+                            <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(
+                              cookie.value
+                            )}</td>
+                            <td>${escapeHtml(cookie.domain)}</td>
+                            <td><span class="badge ${cookie.type}">${
+                          cookie.type
+                        }</span></td>
+                            <td>${formatBytes(cookie.size)}</td>
+                            <td>${
+                              cookie.secure
+                                ? '<span class="badge secure">Yes</span>'
+                                : "No"
+                            }</td>
+                        </tr>
+                    `
+                      )
+                      .join("")}
+                </tbody>
+            `;
+
+        tableWrapper.appendChild(table);
+        content.appendChild(tableWrapper);
+      }
+
+      // Display LocalStorage
+      function displayLocalStorage(items, container) {
+        const tooltipText =
+          "<strong>What is LocalStorage?</strong> A storage mechanism that allows websites to store key-value pairs persistently in your browser. Data persists even after closing the browser. <strong>Privacy Impact:</strong> Can store tracking identifiers and user data indefinitely. Size limit: ~5-10MB per domain.";
+
+        const panel = createPanel(
+          "LocalStorage",
+          items.length,
+          tooltipText,
+          container
+        );
+        const content = panel.querySelector(".panel-content");
+
+        if (items.length === 0) {
+          content.innerHTML = `<div class="empty-state">No LocalStorage items found</div>`;
+          return;
+        }
+
+        const totalSize = items.reduce((sum, item) => sum + item.size, 0);
+        const sizeInfo = document.createElement("div");
+        sizeInfo.className = "warning-box";
+        sizeInfo.innerHTML = `<strong>Total Size:</strong> ${formatBytes(
+          totalSize
+        )}`;
+        content.appendChild(sizeInfo);
+
+        const tableWrapper = document.createElement("div");
+        tableWrapper.className = "table-wrapper";
+
+        const table = document.createElement("table");
+        table.className = "data-table";
+
+        table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>Key</th>
+                        <th>Value</th>
+                        <th>Size</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${items
+                      .map(
+                        (item) => `
+                        <tr>
+                            <td>${escapeHtml(item.key)}</td>
+                            <td style="max-width: 400px; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(
+                              item.value
+                            )}</td>
+                            <td>${formatBytes(item.size)}</td>
+                        </tr>
+                    `
+                      )
+                      .join("")}
+                </tbody>
+            `;
+
+        tableWrapper.appendChild(table);
+        content.appendChild(tableWrapper);
+      }
+
+      // Display SessionStorage
+      function displaySessionStorage(items, container) {
+        const tooltipText =
+          "<strong>What is SessionStorage?</strong> Similar to LocalStorage but data only persists for the current browser session. Data is cleared when the tab is closed. <strong>Privacy Impact:</strong> Temporary storage for session-specific data. Less privacy concern than LocalStorage but can still track activity within a session.";
+
+        const panel = createPanel(
+          "SessionStorage",
+          items.length,
+          tooltipText,
+          container
+        );
+        const content = panel.querySelector(".panel-content");
+
+        if (items.length === 0) {
+          content.innerHTML = `<div class="empty-state">No SessionStorage items found</div>`;
+          return;
+        }
+
+        const totalSize = items.reduce((sum, item) => sum + item.size, 0);
+        const sizeInfo = document.createElement("div");
+        sizeInfo.className = "warning-box";
+        sizeInfo.innerHTML = `<strong>Total Size:</strong> ${formatBytes(
+          totalSize
+        )}`;
+        content.appendChild(sizeInfo);
+
+        const tableWrapper = document.createElement("div");
+        tableWrapper.className = "table-wrapper";
+
+        const table = document.createElement("table");
+        table.className = "data-table";
+
+        table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>Key</th>
+                        <th>Value</th>
+                        <th>Size</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${items
+                      .map(
+                        (item) => `
+                        <tr>
+                            <td>${escapeHtml(item.key)}</td>
+                            <td style="max-width: 400px; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(
+                              item.value
+                            )}</td>
+                            <td>${formatBytes(item.size)}</td>
+                        </tr>
+                    `
+                      )
+                      .join("")}
+                </tbody>
+            `;
+
+        tableWrapper.appendChild(table);
+        content.appendChild(tableWrapper);
+      }
+
+      // Display IndexedDB
+      function displayIndexedDB(databases, container) {
+        const tooltipText =
+          "<strong>What is IndexedDB?</strong> A low-level API for storing large amounts of structured data, including files and blobs. More powerful than LocalStorage. <strong>Privacy Impact:</strong> Can store significant amounts of user data persistently. Used by web apps for offline functionality and data caching.";
+
+        const panel = createPanel(
+          "IndexedDB Databases",
+          databases.length,
+          tooltipText,
+          container
+        );
+        const content = panel.querySelector(".panel-content");
+
+        if (databases.length === 0) {
+          content.innerHTML = `<div class="empty-state">No IndexedDB databases found</div>`;
+          return;
+        }
+
+        const list = document.createElement("ul");
+        list.className = "item-list";
+
+        databases.forEach((db) => {
+          const li = document.createElement("li");
+          li.innerHTML = `
+                    <div class="item-header">${escapeHtml(db.name)}</div>
+                    <div class="item-details">Version: ${db.version}</div>
+                `;
+          list.appendChild(li);
+        });
+
+        content.appendChild(list);
+      }
+
+      // Display Service Workers
+      function displayServiceWorkers(workers, container) {
+        const tooltipText =
+          "<strong>What are Service Workers?</strong> Scripts that run in the background, separate from web pages, enabling features like push notifications, background sync, and offline functionality. <strong>Privacy Impact:</strong> Can intercept network requests and cache resources. Powerful but can be used for tracking.";
+
+        const panel = createPanel(
+          "Service Workers",
+          workers.length,
+          tooltipText,
+          container
+        );
+        const content = panel.querySelector(".panel-content");
+
+        if (workers.length === 0) {
+          content.innerHTML = `<div class="empty-state">No Service Workers registered</div>`;
+          return;
+        }
+
+        const list = document.createElement("ul");
+        list.className = "item-list";
+
+        workers.forEach((worker) => {
+          const li = document.createElement("li");
+          li.innerHTML = `
+                    <div class="item-header">
+                        ${escapeHtml(worker.scope)}
+                        <span class="badge ${
+                          worker.state === "activated"
+                            ? "first-party"
+                            : "third-party"
+                        }">${worker.state}</span>
+                    </div>
+                    <div class="item-details">Script: ${escapeHtml(
+                      worker.scriptURL
+                    )}</div>
+                `;
+          list.appendChild(li);
+        });
+
+        content.appendChild(list);
+      }
+
+      // Display Cache Storage
+      function displayCacheStorage(caches, container) {
+        const tooltipText =
+          "<strong>What is Cache Storage?</strong> API used by Service Workers to cache network requests and responses for offline access. Stores complete HTTP responses. <strong>Privacy Impact:</strong> Can store substantial data offline. Shows which resources websites are caching locally.";
+
+        const panel = createPanel(
+          "Cache Storage",
+          caches.length,
+          tooltipText,
+          container
+        );
+        const content = panel.querySelector(".panel-content");
+
+        if (caches.length === 0) {
+          content.innerHTML = `<div class="empty-state">No Cache Storage found</div>`;
+          return;
+        }
+
+        const list = document.createElement("ul");
+        list.className = "item-list";
+
+        caches.forEach((cache) => {
+          const li = document.createElement("li");
+          li.innerHTML = `
+                    <div class="item-header">${escapeHtml(cache.name)}</div>
+                    <div class="item-details">Items cached: ${
+                      cache.itemCount
+                    }</div>
+                `;
+          list.appendChild(li);
+        });
+
+        content.appendChild(list);
+      }
+
+      // Display Storage Quota
+      function displayStorageQuota(quota, container) {
+        if (!quota) return;
+
+        const tooltipText =
+          "<strong>What is Storage Quota?</strong> The total amount of storage space your browser allocates to this website and how much is currently used. <strong>Privacy Impact:</strong> Shows how much data websites are storing on your device. Browsers typically allocate 50-60% of available disk space.";
+
+        const panel = createPanel(
+          "Storage Quota",
+          null,
+          tooltipText,
+          container
+        );
+        const content = panel.querySelector(".panel-content");
+
+        const grid = document.createElement("div");
+        grid.className = "key-value-grid";
+
+        grid.innerHTML = `
+                <div class="key-value-label">Usage</div>
+                <div class="key-value-value">${formatBytes(quota.usage)}</div>
+                <div class="key-value-label">Quota</div>
+                <div class="key-value-value">${formatBytes(quota.quota)}</div>
+                <div class="key-value-label">Percentage Used</div>
+                <div class="key-value-value">${quota.percentage}%</div>
+            `;
+
+        content.appendChild(grid);
+      }
+
+      // Create panel helper
+      function createPanel(title, count, tooltipText, container) {
+        const panel = document.createElement("div");
+        panel.className = "panel";
+
+        const header = document.createElement("h2");
+
+        const headerContent = document.createElement("div");
+        headerContent.className = "panel-header-content";
+
+        const titleText = document.createElement("span");
+        titleText.textContent = count !== null ? `${title} (${count})` : title;
+        headerContent.appendChild(titleText);
+
+        if (tooltipText) {
+          const infoIcon = document.createElement("span");
+          infoIcon.className = "info-icon";
+          infoIcon.innerHTML = "i";
+
+          const tooltip = document.createElement("div");
+          tooltip.className = "tooltip";
+          tooltip.innerHTML = tooltipText;
+
+          infoIcon.appendChild(tooltip);
+          headerContent.appendChild(infoIcon);
+        }
+
+        header.appendChild(headerContent);
+
+        header.addEventListener("click", (e) => {
+          if (e.target.closest(".info-icon")) {
+            return;
+          }
+          header.classList.toggle("collapsed");
+          content.classList.toggle("collapsed");
+        });
+
+        const content = document.createElement("div");
+        content.className = "panel-content";
+
+        panel.appendChild(header);
+        panel.appendChild(content);
+        container.appendChild(panel);
+
+        return panel;
+      }
+
+      // Display all storage data
+      function displayStorage(data) {
+        const container = document.getElementById("storageData");
+        container.innerHTML = "";
+
+        displaySummary(data);
+        displayCookies(data.cookies, container);
+        displayLocalStorage(data.localStorage, container);
+        displaySessionStorage(data.sessionStorage, container);
+        displayIndexedDB(data.indexedDB, container);
+        displayServiceWorkers(data.serviceWorkers, container);
+        displayCacheStorage(data.cacheStorage, container);
+        displayStorageQuota(data.storageQuota, container);
+      }
+
+      // Copy to clipboard
+      async function copyToClipboard() {
+        const text = JSON.stringify(storageData, null, 2);
+        try {
+          await navigator.clipboard.writeText(text);
+          alert("Storage data copied to clipboard!");
+        } catch (e) {
+          const textarea = document.createElement("textarea");
+          textarea.value = text;
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand("copy");
+          document.body.removeChild(textarea);
+          alert("Storage data copied to clipboard!");
+        }
+      }
+
+      // Download JSON
+      function downloadJSON() {
+        const dataStr = JSON.stringify(storageData, null, 2);
+        const blob = new Blob([dataStr], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `storage-analysis-${Date.now()}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      // Event handlers
+      document.getElementById("refreshBtn").addEventListener("click", init);
+      document
+        .getElementById("copyBtn")
+        .addEventListener("click", copyToClipboard);
+      document
+        .getElementById("downloadBtn")
+        .addEventListener("click", downloadJSON);
+
+      // Initialization
+      async function init() {
+        storageData = await collectStorageData();
+        displayStorage(storageData);
+      }
+
+      // Run on page load
+      init();
+    </script>
+  </body>
+</html>
