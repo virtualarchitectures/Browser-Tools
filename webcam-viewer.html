@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Webcam Viewer</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Arial, sans-serif;
+        line-height: 1.6;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        color: #24292e;
+        background: #ffffff;
+      }
+
+      h1 {
+        border-bottom: 1px solid #eaecef;
+        padding-bottom: 0.3em;
+        margin-top: 0;
+        font-size: 32px;
+        font-weight: 600;
+      }
+
+      .controls {
+        background: #f6f8fa;
+        padding: 16px;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+        margin-bottom: 20px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 6px;
+        font-weight: 600;
+        color: #24292e;
+        font-size: 14px;
+      }
+
+      input[type="text"],
+      input[type="url"] {
+        width: 100%;
+        padding: 6px 12px;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        font-size: 16px;
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Arial, sans-serif;
+        margin-bottom: 12px;
+        background: #ffffff;
+      }
+
+      input[type="text"]:focus,
+      input[type="url"]:focus {
+        outline: none;
+        border-color: #0366d6;
+        box-shadow: 0 0 0 3px rgba(3, 102, 214, 0.1);
+      }
+
+      .btn {
+        background: #0366d6;
+        color: #fff;
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+        cursor: pointer;
+        font-size: 14px;
+        line-height: 20px;
+        text-decoration: none;
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Arial, sans-serif;
+        margin-right: 8px;
+        margin-bottom: 8px;
+      }
+
+      .btn:hover {
+        background: #0256c5;
+      }
+
+      .btn.secondary {
+        background: #fafbfc;
+        color: #24292e;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+      }
+
+      .btn.secondary:hover {
+        background: #f3f4f6;
+      }
+
+      .btn.danger {
+        background: #d73a49;
+        color: #fff;
+      }
+
+      .btn.danger:hover {
+        background: #cb2431;
+      }
+
+      .feed-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+        gap: 20px;
+        margin-bottom: 20px;
+      }
+
+      .feed-card {
+        background: #ffffff;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+        overflow: hidden;
+      }
+
+      .feed-header {
+        padding: 12px 16px;
+        background: #f6f8fa;
+        border-bottom: 1px solid #e1e4e8;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .feed-title {
+        font-weight: 600;
+        color: #24292e;
+        font-size: 14px;
+        margin: 0;
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .feed-actions {
+        display: flex;
+        gap: 6px;
+      }
+
+      .feed-actions button {
+        padding: 4px 8px;
+        font-size: 12px;
+        margin: 0;
+      }
+
+      .feed-content {
+        position: relative;
+        background: #000;
+        aspect-ratio: 16 / 9;
+      }
+
+      .feed-video,
+      .feed-iframe {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      .feed-info {
+        padding: 12px 16px;
+        font-size: 12px;
+        color: #586069;
+        border-top: 1px solid #e1e4e8;
+      }
+
+      .feed-url {
+        word-break: break-all;
+        font-family: monospace;
+        font-size: 11px;
+        color: #6a737d;
+        margin-top: 4px;
+      }
+
+      .empty-state {
+        background: #f6f8fa;
+        border-radius: 6px;
+        padding: 40px;
+        text-align: center;
+        border: 1px solid #e1e4e8;
+      }
+
+      .empty-state h2 {
+        color: #24292e;
+        margin: 0 0 8px 0;
+        font-size: 20px;
+      }
+
+      .empty-state p {
+        color: #586069;
+        margin: 0;
+        font-size: 14px;
+      }
+
+      .info {
+        background: #f6f8fa;
+        border: 1px solid #e1e4e8;
+        color: #24292e;
+        padding: 12px 16px;
+        border-radius: 6px;
+        margin-bottom: 16px;
+        font-size: 14px;
+        line-height: 1.6;
+      }
+
+      .input-group {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      .input-group > div {
+        flex: 1;
+      }
+
+      .input-group label {
+        margin-bottom: 6px;
+      }
+
+      .input-group input {
+        margin-bottom: 0;
+      }
+
+      .back-link {
+        display: inline-block;
+        color: #0366d6;
+        text-decoration: none;
+        margin-bottom: 16px;
+        font-size: 14px;
+      }
+
+      .back-link:hover {
+        text-decoration: underline;
+      }
+
+      @media (max-width: 768px) {
+        .feed-grid {
+          grid-template-columns: 1fr;
+        }
+
+        h1 {
+          font-size: 24px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a href="index.html" class="back-link">Back to Tools</a>
+
+    <h1>Multi-Webcam Viewer</h1>
+
+    <div class="info">
+      Enter a name and URL to add a webcam feed. Supports YouTube embeds, direct
+      video streams (MP4, M3U8, HLS), and iframe-compatible sources. Be aware
+      that many webcam services block iframe embedding. Feeds are stored in
+      session storage and will be cleared when you close the browser tab. Use
+      "Save Config" to export collections of feeds for later use.
+    </div>
+
+    <div class="controls">
+      <div class="input-group">
+        <div>
+          <label for="feedName">Feed Name</label>
+          <input
+            type="text"
+            id="feedName"
+            placeholder="e.g., Times Square NYC"
+          />
+        </div>
+        <div>
+          <label for="feedUrl">Feed URL</label>
+          <input
+            type="url"
+            id="feedUrl"
+            placeholder="Enter webcam stream URL"
+          />
+        </div>
+      </div>
+
+      <div>
+        <button class="btn" id="addFeedBtn">Add Feed</button>
+        <button class="btn secondary" id="clearAllBtn">Clear All</button>
+        <button class="btn secondary" id="saveConfigBtn">Save Config</button>
+        <button class="btn secondary" id="loadConfigBtn">Load Config</button>
+      </div>
+    </div>
+
+    <div id="feedContainer"></div>
+
+    <script type="module">
+      const feeds = [];
+      const hlsInstances = {};
+      const feedContainer = document.getElementById("feedContainer");
+      const feedNameInput = document.getElementById("feedName");
+      const feedUrlInput = document.getElementById("feedUrl");
+      const addFeedBtn = document.getElementById("addFeedBtn");
+      const clearAllBtn = document.getElementById("clearAllBtn");
+      const saveConfigBtn = document.getElementById("saveConfigBtn");
+      const loadConfigBtn = document.getElementById("loadConfigBtn");
+
+      function generateId() {
+        return (
+          "feed_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9)
+        );
+      }
+
+      function isVideoUrl(url) {
+        const videoExtensions = [".mp4", ".webm", ".ogg", ".m3u8"];
+        const lowerUrl = url.toLowerCase();
+        return (
+          videoExtensions.some((ext) => lowerUrl.includes(ext)) ||
+          lowerUrl.includes("stream")
+        );
+      }
+
+      function convertToEmbedUrl(url) {
+        if (url.includes("youtube.com/watch")) {
+          const urlObj = new URL(url);
+          const videoId = urlObj.searchParams.get("v");
+          if (videoId) {
+            return `https://www.youtube.com/embed/${videoId}`;
+          }
+        } else if (url.includes("youtu.be/")) {
+          const videoId = url.split("youtu.be/")[1].split("?")[0];
+          return `https://www.youtube.com/embed/${videoId}`;
+        }
+        return url;
+      }
+
+      function addFeed(name, url) {
+        if (!name || !url) {
+          alert("Please provide both a name and URL for the feed");
+          return;
+        }
+
+        const feed = {
+          id: generateId(),
+          name: name,
+          url: url,
+          addedAt: new Date().toISOString(),
+        };
+
+        feeds.push(feed);
+        renderFeeds();
+
+        feedNameInput.value = "";
+        feedUrlInput.value = "";
+        feedNameInput.focus();
+
+        saveFeedsToStorage();
+      }
+
+      function removeFeed(id) {
+        const index = feeds.findIndex((f) => f.id === id);
+        if (index !== -1) {
+          // Clean up HLS instance if exists
+          cleanupFeed(id);
+
+          feeds.splice(index, 1);
+          renderFeeds();
+          saveFeedsToStorage();
+        }
+      }
+
+      function clearAllFeeds() {
+        if (feeds.length === 0) return;
+
+        if (confirm("Remove all feeds?")) {
+          // Clean up all HLS instances
+          feeds.forEach((feed) => cleanupFeed(feed.id));
+
+          feeds.length = 0;
+          renderFeeds();
+          saveFeedsToStorage();
+        }
+      }
+
+      function renderFeeds() {
+        if (feeds.length === 0) {
+          feedContainer.innerHTML = `
+      <div class="empty-state">
+        <h2>No Feeds Added</h2>
+        <p>Add a webcam feed using the controls above</p>
+      </div>
+    `;
+          return;
+        }
+
+        feedContainer.innerHTML = `<div class="feed-grid">${feeds
+          .map((feed) => createFeedCard(feed))
+          .join("")}</div>`;
+
+        feeds.forEach((feed) => {
+          const removeBtn = document.getElementById(`remove-${feed.id}`);
+          const refreshBtn = document.getElementById(`refresh-${feed.id}`);
+
+          if (removeBtn) {
+            removeBtn.addEventListener("click", () => removeFeed(feed.id));
+          }
+
+          if (refreshBtn) {
+            refreshBtn.addEventListener("click", () => refreshFeed(feed.id));
+          }
+
+          // Initialize video players for video feeds
+          const processedUrl = convertToEmbedUrl(feed.url);
+          if (isVideoUrl(processedUrl)) {
+            const videoElement = document.getElementById(`video-${feed.id}`);
+            if (videoElement) {
+              initializeVideoPlayer(videoElement, processedUrl, feed.id);
+            }
+          }
+        });
+      }
+
+      function createFeedCard(feed) {
+        const processedUrl = convertToEmbedUrl(feed.url);
+        const isVideo = isVideoUrl(processedUrl);
+
+        let mediaContent;
+        if (isVideo) {
+          mediaContent = `
+      <video class="feed-video" id="video-${feed.id}" controls muted></video>
+    `;
+        } else {
+          mediaContent = `
+      <iframe
+        class="feed-iframe"
+        src="${escapeHtml(processedUrl)}"
+        frameborder="0"
+        allow="autoplay; fullscreen; picture-in-picture"
+        allowfullscreen>
+      </iframe>
+    `;
+        }
+
+        return `
+    <div class="feed-card" data-feed-id="${feed.id}">
+      <div class="feed-header">
+        <h3 class="feed-title" title="${escapeHtml(feed.name)}">${escapeHtml(
+          feed.name
+        )}</h3>
+        <div class="feed-actions">
+          <button class="btn secondary" id="refresh-${feed.id}">Refresh</button>
+          <button class="btn danger" id="remove-${feed.id}">Remove</button>
+        </div>
+      </div>
+      <div class="feed-content" id="content-${feed.id}">
+        ${mediaContent}
+      </div>
+      <div class="feed-info">
+        <div>Added: ${new Date(feed.addedAt).toLocaleString()}</div>
+        <div class="feed-url">${escapeHtml(processedUrl)}</div>
+      </div>
+    </div>
+  `;
+      }
+
+      function initializeVideoPlayer(videoElement, url, feedId) {
+        if (url.includes(".m3u8")) {
+          if (Hls.isSupported()) {
+            const hls = new Hls();
+            hls.loadSource(url);
+            hls.attachMedia(videoElement);
+            hls.on(Hls.Events.MANIFEST_PARSED, function () {
+              videoElement.play();
+            });
+
+            // Store HLS instance for cleanup
+            if (feedId) {
+              hlsInstances[feedId] = hls;
+            }
+          } else if (
+            videoElement.canPlayType("application/vnd.apple.mpegurl")
+          ) {
+            videoElement.src = url;
+            videoElement.addEventListener("loadedmetadata", function () {
+              videoElement.play();
+            });
+          }
+        } else {
+          videoElement.src = url;
+          videoElement.play();
+        }
+      }
+
+      function cleanupFeed(feedId) {
+        // Destroy HLS instance if exists
+        if (hlsInstances[feedId]) {
+          hlsInstances[feedId].destroy();
+          delete hlsInstances[feedId];
+        }
+
+        // Stop video element
+        const videoElement = document.getElementById(`video-${feedId}`);
+        if (videoElement) {
+          videoElement.pause();
+          videoElement.src = "";
+          videoElement.load();
+        }
+
+        // Clear iframe src
+        const feedCard = document.querySelector(`[data-feed-id="${feedId}"]`);
+        if (feedCard) {
+          const iframe = feedCard.querySelector(".feed-iframe");
+          if (iframe) {
+            iframe.src = "about:blank";
+          }
+        }
+      }
+
+      function refreshFeed(id) {
+        const feedCard = document.querySelector(`[data-feed-id="${id}"]`);
+        if (!feedCard) return;
+
+        const feed = feeds.find((f) => f.id === id);
+        if (!feed) return;
+
+        const content = feedCard.querySelector(".feed-content");
+        content.innerHTML =
+          '<div style="color: white; text-align: center; padding: 20px;">Refreshing...</div>';
+
+        setTimeout(() => {
+          const processedUrl = convertToEmbedUrl(feed.url);
+          const isVideo = isVideoUrl(processedUrl);
+
+          if (isVideo) {
+            content.innerHTML = `
+        <video class="feed-video" id="video-refresh-${feed.id}" controls muted></video>
+      `;
+            const videoElement = document.getElementById(
+              `video-refresh-${feed.id}`
+            );
+            if (videoElement) {
+              // Clean up old instance before refresh
+              cleanupFeed(feed.id);
+              initializeVideoPlayer(videoElement, processedUrl, feed.id);
+            }
+          } else {
+            content.innerHTML = `
+        <iframe
+          class="feed-iframe"
+          src="${escapeHtml(processedUrl)}"
+          frameborder="0"
+          allow="autoplay; fullscreen; picture-in-picture"
+          allowfullscreen>
+        </iframe>
+      `;
+          }
+        }, 300);
+      }
+
+      function escapeHtml(text) {
+        const div = document.createElement("div");
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      function saveFeedsToStorage() {
+        try {
+          sessionStorage.setItem("webcamFeeds", JSON.stringify(feeds));
+        } catch (e) {
+          console.error("Failed to save feeds:", e);
+        }
+      }
+
+      function loadFeedsFromStorage() {
+        try {
+          const stored = sessionStorage.getItem("webcamFeeds");
+          if (stored) {
+            const loaded = JSON.parse(stored);
+            feeds.push(...loaded);
+            renderFeeds();
+          } else {
+            renderFeeds();
+          }
+        } catch (e) {
+          console.error("Failed to load feeds:", e);
+          renderFeeds();
+        }
+      }
+
+      function saveConfiguration() {
+        if (feeds.length === 0) {
+          alert("No feeds to save");
+          return;
+        }
+
+        const config = {
+          feeds: feeds,
+          exportedAt: new Date().toISOString(),
+        };
+
+        const blob = new Blob([JSON.stringify(config, null, 2)], {
+          type: "application/json",
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `webcam-feeds-${Date.now()}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      function loadConfiguration() {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = "application/json";
+
+        input.onchange = (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            try {
+              const config = JSON.parse(event.target.result);
+              if (config.feeds && Array.isArray(config.feeds)) {
+                if (
+                  confirm(
+                    `Load ${config.feeds.length} feeds? This will replace current feeds.`
+                  )
+                ) {
+                  feeds.length = 0;
+                  feeds.push(...config.feeds);
+                  renderFeeds();
+                  saveFeedsToStorage();
+                }
+              } else {
+                alert("Invalid configuration file");
+              }
+            } catch (err) {
+              alert("Failed to parse configuration: " + err.message);
+            }
+          };
+          reader.readAsText(file);
+        };
+
+        input.click();
+      }
+
+      addFeedBtn.addEventListener("click", () => {
+        addFeed(feedNameInput.value.trim(), feedUrlInput.value.trim());
+      });
+
+      feedNameInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+          feedUrlInput.focus();
+        }
+      });
+
+      feedUrlInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+          addFeed(feedNameInput.value.trim(), feedUrlInput.value.trim());
+        }
+      });
+
+      clearAllBtn.addEventListener("click", clearAllFeeds);
+      saveConfigBtn.addEventListener("click", saveConfiguration);
+      loadConfigBtn.addEventListener("click", loadConfiguration);
+
+      loadFeedsFromStorage();
+    </script>
+  </body>
+</html>
