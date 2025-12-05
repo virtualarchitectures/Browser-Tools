@@ -15,6 +15,10 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 
 ## Available Tools
 
+### Data
+
+- **[CSV to JSON Converter](csv-to-json.html)** — convert CSV files to JSON format with collapsible table preview and download options
+
 ### Digital forensics
 
 - **[Email Header Analysis](email-header-analysis.html)** — analyse and highlight email headers with syntax highlighting for IPs, emails, and URLs
