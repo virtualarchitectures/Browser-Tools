@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Browser Fingerprint Viewer</title>
+
+    <style>
+      /* =========================
+         CSS Styles
+         ========================= */
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Arial, sans-serif;
+        line-height: 1.6;
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 20px;
+        color: #24292e;
+        background: #ffffff;
+      }
+
+      h1 {
+        border-bottom: 1px solid #eaecef;
+        padding-bottom: 0.3em;
+        margin-top: 0;
+        font-size: 32px;
+        font-weight: 600;
+      }
+
+      .back-link {
+        display: inline-block;
+        margin-bottom: 16px;
+        color: #0366d6;
+        text-decoration: none;
+        font-size: 14px;
+      }
+
+      .back-link:hover {
+        text-decoration: underline;
+      }
+
+      .info {
+        font-size: 14px;
+        color: #586069;
+        margin-bottom: 24px;
+        padding: 12px;
+        background: #f6f8fa;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+      }
+
+      .actions {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+      }
+
+      .btn {
+        background: #fafbfc;
+        color: #24292e;
+        padding: 8px 16px;
+        border-radius: 6px;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+        cursor: pointer;
+        font-size: 14px;
+        line-height: 20px;
+        text-decoration: none;
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Arial, sans-serif;
+      }
+
+      .btn:hover {
+        background: #f3f4f6;
+      }
+
+      .btn.primary {
+        background: #0366d6;
+        color: #fff;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+      }
+
+      .btn.primary:hover {
+        background: #0256c5;
+      }
+
+      .panel {
+        background: #ffffff;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        margin-bottom: 16px;
+        overflow: hidden;
+      }
+
+      .panel h2 {
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0;
+        padding: 16px;
+        background: #f6f8fa;
+        border-bottom: 1px solid #e1e4e8;
+        cursor: pointer;
+        user-select: none;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .panel h2::after {
+        content: "▼";
+        font-size: 12px;
+        color: #586069;
+        transition: transform 0.2s;
+      }
+
+      .panel h2.collapsed::after {
+        transform: rotate(-90deg);
+      }
+
+      .panel-content {
+        padding: 16px;
+        max-height: 2000px;
+        overflow: hidden;
+        transition: max-height 0.3s ease-out;
+      }
+
+      .panel-content.collapsed {
+        max-height: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+      }
+
+      .fingerprint-grid {
+        display: grid;
+        grid-template-columns: minmax(200px, 1fr) 2fr;
+        gap: 8px;
+        font-size: 14px;
+      }
+
+      .fingerprint-label {
+        font-weight: 600;
+        color: #24292e;
+        padding: 8px;
+        background: #f6f8fa;
+        border-radius: 3px;
+      }
+
+      .fingerprint-value {
+        padding: 8px;
+        color: #586069;
+        word-break: break-all;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
+          monospace;
+        font-size: 13px;
+      }
+
+      .fingerprint-value code {
+        background: #f6f8fa;
+        padding: 2px 4px;
+        border-radius: 3px;
+        font-size: 12px;
+      }
+
+      .canvas-container {
+        margin-top: 12px;
+        padding: 12px;
+        background: #f6f8fa;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+      }
+
+      .canvas-container canvas {
+        display: block;
+        max-width: 100%;
+        border: 1px solid #e1e4e8;
+        border-radius: 3px;
+        background: white;
+      }
+
+      .list-display {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .list-display li {
+        padding: 6px 8px;
+        margin-bottom: 4px;
+        background: #f6f8fa;
+        border-radius: 3px;
+        font-size: 13px;
+      }
+
+      .panel-header-content {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 1;
+      }
+
+      .info-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #0366d6;
+        color: white;
+        font-size: 12px;
+        font-weight: bold;
+        cursor: help;
+        position: relative;
+        flex-shrink: 0;
+      }
+
+      .info-icon:hover {
+        background: #0256c5;
+      }
+
+      .tooltip {
+        visibility: hidden;
+        position: absolute;
+        z-index: 1000;
+        background: #24292e;
+        color: white;
+        padding: 12px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: normal;
+        line-height: 1.5;
+        width: 300px;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        margin-top: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        pointer-events: none;
+      }
+
+      .tooltip::before {
+        content: "";
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border: 6px solid transparent;
+        border-bottom-color: #24292e;
+      }
+
+      .info-icon:hover .tooltip {
+        visibility: visible;
+      }
+
+      .tooltip strong {
+        display: block;
+        margin-bottom: 4px;
+        color: #58a6ff;
+      }
+
+      @media (max-width: 768px) {
+        .fingerprint-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .actions {
+          flex-direction: column;
+        }
+
+        .btn {
+          width: 100%;
+        }
+
+        .tooltip {
+          width: 250px;
+          font-size: 12px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- =========================
+         HTML Structure
+         ========================= -->
+
+    <a href="index.html" class="back-link">← Back to Browser Tools</a>
+
+    <h1>Browser Fingerprint Viewer</h1>
+
+    <div class="info">
+      This tool displays information that websites can collect about your
+      browser and device. This data can be used to create a unique "fingerprint"
+      that can identify you across different websites, even without cookies. All
+      processing happens locally in your browser. For more detailed browser
+      fingerprinting, please refer to
+      <a
+        href="https://amiunique.org/fingerprint"
+        target="_blank"
+        rel="noopener noreferrer"
+        >Am I Unique?</a
+      >
+    </div>
+
+    <div class="actions">
+      <button id="refreshBtn" class="btn primary">Refresh Fingerprint</button>
+      <button id="copyBtn" class="btn">Copy All Data</button>
+      <button id="downloadBtn" class="btn">Download JSON</button>
+    </div>
+
+    <div id="fingerprintData"></div>
+
+    <script>
+      /* =========================
+         JavaScript
+         ========================= */
+
+      // State variables
+      let fingerprintData = {};
+
+      // Utility functions
+      function escapeHtml(text) {
+        const div = document.createElement("div");
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      async function sha256(message) {
+        const msgBuffer = new TextEncoder().encode(message);
+        const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+      }
+
+      // Fingerprinting functions
+      async function getCanvasFingerprint() {
+        const canvas = document.createElement("canvas");
+        canvas.width = 200;
+        canvas.height = 50;
+        const ctx = canvas.getContext("2d");
+
+        // Draw text with different styles
+        ctx.textBaseline = "top";
+        ctx.font = "14px 'Arial'";
+        ctx.textBaseline = "alphabetic";
+        ctx.fillStyle = "#f60";
+        ctx.fillRect(125, 1, 62, 20);
+        ctx.fillStyle = "#069";
+        ctx.fillText("Canvas Fingerprint 🎨", 2, 15);
+        ctx.fillStyle = "rgba(102, 204, 0, 0.7)";
+        ctx.fillText("Canvas Fingerprint 🎨", 4, 17);
+
+        const dataURL = canvas.toDataURL();
+        const hash = await sha256(dataURL);
+
+        return {
+          canvas: canvas,
+          dataURL: dataURL,
+          hash: hash,
+        };
+      }
+
+      async function getWebGLFingerprint() {
+        const canvas = document.createElement("canvas");
+        const gl =
+          canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+
+        if (!gl) {
+          return { supported: false };
+        }
+
+        const debugInfo = gl.getExtension("WEBGL_debug_renderer_info");
+        const vendor = debugInfo
+          ? gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL)
+          : gl.getParameter(gl.VENDOR);
+        const renderer = debugInfo
+          ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)
+          : gl.getParameter(gl.RENDERER);
+
+        return {
+          supported: true,
+          vendor: vendor,
+          renderer: renderer,
+          version: gl.getParameter(gl.VERSION),
+          shadingLanguageVersion: gl.getParameter(gl.SHADING_LANGUAGE_VERSION),
+          maxTextureSize: gl.getParameter(gl.MAX_TEXTURE_SIZE),
+          maxViewportDims: gl.getParameter(gl.MAX_VIEWPORT_DIMS).join(" x "),
+          maxRenderBufferSize: gl.getParameter(gl.MAX_RENDERBUFFER_SIZE),
+        };
+      }
+
+      async function getAudioFingerprint() {
+        try {
+          const audioContext = new (window.AudioContext ||
+            window.webkitAudioContext)();
+          const oscillator = audioContext.createOscillator();
+          const analyser = audioContext.createAnalyser();
+          const gainNode = audioContext.createGain();
+          const scriptProcessor = audioContext.createScriptProcessor(
+            4096,
+            1,
+            1
+          );
+
+          gainNode.gain.value = 0;
+          oscillator.connect(analyser);
+          analyser.connect(scriptProcessor);
+          scriptProcessor.connect(gainNode);
+          gainNode.connect(audioContext.destination);
+
+          oscillator.start(0);
+
+          const audioData = await new Promise((resolve) => {
+            scriptProcessor.onaudioprocess = function (event) {
+              const output = event.outputBuffer.getChannelData(0);
+              resolve(Array.from(output.slice(0, 30)));
+              scriptProcessor.disconnect();
+              oscillator.disconnect();
+              analyser.disconnect();
+              gainNode.disconnect();
+            };
+          });
+
+          const hash = await sha256(audioData.join(","));
+
+          return {
+            supported: true,
+            sampleRate: audioContext.sampleRate,
+            maxChannelCount: audioContext.destination.maxChannelCount,
+            numberOfInputs: audioContext.destination.numberOfInputs,
+            numberOfOutputs: audioContext.destination.numberOfOutputs,
+            channelCount: audioContext.destination.channelCount,
+            hash: hash,
+          };
+        } catch (e) {
+          return { supported: false, error: e.message };
+        }
+      }
+
+      function getFonts() {
+        const baseFonts = ["monospace", "sans-serif", "serif"];
+        const testFonts = [
+          "Arial",
+          "Verdana",
+          "Times New Roman",
+          "Courier New",
+          "Georgia",
+          "Palatino",
+          "Garamond",
+          "Bookman",
+          "Comic Sans MS",
+          "Trebuchet MS",
+          "Impact",
+          "Lucida Sans",
+          "Tahoma",
+          "Lucida Console",
+          "Monaco",
+          "Helvetica",
+          "Apple Symbols",
+          "Calibri",
+          "Cambria",
+          "Consolas",
+          "Segoe UI",
+        ];
+
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        const testString = "mmmmmmmmmmlli";
+        const baseSizes = {};
+
+        // Get base font sizes
+        for (const baseFont of baseFonts) {
+          ctx.font = `72px ${baseFont}`;
+          baseSizes[baseFont] = ctx.measureText(testString).width;
+        }
+
+        const detectedFonts = [];
+
+        for (const testFont of testFonts) {
+          let detected = false;
+          for (const baseFont of baseFonts) {
+            ctx.font = `72px '${testFont}', ${baseFont}`;
+            const size = ctx.measureText(testString).width;
+            if (size !== baseSizes[baseFont]) {
+              detected = true;
+              break;
+            }
+          }
+          if (detected) {
+            detectedFonts.push(testFont);
+          }
+        }
+
+        return detectedFonts;
+      }
+
+      function getPlugins() {
+        const plugins = [];
+        for (let i = 0; i < navigator.plugins.length; i++) {
+          const plugin = navigator.plugins[i];
+          plugins.push({
+            name: plugin.name,
+            description: plugin.description,
+            filename: plugin.filename,
+          });
+        }
+        return plugins;
+      }
+
+      async function collectFingerprint() {
+        const data = {
+          basicInfo: {
+            userAgent: {
+              value: navigator.userAgent,
+              status: "acquired",
+            },
+            language: {
+              value: navigator.language,
+              status: "acquired",
+            },
+            languages: navigator.languages
+              ? {
+                  value: navigator.languages.join(", "),
+                  status: "acquired",
+                }
+              : { value: "Not available", status: "unsupported" },
+            platform: {
+              value: navigator.platform,
+              status: "acquired",
+            },
+            hardwareConcurrency: navigator.hardwareConcurrency
+              ? {
+                  value: navigator.hardwareConcurrency,
+                  status: "acquired",
+                }
+              : { value: "Not available", status: "unsupported" },
+            deviceMemory: navigator.deviceMemory
+              ? {
+                  value: `${navigator.deviceMemory} GB`,
+                  status: "acquired",
+                }
+              : { value: "Not available", status: "unsupported" },
+            maxTouchPoints: navigator.maxTouchPoints
+              ? {
+                  value: navigator.maxTouchPoints,
+                  status: "acquired",
+                }
+              : { value: 0, status: "fallback" },
+            doNotTrack: navigator.doNotTrack
+              ? {
+                  value: navigator.doNotTrack,
+                  status: "acquired",
+                }
+              : { value: "Not set", status: "fallback" },
+            cookieEnabled: {
+              value: navigator.cookieEnabled,
+              status: "acquired",
+            },
+          },
+          screen: {
+            width: { value: screen.width, status: "acquired" },
+            height: { value: screen.height, status: "acquired" },
+            availWidth: {
+              value: screen.availWidth,
+              status: "acquired",
+            },
+            availHeight: {
+              value: screen.availHeight,
+              status: "acquired",
+            },
+            colorDepth: {
+              value: screen.colorDepth,
+              status: "acquired",
+            },
+            pixelDepth: {
+              value: screen.pixelDepth,
+              status: "acquired",
+            },
+            devicePixelRatio: {
+              value: window.devicePixelRatio,
+              status: "acquired",
+            },
+            orientation: screen.orientation?.type
+              ? {
+                  value: screen.orientation.type,
+                  status: "acquired",
+                }
+              : { value: "Not available", status: "unsupported" },
+          },
+          timezone: {
+            timezone: {
+              value: Intl.DateTimeFormat().resolvedOptions().timeZone,
+              status: "acquired",
+            },
+            timezoneOffset: {
+              value: new Date().getTimezoneOffset(),
+              status: "acquired",
+            },
+            locale: {
+              value: Intl.DateTimeFormat().resolvedOptions().locale,
+              status: "acquired",
+            },
+          },
+          battery: null,
+          connection: null,
+          permissions: {},
+          canvas: {
+            data: await getCanvasFingerprint(),
+            status: "acquired",
+          },
+          webgl: await getWebGLFingerprint(),
+          audio: await getAudioFingerprint(),
+          fonts: { list: getFonts(), status: "acquired" },
+          plugins: { list: getPlugins(), status: "acquired" },
+          storage: {
+            localStorage: {
+              value: typeof localStorage !== "undefined",
+              status: "acquired",
+            },
+            sessionStorage: {
+              value: typeof sessionStorage !== "undefined",
+              status: "acquired",
+            },
+            indexedDB: {
+              value: typeof indexedDB !== "undefined",
+              status: "acquired",
+            },
+            cookiesEnabled: {
+              value: navigator.cookieEnabled,
+              status: "acquired",
+            },
+          },
+          features: {
+            webWorker: {
+              value: typeof Worker !== "undefined",
+              status: "acquired",
+            },
+            serviceWorker: {
+              value: "serviceWorker" in navigator,
+              status: "acquired",
+            },
+            webRTC: {
+              value: !!(
+                window.RTCPeerConnection ||
+                window.mozRTCPeerConnection ||
+                window.webkitRTCPeerConnection
+              ),
+              status: "acquired",
+            },
+            webGL: {
+              value: !!document.createElement("canvas").getContext("webgl"),
+              status: "acquired",
+            },
+            webAssembly: {
+              value: typeof WebAssembly !== "undefined",
+              status: "acquired",
+            },
+            notifications: {
+              value: "Notification" in window,
+              status: "acquired",
+            },
+            geolocation: {
+              value: "geolocation" in navigator,
+              status: "acquired",
+            },
+            bluetooth: {
+              value: "bluetooth" in navigator,
+              status: "acquired",
+            },
+            usb: { value: "usb" in navigator, status: "acquired" },
+            mediaDevices: {
+              value: "mediaDevices" in navigator,
+              status: "acquired",
+            },
+            payment: {
+              value: "PaymentRequest" in window,
+              status: "acquired",
+            },
+            credentials: {
+              value: "credentials" in navigator,
+              status: "acquired",
+            },
+            share: {
+              value: "share" in navigator,
+              status: "acquired",
+            },
+          },
+        };
+
+        // Battery API
+        if ("getBattery" in navigator) {
+          try {
+            const battery = await navigator.getBattery();
+            data.battery = {
+              level: {
+                value: (battery.level * 100).toFixed(0) + "%",
+                status: "acquired",
+              },
+              charging: {
+                value: battery.charging,
+                status: "acquired",
+              },
+              chargingTime: {
+                value: battery.chargingTime,
+                status: "acquired",
+              },
+              dischargingTime: {
+                value: battery.dischargingTime,
+                status: "acquired",
+              },
+            };
+          } catch (e) {
+            data.battery = {
+              error: {
+                value: "Permission denied or not available",
+                status: "unsupported",
+              },
+            };
+          }
+        } else {
+          data.battery = {
+            supported: { value: false, status: "unsupported" },
+          };
+        }
+
+        // Network Information API
+        if ("connection" in navigator || "mozConnection" in navigator) {
+          const conn = navigator.connection || navigator.mozConnection;
+          data.connection = {
+            effectiveType: conn.effectiveType
+              ? {
+                  value: conn.effectiveType,
+                  status: "acquired",
+                }
+              : { value: "Unknown", status: "fallback" },
+            downlink: conn.downlink
+              ? {
+                  value: `${conn.downlink} Mbps`,
+                  status: "acquired",
+                }
+              : { value: "Unknown", status: "fallback" },
+            rtt: conn.rtt
+              ? { value: `${conn.rtt} ms`, status: "acquired" }
+              : { value: "Unknown", status: "fallback" },
+            saveData: conn.saveData
+              ? { value: conn.saveData, status: "acquired" }
+              : { value: false, status: "fallback" },
+          };
+        } else {
+          data.connection = {
+            supported: { value: false, status: "unsupported" },
+          };
+        }
+
+        return data;
+      }
+
+      function displayFingerprint(data) {
+        const container = document.getElementById("fingerprintData");
+        container.innerHTML = "";
+
+        // Basic Information
+        createPanel("Basic Information", data.basicInfo, container);
+
+        // Screen & Display
+        createPanel("Screen & Display", data.screen, container);
+
+        // Timezone & Locale
+        createPanel("Timezone & Locale", data.timezone, container);
+
+        // Canvas Fingerprint
+        const canvasPanel = createPanel(
+          "Canvas Fingerprint",
+          {
+            hash: {
+              value: data.canvas.data.hash,
+              status: "acquired",
+            },
+          },
+          container
+        );
+        const canvasContent = canvasPanel.querySelector(".panel-content");
+        const canvasContainer = document.createElement("div");
+        canvasContainer.className = "canvas-container";
+        canvasContainer.innerHTML = `
+          <strong>Canvas Preview:</strong>
+        `;
+        canvasContainer.appendChild(data.canvas.data.canvas);
+        canvasContent.appendChild(canvasContainer);
+
+        // WebGL Information
+        createPanel("WebGL Information", data.webgl, container);
+
+        // Audio Fingerprint
+        createPanel("Audio Context Fingerprint", data.audio, container);
+
+        // Detected Fonts
+        const fontsPanel = createPanel(
+          `Detected Fonts (${data.fonts.list.length})`,
+          {},
+          container
+        );
+        const fontsContent = fontsPanel.querySelector(".panel-content");
+        const fontsList = document.createElement("ul");
+        fontsList.className = "list-display";
+        data.fonts.list.forEach((font) => {
+          const li = document.createElement("li");
+          li.textContent = font;
+          fontsList.appendChild(li);
+        });
+        fontsContent.appendChild(fontsList);
+
+        // Browser Plugins
+        if (data.plugins.list.length > 0) {
+          const pluginsPanel = createPanel(
+            `Browser Plugins (${data.plugins.list.length})`,
+            {},
+            container
+          );
+          const pluginsContent = pluginsPanel.querySelector(".panel-content");
+          const pluginsList = document.createElement("ul");
+          pluginsList.className = "list-display";
+          data.plugins.list.forEach((plugin) => {
+            const li = document.createElement("li");
+            li.innerHTML = `
+              <strong>${escapeHtml(plugin.name)}</strong><br>
+              <small>${escapeHtml(plugin.description)}</small>
+            `;
+            pluginsList.appendChild(li);
+          });
+          pluginsContent.appendChild(pluginsList);
+        }
+
+        // Storage APIs
+        createPanel("Storage APIs", data.storage, container);
+
+        // Browser Features
+        createPanel("Browser Features & APIs", data.features, container);
+
+        // Battery Status
+        if (data.battery && data.battery.supported !== false) {
+          createPanel("Battery Status", data.battery, container);
+        }
+
+        // Network Information
+        if (data.connection && data.connection.supported !== false) {
+          createPanel("Network Information", data.connection, container);
+        }
+      }
+
+      // Educational tooltips for each section
+      const tooltips = {
+        "Basic Information":
+          "<strong>What is this?</strong> Basic browser and system information that websites can access without any permissions. <strong>Privacy Impact:</strong> Your User Agent alone can narrow you down to a small group of users. Combined with other factors, it becomes highly identifying.",
+        "Screen & Display":
+          "<strong>What is this?</strong> Information about your screen resolution, color depth, and pixel ratio. <strong>Privacy Impact:</strong> Uncommon screen configurations (like ultrawide monitors or non-standard DPI settings) make you more trackable.",
+        "Timezone & Locale":
+          "<strong>What is this?</strong> Your timezone and language preferences detected from your browser. <strong>Privacy Impact:</strong> Combined with other data, this helps narrow down your geographic location and cultural background.",
+        "Canvas Fingerprint":
+          "<strong>What is this?</strong> A technique that draws text and shapes on a hidden canvas. Small differences in how browsers render graphics create a unique hash. <strong>Privacy Impact:</strong> Highly unique and difficult to defend against. Each GPU/driver combination renders slightly differently.",
+        "WebGL Information":
+          "<strong>What is this?</strong> Information about your graphics card and WebGL capabilities. <strong>Privacy Impact:</strong> Your GPU model is highly identifying. Privacy-focused browsers may mask this data.",
+        "Audio Context Fingerprint":
+          "<strong>What is this?</strong> Similar to canvas fingerprinting, but uses the Web Audio API to generate unique audio signatures based on your hardware. <strong>Privacy Impact:</strong> Very difficult to detect or block. Different audio hardware produces different results.",
+        "Detected Fonts":
+          "<strong>What is this?</strong> A list of fonts installed on your system, detected by measuring text rendering. <strong>Privacy Impact:</strong> Your font list is often unique to you. Designers and developers have many specialized fonts installed.",
+        "Browser Plugins":
+          "<strong>What is this?</strong> Browser extensions and plugins that are detectable. <strong>Privacy Impact:</strong> Modern browsers hide most plugin information, but older browsers expose this data.",
+        "Storage APIs":
+          "<strong>What is this?</strong> Which storage mechanisms (LocalStorage, SessionStorage, IndexedDB) are available in your browser. <strong>Privacy Impact:</strong> Shows if you're using privacy modes or extensions that block storage.",
+        "Browser Features & APIs":
+          "<strong>What is this?</strong> A list of modern web APIs your browser supports. <strong>Privacy Impact:</strong> The combination of supported features helps identify your browser version and type.",
+        "Battery Status":
+          "<strong>What is this?</strong> Your device's battery level and charging status. <strong>Privacy Impact:</strong> Can be used to track you across sessions. Many browsers now require permission for this data.",
+        "Network Information":
+          "<strong>What is this?</strong> Information about your internet connection type and speed. <strong>Privacy Impact:</strong> Helps identify if you're on mobile, WiFi, or wired connection, and can be correlated with location.",
+      };
+
+      function createPanel(title, data, container) {
+        const panel = document.createElement("div");
+        panel.className = "panel";
+
+        const header = document.createElement("h2");
+
+        // Create header content wrapper
+        const headerContent = document.createElement("div");
+        headerContent.className = "panel-header-content";
+
+        const titleText = document.createElement("span");
+        titleText.textContent = title;
+        headerContent.appendChild(titleText);
+
+        // Add info icon with tooltip if tooltip exists for this section
+        if (tooltips[title.replace(/\s*\(\d+\)/, "")]) {
+          const infoIcon = document.createElement("span");
+          infoIcon.className = "info-icon";
+          infoIcon.innerHTML = "i";
+
+          const tooltip = document.createElement("div");
+          tooltip.className = "tooltip";
+          tooltip.innerHTML = tooltips[title.replace(/\s*\(\d+\)/, "")];
+
+          infoIcon.appendChild(tooltip);
+          headerContent.appendChild(infoIcon);
+        }
+
+        header.appendChild(headerContent);
+
+        header.addEventListener("click", (e) => {
+          // Don't toggle if clicking on info icon
+          if (e.target.closest(".info-icon")) {
+            return;
+          }
+          header.classList.toggle("collapsed");
+          content.classList.toggle("collapsed");
+        });
+
+        const content = document.createElement("div");
+        content.className = "panel-content";
+
+        if (Object.keys(data).length > 0) {
+          const grid = document.createElement("div");
+          grid.className = "fingerprint-grid";
+
+          for (const [key, value] of Object.entries(data)) {
+            const label = document.createElement("div");
+            label.className = "fingerprint-label";
+            label.textContent = key
+              .replace(/([A-Z])/g, " $1")
+              .replace(/^./, (str) => str.toUpperCase());
+
+            const valueEl = document.createElement("div");
+            valueEl.className = "fingerprint-value";
+
+            // Handle new structure with value and status
+            let displayValue = value;
+            let status = null;
+
+            if (
+              typeof value === "object" &&
+              value !== null &&
+              "value" in value &&
+              "status" in value
+            ) {
+              displayValue = value.value;
+              status = value.status;
+            }
+
+            if (typeof displayValue === "boolean") {
+              valueEl.textContent = displayValue ? "Yes" : "No";
+              valueEl.style.color = displayValue ? "#28a745" : "#dc3545";
+            } else if (
+              typeof displayValue === "object" &&
+              displayValue !== null
+            ) {
+              valueEl.textContent = JSON.stringify(displayValue, null, 2);
+            } else {
+              valueEl.textContent = displayValue || "Not available";
+            }
+
+            grid.appendChild(label);
+            grid.appendChild(valueEl);
+          }
+
+          content.appendChild(grid);
+        }
+
+        panel.appendChild(header);
+        panel.appendChild(content);
+        container.appendChild(panel);
+
+        return panel;
+      }
+
+      function stripStatus(obj) {
+        if (obj === null || obj === undefined) {
+          return obj;
+        }
+
+        if (Array.isArray(obj)) {
+          return obj.map(stripStatus);
+        }
+
+        if (typeof obj === "object") {
+          // If it has value and status, return just the value
+          if ("value" in obj && "status" in obj) {
+            return stripStatus(obj.value);
+          }
+
+          // If it has data and status, return just the data
+          if ("data" in obj && "status" in obj) {
+            return stripStatus(obj.data);
+          }
+
+          // If it has list and status, return just the list
+          if ("list" in obj && "status" in obj) {
+            return stripStatus(obj.list);
+          }
+
+          // Otherwise, recursively process all properties
+          const cleaned = {};
+          for (const [key, value] of Object.entries(obj)) {
+            cleaned[key] = stripStatus(value);
+          }
+          return cleaned;
+        }
+
+        return obj;
+      }
+
+      async function copyToClipboard() {
+        const cleanData = stripStatus(fingerprintData);
+        const text = JSON.stringify(cleanData, null, 2);
+        try {
+          await navigator.clipboard.writeText(text);
+          alert("Fingerprint data copied to clipboard!");
+        } catch (e) {
+          // Fallback for older browsers
+          const textarea = document.createElement("textarea");
+          textarea.value = text;
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand("copy");
+          document.body.removeChild(textarea);
+          alert("Fingerprint data copied to clipboard!");
+        }
+      }
+
+      function downloadJSON() {
+        const cleanData = stripStatus(fingerprintData);
+        const dataStr = JSON.stringify(cleanData, null, 2);
+        const blob = new Blob([dataStr], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `browser-fingerprint-${Date.now()}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      // Event handlers
+      document.getElementById("refreshBtn").addEventListener("click", init);
+      document
+        .getElementById("copyBtn")
+        .addEventListener("click", copyToClipboard);
+      document
+        .getElementById("downloadBtn")
+        .addEventListener("click", downloadJSON);
+
+      // Initialization
+      async function init() {
+        fingerprintData = await collectFingerprint();
+        displayFingerprint(fingerprintData);
+      }
+
+      // Run on page load
+      init();
+    </script>
+  </body>
+</html>
