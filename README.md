@@ -1,6 +1,6 @@
 # Browser Tools
 
-A collection of browser-based HTML+JavaScript tools for various tasks. Each tool has been built with the aid of LLMs and agentic coding tools. In each case AI has been used to tailor the tool to my own practical needs, and in broad alignment with the principles of [malleable software](https://www.inkandswitch.com/essay/malleable-software/) and [resonant computing](https://resonantcomputing.org/). All tools run entirely in your browser with no server-side processing.
+A collection of browser-based HTML+JavaScript tools for various tasks. Each tool has been built with the aid of LLMs and agentic coding tools. In each case AI has been used to tailor the tool to my own practical needs, and in broad alignment with the kinds of principles outlined under the headings of [malleable software](https://www.inkandswitch.com/essay/malleable-software/) and [resonant computing](https://resonantcomputing.org/). All tools run entirely in your browser with no server-side processing.
 
 ## Features
 
