@@ -1,5 +1,9 @@
 # AGENTS.md
 
+## Project Overview
+
+This repository contains a collection of browser-based HTML+JavaScript tools for various tasks. All tools are intended to run entirely in the browser with no server-side processing.
+
 ## Guidelines for AI Agents Working on Browser-Tools
 
 This document provides instructions for AI coding assistants (Claude, ChatGPT, Gemini, Cursor, etc.) working on this repository.
