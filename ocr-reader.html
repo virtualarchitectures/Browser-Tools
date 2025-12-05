@@ -309,8 +309,58 @@
         color: #d73a49;
       }
 
+      .status.warning {
+        background: #fff8e6;
+        border: 1px solid #f9a825;
+        color: #f57c00;
+      }
+
       .status.hidden {
         display: none;
+      }
+
+      .quality-info {
+        font-size: 13px;
+        color: #586069;
+        padding: 8px 12px;
+        background: #f6f8fa;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+        margin-bottom: 12px;
+      }
+
+      .quality-info.hidden {
+        display: none;
+      }
+
+      .quality-info strong {
+        color: #24292e;
+      }
+
+      .confidence-bar {
+        width: 100%;
+        height: 8px;
+        background: #e1e4e8;
+        border-radius: 4px;
+        overflow: hidden;
+        margin-top: 4px;
+      }
+
+      .confidence-fill {
+        height: 100%;
+        transition: width 0.3s, background-color 0.3s;
+      }
+
+      .confidence-fill.high {
+        background: #28a745;
+      }
+
+      .confidence-fill.medium {
+        background: #f9a825;
+      }
+
+      .confidence-fill.low {
+        background: #d73a49;
       }
 
       .progress-bar {
@@ -411,6 +461,8 @@
 
         <div id="status" class="status hidden"></div>
 
+        <div id="qualityInfo" class="quality-info hidden"></div>
+
         <div id="progressContainer" class="hidden">
           <div class="progress-bar">
             <div id="progressFill" class="progress-fill" style="width: 0%">
@@ -478,6 +530,7 @@
       let currentPage = 1;
       let totalPages = 1;
       let allPagesText = [];
+      let allPagesConfidence = [];
 
       // DOM elements
       const dropZone = document.getElementById("dropZone");
@@ -485,6 +538,7 @@
       const languageSelect = document.getElementById("languageSelect");
       const fileName = document.getElementById("fileName");
       const status = document.getElementById("status");
+      const qualityInfo = document.getElementById("qualityInfo");
       const progressContainer = document.getElementById("progressContainer");
       const progressFill = document.getElementById("progressFill");
       const controls = document.getElementById("controls");
@@ -529,11 +583,14 @@
         currentPage = 1;
         totalPages = 1;
         allPagesText = [];
+        allPagesConfidence = [];
         imageContainer.innerHTML = "";
         textOutput.textContent = "";
         fileInput.value = "";
         fileName.classList.add("hidden");
         fileName.textContent = "";
+        qualityInfo.classList.add("hidden");
+        qualityInfo.innerHTML = "";
         contentContainer.classList.add("hidden");
         controls.classList.add("hidden");
         processAllBtn.classList.add("hidden");
@@ -563,15 +620,88 @@
           });
 
           const {
-            data: { text },
+            data: { text, confidence },
           } = await worker.recognize(imageSource);
           await worker.terminate();
 
           hideProgress();
-          return text;
+          return { text, confidence };
         } catch (error) {
           hideProgress();
           throw error;
+        }
+      }
+
+      function checkImageQuality(img) {
+        const warnings = [];
+        const width = img.naturalWidth || img.width;
+        const height = img.naturalHeight || img.height;
+        const pixels = width * height;
+
+        // Check resolution
+        if (pixels < 500000) {
+          // Less than 0.5 megapixels
+          warnings.push(
+            "⚠️ Low resolution image detected. For best results, use images with at least 300 DPI or 1200x800 pixels."
+          );
+        }
+
+        // Check dimensions
+        if (width < 800 || height < 600) {
+          warnings.push(
+            "⚠️ Small image dimensions. Text may be difficult to recognize accurately."
+          );
+        }
+
+        return warnings;
+      }
+
+      function displayQualityInfo(confidence, warnings = []) {
+        let html = "";
+
+        // Show confidence score
+        if (confidence !== undefined && confidence !== null) {
+          const confidencePercent = Math.round(confidence);
+          let confidenceClass = "high";
+          let confidenceLabel = "High";
+
+          if (confidence < 60) {
+            confidenceClass = "low";
+            confidenceLabel = "Low";
+          } else if (confidence < 80) {
+            confidenceClass = "medium";
+            confidenceLabel = "Medium";
+          }
+
+          html += `
+            <div>
+              <strong>OCR Confidence:</strong> ${confidencePercent}% (${confidenceLabel})
+              <div class="confidence-bar">
+                <div class="confidence-fill ${confidenceClass}" style="width: ${confidencePercent}%"></div>
+              </div>
+            </div>
+          `;
+
+          if (confidence < 80) {
+            html += `<div style="margin-top: 8px; color: #f57c00;">💡 Low confidence may indicate poor image quality, unusual fonts, or unclear text.</div>`;
+          }
+        }
+
+        // Show quality warnings
+        if (warnings.length > 0) {
+          if (html)
+            html +=
+              "<hr style='margin: 12px 0; border: none; border-top: 1px solid #e1e4e8;'>";
+          html += warnings
+            .map((w) => `<div style="margin-bottom: 4px;">${w}</div>`)
+            .join("");
+        }
+
+        if (html) {
+          qualityInfo.innerHTML = html;
+          qualityInfo.classList.remove("hidden");
+        } else {
+          qualityInfo.classList.add("hidden");
         }
       }
 
@@ -582,23 +712,35 @@
             // Display image
             const img = document.createElement("img");
             img.src = e.target.result;
+
+            // Wait for image to load to check quality
+            img.onload = async () => {
+              const warnings = checkImageQuality(img);
+              if (warnings.length > 0) {
+                displayQualityInfo(null, warnings);
+              }
+
+              // Perform OCR
+              const result = await performOCR(e.target.result);
+              textOutput.textContent = result.text;
+
+              // Display quality info with confidence
+              displayQualityInfo(result.confidence, warnings);
+
+              if (result.text.trim()) {
+                showStatus("OCR completed successfully!", "success");
+                copyBtn.disabled = false;
+                downloadBtn.disabled = false;
+              } else {
+                showStatus("No text found in image.", "info");
+              }
+            };
+
             imageContainer.innerHTML = "";
             imageContainer.appendChild(img);
 
             contentContainer.classList.remove("hidden");
             controls.classList.remove("hidden");
-
-            // Perform OCR
-            const text = await performOCR(e.target.result);
-            textOutput.textContent = text;
-
-            if (text.trim()) {
-              showStatus("OCR completed successfully!", "success");
-              copyBtn.disabled = false;
-              downloadBtn.disabled = false;
-            } else {
-              showStatus("No text found in image.", "info");
-            }
           } catch (error) {
             showStatus(`Error processing image: ${error.message}`, "error");
             console.error(error);
@@ -645,6 +787,12 @@
           // Check if we already have text for this page
           if (allPagesText[pageNum - 1]) {
             textOutput.textContent = allPagesText[pageNum - 1];
+
+            // Display stored confidence for this page
+            if (allPagesConfidence[pageNum - 1] !== undefined) {
+              displayQualityInfo(allPagesConfidence[pageNum - 1]);
+            }
+
             showStatus(`Showing page ${pageNum} of ${totalPages}`, "success");
             copyBtn.disabled = false;
             downloadBtn.disabled = false;
@@ -653,11 +801,15 @@
           }
 
           // Perform OCR on the canvas
-          const text = await performOCR(canvas);
-          allPagesText[pageNum - 1] = text;
-          textOutput.textContent = text;
+          const result = await performOCR(canvas);
+          allPagesText[pageNum - 1] = result.text;
+          allPagesConfidence[pageNum - 1] = result.confidence;
+          textOutput.textContent = result.text;
 
-          if (text.trim()) {
+          // Display confidence for this page
+          displayQualityInfo(result.confidence);
+
+          if (result.text.trim()) {
             showStatus(`Page ${pageNum} processed successfully!`, "success");
             copyBtn.disabled = false;
             downloadBtn.disabled = false;
@@ -697,14 +849,21 @@
             const canvas = imageContainer.querySelector("canvas");
 
             // Perform OCR
-            const text = await performOCR(canvas);
-            allPagesText[i - 1] = text;
+            const result = await performOCR(canvas);
+            allPagesText[i - 1] = result.text;
+            allPagesConfidence[i - 1] = result.confidence;
           }
 
           // Return to first page display and show its text
           await renderPDFPage(1);
           currentPage = 1;
           textOutput.textContent = allPagesText[0];
+
+          // Display confidence for first page
+          if (allPagesConfidence[0] !== undefined) {
+            displayQualityInfo(allPagesConfidence[0]);
+          }
+
           updatePageControls();
 
           showStatus(
