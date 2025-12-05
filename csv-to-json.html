@@ -210,6 +210,46 @@
         color: #586069;
         font-style: italic;
       }
+      .options {
+        background: #ffffff;
+        padding: 12px;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+        margin-bottom: 12px;
+      }
+      .option-group {
+        margin-bottom: 12px;
+      }
+      .option-group:last-child {
+        margin-bottom: 0;
+      }
+      .option-group label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #24292e;
+      }
+      .option-group select {
+        width: 100%;
+        padding: 6px 12px;
+        font-size: 16px;
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Arial, sans-serif;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        background: #ffffff;
+        color: #24292e;
+      }
+      .option-group select:focus {
+        outline: none;
+        border-color: #0366d6;
+      }
+      .option-description {
+        font-size: 12px;
+        color: #586069;
+        margin-top: 4px;
+      }
     </style>
   </head>
   <body>
@@ -230,6 +270,7 @@
         <div class="info">
           Upload a CSV file to preview its contents and convert to JSON format.
         </div>
+        <div class="info" id="columnCount" style="display: none"></div>
         <div class="table-wrapper">
           <div id="tableDisplay" class="empty-state">No data loaded</div>
         </div>
@@ -239,6 +280,32 @@
     <div class="panel" id="jsonPanel">
       <h2 id="jsonHeader">JSON Output</h2>
       <div class="panel-content" id="jsonContent">
+        <div class="options">
+          <div class="option-group">
+            <label for="parseDotNotation">Column Name Handling</label>
+            <select id="parseDotNotation">
+              <option value="false">Keep as-is (flat structure)</option>
+              <option value="true">
+                Parse dot notation (nested structure)
+              </option>
+            </select>
+            <div class="option-description">
+              If enabled, columns like "user.name" will create nested objects:
+              {"user": {"name": "..."}}
+            </div>
+          </div>
+          <div class="option-group">
+            <label for="outputFormat">Output Format</label>
+            <select id="outputFormat">
+              <option value="array">JSON Array (standard)</option>
+              <option value="jsonlines">JSON Lines (JSONL/NDJSON)</option>
+            </select>
+            <div class="option-description">
+              Choose between standard JSON array or JSON Lines format (one
+              object per line)
+            </div>
+          </div>
+        </div>
         <div class="actions">
           <button class="btn primary" id="downloadBtn" disabled>
             Download JSON
@@ -264,8 +331,12 @@
       const downloadBtn = document.getElementById("downloadBtn");
       const copyBtn = document.getElementById("copyBtn");
       const clearBtn = document.getElementById("clearBtn");
+      const outputFormat = document.getElementById("outputFormat");
+      const columnCount = document.getElementById("columnCount");
+      const parseDotNotation = document.getElementById("parseDotNotation");
 
       let currentData = null;
+      let currentLines = null;
 
       // Toggle collapsible sections
       csvHeader.addEventListener("click", () => {
@@ -326,8 +397,30 @@
         return lines;
       }
 
+      // Set nested value using dot notation path
+      function setNestedValue(obj, path, value) {
+        const parts = path.split(".");
+        let current = obj;
+
+        for (let i = 0; i < parts.length - 1; i++) {
+          const part = parts[i];
+          if (!(part in current)) {
+            current[part] = {};
+          } else if (
+            typeof current[part] !== "object" ||
+            Array.isArray(current[part])
+          ) {
+            // If the path conflicts with existing non-object value, convert to object
+            current[part] = {};
+          }
+          current = current[part];
+        }
+
+        current[parts[parts.length - 1]] = value;
+      }
+
       // Convert CSV to JSON
-      function csvToJSON(lines) {
+      function csvToJSON(lines, parseNested = false) {
         if (lines.length === 0) return [];
 
         const headers = lines[0].map((h) => h.trim());
@@ -339,7 +432,13 @@
 
           for (let j = 0; j < headers.length; j++) {
             const value = row[j] !== undefined ? row[j].trim() : "";
-            obj[headers[j]] = value;
+            const header = headers[j];
+
+            if (parseNested && header.includes(".")) {
+              setNestedValue(obj, header, value);
+            } else {
+              obj[header] = value;
+            }
           }
 
           data.push(obj);
@@ -353,8 +452,17 @@
         if (lines.length === 0) {
           tableDisplay.innerHTML =
             '<span class="empty-state">No data in CSV</span>';
+          columnCount.style.display = "none";
           return;
         }
+
+        // Update column/row count indicator
+        const colCount = lines[0].length;
+        const rowCount = lines.length - 1; // Exclude header row
+        columnCount.textContent = `${colCount} column${
+          colCount !== 1 ? "s" : ""
+        } × ${rowCount} row${rowCount !== 1 ? "s" : ""}`;
+        columnCount.style.display = "block";
 
         const table = document.createElement("table");
         table.className = "data-table";
@@ -388,6 +496,15 @@
         tableDisplay.appendChild(table);
       }
 
+      // Format output based on selected format
+      function formatOutput(data, format) {
+        if (format === "jsonlines") {
+          return data.map((obj) => JSON.stringify(obj)).join("\n");
+        } else {
+          return JSON.stringify(data, null, 2);
+        }
+      }
+
       // Load CSV file
       fileInput.addEventListener("change", () => {
         const file = fileInput.files[0];
@@ -403,9 +520,14 @@
             return;
           }
 
+          currentLines = lines;
           displayTable(lines);
-          currentData = csvToJSON(lines);
-          jsonOutput.textContent = JSON.stringify(currentData, null, 2);
+
+          const parseNested = parseDotNotation.value === "true";
+          currentData = csvToJSON(lines, parseNested);
+
+          const format = outputFormat.value;
+          jsonOutput.textContent = formatOutput(currentData, format);
           downloadBtn.disabled = false;
           copyBtn.disabled = false;
 
@@ -421,6 +543,26 @@
         };
 
         reader.readAsText(file);
+      });
+
+      // Handle output format changes
+      outputFormat.addEventListener("change", () => {
+        if (currentLines) {
+          const parseNested = parseDotNotation.value === "true";
+          currentData = csvToJSON(currentLines, parseNested);
+          const format = outputFormat.value;
+          jsonOutput.textContent = formatOutput(currentData, format);
+        }
+      });
+
+      // Handle dot notation parsing changes
+      parseDotNotation.addEventListener("change", () => {
+        if (currentLines) {
+          const parseNested = parseDotNotation.value === "true";
+          currentData = csvToJSON(currentLines, parseNested);
+          const format = outputFormat.value;
+          jsonOutput.textContent = formatOutput(currentData, format);
+        }
       });
 
       // Copy to clipboard
@@ -447,11 +589,16 @@
         const data = jsonOutput.textContent;
         if (!data) return;
 
-        const blob = new Blob([data], { type: "application/json" });
+        const format = outputFormat.value;
+        const mimeType =
+          format === "jsonlines" ? "application/x-ndjson" : "application/json";
+        const extension = format === "jsonlines" ? "jsonl" : "json";
+
+        const blob = new Blob([data], { type: mimeType });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = "converted.json";
+        a.download = `converted.${extension}`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -462,10 +609,12 @@
       clearBtn.addEventListener("click", () => {
         fileInput.value = "";
         currentData = null;
+        currentLines = null;
         tableDisplay.innerHTML =
           '<span class="empty-state">No data loaded</span>';
         jsonOutput.innerHTML =
           '<span class="empty-state">No data converted yet</span>';
+        columnCount.style.display = "none";
         downloadBtn.disabled = true;
         copyBtn.disabled = true;
       });
