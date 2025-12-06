@@ -46,6 +46,7 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 - **[PDF Metadata Viewer](pdf-metadata.html)** — extract and view PDF metadata including title, author, dates, permissions, and security settings
 - **[Text Diff Tool](text-diff.html)** — compare two text blocks and highlight added and removed content
 - **[Text Redactor](text-redactor.html)** — automatically detect and redact personally identifiable information (emails, phones, IPs) from text files
+- **[Word Frequency Counter](word-frequency.html)** — analyze word frequency, discover common phrases with n-grams (bigrams, trigrams, 4-grams, 5-grams), and get detailed text statistics with customisable stop word filtering
 
 ### Web development
 
