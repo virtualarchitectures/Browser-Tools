@@ -109,14 +109,45 @@
         border-color: #0366d6;
       }
       .options {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        display: flex;
+        flex-direction: column;
         gap: 12px;
         margin: 16px 0;
         padding: 12px;
         background: #f6f8fa;
         border-radius: 6px;
         border: 1px solid #e1e4e8;
+      }
+      .options-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 4px;
+      }
+      .options-controls {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+      }
+      .sort-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .sort-group label {
+        margin: 0;
+        font-weight: 400;
+      }
+      .sort-group select {
+        padding: 4px 8px;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        background: #ffffff;
+        font-size: 14px;
+        cursor: pointer;
+      }
+      .sort-group select:focus {
+        outline: none;
+        border-color: #0366d6;
       }
       .option-group {
         display: flex;
@@ -167,8 +198,8 @@
       }
       .stats {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-        gap: 16px;
+        grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+        gap: 6px;
         margin-bottom: 16px;
         padding: 12px;
         background: #f6f8fa;
@@ -179,7 +210,7 @@
         text-align: center;
       }
       .stat-number {
-        font-size: 24px;
+        font-size: 18px;
         font-weight: 600;
       }
       .stat-number .total {
@@ -189,9 +220,9 @@
         color: #586069;
       }
       .stat-number .arrow {
-        margin: 0 6px;
+        margin: 0 2px;
         color: #d1d5da;
-        font-size: 18px;
+        font-size: 16px;
       }
       .stat-label {
         font-size: 12px;
@@ -380,7 +411,7 @@ Phone: (555) 123-4567"
             <span class="arrow">→</span>
             <span class="selected" id="selectedLinks">0</span>
           </div>
-          <div class="stat-label">Links</div>
+          <div class="stat-label">URLs</div>
         </div>
         <div class="stat-item">
           <div class="stat-number">
@@ -434,41 +465,49 @@ Phone: (555) 123-4567"
     </div>
 
     <div class="options">
-      <div class="option-group">
-        <input type="checkbox" id="includeLinks" checked />
-        <label for="includeLinks">Include links</label>
+      <div class="options-row">
+        <div class="option-group">
+          <input type="checkbox" id="includeEmails" checked />
+          <label for="includeEmails">Email</label>
+        </div>
+        <div class="option-group">
+          <input type="checkbox" id="includePhone" />
+          <label for="includePhone">Phone</label>
+        </div>
+        <div class="option-group">
+          <input type="checkbox" id="includeLinks" checked />
+          <label for="includeLinks">URL</label>
+        </div>
+        <div class="option-group">
+          <input type="checkbox" id="includeIPv4" />
+          <label for="includeIPv4">IPv4</label>
+        </div>
+        <div class="option-group">
+          <input type="checkbox" id="includeIPv6" />
+          <label for="includeIPv6">IPv6</label>
+        </div>
+        <div class="option-group">
+          <input type="checkbox" id="includeMAC" />
+          <label for="includeMAC">MAC</label>
+        </div>
+        <div class="option-group">
+          <input type="checkbox" id="includeAPIKey" />
+          <label for="includeAPIKey">API Key</label>
+        </div>
       </div>
-      <div class="option-group">
-        <input type="checkbox" id="includeEmails" checked />
-        <label for="includeEmails">Include email addresses</label>
-      </div>
-      <div class="option-group">
-        <input type="checkbox" id="includeIPv4" />
-        <label for="includeIPv4">Include IPv4 addresses</label>
-      </div>
-      <div class="option-group">
-        <input type="checkbox" id="includeIPv6" />
-        <label for="includeIPv6">Include IPv6 addresses</label>
-      </div>
-      <div class="option-group">
-        <input type="checkbox" id="includePhone" />
-        <label for="includePhone">Include phone numbers</label>
-      </div>
-      <div class="option-group">
-        <input type="checkbox" id="includeMAC" />
-        <label for="includeMAC">Include MAC addresses</label>
-      </div>
-      <div class="option-group">
-        <input type="checkbox" id="includeAPIKey" />
-        <label for="includeAPIKey">Include API keys</label>
-      </div>
-      <div class="option-group">
-        <input type="checkbox" id="removeDuplicates" />
-        <label for="removeDuplicates">Remove duplicates</label>
-      </div>
-      <div class="option-group">
-        <input type="checkbox" id="sortLinks" />
-        <label for="sortLinks">Sort alphabetically</label>
+      <div class="options-controls">
+        <div class="sort-group">
+          <label for="sortBy">Sort by:</label>
+          <select id="sortBy">
+            <option value="sequence">Sequence number</option>
+            <option value="type">Type</option>
+            <option value="value">Value</option>
+          </select>
+        </div>
+        <div class="option-group">
+          <input type="checkbox" id="removeDuplicates" />
+          <label for="removeDuplicates">Remove duplicates</label>
+        </div>
       </div>
     </div>
 
@@ -509,7 +548,7 @@ Phone: (555) 123-4567"
         },
         ipv6: {
           regex:
-            /\b(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\b|\b(?:[0-9a-fA-F]{1,4}:){1,7}:\b|\b(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}\b|\b(?:[0-9a-fA-F]{1,4}:){1,5}(?::[0-9a-fA-F]{1,4}){1,2}\b|\b(?:[0-9a-fA-F]{1,4}:){1,4}(?::[0-9a-fA-F]{1,4}){1,3}\b|\b(?:[0-9a-fA-F]{1,4}:){1,3}(?::[0-9a-fA-F]{1,4}){1,4}\b|\b(?:[0-9a-fA-F]{1,4}:){1,2}(?::[0-9a-fA-F]{1,4}){1,5}\b|\b[0-9a-fA-F]{1,4}:(?::[0-9a-fA-F]{1,4}){1,6}\b|\b:(?:(?::[0-9a-fA-F]{1,4}){1,7}|:)\b/g,
+            /(?:(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}:){1,7}:|(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}:){1,5}(?::[0-9a-fA-F]{1,4}){1,2}|(?:[0-9a-fA-F]{1,4}:){1,4}(?::[0-9a-fA-F]{1,4}){1,3}|(?:[0-9a-fA-F]{1,4}:){1,3}(?::[0-9a-fA-F]{1,4}){1,4}|(?:[0-9a-fA-F]{1,4}:){1,2}(?::[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:(?::[0-9a-fA-F]{1,4}){1,6}|:(?:(?::[0-9a-fA-F]{1,4}){1,7}|:))(?=\s|$|[^\w:])/g,
           name: "IPV6",
           type: "ipv6",
         },
@@ -577,7 +616,7 @@ Phone: (555) 123-4567"
       const includeAPIKeyCheckbox = document.getElementById("includeAPIKey");
       const removeDuplicatesCheckbox =
         document.getElementById("removeDuplicates");
-      const sortLinksCheckbox = document.getElementById("sortLinks");
+      const sortBySelect = document.getElementById("sortBy");
 
       /* =========================
          State Variables for Extracted Data
@@ -696,7 +735,11 @@ Phone: (555) 123-4567"
       /**
        * Process links based on options
        */
-      function processLinks(items, removeDuplicates = false, sort = false) {
+      function processLinks(
+        items,
+        removeDuplicates = false,
+        sortBy = "sequence"
+      ) {
         let processed = [...items];
 
         // Add protocol to links starting with www
@@ -720,13 +763,20 @@ Phone: (555) 123-4567"
           });
         }
 
-        // Sort alphabetically
-        if (sort) {
+        // Sort based on sortBy option
+        if (sortBy === "type") {
+          processed.sort((a, b) => {
+            const typeCompare = a.type.localeCompare(b.type);
+            if (typeCompare !== 0) return typeCompare;
+            // Secondary sort by value
+            return a.value.toLowerCase().localeCompare(b.value.toLowerCase());
+          });
+        } else if (sortBy === "value") {
           processed.sort((a, b) =>
             a.value.toLowerCase().localeCompare(b.value.toLowerCase())
           );
         } else {
-          // Maintain original document order
+          // Sort by sequence (default)
           processed.sort((a, b) => a.originalSequence - b.originalSequence);
         }
 
@@ -738,7 +788,7 @@ Phone: (555) 123-4567"
        */
       function getTypeName(type) {
         const typeMap = {
-          link: "Link",
+          link: "URL",
           email: "Email",
           ipv4: "IPv4",
           ipv6: "IPv6",
@@ -1035,13 +1085,13 @@ Phone: (555) 123-4567"
           includeAPIKey: includeAPIKeyCheckbox.checked,
         };
         const removeDuplicates = removeDuplicatesCheckbox.checked;
-        const sort = sortLinksCheckbox.checked;
+        const sortBy = sortBySelect.value;
 
         // Filter items based on checkboxes
         const filteredItems = filterItems(allExtractedItems, options);
 
         // Process items (remove duplicates, sort)
-        extractedLinks = processLinks(filteredItems, removeDuplicates, sort);
+        extractedLinks = processLinks(filteredItems, removeDuplicates, sortBy);
 
         // Display results
         displayLinks(extractedLinks);
@@ -1129,7 +1179,7 @@ Phone: (555) 123-4567"
       includeMACCheckbox.addEventListener("change", updateDisplay);
       includeAPIKeyCheckbox.addEventListener("change", updateDisplay);
       removeDuplicatesCheckbox.addEventListener("change", updateDisplay);
-      sortLinksCheckbox.addEventListener("change", updateDisplay);
+      sortBySelect.addEventListener("change", updateDisplay);
 
       // Initialization
       textInput.focus();
