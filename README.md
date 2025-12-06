@@ -46,7 +46,6 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 - **[OCR Reader](ocr-reader.html)** — extract text from images and PDF files using optical character recognition with side-by-side preview
 - **[PDF Metadata Viewer](pdf-metadata.html)** — extract and view PDF metadata including title, author, dates, permissions, and security settings
 - **[Text Analyzer & Word Frequency](text-analyzer.html)** — analyze text composition, count words, characters, sentences, and calculate n-grams
-- **[Text Cleaning & Transformation](text-cleaner.html)** — deduplicate, sort, trim, format, and find/replace text with multiple transformation options
 - **[Text Diff Tool](text-diff.html)** — compare two text blocks and highlight added and removed content
 
 ### Web development
