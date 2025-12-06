@@ -343,9 +343,14 @@
           <div class="table-container">
             <div class="table-header">
               <span>Top Words</span>
-              <span style="font-size: 0.8em; color: var(--secondary-text)"
-                >Single tokens</span
+              <button
+                id="downloadWords"
+                class="btn"
+                style="padding: 4px 8px; font-size: 12px; margin-left: auto"
+                title="Download complete word frequency table as CSV"
               >
+                CSV
+              </button>
             </div>
             <div class="table-search">
               <input
@@ -360,7 +365,7 @@
                   <tr>
                     <th>Word</th>
                     <th>Count</th>
-                    <th>%</th>
+                    <th>Percent</th>
                   </tr>
                 </thead>
                 <tbody></tbody>
@@ -388,6 +393,14 @@
                 <option value="4">4-grams (4-word)</option>
                 <option value="5">5-grams (5-word)</option>
               </select>
+              <button
+                id="downloadNgrams"
+                class="btn"
+                style="padding: 4px 8px; font-size: 12px; margin-left: auto"
+                title="Download complete n-gram table as CSV"
+              >
+                CSV
+              </button>
             </div>
             <div class="table-search">
               <input
@@ -402,7 +415,7 @@
                   <tr>
                     <th>Phrase</th>
                     <th>Count</th>
-                    <th>%</th>
+                    <th>Percent</th>
                   </tr>
                 </thead>
                 <tbody></tbody>
@@ -414,9 +427,14 @@
           <div class="table-container">
             <div class="table-header">
               <span>Stop Words</span>
-              <span style="font-size: 0.8em; color: var(--secondary-text)"
-                >Alphabetical list</span
+              <button
+                id="downloadStopWords"
+                class="btn"
+                style="padding: 4px 8px; font-size: 12px; margin-left: auto"
+                title="Download stop words list as TXT"
               >
+                TXT
+              </button>
             </div>
             <div class="table-search">
               <input
@@ -448,6 +466,11 @@
       const searchWords = document.getElementById("searchWords");
       const searchNgrams = document.getElementById("searchNgrams");
       const searchStopWords = document.getElementById("searchStopWords");
+
+      // Download buttons
+      const downloadWords = document.getElementById("downloadWords");
+      const downloadNgrams = document.getElementById("downloadNgrams");
+      const downloadStopWords = document.getElementById("downloadStopWords");
 
       // Options
       const ignoreCaseCheckbox = document.getElementById("ignoreCase");
@@ -675,6 +698,36 @@
       // Initialize stop words table on page load
       renderStopWordsTable();
 
+      // Download button event listeners
+      downloadWords.addEventListener("click", () => {
+        downloadCSV("wordFreqTable", "word-frequency.csv", [
+          "Word",
+          "Count",
+          "Percent",
+        ]);
+      });
+
+      downloadNgrams.addEventListener("click", () => {
+        const ngramSize = parseInt(ngramSelect.value) || 2;
+        const ngramNames = {
+          2: "bigrams",
+          3: "trigrams",
+          4: "4-grams",
+          5: "5-grams",
+        };
+        downloadCSV("ngramTable", `${ngramNames[ngramSize]}.csv`, [
+          "Phrase",
+          "Count",
+          "Percent",
+        ]);
+      });
+
+      downloadStopWords.addEventListener("click", () => {
+        const stopWordsArray = Array.from(STOP_WORDS).sort();
+        const content = stopWordsArray.join("\n");
+        downloadFile(content, "stop-words.txt", "text/plain");
+      });
+
       function handleFile(file) {
         fileStatus.textContent = file.name;
         const reader = new FileReader();
@@ -772,7 +825,7 @@
           const row = document.createElement("tr");
           let percentage = "";
           if (totalCount) {
-            percentage = ((count / totalCount) * 100).toFixed(1) + "%";
+            percentage = ((count / totalCount) * 100).toFixed(1);
           }
 
           row.innerHTML = `
@@ -828,6 +881,39 @@
           row.innerHTML = `<td>${escapeHtml(word)}</td>`;
           tbody.appendChild(row);
         });
+      }
+
+      function downloadCSV(tableId, filename, headers) {
+        const table = document.getElementById(tableId);
+        const rows = table.querySelectorAll("tbody tr");
+
+        // Build CSV content
+        let csvContent = headers.join(",") + "\n";
+
+        rows.forEach((row) => {
+          const cells = Array.from(row.cells);
+          const rowData = cells.map((cell) => {
+            let value = cell.textContent.trim();
+            // Escape quotes and wrap in quotes if contains comma
+            if (value.includes(",") || value.includes('"')) {
+              value = '"' + value.replace(/"/g, '""') + '"';
+            }
+            return value;
+          });
+          csvContent += rowData.join(",") + "\n";
+        });
+
+        downloadFile(csvContent, filename, "text/csv");
+      }
+
+      function downloadFile(content, filename, mimeType) {
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
       }
     </script>
   </body>
