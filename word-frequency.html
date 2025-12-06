@@ -28,6 +28,18 @@
         margin: 0 auto;
       }
 
+      .back-link {
+        display: inline-block;
+        margin-bottom: 16px;
+        color: #0366d6;
+        text-decoration: none;
+        font-size: 14px;
+      }
+
+      .back-link:hover {
+        text-decoration: underline;
+      }
+
       header {
         margin-bottom: 2rem;
         border-bottom: 1px solid var(--border-color);
@@ -45,19 +57,22 @@
         margin-bottom: 2rem;
       }
 
-      .drop-zone {
-        border: 2px dashed var(--border-color);
+      .file-controls {
+        display: flex;
+        align-items: center;
+        gap: 0;
+        margin-bottom: 16px;
+        padding: 12px;
+        background: #ffffff;
         border-radius: 6px;
-        padding: 2rem;
-        text-align: center;
-        background-color: var(--bg-color);
-        transition: border-color 0.2s;
-        cursor: pointer;
+        border: 1px solid var(--border-color);
       }
 
-      .drop-zone:hover,
-      .drop-zone.drag-over {
-        border-color: var(--primary-color);
+      .file-status {
+        font-size: 14px;
+        color: var(--text-color);
+        margin-left: 8px;
+        font-weight: 500;
       }
 
       textarea {
@@ -82,6 +97,7 @@
         border: 1px solid var(--border-color);
       }
 
+      .btn,
       button {
         background-color: var(--primary-color);
         color: white;
@@ -90,16 +106,32 @@
         border-radius: 6px;
         cursor: pointer;
         font-weight: 500;
+        font-size: 14px;
+        font-family: inherit;
+        text-decoration: none;
+        display: inline-block;
       }
 
+      .btn:hover,
       button:hover {
         opacity: 0.9;
       }
 
+      .btn.secondary,
       button.secondary {
         background-color: #eff3f6;
         color: var(--text-color);
         border: 1px solid rgba(27, 31, 35, 0.15);
+      }
+
+      .btn.secondary:hover,
+      button.secondary:hover {
+        background: #f3f4f6;
+        opacity: 1;
+      }
+
+      label.btn {
+        margin: 0;
       }
 
       .stats-grid {
@@ -196,6 +228,8 @@
   </head>
   <body>
     <div class="container">
+      <a href="index.html" class="back-link">← Back to Browser Tools</a>
+
       <header>
         <h1>Word Frequency Counter</h1>
         <p>
@@ -204,18 +238,25 @@
           customizable filtering options. All processing happens locally in your
           browser.
         </p>
-        <a href="index.html">← Back to tools</a>
       </header>
 
       <div class="input-section">
-        <div class="drop-zone" id="dropZone">
-          <p>Drag & drop a text file here, or click to select</p>
+        <div class="file-controls">
           <input
             type="file"
             id="fileInput"
             accept=".txt,.md,.csv,.json,.html"
             style="display: none"
           />
+          <label for="fileInput" class="btn">Load file</label>
+          <span id="fileStatus" class="file-status">No file selected</span>
+          <button
+            id="clearFileBtn"
+            class="btn secondary"
+            style="margin-left: auto"
+          >
+            Clear
+          </button>
         </div>
 
         <textarea
@@ -237,7 +278,6 @@
             <label for="includeNumbers">Include Numbers</label>
           </div>
           <button id="analyzeBtn">Analyze</button>
-          <button id="clearBtn" class="secondary">Clear</button>
         </div>
       </div>
 
@@ -331,11 +371,11 @@
 
     <script>
       // DOM Elements
-      const dropZone = document.getElementById("dropZone");
       const fileInput = document.getElementById("fileInput");
+      const fileStatus = document.getElementById("fileStatus");
+      const clearFileBtn = document.getElementById("clearFileBtn");
       const inputText = document.getElementById("inputText");
       const analyzeBtn = document.getElementById("analyzeBtn");
-      const clearBtn = document.getElementById("clearBtn");
       const resultsSection = document.getElementById("results");
 
       // Options
@@ -524,37 +564,21 @@
       ]);
 
       // Event Listeners
-      dropZone.addEventListener("click", () => fileInput.click());
-
-      dropZone.addEventListener("dragover", (e) => {
-        e.preventDefault();
-        dropZone.classList.add("drag-over");
-      });
-
-      dropZone.addEventListener("dragleave", () => {
-        dropZone.classList.remove("drag-over");
-      });
-
-      dropZone.addEventListener("drop", (e) => {
-        e.preventDefault();
-        dropZone.classList.remove("drag-over");
-        const files = e.dataTransfer.files;
-        if (files.length) handleFile(files[0]);
-      });
-
       fileInput.addEventListener("change", (e) => {
         if (e.target.files.length) handleFile(e.target.files[0]);
       });
 
-      analyzeBtn.addEventListener("click", analyzeText);
-
-      clearBtn.addEventListener("click", () => {
+      clearFileBtn.addEventListener("click", () => {
         inputText.value = "";
         resultsSection.classList.add("hidden");
         fileInput.value = "";
+        fileStatus.textContent = "No file selected";
       });
 
+      analyzeBtn.addEventListener("click", analyzeText);
+
       function handleFile(file) {
+        fileStatus.textContent = file.name;
         const reader = new FileReader();
         reader.onload = (e) => {
           inputText.value = e.target.result;
