@@ -84,22 +84,6 @@
         font-size: 13px;
         color: #586069;
       }
-      .drop-zone {
-        border: 2px dashed #e1e4e8;
-        border-radius: 6px;
-        padding: 20px;
-        text-align: center;
-        color: #586069;
-        font-size: 14px;
-        margin-bottom: 16px;
-        background: #f6f8fa;
-        transition: all 0.2s;
-      }
-      .drop-zone.drag-over {
-        border-color: #0366d6;
-        background: #e6f2ff;
-        color: #0366d6;
-      }
       label {
         font-size: 14px;
         font-weight: 600;
@@ -197,7 +181,17 @@
       .stat-number {
         font-size: 24px;
         font-weight: 600;
+      }
+      .stat-number .total {
         color: #0366d6;
+      }
+      .stat-number .selected {
+        color: #586069;
+      }
+      .stat-number .arrow {
+        margin: 0 6px;
+        color: #d1d5da;
+        font-size: 18px;
       }
       .stat-label {
         font-size: 12px;
@@ -329,9 +323,10 @@
     <h1>Link Finder</h1>
 
     <p class="instruction">
-      Paste text containing URLs into the box below. The tool will automatically
-      extract all web links and email addresses. You can copy individual links,
-      open them in a new tab, or download the entire list as a text file.
+      Paste text containing URLs, emails, IP addresses, phone numbers, MAC
+      addresses, or API keys into the box below. The tool will automatically
+      extract all matching patterns. You can copy individual items, open them in
+      a new tab, or download the entire list as a text file.
     </p>
 
     <div class="input-section">
@@ -348,19 +343,17 @@
         <button class="secondary" id="clearBtn">Clear</button>
       </div>
 
-      <div class="drop-zone" id="dropZone">
-        Drop a text file here or click to browse
-      </div>
-
       <label for="textInput">Or paste text directly</label>
       <textarea
         id="textInput"
-        placeholder="Paste text containing URLs here...
+        placeholder="Paste text containing URLs, emails, IP addresses, etc...
 
 Examples:
 Check out https://example.com for more info
 Visit www.example.org or http://test.com
-Email me at user@example.com"
+Email me at user@example.com
+Server IP: 192.168.1.1
+Phone: (555) 123-4567"
         autofocus
       ></textarea>
     </div>
@@ -370,20 +363,72 @@ Email me at user@example.com"
 
       <div class="stats">
         <div class="stat-item">
-          <div class="stat-number" id="totalItems">0</div>
+          <div class="stat-number">
+            <span class="total" id="totalItems">0</span>
+          </div>
           <div class="stat-label">Total Items</div>
         </div>
         <div class="stat-item">
-          <div class="stat-number" id="uniqueItems">0</div>
+          <div class="stat-number">
+            <span class="total" id="uniqueItems">0</span>
+          </div>
           <div class="stat-label">Unique Items</div>
         </div>
         <div class="stat-item">
-          <div class="stat-number" id="totalLinks">0</div>
+          <div class="stat-number">
+            <span class="total" id="totalLinks">0</span>
+            <span class="arrow">→</span>
+            <span class="selected" id="selectedLinks">0</span>
+          </div>
           <div class="stat-label">Links</div>
         </div>
         <div class="stat-item">
-          <div class="stat-number" id="totalEmails">0</div>
+          <div class="stat-number">
+            <span class="total" id="totalEmails">0</span>
+            <span class="arrow">→</span>
+            <span class="selected" id="selectedEmails">0</span>
+          </div>
           <div class="stat-label">Emails</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">
+            <span class="total" id="totalIPv4">0</span>
+            <span class="arrow">→</span>
+            <span class="selected" id="selectedIPv4">0</span>
+          </div>
+          <div class="stat-label">IPv4</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">
+            <span class="total" id="totalIPv6">0</span>
+            <span class="arrow">→</span>
+            <span class="selected" id="selectedIPv6">0</span>
+          </div>
+          <div class="stat-label">IPv6</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">
+            <span class="total" id="totalPhone">0</span>
+            <span class="arrow">→</span>
+            <span class="selected" id="selectedPhone">0</span>
+          </div>
+          <div class="stat-label">Phone</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">
+            <span class="total" id="totalMAC">0</span>
+            <span class="arrow">→</span>
+            <span class="selected" id="selectedMAC">0</span>
+          </div>
+          <div class="stat-label">MAC</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">
+            <span class="total" id="totalAPIKey">0</span>
+            <span class="arrow">→</span>
+            <span class="selected" id="selectedAPIKey">0</span>
+          </div>
+          <div class="stat-label">API Keys</div>
         </div>
       </div>
     </div>
@@ -396,6 +441,26 @@ Email me at user@example.com"
       <div class="option-group">
         <input type="checkbox" id="includeEmails" checked />
         <label for="includeEmails">Include email addresses</label>
+      </div>
+      <div class="option-group">
+        <input type="checkbox" id="includeIPv4" />
+        <label for="includeIPv4">Include IPv4 addresses</label>
+      </div>
+      <div class="option-group">
+        <input type="checkbox" id="includeIPv6" />
+        <label for="includeIPv6">Include IPv6 addresses</label>
+      </div>
+      <div class="option-group">
+        <input type="checkbox" id="includePhone" />
+        <label for="includePhone">Include phone numbers</label>
+      </div>
+      <div class="option-group">
+        <input type="checkbox" id="includeMAC" />
+        <label for="includeMAC">Include MAC addresses</label>
+      </div>
+      <div class="option-group">
+        <input type="checkbox" id="includeAPIKey" />
+        <label for="includeAPIKey">Include API keys</label>
       </div>
       <div class="option-group">
         <input type="checkbox" id="removeDuplicates" />
@@ -415,24 +480,71 @@ Email me at user@example.com"
       </div>
 
       <div class="links-container" id="linksContainer">
-        <div class="empty-state">No links found in the text.</div>
+        <div class="empty-state">No items found in the text.</div>
       </div>
     </div>
 
     <script>
       /* =========================
-           JavaScript
-           ========================= */
+         Detection Patterns
+         ========================= */
 
-      // State variables
+      const PATTERNS = {
+        url: {
+          regex:
+            /https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)/g,
+          name: "URL",
+          type: "link",
+        },
+        email: {
+          regex: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
+          name: "EMAIL",
+          type: "email",
+        },
+        ipv4: {
+          regex:
+            /\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b/g,
+          name: "IPV4",
+          type: "ipv4",
+        },
+        ipv6: {
+          regex:
+            /\b(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\b|\b(?:[0-9a-fA-F]{1,4}:){1,7}:\b|\b(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}\b|\b(?:[0-9a-fA-F]{1,4}:){1,5}(?::[0-9a-fA-F]{1,4}){1,2}\b|\b(?:[0-9a-fA-F]{1,4}:){1,4}(?::[0-9a-fA-F]{1,4}){1,3}\b|\b(?:[0-9a-fA-F]{1,4}:){1,3}(?::[0-9a-fA-F]{1,4}){1,4}\b|\b(?:[0-9a-fA-F]{1,4}:){1,2}(?::[0-9a-fA-F]{1,4}){1,5}\b|\b[0-9a-fA-F]{1,4}:(?::[0-9a-fA-F]{1,4}){1,6}\b|\b:(?:(?::[0-9a-fA-F]{1,4}){1,7}|:)\b/g,
+          name: "IPV6",
+          type: "ipv6",
+        },
+        phone: {
+          regex: /(?:\+?\d{1,2}\s?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}\b/g,
+          name: "PHONE",
+          type: "phone",
+        },
+        mac: {
+          regex: /\b(?:[0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}\b/g,
+          name: "MAC_ADDRESS",
+          type: "mac",
+        },
+        apiKey: {
+          regex:
+            /\b(?:sk_live_|pk_live_|sk_test_|pk_test_|AIza|ya29\.|AKIA|ghp_|gho_|github_pat_)[a-zA-Z0-9_\-]{20,}/g,
+          name: "API_KEY",
+          type: "apiKey",
+        },
+      };
+
+      /* =========================
+         State Variables
+         ========================= */
+
       let extractedLinks = [];
-      let originalSequence = new Map(); // Track original document order
+      let originalSequence = new Map();
 
-      // DOM elements
+      /* =========================
+         DOM Elements
+         ========================= */
+
       const textInput = document.getElementById("textInput");
       const fileInput = document.getElementById("fileInput");
       const fileName = document.getElementById("fileName");
-      const dropZone = document.getElementById("dropZone");
       const clearBtn = document.getElementById("clearBtn");
       const copyAllBtn = document.getElementById("copyAllBtn");
       const downloadTxtBtn = document.getElementById("downloadTxtBtn");
@@ -441,58 +553,117 @@ Email me at user@example.com"
       const linksSection = document.getElementById("linksSection");
       const linksContainer = document.getElementById("linksContainer");
       const totalItemsEl = document.getElementById("totalItems");
+      const selectedLinksEl = document.getElementById("selectedLinks");
       const totalLinksEl = document.getElementById("totalLinks");
+      const selectedEmailsEl = document.getElementById("selectedEmails");
       const totalEmailsEl = document.getElementById("totalEmails");
+      const selectedIPv4El = document.getElementById("selectedIPv4");
+      const totalIPv4El = document.getElementById("totalIPv4");
+      const selectedIPv6El = document.getElementById("selectedIPv6");
+      const totalIPv6El = document.getElementById("totalIPv6");
+      const selectedPhoneEl = document.getElementById("selectedPhone");
+      const totalPhoneEl = document.getElementById("totalPhone");
+      const selectedMACEl = document.getElementById("selectedMAC");
+      const totalMACEl = document.getElementById("totalMAC");
+      const selectedAPIKeyEl = document.getElementById("selectedAPIKey");
+      const totalAPIKeyEl = document.getElementById("totalAPIKey");
       const uniqueItemsEl = document.getElementById("uniqueItems");
       const includeLinksCheckbox = document.getElementById("includeLinks");
       const includeEmailsCheckbox = document.getElementById("includeEmails");
+      const includeIPv4Checkbox = document.getElementById("includeIPv4");
+      const includeIPv6Checkbox = document.getElementById("includeIPv6");
+      const includePhoneCheckbox = document.getElementById("includePhone");
+      const includeMACCheckbox = document.getElementById("includeMAC");
+      const includeAPIKeyCheckbox = document.getElementById("includeAPIKey");
       const removeDuplicatesCheckbox =
         document.getElementById("removeDuplicates");
       const sortLinksCheckbox = document.getElementById("sortLinks");
 
-      // Utility functions
+      /* =========================
+         State Variables for Extracted Data
+         ========================= */
+
+      let allExtractedItems = []; // All items extracted from text (never filtered)
+
+      /* =========================
+         Utility Functions
+         ========================= */
 
       /**
-       * Extract URLs and emails from text using regex
+       * Extract ALL patterns from text (always extracts everything)
        */
-      function extractLinks(text, includeLinks = true, includeEmails = true) {
-        const items = [];
-
-        // Regex for URLs (http, https, ftp, www)
-        const urlRegex =
-          /(?:(?:https?|ftp):\/\/|www\.)[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)/gi;
-
-        // Regex for email addresses
-        const emailRegex =
-          /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g;
-
-        // Track positions to maintain order
+      function extractAllPatterns(text) {
         const found = [];
 
         // Extract URLs
-        if (includeLinks) {
-          let match;
-          const regex = new RegExp(urlRegex);
-          while ((match = regex.exec(text)) !== null) {
-            found.push({
-              value: match[0],
-              position: match.index,
-              type: "link",
-            });
-          }
+        const urlRegex = new RegExp(PATTERNS.url.regex);
+        let match;
+        while ((match = urlRegex.exec(text)) !== null) {
+          found.push({
+            value: match[0],
+            position: match.index,
+            type: PATTERNS.url.type,
+          });
         }
 
-        // Extract emails
-        if (includeEmails) {
-          let match;
-          const regex = new RegExp(emailRegex);
-          while ((match = regex.exec(text)) !== null) {
-            found.push({
-              value: match[0],
-              position: match.index,
-              type: "email",
-            });
-          }
+        // Extract Emails
+        const emailRegex = new RegExp(PATTERNS.email.regex);
+        while ((match = emailRegex.exec(text)) !== null) {
+          found.push({
+            value: match[0],
+            position: match.index,
+            type: PATTERNS.email.type,
+          });
+        }
+
+        // Extract IPv4
+        const ipv4Regex = new RegExp(PATTERNS.ipv4.regex);
+        while ((match = ipv4Regex.exec(text)) !== null) {
+          found.push({
+            value: match[0],
+            position: match.index,
+            type: PATTERNS.ipv4.type,
+          });
+        }
+
+        // Extract IPv6
+        const ipv6Regex = new RegExp(PATTERNS.ipv6.regex);
+        while ((match = ipv6Regex.exec(text)) !== null) {
+          found.push({
+            value: match[0],
+            position: match.index,
+            type: PATTERNS.ipv6.type,
+          });
+        }
+
+        // Extract Phone
+        const phoneRegex = new RegExp(PATTERNS.phone.regex);
+        while ((match = phoneRegex.exec(text)) !== null) {
+          found.push({
+            value: match[0],
+            position: match.index,
+            type: PATTERNS.phone.type,
+          });
+        }
+
+        // Extract MAC
+        const macRegex = new RegExp(PATTERNS.mac.regex);
+        while ((match = macRegex.exec(text)) !== null) {
+          found.push({
+            value: match[0],
+            position: match.index,
+            type: PATTERNS.mac.type,
+          });
+        }
+
+        // Extract API Keys
+        const apiKeyRegex = new RegExp(PATTERNS.apiKey.regex);
+        while ((match = apiKeyRegex.exec(text)) !== null) {
+          found.push({
+            value: match[0],
+            position: match.index,
+            type: PATTERNS.apiKey.type,
+          });
         }
 
         // Sort by position to maintain document order
@@ -507,9 +678,25 @@ Email me at user@example.com"
       }
 
       /**
+       * Filter items based on user selections
+       */
+      function filterItems(allItems, options) {
+        return allItems.filter((item) => {
+          if (item.type === "link" && !options.includeLinks) return false;
+          if (item.type === "email" && !options.includeEmails) return false;
+          if (item.type === "ipv4" && !options.includeIPv4) return false;
+          if (item.type === "ipv6" && !options.includeIPv6) return false;
+          if (item.type === "phone" && !options.includePhone) return false;
+          if (item.type === "mac" && !options.includeMAC) return false;
+          if (item.type === "apiKey" && !options.includeAPIKey) return false;
+          return true;
+        });
+      }
+
+      /**
        * Process links based on options
        */
-      function processLinks(items, removeDuplicates = true, sort = false) {
+      function processLinks(items, removeDuplicates = false, sort = false) {
         let processed = [...items];
 
         // Add protocol to links starting with www
@@ -547,6 +734,22 @@ Email me at user@example.com"
       }
 
       /**
+       * Get display name for type
+       */
+      function getTypeName(type) {
+        const typeMap = {
+          link: "Link",
+          email: "Email",
+          ipv4: "IPv4",
+          ipv6: "IPv6",
+          phone: "Phone",
+          mac: "MAC",
+          apiKey: "API Key",
+        };
+        return typeMap[type] || type;
+      }
+
+      /**
        * Display extracted links in a table
        */
       function displayLinks(items) {
@@ -554,7 +757,7 @@ Email me at user@example.com"
 
         if (items.length === 0) {
           linksContainer.innerHTML =
-            '<div class="empty-state">No links found in the text.</div>';
+            '<div class="empty-state">No items found in the text.</div>';
           return;
         }
 
@@ -565,7 +768,7 @@ Email me at user@example.com"
         const thead = document.createElement("thead");
         const headerRow = document.createElement("tr");
 
-        const headers = ["Seq", "Type", "Link/Email", "Actions"];
+        const headers = ["Seq", "Type", "Value", "Actions"];
         headers.forEach((headerText) => {
           const th = document.createElement("th");
           th.textContent = headerText;
@@ -581,7 +784,7 @@ Email me at user@example.com"
         items.forEach((item, index) => {
           const row = document.createElement("tr");
 
-          // Sequence number (original document order)
+          // Sequence number
           const seqCell = document.createElement("td");
           seqCell.textContent = item.originalSequence;
           row.appendChild(seqCell);
@@ -589,10 +792,10 @@ Email me at user@example.com"
           // Type
           const typeCell = document.createElement("td");
           typeCell.className = "link-type";
-          typeCell.textContent = item.type === "email" ? "Email" : "Link";
+          typeCell.textContent = getTypeName(item.type);
           row.appendChild(typeCell);
 
-          // Link/Email value
+          // Value
           const valueCell = document.createElement("td");
           valueCell.className = "link-url";
           valueCell.textContent = item.value;
@@ -608,8 +811,14 @@ Email me at user@example.com"
           openBtn.onclick = () => {
             if (item.type === "email") {
               window.open(`mailto:${item.value}`, "_blank");
-            } else {
+            } else if (item.type === "link") {
               window.open(item.value, "_blank");
+            } else {
+              // For other types, copy to clipboard
+              copyToClipboard(
+                item.value,
+                `${getTypeName(item.type)} copied to clipboard`
+              );
             }
           };
 
@@ -627,18 +836,84 @@ Email me at user@example.com"
       /**
        * Update statistics
        */
-      function updateStats(allItems, processedItems) {
-        const linkCount = allItems.filter(
+      function updateStats(allItems, selectedItems) {
+        // Count total items by type
+        const totalLinkCount = allItems.filter(
           (item) => item.type === "link"
         ).length;
-        const emailCount = allItems.filter(
+        const totalEmailCount = allItems.filter(
           (item) => item.type === "email"
         ).length;
+        const totalIpv4Count = allItems.filter(
+          (item) => item.type === "ipv4"
+        ).length;
+        const totalIpv6Count = allItems.filter(
+          (item) => item.type === "ipv6"
+        ).length;
+        const totalPhoneCount = allItems.filter(
+          (item) => item.type === "phone"
+        ).length;
+        const totalMacCount = allItems.filter(
+          (item) => item.type === "mac"
+        ).length;
+        const totalApiKeyCount = allItems.filter(
+          (item) => item.type === "apiKey"
+        ).length;
 
+        // Count selected items by type
+        const selectedLinkCount = selectedItems.filter(
+          (item) => item.type === "link"
+        ).length;
+        const selectedEmailCount = selectedItems.filter(
+          (item) => item.type === "email"
+        ).length;
+        const selectedIpv4Count = selectedItems.filter(
+          (item) => item.type === "ipv4"
+        ).length;
+        const selectedIpv6Count = selectedItems.filter(
+          (item) => item.type === "ipv6"
+        ).length;
+        const selectedPhoneCount = selectedItems.filter(
+          (item) => item.type === "phone"
+        ).length;
+        const selectedMacCount = selectedItems.filter(
+          (item) => item.type === "mac"
+        ).length;
+        const selectedApiKeyCount = selectedItems.filter(
+          (item) => item.type === "apiKey"
+        ).length;
+
+        // Calculate unique items count (regardless of remove duplicates setting)
+        const uniqueValues = new Set(
+          allItems.map((item) => item.value.toLowerCase())
+        );
+        const uniqueCount = uniqueValues.size;
+
+        // Update display
         totalItemsEl.textContent = allItems.length;
-        totalLinksEl.textContent = linkCount;
-        totalEmailsEl.textContent = emailCount;
-        uniqueItemsEl.textContent = processedItems.length;
+
+        selectedLinksEl.textContent = selectedLinkCount;
+        totalLinksEl.textContent = totalLinkCount;
+
+        selectedEmailsEl.textContent = selectedEmailCount;
+        totalEmailsEl.textContent = totalEmailCount;
+
+        selectedIPv4El.textContent = selectedIpv4Count;
+        totalIPv4El.textContent = totalIpv4Count;
+
+        selectedIPv6El.textContent = selectedIpv6Count;
+        totalIPv6El.textContent = totalIpv6Count;
+
+        selectedPhoneEl.textContent = selectedPhoneCount;
+        totalPhoneEl.textContent = totalPhoneCount;
+
+        selectedMACEl.textContent = selectedMacCount;
+        totalMACEl.textContent = totalMacCount;
+
+        selectedAPIKeyEl.textContent = selectedApiKeyCount;
+        totalAPIKeyEl.textContent = totalApiKeyCount;
+
+        uniqueItemsEl.textContent = uniqueCount;
       }
 
       /**
@@ -683,7 +958,7 @@ Email me at user@example.com"
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `extracted-links-${Date.now()}.txt`;
+        a.download = `extracted-items-${Date.now()}.txt`;
         a.click();
         URL.revokeObjectURL(url);
         showNotification("Text file downloaded successfully");
@@ -694,12 +969,12 @@ Email me at user@example.com"
        */
       function downloadLinksAsCsv(items) {
         // Create CSV header
-        let csv = "Sequence,Type,Link/Email\n";
+        let csv = "Sequence,Type,Value\n";
 
         // Add data rows
         items.forEach((item) => {
           const seq = item.originalSequence;
-          const type = item.type === "email" ? "Email" : "Link";
+          const type = getTypeName(item.type);
           const value = `"${item.value.replace(/"/g, '""')}"`;
           csv += `${seq},${type},${value}\n`;
         });
@@ -708,16 +983,18 @@ Email me at user@example.com"
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `extracted-links-${Date.now()}.csv`;
+        a.download = `extracted-items-${Date.now()}.csv`;
         a.click();
         URL.revokeObjectURL(url);
         showNotification("CSV file downloaded successfully");
       }
 
-      // Event handlers
+      /* =========================
+         Event Handlers
+         ========================= */
 
       /**
-       * Extract and display links
+       * Extract and display links (called when text changes)
        */
       function extractAndDisplay() {
         const text = textInput.value.trim();
@@ -725,23 +1002,15 @@ Email me at user@example.com"
         if (!text) {
           resultsSection.classList.add("hidden");
           linksSection.classList.add("hidden");
+          allExtractedItems = [];
           return;
         }
 
-        const includeLinks = includeLinksCheckbox.checked;
-        const includeEmails = includeEmailsCheckbox.checked;
-        const removeDuplicates = removeDuplicatesCheckbox.checked;
-        const sort = sortLinksCheckbox.checked;
+        // Extract ALL items from text (this happens once per text change)
+        allExtractedItems = extractAllPatterns(text);
 
-        // Extract links
-        const rawItems = extractLinks(text, includeLinks, includeEmails);
-
-        // Process links
-        extractedLinks = processLinks(rawItems, removeDuplicates, sort);
-
-        // Display results
-        displayLinks(extractedLinks);
-        updateStats(rawItems, extractedLinks);
+        // Now filter and display based on current settings
+        updateDisplay();
 
         // Show results section
         resultsSection.classList.remove("hidden");
@@ -749,78 +1018,35 @@ Email me at user@example.com"
       }
 
       /**
-       * Update display with current options
+       * Update display with current filter options (does NOT re-extract)
        */
       function updateDisplay() {
-        const text = textInput.value.trim();
-
-        if (!text || resultsSection.classList.contains("hidden")) {
+        if (allExtractedItems.length === 0) {
           return;
         }
 
-        const includeLinks = includeLinksCheckbox.checked;
-        const includeEmails = includeEmailsCheckbox.checked;
+        const options = {
+          includeLinks: includeLinksCheckbox.checked,
+          includeEmails: includeEmailsCheckbox.checked,
+          includeIPv4: includeIPv4Checkbox.checked,
+          includeIPv6: includeIPv6Checkbox.checked,
+          includePhone: includePhoneCheckbox.checked,
+          includeMAC: includeMACCheckbox.checked,
+          includeAPIKey: includeAPIKeyCheckbox.checked,
+        };
         const removeDuplicates = removeDuplicatesCheckbox.checked;
         const sort = sortLinksCheckbox.checked;
 
-        // Extract links
-        const rawItems = extractLinks(text, includeLinks, includeEmails);
+        // Filter items based on checkboxes
+        const filteredItems = filterItems(allExtractedItems, options);
 
-        // Process links
-        extractedLinks = processLinks(rawItems, removeDuplicates, sort);
+        // Process items (remove duplicates, sort)
+        extractedLinks = processLinks(filteredItems, removeDuplicates, sort);
 
         // Display results
         displayLinks(extractedLinks);
-        updateStats(rawItems, extractedLinks);
+        updateStats(allExtractedItems, extractedLinks);
       }
-
-      /**
-       * Clear button click
-       */
-      clearBtn.addEventListener("click", () => {
-        textInput.value = "";
-        extractedLinks = [];
-        resultsSection.classList.add("hidden");
-        linksSection.classList.add("hidden");
-        textInput.focus();
-      });
-
-      /**
-       * Copy all links button click
-       */
-      copyAllBtn.addEventListener("click", () => {
-        if (extractedLinks.length === 0) {
-          showNotification("No links to copy", "error");
-          return;
-        }
-
-        const allLinks = extractedLinks.map((item) => item.value).join("\n");
-        copyToClipboard(allLinks, "All links copied to clipboard");
-      });
-
-      /**
-       * Download as text button click
-       */
-      downloadTxtBtn.addEventListener("click", () => {
-        if (extractedLinks.length === 0) {
-          showNotification("No links to download", "error");
-          return;
-        }
-
-        downloadLinksAsTxt(extractedLinks);
-      });
-
-      /**
-       * Download as CSV button click
-       */
-      downloadCsvBtn.addEventListener("click", () => {
-        if (extractedLinks.length === 0) {
-          showNotification("No links to download", "error");
-          return;
-        }
-
-        downloadLinksAsCsv(extractedLinks);
-      });
 
       /**
        * Handle file reading
@@ -839,9 +1065,49 @@ Email me at user@example.com"
         reader.readAsText(file);
       }
 
-      /**
-       * Handle file selection
-       */
+      // Clear button
+      clearBtn.addEventListener("click", () => {
+        textInput.value = "";
+        fileName.textContent = "";
+        extractedLinks = [];
+        allExtractedItems = [];
+        resultsSection.classList.add("hidden");
+        linksSection.classList.add("hidden");
+        textInput.focus();
+      });
+
+      // Copy all button
+      copyAllBtn.addEventListener("click", () => {
+        if (extractedLinks.length === 0) {
+          showNotification("No items to copy", "error");
+          return;
+        }
+
+        const allLinks = extractedLinks.map((item) => item.value).join("\n");
+        copyToClipboard(allLinks, "All items copied to clipboard");
+      });
+
+      // Download as text button
+      downloadTxtBtn.addEventListener("click", () => {
+        if (extractedLinks.length === 0) {
+          showNotification("No items to download", "error");
+          return;
+        }
+
+        downloadLinksAsTxt(extractedLinks);
+      });
+
+      // Download as CSV button
+      downloadCsvBtn.addEventListener("click", () => {
+        if (extractedLinks.length === 0) {
+          showNotification("No items to download", "error");
+          return;
+        }
+
+        downloadLinksAsCsv(extractedLinks);
+      });
+
+      // File input change
       fileInput.addEventListener("change", (e) => {
         const file = e.target.files[0];
         if (file) {
@@ -849,55 +1115,21 @@ Email me at user@example.com"
         }
       });
 
-      /**
-       * Handle file drop
-       */
-      dropZone.addEventListener("dragover", (e) => {
-        e.preventDefault();
-        dropZone.classList.add("drag-over");
-      });
-
-      dropZone.addEventListener("dragleave", () => {
-        dropZone.classList.remove("drag-over");
-      });
-
-      dropZone.addEventListener("drop", (e) => {
-        e.preventDefault();
-        dropZone.classList.remove("drag-over");
-        const file = e.dataTransfer.files[0];
-        if (file) {
-          handleFile(file);
-        }
-      });
-
-      /**
-       * Allow click on drop zone to trigger file input
-       */
-      dropZone.addEventListener("click", () => {
-        fileInput.click();
-      });
-
-      /**
-       * Auto-extract on input change
-       */
+      // Auto-extract on input change
       textInput.addEventListener("input", () => {
         extractAndDisplay();
       });
 
-      /**
-       * Update display when checkboxes change
-       */
+      // Update display when checkboxes change
       includeLinksCheckbox.addEventListener("change", updateDisplay);
       includeEmailsCheckbox.addEventListener("change", updateDisplay);
+      includeIPv4Checkbox.addEventListener("change", updateDisplay);
+      includeIPv6Checkbox.addEventListener("change", updateDisplay);
+      includePhoneCheckbox.addEventListener("change", updateDisplay);
+      includeMACCheckbox.addEventListener("change", updateDisplay);
+      includeAPIKeyCheckbox.addEventListener("change", updateDisplay);
       removeDuplicatesCheckbox.addEventListener("change", updateDisplay);
       sortLinksCheckbox.addEventListener("change", updateDisplay);
-
-      /**
-       * Allow click on drop zone to trigger file input
-       */
-      dropZone.addEventListener("click", () => {
-        fileInput.click();
-      });
 
       // Initialization
       textInput.focus();
