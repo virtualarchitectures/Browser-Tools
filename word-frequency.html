@@ -184,6 +184,27 @@
         align-items: center;
       }
 
+      .table-search {
+        padding: 10px 15px;
+        background-color: #ffffff;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .table-search input {
+        width: 100%;
+        padding: 6px 10px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        font-size: 14px;
+        font-family: inherit;
+        box-sizing: border-box;
+      }
+
+      .table-search input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+      }
+
       table {
         width: 100%;
         border-collapse: collapse;
@@ -277,6 +298,22 @@
             <input type="checkbox" id="includeNumbers" />
             <label for="includeNumbers">Include Numbers</label>
           </div>
+          <div class="checkbox-wrapper">
+            <label for="maxResults">Max results:</label>
+            <input
+              type="number"
+              id="maxResults"
+              min="10"
+              max="1000"
+              value="100"
+              style="
+                width: 80px;
+                padding: 4px 8px;
+                border: 1px solid var(--border-color);
+                border-radius: 4px;
+              "
+            />
+          </div>
           <button id="analyzeBtn">Analyze</button>
         </div>
       </div>
@@ -310,6 +347,13 @@
                 >Single tokens</span
               >
             </div>
+            <div class="table-search">
+              <input
+                type="text"
+                id="searchWords"
+                placeholder="Search words..."
+              />
+            </div>
             <div style="max-height: 400px; overflow-y: auto">
               <table id="wordFreqTable">
                 <thead>
@@ -332,6 +376,13 @@
                 >2-word phrases</span
               >
             </div>
+            <div class="table-search">
+              <input
+                type="text"
+                id="searchBigrams"
+                placeholder="Search bigrams..."
+              />
+            </div>
             <div style="max-height: 400px; overflow-y: auto">
               <table id="bigramTable">
                 <thead>
@@ -352,6 +403,13 @@
               <span style="font-size: 0.8em; color: var(--secondary-text)"
                 >3-word phrases</span
               >
+            </div>
+            <div class="table-search">
+              <input
+                type="text"
+                id="searchTrigrams"
+                placeholder="Search trigrams..."
+              />
             </div>
             <div style="max-height: 400px; overflow-y: auto">
               <table id="trigramTable">
@@ -378,11 +436,17 @@
       const analyzeBtn = document.getElementById("analyzeBtn");
       const resultsSection = document.getElementById("results");
 
+      // Search inputs
+      const searchWords = document.getElementById("searchWords");
+      const searchBigrams = document.getElementById("searchBigrams");
+      const searchTrigrams = document.getElementById("searchTrigrams");
+
       // Options
       const ignoreCaseCheckbox = document.getElementById("ignoreCase");
       const removeStopWordsCheckbox =
         document.getElementById("removeStopWords");
       const includeNumbersCheckbox = document.getElementById("includeNumbers");
+      const maxResultsInput = document.getElementById("maxResults");
 
       // Common English Stop Words
       const STOP_WORDS = new Set([
@@ -577,6 +641,17 @@
 
       analyzeBtn.addEventListener("click", analyzeText);
 
+      // Search event listeners
+      searchWords.addEventListener("input", (e) =>
+        filterTable("wordFreqTable", e.target.value)
+      );
+      searchBigrams.addEventListener("input", (e) =>
+        filterTable("bigramTable", e.target.value)
+      );
+      searchTrigrams.addEventListener("input", (e) =>
+        filterTable("trigramTable", e.target.value)
+      );
+
       function handleFile(file) {
         fileStatus.textContent = file.name;
         const reader = new FileReader();
@@ -595,6 +670,7 @@
         const ignoreCase = ignoreCaseCheckbox.checked;
         const removeStop = removeStopWordsCheckbox.checked;
         const includeNums = includeNumbersCheckbox.checked;
+        const maxResults = parseInt(maxResultsInput.value) || 100;
 
         // Basic Stats
         const charCount = text.length;
@@ -643,7 +719,7 @@
 
         const sortedFreq = Object.entries(frequency)
           .sort((a, b) => b[1] - a[1])
-          .slice(0, 100); // Top 100
+          .slice(0, maxResults);
 
         renderTable("wordFreqTable", sortedFreq, totalWords);
 
@@ -651,8 +727,8 @@
         const bigrams = generateNGrams(processedTokens, 2);
         const trigrams = generateNGrams(processedTokens, 3);
 
-        renderTable("bigramTable", bigrams.slice(0, 50));
-        renderTable("trigramTable", trigrams.slice(0, 50));
+        renderTable("bigramTable", bigrams.slice(0, maxResults));
+        renderTable("trigramTable", trigrams.slice(0, maxResults));
 
         resultsSection.classList.remove("hidden");
       }
@@ -698,6 +774,24 @@
         const div = document.createElement("div");
         div.textContent = text;
         return div.innerHTML;
+      }
+
+      function filterTable(tableId, searchTerm) {
+        const table = document.getElementById(tableId);
+        const rows = table.querySelectorAll("tbody tr");
+        const term = searchTerm.toLowerCase();
+
+        rows.forEach((row) => {
+          const firstCell = row.cells[0];
+          if (firstCell) {
+            const text = firstCell.textContent.toLowerCase();
+            if (text.includes(term)) {
+              row.style.display = "";
+            } else {
+              row.style.display = "none";
+            }
+          }
+        });
       }
     </script>
   </body>
