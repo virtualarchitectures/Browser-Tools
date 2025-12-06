@@ -41,11 +41,11 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 
 ### Text and documents
 
-- **[Document Redactor](document-redactor.html)** — automatically detect and redact personally identifiable information (emails, phones, IPs) from text files
 - **[Link Finder](link-finder.html)** — extract URLs and email addresses from text with filtering, sorting, and export options
 - **[OCR Reader](ocr-reader.html)** — extract text from images and PDF files using optical character recognition with side-by-side preview
 - **[PDF Metadata Viewer](pdf-metadata.html)** — extract and view PDF metadata including title, author, dates, permissions, and security settings
 - **[Text Diff Tool](text-diff.html)** — compare two text blocks and highlight added and removed content
+- **[Text Redactor](text-redactor.html)** — automatically detect and redact personally identifiable information (emails, phones, IPs) from text files
 
 ### Web development
 
