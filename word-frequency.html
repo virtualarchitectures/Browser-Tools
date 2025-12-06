@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Word Frequency Counter</title>
+    <style>
+      :root {
+        --primary-color: #0366d6;
+        --bg-color: #f6f8fa;
+        --border-color: #e1e4e8;
+        --text-color: #24292e;
+        --secondary-text: #586069;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica,
+          Arial, sans-serif;
+        line-height: 1.6;
+        color: var(--text-color);
+        margin: 0;
+        padding: 20px;
+        background-color: #fff;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      header {
+        margin-bottom: 2rem;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 1rem;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 1.5rem;
+      }
+
+      .input-section {
+        display: grid;
+        gap: 1rem;
+        margin-bottom: 2rem;
+      }
+
+      .drop-zone {
+        border: 2px dashed var(--border-color);
+        border-radius: 6px;
+        padding: 2rem;
+        text-align: center;
+        background-color: var(--bg-color);
+        transition: border-color 0.2s;
+        cursor: pointer;
+      }
+
+      .drop-zone:hover,
+      .drop-zone.drag-over {
+        border-color: var(--primary-color);
+      }
+
+      textarea {
+        width: 100%;
+        height: 200px;
+        padding: 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        font-family: inherit;
+        resize: vertical;
+        box-sizing: border-box;
+      }
+
+      .controls {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        flex-wrap: wrap;
+        padding: 1rem;
+        background-color: var(--bg-color);
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
+      }
+
+      button {
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+      }
+
+      button:hover {
+        opacity: 0.9;
+      }
+
+      button.secondary {
+        background-color: #eff3f6;
+        color: var(--text-color);
+        border: 1px solid rgba(27, 31, 35, 0.15);
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+      }
+
+      .stat-card {
+        background: white;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        padding: 1rem;
+        text-align: center;
+      }
+
+      .stat-value {
+        font-size: 2rem;
+        font-weight: bold;
+        color: var(--primary-color);
+      }
+
+      .stat-label {
+        color: var(--secondary-text);
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .analysis-layout {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 2rem;
+      }
+
+      .table-container {
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        overflow: hidden;
+      }
+
+      .table-header {
+        background-color: var(--bg-color);
+        padding: 10px 15px;
+        font-weight: 600;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+      }
+
+      th,
+      td {
+        padding: 8px 15px;
+        text-align: left;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      th {
+        background-color: #fafbfc;
+        font-weight: 600;
+        color: var(--secondary-text);
+      }
+
+      tr:last-child td {
+        border-bottom: none;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      /* Checkbox style */
+      .checkbox-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        user-select: none;
+      }
+
+      @media (max-width: 768px) {
+        .analysis-layout {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>Word Frequency Counter</h1>
+        <p>
+          Analyze word frequency, discover common phrases with n-grams, and get
+          detailed text statistics. Count words, characters, and sentences with
+          customizable filtering options. All processing happens locally in your
+          browser.
+        </p>
+        <a href="index.html">← Back to tools</a>
+      </header>
+
+      <div class="input-section">
+        <div class="drop-zone" id="dropZone">
+          <p>Drag & drop a text file here, or click to select</p>
+          <input
+            type="file"
+            id="fileInput"
+            accept=".txt,.md,.csv,.json,.html"
+            style="display: none"
+          />
+        </div>
+
+        <textarea
+          id="inputText"
+          placeholder="Or paste your text here..."
+        ></textarea>
+
+        <div class="controls">
+          <div class="checkbox-wrapper">
+            <input type="checkbox" id="ignoreCase" checked />
+            <label for="ignoreCase">Ignore Case</label>
+          </div>
+          <div class="checkbox-wrapper">
+            <input type="checkbox" id="removeStopWords" checked />
+            <label for="removeStopWords">Remove Stop Words</label>
+          </div>
+          <div class="checkbox-wrapper">
+            <input type="checkbox" id="includeNumbers" />
+            <label for="includeNumbers">Include Numbers</label>
+          </div>
+          <button id="analyzeBtn">Analyze</button>
+          <button id="clearBtn" class="secondary">Clear</button>
+        </div>
+      </div>
+
+      <div id="results" class="hidden">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-value" id="wordCount">0</div>
+            <div class="stat-label">Words</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="charCount">0</div>
+            <div class="stat-label">Characters</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="sentenceCount">0</div>
+            <div class="stat-label">Sentences</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="readTime">0m</div>
+            <div class="stat-label">Reading Time</div>
+          </div>
+        </div>
+
+        <div class="analysis-layout">
+          <!-- Word Frequency -->
+          <div class="table-container">
+            <div class="table-header">
+              <span>Top Words</span>
+              <span style="font-size: 0.8em; color: var(--secondary-text)"
+                >Single tokens</span
+              >
+            </div>
+            <div style="max-height: 400px; overflow-y: auto">
+              <table id="wordFreqTable">
+                <thead>
+                  <tr>
+                    <th>Word</th>
+                    <th>Count</th>
+                    <th>%</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Bigrams -->
+          <div class="table-container">
+            <div class="table-header">
+              <span>Bigrams</span>
+              <span style="font-size: 0.8em; color: var(--secondary-text)"
+                >2-word phrases</span
+              >
+            </div>
+            <div style="max-height: 400px; overflow-y: auto">
+              <table id="bigramTable">
+                <thead>
+                  <tr>
+                    <th>Phrase</th>
+                    <th>Count</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Trigrams -->
+          <div class="table-container">
+            <div class="table-header">
+              <span>Trigrams</span>
+              <span style="font-size: 0.8em; color: var(--secondary-text)"
+                >3-word phrases</span
+              >
+            </div>
+            <div style="max-height: 400px; overflow-y: auto">
+              <table id="trigramTable">
+                <thead>
+                  <tr>
+                    <th>Phrase</th>
+                    <th>Count</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // DOM Elements
+      const dropZone = document.getElementById("dropZone");
+      const fileInput = document.getElementById("fileInput");
+      const inputText = document.getElementById("inputText");
+      const analyzeBtn = document.getElementById("analyzeBtn");
+      const clearBtn = document.getElementById("clearBtn");
+      const resultsSection = document.getElementById("results");
+
+      // Options
+      const ignoreCaseCheckbox = document.getElementById("ignoreCase");
+      const removeStopWordsCheckbox =
+        document.getElementById("removeStopWords");
+      const includeNumbersCheckbox = document.getElementById("includeNumbers");
+
+      // Common English Stop Words
+      const STOP_WORDS = new Set([
+        "a",
+        "about",
+        "above",
+        "after",
+        "again",
+        "against",
+        "all",
+        "am",
+        "an",
+        "and",
+        "any",
+        "are",
+        "aren't",
+        "as",
+        "at",
+        "be",
+        "because",
+        "been",
+        "before",
+        "being",
+        "below",
+        "between",
+        "both",
+        "but",
+        "by",
+        "can",
+        "can't",
+        "cannot",
+        "could",
+        "couldn't",
+        "did",
+        "didn't",
+        "do",
+        "does",
+        "doesn't",
+        "doing",
+        "don't",
+        "down",
+        "during",
+        "each",
+        "few",
+        "for",
+        "from",
+        "further",
+        "had",
+        "hadn't",
+        "has",
+        "hasn't",
+        "have",
+        "haven't",
+        "having",
+        "he",
+        "he'd",
+        "he'll",
+        "he's",
+        "her",
+        "here",
+        "here's",
+        "hers",
+        "herself",
+        "him",
+        "himself",
+        "his",
+        "how",
+        "how's",
+        "i",
+        "i'd",
+        "i'll",
+        "i'm",
+        "i've",
+        "if",
+        "in",
+        "into",
+        "is",
+        "isn't",
+        "it",
+        "it's",
+        "its",
+        "itself",
+        "let's",
+        "me",
+        "more",
+        "most",
+        "mustn't",
+        "my",
+        "myself",
+        "no",
+        "nor",
+        "not",
+        "of",
+        "off",
+        "on",
+        "once",
+        "only",
+        "or",
+        "other",
+        "ought",
+        "our",
+        "ours",
+        "ourselves",
+        "out",
+        "over",
+        "own",
+        "same",
+        "shan't",
+        "she",
+        "she'd",
+        "she'll",
+        "she's",
+        "should",
+        "shouldn't",
+        "so",
+        "some",
+        "such",
+        "than",
+        "that",
+        "that's",
+        "the",
+        "their",
+        "theirs",
+        "them",
+        "themselves",
+        "then",
+        "there",
+        "there's",
+        "these",
+        "they",
+        "they'd",
+        "they'll",
+        "they're",
+        "they've",
+        "this",
+        "those",
+        "through",
+        "to",
+        "too",
+        "under",
+        "until",
+        "up",
+        "very",
+        "was",
+        "wasn't",
+        "we",
+        "we'd",
+        "we'll",
+        "we're",
+        "we've",
+        "were",
+        "weren't",
+        "what",
+        "what's",
+        "when",
+        "when's",
+        "where",
+        "where's",
+        "which",
+        "while",
+        "who",
+        "who's",
+        "whom",
+        "why",
+        "why's",
+        "with",
+        "won't",
+        "would",
+        "wouldn't",
+        "you",
+        "you'd",
+        "you'll",
+        "you're",
+        "you've",
+        "your",
+        "yours",
+        "yourself",
+        "yourselves",
+      ]);
+
+      // Event Listeners
+      dropZone.addEventListener("click", () => fileInput.click());
+
+      dropZone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropZone.classList.add("drag-over");
+      });
+
+      dropZone.addEventListener("dragleave", () => {
+        dropZone.classList.remove("drag-over");
+      });
+
+      dropZone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropZone.classList.remove("drag-over");
+        const files = e.dataTransfer.files;
+        if (files.length) handleFile(files[0]);
+      });
+
+      fileInput.addEventListener("change", (e) => {
+        if (e.target.files.length) handleFile(e.target.files[0]);
+      });
+
+      analyzeBtn.addEventListener("click", analyzeText);
+
+      clearBtn.addEventListener("click", () => {
+        inputText.value = "";
+        resultsSection.classList.add("hidden");
+        fileInput.value = "";
+      });
+
+      function handleFile(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          inputText.value = e.target.result;
+          analyzeText();
+        };
+        reader.readAsText(file);
+      }
+
+      function analyzeText() {
+        const text = inputText.value;
+        if (!text.trim()) return;
+
+        // Options
+        const ignoreCase = ignoreCaseCheckbox.checked;
+        const removeStop = removeStopWordsCheckbox.checked;
+        const includeNums = includeNumbersCheckbox.checked;
+
+        // Basic Stats
+        const charCount = text.length;
+
+        // Sentence Count (simple approximation)
+        // Matches punctuation followed by space or end of string
+        const sentences = text
+          .split(/[.!?]+(?=\s|$)/)
+          .filter((s) => s.trim().length > 0);
+        document.getElementById("sentenceCount").textContent = sentences.length;
+
+        // Tokenization
+        let tokens = text.match(/\b[\w']+\b/g) || [];
+
+        // Filter numbers if requested
+        if (!includeNums) {
+          tokens = tokens.filter((t) => isNaN(t));
+        }
+
+        const totalWords = tokens.length;
+        document.getElementById("wordCount").textContent = totalWords;
+        document.getElementById("charCount").textContent = charCount;
+
+        // Reading time (approx 200 wpm)
+        const minutes = Math.ceil(totalWords / 200);
+        document.getElementById("readTime").textContent = `${minutes} min${
+          minutes !== 1 ? "s" : ""
+        }`;
+
+        // Process tokens for frequency
+        let processedTokens = tokens.map((t) =>
+          ignoreCase ? t.toLowerCase() : t
+        );
+
+        if (removeStop) {
+          processedTokens = processedTokens.filter(
+            (t) => !STOP_WORDS.has(t.toLowerCase())
+          );
+        }
+
+        // Word Frequency
+        const frequency = {};
+        processedTokens.forEach((word) => {
+          frequency[word] = (frequency[word] || 0) + 1;
+        });
+
+        const sortedFreq = Object.entries(frequency)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 100); // Top 100
+
+        renderTable("wordFreqTable", sortedFreq, totalWords);
+
+        // N-Grams
+        const bigrams = generateNGrams(processedTokens, 2);
+        const trigrams = generateNGrams(processedTokens, 3);
+
+        renderTable("bigramTable", bigrams.slice(0, 50));
+        renderTable("trigramTable", trigrams.slice(0, 50));
+
+        resultsSection.classList.remove("hidden");
+      }
+
+      function generateNGrams(tokens, n) {
+        const ngrams = {};
+        for (let i = 0; i <= tokens.length - n; i++) {
+          const phrase = tokens.slice(i, i + n).join(" ");
+          ngrams[phrase] = (ngrams[phrase] || 0) + 1;
+        }
+        return Object.entries(ngrams).sort((a, b) => b[1] - a[1]);
+      }
+
+      function renderTable(tableId, data, totalCount = null) {
+        const tbody = document.querySelector(`#${tableId} tbody`);
+        tbody.innerHTML = "";
+
+        data.forEach(([item, count]) => {
+          const row = document.createElement("tr");
+          let percentage = "";
+          if (totalCount) {
+            percentage = ((count / totalCount) * 100).toFixed(1) + "%";
+          }
+
+          row.innerHTML = `
+                    <td>${escapeHtml(item)}</td>
+                    <td>${count}</td>
+                    ${totalCount ? `<td>${percentage}</td>` : ""}
+                `;
+          tbody.appendChild(row);
+        });
+
+        if (data.length === 0) {
+          const row = document.createElement("tr");
+          row.innerHTML = `<td colspan="${
+            totalCount ? 3 : 2
+          }" style="text-align:center; color: #586069;">No data found</td>`;
+          tbody.appendChild(row);
+        }
+      }
+
+      function escapeHtml(text) {
+        const div = document.createElement("div");
+        div.textContent = text;
+        return div.innerHTML;
+      }
+    </script>
+  </body>
+</html>
