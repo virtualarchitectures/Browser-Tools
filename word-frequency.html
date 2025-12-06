@@ -316,6 +316,28 @@
           </div>
           <button id="analyzeBtn">Analyze</button>
         </div>
+
+        <div class="file-controls">
+          <input
+            type="file"
+            id="keywordFileInput"
+            accept=".txt"
+            style="display: none"
+          />
+          <label for="keywordFileInput" class="btn secondary">
+            Load custom stopwords
+          </label>
+          <span id="keywordStatus" class="file-status">
+            Using default stop words
+          </span>
+          <button
+            id="clearKeywordsBtn"
+            class="btn secondary"
+            style="margin-left: auto"
+          >
+            Clear custom stopwords
+          </button>
+        </div>
       </div>
 
       <div id="results" class="hidden">
@@ -462,6 +484,11 @@
       const analyzeBtn = document.getElementById("analyzeBtn");
       const resultsSection = document.getElementById("results");
 
+      // Keyword file elements
+      const keywordFileInput = document.getElementById("keywordFileInput");
+      const keywordStatus = document.getElementById("keywordStatus");
+      const clearKeywordsBtn = document.getElementById("clearKeywordsBtn");
+
       // Search inputs
       const searchWords = document.getElementById("searchWords");
       const searchNgrams = document.getElementById("searchNgrams");
@@ -479,6 +506,9 @@
       const includeNumbersCheckbox = document.getElementById("includeNumbers");
       const maxResultsInput = document.getElementById("maxResults");
       const ngramSelect = document.getElementById("ngramSelect");
+
+      // Custom stopwords (not persisted)
+      let customKeywords = null;
 
       // Common English Stop Words
       const STOP_WORDS = new Set([
@@ -671,6 +701,20 @@
         fileStatus.textContent = "No file selected";
       });
 
+      keywordFileInput.addEventListener("change", (e) => {
+        if (e.target.files.length) handleKeywordFile(e.target.files[0]);
+      });
+
+      clearKeywordsBtn.addEventListener("click", () => {
+        customKeywords = null;
+        keywordFileInput.value = "";
+        keywordStatus.textContent = "Using default stop words";
+        renderStopWordsTable();
+        if (inputText.value.trim()) {
+          analyzeText();
+        }
+      });
+
       analyzeBtn.addEventListener("click", analyzeText);
 
       // Search event listeners
@@ -723,9 +767,13 @@
       });
 
       downloadStopWords.addEventListener("click", () => {
-        const stopWordsArray = Array.from(STOP_WORDS).sort();
+        const keywordSet = customKeywords || STOP_WORDS;
+        const stopWordsArray = Array.from(keywordSet).sort();
         const content = stopWordsArray.join("\n");
-        downloadFile(content, "stop-words.txt", "text/plain");
+        const filename = customKeywords
+          ? "custom-stopwords.txt"
+          : "stop-words.txt";
+        downloadFile(content, filename, "text/plain");
       });
 
       function handleFile(file) {
@@ -734,6 +782,34 @@
         reader.onload = (e) => {
           inputText.value = e.target.result;
           analyzeText();
+        };
+        reader.readAsText(file);
+      }
+
+      function handleKeywordFile(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const content = e.target.result;
+          // Parse stopwords - one per line, trim whitespace, ignore empty lines
+          const keywords = content
+            .split(/\r?\n/)
+            .map((line) => line.trim().toLowerCase())
+            .filter((line) => line.length > 0);
+
+          if (keywords.length > 0) {
+            customKeywords = new Set(keywords);
+            keywordStatus.textContent = `${file.name} (${keywords.length} stopwords)`;
+            renderStopWordsTable();
+            // Re-analyze if text exists
+            if (inputText.value.trim()) {
+              analyzeText();
+            }
+          } else {
+            alert(
+              "No valid stopwords found in file. Each stopword should be on a new line."
+            );
+            keywordFileInput.value = "";
+          }
         };
         reader.readAsText(file);
       }
@@ -783,8 +859,10 @@
         );
 
         if (removeStop) {
+          // Use custom stopwords if loaded, otherwise use default stop words
+          const keywordSet = customKeywords || STOP_WORDS;
           processedTokens = processedTokens.filter(
-            (t) => !STOP_WORDS.has(t.toLowerCase())
+            (t) => !keywordSet.has(t.toLowerCase())
           );
         }
 
@@ -873,8 +951,9 @@
         const tbody = document.querySelector("#stopWordsTable tbody");
         tbody.innerHTML = "";
 
-        // Convert Set to sorted array
-        const sortedStopWords = Array.from(STOP_WORDS).sort();
+        // Use custom stopwords if loaded, otherwise use default stop words
+        const keywordSet = customKeywords || STOP_WORDS;
+        const sortedStopWords = Array.from(keywordSet).sort();
 
         sortedStopWords.forEach((word) => {
           const row = document.createElement("tr");
