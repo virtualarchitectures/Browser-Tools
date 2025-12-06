@@ -61,7 +61,6 @@
         display: flex;
         align-items: center;
         gap: 0;
-        margin-bottom: 16px;
         padding: 12px;
         background: #ffffff;
         border-radius: 6px;
@@ -138,7 +137,6 @@
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 1rem;
-        margin-bottom: 2rem;
       }
 
       .stat-card {
@@ -317,6 +315,21 @@
           <button id="analyzeBtn">Analyze</button>
         </div>
 
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-value" id="wordCount">0</div>
+            <div class="stat-label">Words</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="charCount">0</div>
+            <div class="stat-label">Characters</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="sentenceCount">0</div>
+            <div class="stat-label">Sentences</div>
+          </div>
+        </div>
+
         <div class="file-controls">
           <input
             type="file"
@@ -324,7 +337,7 @@
             accept=".txt"
             style="display: none"
           />
-          <label for="keywordFileInput" class="btn secondary">
+          <label for="keywordFileInput" class="btn">
             Load custom stopwords
           </label>
           <span id="keywordStatus" class="file-status">
@@ -341,25 +354,6 @@
       </div>
 
       <div id="results" class="hidden">
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-value" id="wordCount">0</div>
-            <div class="stat-label">Words</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-value" id="charCount">0</div>
-            <div class="stat-label">Characters</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-value" id="sentenceCount">0</div>
-            <div class="stat-label">Sentences</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-value" id="readTime">0m</div>
-            <div class="stat-label">Reading Time</div>
-          </div>
-        </div>
-
         <div class="analysis-layout">
           <!-- Word Frequency -->
           <div class="table-container">
@@ -699,6 +693,9 @@
         resultsSection.classList.add("hidden");
         fileInput.value = "";
         fileStatus.textContent = "No file selected";
+        document.getElementById("wordCount").textContent = 0;
+        document.getElementById("charCount").textContent = 0;
+        document.getElementById("sentenceCount").textContent = 0;
       });
 
       keywordFileInput.addEventListener("change", (e) => {
@@ -711,6 +708,7 @@
         keywordStatus.textContent = "Using default stop words";
         renderStopWordsTable();
         if (inputText.value.trim()) {
+          updateBasicStats();
           analyzeText();
         }
       });
@@ -781,9 +779,34 @@
         const reader = new FileReader();
         reader.onload = (e) => {
           inputText.value = e.target.result;
+          updateBasicStats();
           analyzeText();
         };
         reader.readAsText(file);
+      }
+
+      function updateBasicStats() {
+        const text = inputText.value;
+        if (!text.trim()) {
+          document.getElementById("wordCount").textContent = 0;
+          document.getElementById("charCount").textContent = 0;
+          document.getElementById("sentenceCount").textContent = 0;
+          return;
+        }
+
+        // Character count (raw)
+        const charCount = text.length;
+        document.getElementById("charCount").textContent = charCount;
+
+        // Sentence Count
+        const sentences = text
+          .split(/[.!?]+(?=\s|$)/)
+          .filter((s) => s.trim().length > 0);
+        document.getElementById("sentenceCount").textContent = sentences.length;
+
+        // Word Count (all tokens, always including numbers)
+        const tokens = text.match(/\b[\w']+\b/g) || [];
+        document.getElementById("wordCount").textContent = tokens.length;
       }
 
       function handleKeywordFile(file) {
@@ -802,6 +825,7 @@
             renderStopWordsTable();
             // Re-analyze if text exists
             if (inputText.value.trim()) {
+              updateBasicStats();
               analyzeText();
             }
           } else {
@@ -818,6 +842,9 @@
         const text = inputText.value;
         if (!text.trim()) return;
 
+        // Update basic stats first
+        updateBasicStats();
+
         // Options
         const ignoreCase = ignoreCaseCheckbox.checked;
         const removeStop = removeStopWordsCheckbox.checked;
@@ -825,33 +852,15 @@
         const maxResults = parseInt(maxResultsInput.value) || 100;
         const ngramSize = parseInt(ngramSelect.value) || 2;
 
-        // Basic Stats
-        const charCount = text.length;
-
-        // Sentence Count (simple approximation)
-        // Matches punctuation followed by space or end of string
-        const sentences = text
-          .split(/[.!?]+(?=\s|$)/)
-          .filter((s) => s.trim().length > 0);
-        document.getElementById("sentenceCount").textContent = sentences.length;
-
-        // Tokenization
+        // Tokenization for frequency analysis
         let tokens = text.match(/\b[\w']+\b/g) || [];
 
-        // Filter numbers if requested
+        // Filter numbers if requested (for frequency analysis only)
         if (!includeNums) {
           tokens = tokens.filter((t) => isNaN(t));
         }
 
         const totalWords = tokens.length;
-        document.getElementById("wordCount").textContent = totalWords;
-        document.getElementById("charCount").textContent = charCount;
-
-        // Reading time (approx 200 wpm)
-        const minutes = Math.ceil(totalWords / 200);
-        document.getElementById("readTime").textContent = `${minutes} min${
-          minutes !== 1 ? "s" : ""
-        }`;
 
         // Process tokens for frequency
         let processedTokens = tokens.map((t) =>
