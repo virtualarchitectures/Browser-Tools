@@ -41,11 +41,11 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 
 ### Text and documents
 
-- **[Link Finder](link-finder.html)** — extract URLs and email addresses from text with filtering, sorting, and export options
+- **[Identifier Extractor](identifier-extractor.html)** — extract and analyze URLs, email addresses, IPv4/IPv6 addresses, phone numbers, MAC addresses, and API keys from text with filtering, sorting, and export options
 - **[OCR Reader](ocr-reader.html)** — extract text from images and PDF files using optical character recognition with side-by-side preview
 - **[PDF Metadata Viewer](pdf-metadata.html)** — extract and view PDF metadata including title, author, dates, permissions, and security settings
 - **[Text Diff Tool](text-diff.html)** — compare two text blocks and highlight added and removed content
-- **[Text Redactor](text-redactor.html)** — automatically detect and redact personally identifiable information (emails, phones, IPs) from text files
+
 - **[Word Frequency Counter](word-frequency.html)** — analyze word frequency, discover common phrases with n-grams (bigrams, trigrams, 4-grams, 5-grams), and get detailed text statistics with customisable stop word filtering
 
 ### Web development
