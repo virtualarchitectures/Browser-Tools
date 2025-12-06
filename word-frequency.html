@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Word Frequency Counter</title>
+    <title>Word Frequency Analysis</title>
     <style>
       :root {
         --primary-color: #0366d6;
@@ -164,7 +164,7 @@
 
       .analysis-layout {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        grid-template-columns: 1fr 1.3fr 0.7fr;
         gap: 2rem;
       }
 
@@ -182,6 +182,7 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+        min-height: 40px;
       }
 
       .table-search {
@@ -252,12 +253,11 @@
       <a href="index.html" class="back-link">← Back to Browser Tools</a>
 
       <header>
-        <h1>Word Frequency Counter</h1>
+        <h1>Word Frequency Analysis</h1>
         <p>
-          Analyze word frequency, discover common phrases with n-grams, and get
+          Analyse word frequency, discover common phrases with n-grams, and get
           detailed text statistics. Count words, characters, and sentences with
-          customizable filtering options. All processing happens locally in your
-          browser.
+          filtering options. All processing happens locally in your browser.
         </p>
       </header>
 
@@ -368,27 +368,41 @@
             </div>
           </div>
 
-          <!-- Bigrams -->
+          <!-- N-grams -->
           <div class="table-container">
             <div class="table-header">
-              <span>Bigrams</span>
-              <span style="font-size: 0.8em; color: var(--secondary-text)"
-                >2-word phrases</span
+              <select
+                id="ngramSelect"
+                style="
+                  padding: 6px 8px;
+                  border: 1px solid var(--border-color);
+                  border-radius: 4px;
+                  font-family: inherit;
+                  font-size: 14px;
+                  font-weight: 600;
+                  background-color: white;
+                "
               >
+                <option value="2">Bigrams (2-word)</option>
+                <option value="3">Trigrams (3-word)</option>
+                <option value="4">4-grams (4-word)</option>
+                <option value="5">5-grams (5-word)</option>
+              </select>
             </div>
             <div class="table-search">
               <input
                 type="text"
-                id="searchBigrams"
-                placeholder="Search bigrams..."
+                id="searchNgrams"
+                placeholder="Search phrases..."
               />
             </div>
             <div style="max-height: 400px; overflow-y: auto">
-              <table id="bigramTable">
+              <table id="ngramTable">
                 <thead>
                   <tr>
                     <th>Phrase</th>
                     <th>Count</th>
+                    <th>%</th>
                   </tr>
                 </thead>
                 <tbody></tbody>
@@ -396,29 +410,23 @@
             </div>
           </div>
 
-          <!-- Trigrams -->
+          <!-- Stop Words List -->
           <div class="table-container">
             <div class="table-header">
-              <span>Trigrams</span>
+              <span>Stop Words</span>
               <span style="font-size: 0.8em; color: var(--secondary-text)"
-                >3-word phrases</span
+                >Alphabetical list</span
               >
             </div>
             <div class="table-search">
               <input
                 type="text"
-                id="searchTrigrams"
-                placeholder="Search trigrams..."
+                id="searchStopWords"
+                placeholder="Search stop words..."
               />
             </div>
             <div style="max-height: 400px; overflow-y: auto">
-              <table id="trigramTable">
-                <thead>
-                  <tr>
-                    <th>Phrase</th>
-                    <th>Count</th>
-                  </tr>
-                </thead>
+              <table id="stopWordsTable">
                 <tbody></tbody>
               </table>
             </div>
@@ -438,8 +446,8 @@
 
       // Search inputs
       const searchWords = document.getElementById("searchWords");
-      const searchBigrams = document.getElementById("searchBigrams");
-      const searchTrigrams = document.getElementById("searchTrigrams");
+      const searchNgrams = document.getElementById("searchNgrams");
+      const searchStopWords = document.getElementById("searchStopWords");
 
       // Options
       const ignoreCaseCheckbox = document.getElementById("ignoreCase");
@@ -447,6 +455,7 @@
         document.getElementById("removeStopWords");
       const includeNumbersCheckbox = document.getElementById("includeNumbers");
       const maxResultsInput = document.getElementById("maxResults");
+      const ngramSelect = document.getElementById("ngramSelect");
 
       // Common English Stop Words
       const STOP_WORDS = new Set([
@@ -645,12 +654,26 @@
       searchWords.addEventListener("input", (e) =>
         filterTable("wordFreqTable", e.target.value)
       );
-      searchBigrams.addEventListener("input", (e) =>
-        filterTable("bigramTable", e.target.value)
+      searchNgrams.addEventListener("input", (e) =>
+        filterTable("ngramTable", e.target.value)
       );
-      searchTrigrams.addEventListener("input", (e) =>
-        filterTable("trigramTable", e.target.value)
+      searchStopWords.addEventListener("input", (e) =>
+        filterTable("stopWordsTable", e.target.value)
       );
+
+      // N-gram selector change
+      ngramSelect.addEventListener("change", () => {
+        if (inputText.value.trim()) {
+          analyzeText();
+          // Reapply the search filter if one exists
+          if (searchNgrams.value) {
+            filterTable("ngramTable", searchNgrams.value);
+          }
+        }
+      });
+
+      // Initialize stop words table on page load
+      renderStopWordsTable();
 
       function handleFile(file) {
         fileStatus.textContent = file.name;
@@ -671,6 +694,7 @@
         const removeStop = removeStopWordsCheckbox.checked;
         const includeNums = includeNumbersCheckbox.checked;
         const maxResults = parseInt(maxResultsInput.value) || 100;
+        const ngramSize = parseInt(ngramSelect.value) || 2;
 
         // Basic Stats
         const charCount = text.length;
@@ -723,12 +747,10 @@
 
         renderTable("wordFreqTable", sortedFreq, totalWords);
 
-        // N-Grams
-        const bigrams = generateNGrams(processedTokens, 2);
-        const trigrams = generateNGrams(processedTokens, 3);
-
-        renderTable("bigramTable", bigrams.slice(0, maxResults));
-        renderTable("trigramTable", trigrams.slice(0, maxResults));
+        // N-Grams based on user selection
+        const ngrams = generateNGrams(processedTokens, ngramSize);
+        const totalNgrams = ngrams.reduce((sum, [, count]) => sum + count, 0);
+        renderTable("ngramTable", ngrams.slice(0, maxResults), totalNgrams);
 
         resultsSection.classList.remove("hidden");
       }
@@ -791,6 +813,20 @@
               row.style.display = "none";
             }
           }
+        });
+      }
+
+      function renderStopWordsTable() {
+        const tbody = document.querySelector("#stopWordsTable tbody");
+        tbody.innerHTML = "";
+
+        // Convert Set to sorted array
+        const sortedStopWords = Array.from(STOP_WORDS).sort();
+
+        sortedStopWords.forEach((word) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `<td>${escapeHtml(word)}</td>`;
+          tbody.appendChild(row);
         });
       }
     </script>
