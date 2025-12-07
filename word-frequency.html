@@ -353,7 +353,20 @@
         </div>
       </div>
 
-      <div id="results" class="hidden">
+      <div id="results">
+        <p
+          style="
+            margin: 0 0 16px 0;
+            font-size: 14px;
+            color: #586069;
+            line-height: 1.5;
+          "
+        >
+          <strong>Note:</strong> Top Words counts each word form separately
+          (e.g., "run" and "running" are distinct). N-grams count overlapping
+          phrases separately (e.g., "the cat sat" contains both "the cat" and
+          "cat sat").
+        </p>
         <div class="analysis-layout">
           <!-- Word Frequency -->
           <div class="table-container">
@@ -690,12 +703,19 @@
 
       clearFileBtn.addEventListener("click", () => {
         inputText.value = "";
-        resultsSection.classList.add("hidden");
         fileInput.value = "";
         fileStatus.textContent = "No file selected";
         document.getElementById("wordCount").textContent = 0;
         document.getElementById("charCount").textContent = 0;
         document.getElementById("sentenceCount").textContent = 0;
+
+        // Clear table contents
+        document.querySelector("#wordFreqTable tbody").innerHTML = "";
+        document.querySelector("#ngramTable tbody").innerHTML = "";
+
+        // Clear search inputs
+        searchWords.value = "";
+        searchNgrams.value = "";
       });
 
       keywordFileInput.addEventListener("change", (e) => {
