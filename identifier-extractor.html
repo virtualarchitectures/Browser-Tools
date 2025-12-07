@@ -408,19 +408,27 @@ Phone: (555) 123-4567"
         </div>
         <div class="stat-item">
           <div class="stat-number">
-            <span class="total" id="totalLinks">0</span>
-            <span class="arrow">→</span>
-            <span class="selected" id="selectedLinks">0</span>
-          </div>
-          <div class="stat-label">URLs</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-number">
             <span class="total" id="totalEmails">0</span>
             <span class="arrow">→</span>
             <span class="selected" id="selectedEmails">0</span>
           </div>
           <div class="stat-label">Emails</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">
+            <span class="total" id="totalPhone">0</span>
+            <span class="arrow">→</span>
+            <span class="selected" id="selectedPhone">0</span>
+          </div>
+          <div class="stat-label">Phone</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">
+            <span class="total" id="totalLinks">0</span>
+            <span class="arrow">→</span>
+            <span class="selected" id="selectedLinks">0</span>
+          </div>
+          <div class="stat-label">URLs</div>
         </div>
         <div class="stat-item">
           <div class="stat-number">
@@ -437,14 +445,6 @@ Phone: (555) 123-4567"
             <span class="selected" id="selectedIPv6">0</span>
           </div>
           <div class="stat-label">IPv6</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-number">
-            <span class="total" id="totalPhone">0</span>
-            <span class="arrow">→</span>
-            <span class="selected" id="selectedPhone">0</span>
-          </div>
-          <div class="stat-label">Phone</div>
         </div>
         <div class="stat-item">
           <div class="stat-number">
@@ -472,7 +472,7 @@ Phone: (555) 123-4567"
           <label for="includeEmails">Email</label>
         </div>
         <div class="option-group">
-          <input type="checkbox" id="includePhone" />
+          <input type="checkbox" id="includePhone" checked />
           <label for="includePhone">Phone</label>
         </div>
         <div class="option-group">
@@ -480,19 +480,19 @@ Phone: (555) 123-4567"
           <label for="includeLinks">URL</label>
         </div>
         <div class="option-group">
-          <input type="checkbox" id="includeIPv4" />
+          <input type="checkbox" id="includeIPv4" checked />
           <label for="includeIPv4">IPv4</label>
         </div>
         <div class="option-group">
-          <input type="checkbox" id="includeIPv6" />
+          <input type="checkbox" id="includeIPv6" checked />
           <label for="includeIPv6">IPv6</label>
         </div>
         <div class="option-group">
-          <input type="checkbox" id="includeMAC" />
+          <input type="checkbox" id="includeMAC" checked />
           <label for="includeMAC">MAC</label>
         </div>
         <div class="option-group">
-          <input type="checkbox" id="includeAPIKey" />
+          <input type="checkbox" id="includeAPIKey" checked />
           <label for="includeAPIKey">API Key</label>
         </div>
       </div>
@@ -531,41 +531,42 @@ Phone: (555) 123-4567"
 
       const PATTERNS = {
         url: {
-          regex:
-            /https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*[a-zA-Z0-9@:%_\+~#?&\/=])?/g,
+          pattern:
+            "https?:\\/\\/(?:www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b(?:[-a-zA-Z0-9()@:%_\\+.~#?&\\/=]*[a-zA-Z0-9@:%_\\+~#?&\\/=])?",
           name: "URL",
           type: "link",
         },
         email: {
-          regex: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
+          pattern: "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}",
           name: "EMAIL",
           type: "email",
         },
         ipv4: {
-          regex:
-            /\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b/g,
+          pattern:
+            "\\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\b",
           name: "IPV4",
           type: "ipv4",
         },
         ipv6: {
-          regex:
-            /(?:(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}:){1,7}:|(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}:){1,5}(?::[0-9a-fA-F]{1,4}){1,2}|(?:[0-9a-fA-F]{1,4}:){1,4}(?::[0-9a-fA-F]{1,4}){1,3}|(?:[0-9a-fA-F]{1,4}:){1,3}(?::[0-9a-fA-F]{1,4}){1,4}|(?:[0-9a-fA-F]{1,4}:){1,2}(?::[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:(?::[0-9a-fA-F]{1,4}){1,6}|:(?:(?::[0-9a-fA-F]{1,4}){1,7}|:))(?=\s|$|[^\w:])/g,
+          pattern:
+            "(?:(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}:){1,7}:|(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}:){1,5}(?::[0-9a-fA-F]{1,4}){1,2}|(?:[0-9a-fA-F]{1,4}:){1,4}(?::[0-9a-fA-F]{1,4}){1,3}|(?:[0-9a-fA-F]{1,4}:){1,3}(?::[0-9a-fA-F]{1,4}){1,4}|(?:[0-9a-fA-F]{1,4}:){1,2}(?::[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:(?::[0-9a-fA-F]{1,4}){1,6}|:(?:(?::[0-9a-fA-F]{1,4}){1,7}|:))(?=\\s|$|[^\\w:])",
           name: "IPV6",
           type: "ipv6",
         },
         phone: {
-          regex: /(?:\+?\d{1,2}\s?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}\b/g,
+          pattern:
+            "(?:\\+?\\d{1,2}\\s?)?\\(?\\d{3}\\)?[\\s.-]?\\d{3}[\\s.-]?\\d{4}\\b",
           name: "PHONE",
           type: "phone",
         },
         mac: {
-          regex: /\b(?:[0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}\b/g,
+          pattern: "\\b(?:[0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}\\b",
           name: "MAC_ADDRESS",
           type: "mac",
         },
         apiKey: {
-          regex:
-            /\b(?:sk_live_|pk_live_|sk_test_|pk_test_|AIza|ya29\.|AKIA|ghp_|gho_|github_pat_)[a-zA-Z0-9_\-]{20,}/g,
+          pattern:
+            "\\b(?:sk_live_|pk_live_|sk_test_|pk_test_|AIza|ya29\\.|AKIA|ghp_|gho_|github_pat_)[a-zA-Z0-9_\\-]{20,}",
           name: "API_KEY",
           type: "apiKey",
         },
@@ -635,10 +636,10 @@ Phone: (555) 123-4567"
       function extractAllPatterns(text) {
         const found = [];
 
-        // Extract URLs
-        const urlRegex = new RegExp(PATTERNS.url.regex);
-        let match;
-        while ((match = urlRegex.exec(text)) !== null) {
+        // Extract URLs - create fresh regex each time
+        const urlRegex = new RegExp(PATTERNS.url.pattern, "g");
+        const urlMatches = text.matchAll(urlRegex);
+        for (const match of urlMatches) {
           found.push({
             value: match[0],
             position: match.index,
@@ -646,9 +647,10 @@ Phone: (555) 123-4567"
           });
         }
 
-        // Extract Emails
-        const emailRegex = new RegExp(PATTERNS.email.regex);
-        while ((match = emailRegex.exec(text)) !== null) {
+        // Extract Emails - create fresh regex each time
+        const emailRegex = new RegExp(PATTERNS.email.pattern, "g");
+        const emailMatches = text.matchAll(emailRegex);
+        for (const match of emailMatches) {
           found.push({
             value: match[0],
             position: match.index,
@@ -656,9 +658,10 @@ Phone: (555) 123-4567"
           });
         }
 
-        // Extract IPv4
-        const ipv4Regex = new RegExp(PATTERNS.ipv4.regex);
-        while ((match = ipv4Regex.exec(text)) !== null) {
+        // Extract IPv4 - create fresh regex each time
+        const ipv4Regex = new RegExp(PATTERNS.ipv4.pattern, "g");
+        const ipv4Matches = text.matchAll(ipv4Regex);
+        for (const match of ipv4Matches) {
           found.push({
             value: match[0],
             position: match.index,
@@ -666,9 +669,10 @@ Phone: (555) 123-4567"
           });
         }
 
-        // Extract IPv6
-        const ipv6Regex = new RegExp(PATTERNS.ipv6.regex);
-        while ((match = ipv6Regex.exec(text)) !== null) {
+        // Extract IPv6 - create fresh regex each time
+        const ipv6Regex = new RegExp(PATTERNS.ipv6.pattern, "g");
+        const ipv6Matches = text.matchAll(ipv6Regex);
+        for (const match of ipv6Matches) {
           found.push({
             value: match[0],
             position: match.index,
@@ -676,9 +680,10 @@ Phone: (555) 123-4567"
           });
         }
 
-        // Extract Phone
-        const phoneRegex = new RegExp(PATTERNS.phone.regex);
-        while ((match = phoneRegex.exec(text)) !== null) {
+        // Extract Phone - create fresh regex each time
+        const phoneRegex = new RegExp(PATTERNS.phone.pattern, "g");
+        const phoneMatches = text.matchAll(phoneRegex);
+        for (const match of phoneMatches) {
           found.push({
             value: match[0],
             position: match.index,
@@ -686,9 +691,10 @@ Phone: (555) 123-4567"
           });
         }
 
-        // Extract MAC
-        const macRegex = new RegExp(PATTERNS.mac.regex);
-        while ((match = macRegex.exec(text)) !== null) {
+        // Extract MAC - create fresh regex each time
+        const macRegex = new RegExp(PATTERNS.mac.pattern, "g");
+        const macMatches = text.matchAll(macRegex);
+        for (const match of macMatches) {
           found.push({
             value: match[0],
             position: match.index,
@@ -696,9 +702,10 @@ Phone: (555) 123-4567"
           });
         }
 
-        // Extract API Keys
-        const apiKeyRegex = new RegExp(PATTERNS.apiKey.regex);
-        while ((match = apiKeyRegex.exec(text)) !== null) {
+        // Extract API Keys - create fresh regex each time
+        const apiKeyRegex = new RegExp(PATTERNS.apiKey.pattern, "g");
+        const apiKeyMatches = text.matchAll(apiKeyRegex);
+        for (const match of apiKeyMatches) {
           found.push({
             value: match[0],
             position: match.index,
@@ -1048,14 +1055,22 @@ Phone: (555) 123-4567"
        * Extract and display links (called when text changes)
        */
       function extractAndDisplay() {
-        const text = textInput.value.trim();
+        // Force a fresh read of the textarea value
+        const text = document.getElementById("textInput").value;
 
-        if (!text) {
+        if (!text || text.trim() === "") {
+          allExtractedItems = [];
+          extractedLinks = [];
           resultsSection.classList.add("hidden");
           linksSection.classList.add("hidden");
-          allExtractedItems = [];
+          // Clear the display
+          linksContainer.innerHTML =
+            '<div class="empty-state">No items found in the text.</div>';
           return;
         }
+
+        // Reset state before extraction
+        allExtractedItems = [];
 
         // Extract ALL items from text (this happens once per text change)
         allExtractedItems = extractAllPatterns(text);
@@ -1072,10 +1087,6 @@ Phone: (555) 123-4567"
        * Update display with current filter options (does NOT re-extract)
        */
       function updateDisplay() {
-        if (allExtractedItems.length === 0) {
-          return;
-        }
-
         const options = {
           includeLinks: includeLinksCheckbox.checked,
           includeEmails: includeEmailsCheckbox.checked,
@@ -1094,9 +1105,18 @@ Phone: (555) 123-4567"
         // Process items (remove duplicates, sort)
         extractedLinks = processLinks(filteredItems, removeDuplicates, sortBy);
 
-        // Display results
+        // Always display results and update stats (even if empty)
         displayLinks(extractedLinks);
         updateStats(allExtractedItems, extractedLinks);
+
+        // Hide/show sections based on whether we have items
+        if (allExtractedItems.length === 0) {
+          resultsSection.classList.add("hidden");
+          linksSection.classList.add("hidden");
+        } else {
+          resultsSection.classList.remove("hidden");
+          linksSection.classList.remove("hidden");
+        }
       }
 
       /**
@@ -1166,9 +1186,22 @@ Phone: (555) 123-4567"
         }
       });
 
-      // Auto-extract on input change
-      textInput.addEventListener("input", () => {
-        extractAndDisplay();
+      // Auto-extract on input change - use multiple events to ensure it fires
+      const handleTextChange = () => {
+        // Use requestAnimationFrame to ensure DOM has updated
+        requestAnimationFrame(() => {
+          extractAndDisplay();
+        });
+      };
+
+      textInput.addEventListener("input", handleTextChange);
+      textInput.addEventListener("keyup", handleTextChange);
+      textInput.addEventListener("change", handleTextChange);
+      textInput.addEventListener("paste", () => {
+        setTimeout(handleTextChange, 10);
+      });
+      textInput.addEventListener("cut", () => {
+        setTimeout(handleTextChange, 10);
       });
 
       // Update display when checkboxes change
