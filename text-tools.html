@@ -1,0 +1,861 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Text Tools</title>
+        <style>
+            /* =========================
+               Reset and Base Styles
+               ========================= */
+            * {
+                box-sizing: border-box;
+            }
+            body {
+                font-family:
+                    Helvetica,
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    Arial,
+                    sans-serif;
+                line-height: 1.6;
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 20px;
+                color: #24292e;
+                background: #ffffff;
+            }
+            h1 {
+                border-bottom: 1px solid #eaecef;
+                padding-bottom: 0.3em;
+                margin-top: 0;
+                font-size: 32px;
+                font-weight: 600;
+            }
+
+            /* =========================
+               Layout
+               ========================= */
+            .container {
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            @media (min-width: 768px) {
+                .container {
+                    grid-template-columns: 300px 1fr;
+                }
+            }
+
+            /* =========================
+               Toolbar and Buttons
+               ========================= */
+            .toolbar {
+                display: flex;
+                flex-direction: column;
+                gap: 16px;
+            }
+            .tool-group {
+                background: #f6f8fa;
+                padding: 12px;
+                border-radius: 6px;
+                border: 1px solid #e1e4e8;
+            }
+            .tool-group h3 {
+                margin: 0 0 10px 0;
+                font-size: 14px;
+                font-weight: 600;
+                color: #24292e;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+            .tool-group h4 {
+                margin: 10px 0 6px 0;
+                font-size: 12px;
+                font-weight: 600;
+                color: #586069;
+                text-transform: uppercase;
+                letter-spacing: 0.3px;
+            }
+            .tool-group h4:first-of-type {
+                margin-top: 0;
+            }
+            .tool-buttons {
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+            }
+            .tool-buttons.two-row {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 6px;
+            }
+            .btn {
+                background: #fafbfc;
+                color: #24292e;
+                padding: 6px 12px;
+                border-radius: 6px;
+                border: 1px solid rgba(27, 31, 35, 0.15);
+                cursor: pointer;
+                font-size: 14px;
+                line-height: 20px;
+                text-decoration: none;
+                font-family:
+                    Helvetica,
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    Arial,
+                    sans-serif;
+                text-align: left;
+            }
+            .btn:hover {
+                background: #f3f4f6;
+            }
+            .btn.primary {
+                background: #0366d6;
+                color: #fff;
+                border: 1px solid rgba(27, 31, 35, 0.15);
+            }
+            .btn.primary:hover {
+                background: #0256c5;
+            }
+            .btn.danger {
+                background: #fafbfc;
+                color: #24292e;
+                border: 1px solid rgba(27, 31, 35, 0.15);
+            }
+            .btn.danger:hover {
+                background: #f3f4f6;
+            }
+
+            /* =========================
+               Text Area Panel
+               ========================= */
+            .text-panel {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+            }
+            .text-container {
+                background: #f6f8fa;
+                padding: 16px;
+                border-radius: 6px;
+                border: 1px solid #e1e4e8;
+            }
+            textarea {
+                width: 100%;
+                min-height: 400px;
+                font-family:
+                    "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
+                    monospace;
+                font-size: 14px;
+                padding: 12px;
+                border: 1px solid #e1e4e8;
+                border-radius: 6px;
+                background: #ffffff;
+                color: #24292e;
+                resize: vertical;
+            }
+            textarea:focus {
+                outline: none;
+                border-color: #0366d6;
+            }
+
+            /* =========================
+               Stats and Info
+               ========================= */
+            .stats {
+                display: flex;
+                gap: 16px;
+                flex-wrap: wrap;
+                padding: 12px;
+                background: #ffffff;
+                border-radius: 6px;
+                border: 1px solid #e1e4e8;
+                font-size: 13px;
+                color: #586069;
+            }
+            .stat {
+                display: flex;
+                gap: 4px;
+            }
+            .stat strong {
+                color: #24292e;
+            }
+
+            /* =========================
+               Actions Bar
+               ========================= */
+            .actions {
+                display: flex;
+                gap: 8px;
+                justify-content: space-between;
+                flex-wrap: wrap;
+            }
+
+            /* =========================
+               Modal for Find & Replace
+               ========================= */
+            .modal {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 1000;
+                align-items: center;
+                justify-content: center;
+            }
+            .modal.active {
+                display: flex;
+            }
+            .modal-content {
+                background: #ffffff;
+                padding: 24px;
+                border-radius: 6px;
+                border: 1px solid #e1e4e8;
+                max-width: 500px;
+                width: 90%;
+            }
+            .modal-content h2 {
+                margin-top: 0;
+                font-size: 20px;
+                font-weight: 600;
+                color: #24292e;
+            }
+            .form-group {
+                margin-bottom: 16px;
+            }
+            .form-group label {
+                display: block;
+                font-size: 14px;
+                font-weight: 600;
+                color: #24292e;
+                margin-bottom: 6px;
+            }
+            .form-group input[type="text"] {
+                width: 100%;
+                padding: 8px 12px;
+                font-size: 14px;
+                border: 1px solid #e1e4e8;
+                border-radius: 6px;
+                font-family:
+                    Helvetica,
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    Arial,
+                    sans-serif;
+            }
+            .form-group input[type="text"]:focus {
+                outline: none;
+                border-color: #0366d6;
+            }
+            .form-group input[type="checkbox"] {
+                margin-right: 6px;
+            }
+            .modal-actions {
+                display: flex;
+                gap: 8px;
+                justify-content: flex-end;
+                margin-top: 20px;
+            }
+
+            /* =========================
+               Split Modal
+               ========================= */
+            .split-options {
+                display: flex;
+                gap: 8px;
+                margin-top: 8px;
+            }
+            .split-options input[type="text"] {
+                flex: 1;
+            }
+
+            /* =========================
+               Utilities
+               ========================= */
+            .back-link {
+                display: inline-block;
+                margin-bottom: 16px;
+                color: #0366d6;
+                text-decoration: none;
+                font-size: 14px;
+            }
+            .back-link:hover {
+                text-decoration: underline;
+            }
+            .info {
+                font-size: 13px;
+                color: #586069;
+                padding: 12px;
+                background: #f6f8fa;
+                border-radius: 6px;
+                border: 1px solid #e1e4e8;
+            }
+        </style>
+    </head>
+    <body>
+        <!-- =========================
+             HTML Structure
+             ========================= -->
+        <a href="index.html" class="back-link">← Back to Tools</a>
+
+        <h1>Text Tools</h1>
+
+        <div class="container">
+            <!-- Toolbar with grouped functions -->
+            <div class="toolbar">
+                <!-- Find & Replace -->
+                <div class="tool-group">
+                    <h3>Find & Replace</h3>
+                    <div class="tool-buttons">
+                        <button class="btn" onclick="showFindReplace()">Find & Replace</button>
+                    </div>
+                </div>
+
+                <!-- Clean & Format -->
+                <div class="tool-group">
+                    <h3>Clean & Format</h3>
+                    <div class="tool-buttons">
+                        <button class="btn" onclick="cleanWhitespace('trim')">Trim Lines</button>
+                        <button class="btn" onclick="cleanWhitespace('empty')">Remove Empty Lines</button>
+                        <button class="btn" onclick="cleanWhitespace('compress')">Compress Whitespace</button>
+                        <button class="btn" onclick="removeDuplicates()">Remove Duplicates</button>
+                    </div>
+                </div>
+
+                <!-- Join/Split -->
+                <div class="tool-group">
+                    <h3>Join/Split</h3>
+                    <div class="tool-buttons">
+                        <button class="btn" onclick="showJoinSplit()">Join/Split Lines</button>
+                    </div>
+                </div>
+
+                <!-- Sort & Order -->
+                <div class="tool-group">
+                    <h3>Sort & Order</h3>
+                    <h4>Lines</h4>
+                    <div class="tool-buttons">
+                        <button class="btn" onclick="sortLines('asc')">Sort A→Z</button>
+                        <button class="btn" onclick="sortLines('desc')">Sort Z→A</button>
+                        <button class="btn" onclick="sortLines('length')">Sort by Length</button>
+                        <button class="btn" onclick="reverseText('lines')">Reverse Lines</button>
+                    </div>
+                    <h4>Text</h4>
+                    <div class="tool-buttons">
+                        <button class="btn" onclick="reverseText('all')">Reverse All Text</button>
+                    </div>
+                </div>
+
+                <!-- Case Transformations -->
+                <div class="tool-group">
+                    <h3>Case</h3>
+                    <div class="tool-buttons two-row">
+                        <button class="btn" onclick="transformCase('upper')">UPPERCASE</button>
+                        <button class="btn" onclick="transformCase('lower')">lowercase</button>
+                        <button class="btn" onclick="transformCase('title')">Title Case</button>
+                        <button class="btn" onclick="transformCase('sentence')">Sentence case</button>
+                        <button class="btn" onclick="transformCase('camel')">camelCase</button>
+                        <button class="btn" onclick="transformCase('pascal')">PascalCase</button>
+                        <button class="btn" onclick="transformCase('snake')">snake_case</button>
+                        <button class="btn" onclick="transformCase('kebab')">kebab-case</button>
+                    </div>
+                </div>
+
+                <!-- Encode & Decode -->
+                <div class="tool-group">
+                    <h3>Encode & Decode</h3>
+                    <div class="tool-buttons two-row">
+                        <button class="btn" onclick="encodeBase64()">Base64 Encode</button>
+                        <button class="btn" onclick="decodeBase64()">Base64 Decode</button>
+                        <button class="btn" onclick="encodeURL()">URL Encode</button>
+                        <button class="btn" onclick="decodeURL()">URL Decode</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main text area panel -->
+            <div class="text-panel">
+                <div class="stats">
+                    <div class="stat">
+                        <span>Total Lines:</span>
+                        <strong id="lineCount">0</strong>
+                    </div>
+                    <div class="stat">
+                        <span>Empty Lines:</span>
+                        <strong id="emptyLineCount">0</strong>
+                    </div>
+                    <div class="stat">
+                        <span>Words:</span>
+                        <strong id="wordCount">0</strong>
+                    </div>
+                    <div class="stat">
+                        <span>Characters:</span>
+                        <strong id="charCount">0</strong>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <div>
+                        <input type="file" id="fileInput" style="display: none;" accept="text/*">
+                        <label for="fileInput" class="btn primary">Load File</label>
+                    </div>
+                    <button class="btn" onclick="clearText()">Clear</button>
+                </div>
+
+                <div class="text-container">
+                    <textarea id="textInput" placeholder="Paste or type your text here..."></textarea>
+                </div>
+
+                <div class="actions">
+                    <button class="btn primary" onclick="copyToClipboard()">Copy</button>
+                    <button class="btn primary" onclick="downloadText()">Download</button>
+                </div>
+
+                <div class="info">
+                    <strong>Tip:</strong> Select a tool from the left to transform your text. All operations happen instantly in your browser.
+                </div>
+            </div>
+        </div>
+
+        <!-- Find & Replace Modal -->
+        <div id="findReplaceModal" class="modal">
+            <div class="modal-content">
+                <h2>Find & Replace</h2>
+                <div class="form-group">
+                    <label for="findText">Find:</label>
+                    <input type="text" id="findText" placeholder="Text to find">
+                </div>
+                <div class="form-group">
+                    <label for="replaceText">Replace with:</label>
+                    <input type="text" id="replaceText" placeholder="Replacement text">
+                </div>
+                <div class="form-group">
+                    <label></label>
+                        <input type="checkbox" id="caseSensitive">
+                        Case sensitive
+                    </label>
+                    <label style="margin-left: 16px;">
+                        <input type="checkbox" id="useRegex">
+                        Use regex
+                    </label>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn" onclick="closeFindReplace()">Cancel</button>
+                    <button class="btn primary" onclick="executeReplace()">Replace All</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Join/Split Modal -->
+        <div id="joinSplitModal" class="modal">
+            <div class="modal-content">
+                <h2>Join/Split Lines</h2>
+                <div class="form-group">
+                    <label>
+                        <input type="radio" name="joinSplitMode" value="join" checked>
+                        Join lines with delimiter
+                    </label>
+                    <div class="split-options">
+                        <input type="text" id="joinDelimiter" placeholder="Delimiter (e.g., , or space)" value=", ">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="radio" name="joinSplitMode" value="split">
+                        Split text by delimiter
+                    </label>
+                    <div class="split-options">
+                        <input type="text" id="splitDelimiter" placeholder="Delimiter (e.g., , or |)" value=",">
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn" onclick="closeJoinSplit()">Cancel</button>
+                    <button class="btn primary" onclick="executeJoinSplit()">Apply</button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            /* =========================
+               JavaScript
+               ========================= */
+
+            // State variables
+            const textInput = document.getElementById('textInput');
+            const charCount = document.getElementById('charCount');
+            const wordCount = document.getElementById('wordCount');
+            const lineCount = document.getElementById('lineCount');
+            const emptyLineCount = document.getElementById('emptyLineCount');
+            const fileInput = document.getElementById('fileInput');
+
+            // =========================
+            // Utility Functions
+            // =========================
+
+            function getText() {
+                return textInput.value;
+            }
+
+            function setText(text) {
+                textInput.value = text;
+                updateStats();
+            }
+
+            function updateStats() {
+                const text = getText();
+                const lines = text ? text.split('\n') : [];
+                const emptyLines = lines.filter(line => line.trim() === '').length;
+
+                charCount.textContent = text.length;
+                wordCount.textContent = text.trim() ? text.trim().split(/\s+/).length : 0;
+                lineCount.textContent = lines.length;
+                emptyLineCount.textContent = emptyLines;
+            }
+
+            // =========================
+            // Case Transformations
+            // =========================
+
+            function transformCase(type) {
+                let text = getText();
+
+                switch(type) {
+                    case 'upper':
+                        text = text.toUpperCase();
+                        break;
+                    case 'lower':
+                        text = text.toLowerCase();
+                        break;
+                    case 'title':
+                        text = text.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+                        break;
+                    case 'sentence':
+                        text = text.toLowerCase().replace(/(^\w|\.\s+\w)/g, c => c.toUpperCase());
+                        break;
+                    case 'camel':
+                        text = text.trim()
+                            .replace(/[^a-zA-Z0-9]+(.)/g, (m, c) => c.toUpperCase())
+                            .replace(/^[A-Z]/, c => c.toLowerCase());
+                        break;
+                    case 'pascal':
+                        text = text.trim()
+                            .replace(/[^a-zA-Z0-9]+(.)/g, (m, c) => c.toUpperCase())
+                            .replace(/^[a-z]/, c => c.toUpperCase());
+                        break;
+                    case 'snake':
+                        text = text.trim()
+                            .replace(/[^a-zA-Z0-9]+/g, '_')
+                            .replace(/([a-z])([A-Z])/g, '$1_$2')
+                            .toLowerCase()
+                            .replace(/^_+|_+$/g, '');
+                        break;
+                    case 'kebab':
+                        text = text.trim()
+                            .replace(/[^a-zA-Z0-9]+/g, '-')
+                            .replace(/([a-z])([A-Z])/g, '$1-$2')
+                            .toLowerCase()
+                            .replace(/^-+|-+$/g, '');
+                        break;
+                }
+
+                setText(text);
+            }
+
+            // =========================
+            // Sort & Order Functions
+            // =========================
+
+            function sortLines(mode) {
+                const text = getText();
+                const lines = text.split('\n');
+
+                switch(mode) {
+                    case 'asc':
+                        lines.sort((a, b) => a.localeCompare(b));
+                        break;
+                    case 'desc':
+                        lines.sort((a, b) => b.localeCompare(a));
+                        break;
+                    case 'length':
+                        lines.sort((a, b) => a.length - b.length);
+                        break;
+                }
+
+                setText(lines.join('\n'));
+            }
+
+            function reverseText(mode) {
+                const text = getText();
+
+                switch(mode) {
+                    case 'all':
+                        setText(text.split('').reverse().join(''));
+                        break;
+                    case 'lines':
+                        setText(text.split('\n').reverse().join('\n'));
+                        break;
+                }
+            }
+
+            // =========================
+            // Clean & Format Functions
+            // =========================
+
+            function cleanWhitespace(mode) {
+                let text = getText();
+
+                switch(mode) {
+                    case 'trim':
+                        text = text.split('\n').map(line => line.trim()).join('\n');
+                        break;
+                    case 'empty':
+                        text = text.split('\n').filter(line => line.trim()).join('\n');
+                        break;
+                    case 'compress':
+                        text = text.replace(/[ \t]+/g, ' ').replace(/\n\s*\n\s*\n+/g, '\n\n');
+                        break;
+                }
+
+                setText(text);
+            }
+
+            function removeDuplicates() {
+                const text = getText();
+                const lines = text.split('\n');
+                const unique = [...new Set(lines)];
+                setText(unique.join('\n'));
+            }
+
+            // =========================
+            // Encode & Decode Functions
+            // =========================
+
+            function encodeBase64() {
+                try {
+                    const text = getText();
+                    const encoded = btoa(unescape(encodeURIComponent(text)));
+                    setText(encoded);
+                } catch (error) {
+                    alert('Error encoding to Base64: ' + error.message);
+                }
+            }
+
+            function decodeBase64() {
+                try {
+                    const text = getText();
+                    const decoded = decodeURIComponent(escape(atob(text)));
+                    setText(decoded);
+                } catch (error) {
+                    alert('Error decoding Base64: Invalid Base64 string');
+                }
+            }
+
+            function encodeURL() {
+                const text = getText();
+                setText(encodeURIComponent(text));
+            }
+
+            function decodeURL() {
+                try {
+                    const text = getText();
+                    setText(decodeURIComponent(text));
+                } catch (error) {
+                    alert('Error decoding URL: Invalid URL encoding');
+                }
+            }
+
+            // =========================
+            // Find & Replace
+            // =========================
+
+            function showFindReplace() {
+                document.getElementById('findReplaceModal').classList.add('active');
+                document.getElementById('findText').focus();
+            }
+
+            function closeFindReplace() {
+                document.getElementById('findReplaceModal').classList.remove('active');
+            }
+
+            function executeReplace() {
+                const findText = document.getElementById('findText').value;
+                const replaceText = document.getElementById('replaceText').value;
+                const caseSensitive = document.getElementById('caseSensitive').checked;
+                const useRegex = document.getElementById('useRegex').checked;
+
+                if (!findText) {
+                    alert('Please enter text to find');
+                    return;
+                }
+
+                let text = getText();
+
+                try {
+                    if (useRegex) {
+                        const flags = caseSensitive ? 'g' : 'gi';
+                        const regex = new RegExp(findText, flags);
+                        text = text.replace(regex, replaceText);
+                    } else {
+                        const searchStr = caseSensitive ? findText : findText.toLowerCase();
+                        const textToSearch = caseSensitive ? text : text.toLowerCase();
+
+                        let result = '';
+                        let lastIndex = 0;
+                        let index = textToSearch.indexOf(searchStr);
+
+                        while (index !== -1) {
+                            result += text.substring(lastIndex, index) + replaceText;
+                            lastIndex = index + findText.length;
+                            index = textToSearch.indexOf(searchStr, lastIndex);
+                        }
+                        result += text.substring(lastIndex);
+                        text = result;
+                    }
+
+                    setText(text);
+                    closeFindReplace();
+                } catch (error) {
+                    alert('Error in find & replace: ' + error.message);
+                }
+            }
+
+            // =========================
+            // Join/Split Functions
+            // =========================
+
+            function showJoinSplit() {
+                document.getElementById('joinSplitModal').classList.add('active');
+            }
+
+            function closeJoinSplit() {
+                document.getElementById('joinSplitModal').classList.remove('active');
+            }
+
+            function executeJoinSplit() {
+                const mode = document.querySelector('input[name="joinSplitMode"]:checked').value;
+                const text = getText();
+
+                if (mode === 'join') {
+                    const delimiter = document.getElementById('joinDelimiter').value;
+                    const lines = text.split('\n');
+                    setText(lines.join(delimiter));
+                } else {
+                    const delimiter = document.getElementById('splitDelimiter').value;
+                    if (!delimiter) {
+                        alert('Please enter a delimiter');
+                        return;
+                    }
+                    const parts = text.split(delimiter);
+                    setText(parts.join('\n'));
+                }
+
+                closeJoinSplit();
+            }
+
+            // =========================
+            // General Actions
+            // =========================
+
+            async function copyToClipboard() {
+                const text = getText();
+                try {
+                    await navigator.clipboard.writeText(text);
+                    const btn = event.target;
+                    const originalText = btn.textContent;
+                    btn.textContent = '✓ Copied!';
+                    setTimeout(() => {
+                        btn.textContent = originalText;
+                    }, 2000);
+                } catch (error) {
+                    alert('Failed to copy to clipboard');
+                }
+            }
+
+            function downloadText() {
+                const text = getText();
+                const blob = new Blob([text], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'text-output.txt';
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+
+            function clearText() {
+                if (getText() && !confirm('Are you sure you want to clear all text?')) {
+                    return;
+                }
+                setText('');
+            }
+
+            // =========================
+            // Event Listeners
+            // =========================
+
+            textInput.addEventListener('input', updateStats);
+
+            // Close modals on clicking outside
+            document.getElementById('findReplaceModal').addEventListener('click', (e) => {
+                if (e.target.id === 'findReplaceModal') {
+                    closeFindReplace();
+                }
+            });
+
+            document.getElementById('joinSplitModal').addEventListener('click', (e) => {
+                if (e.target.id === 'joinSplitModal') {
+                    closeJoinSplit();
+                }
+            });
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                // Close modals with Escape
+                if (e.key === 'Escape') {
+                    closeFindReplace();
+                    closeJoinSplit();
+                }
+
+                // Find & Replace with Ctrl/Cmd + F
+                if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                    e.preventDefault();
+                    showFindReplace();
+                }
+
+                // Execute replace with Enter in modal
+                if (e.key === 'Enter' && document.getElementById('findReplaceModal').classList.contains('active')) {
+                    executeReplace();
+                }
+            });
+
+            // =========================
+            // File Loading
+            // =========================
+
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        setText(event.target.result);
+                    };
+                    reader.readAsText(file);
+                }
+            });
+
+            // =========================
+            // Initialize
+            // =========================
+
+            updateStats();
+        </script>
+    </body>
+</html>
