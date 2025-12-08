@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Named Entity Recognition</title>
+    <style>
+      /* =========================
+         CSS Styles
+         ========================= */
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica,
+          Arial, sans-serif;
+        line-height: 1.6;
+        color: #24292e;
+        background-color: #f6f8fa;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+        padding: 30px;
+      }
+
+      h1 {
+        color: #24292e;
+        margin-bottom: 10px;
+        font-size: 2em;
+      }
+
+      .description {
+        color: #586069;
+        margin-bottom: 30px;
+        font-size: 1.1em;
+      }
+
+      .input-section {
+        margin-bottom: 30px;
+      }
+
+      label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: #24292e;
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 200px;
+        padding: 12px;
+        border: 2px solid #e1e4e8;
+        border-radius: 6px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica,
+          Arial, sans-serif;
+        font-size: 14px;
+        resize: vertical;
+        transition: border-color 0.2s;
+      }
+
+      textarea:focus {
+        outline: none;
+        border-color: #0366d6;
+      }
+
+      .button-group {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+        flex-wrap: wrap;
+      }
+
+      button {
+        background-color: #0366d6;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+
+      button:hover {
+        background-color: #0256c2;
+      }
+
+      button:active {
+        background-color: #024ea2;
+      }
+
+      button.secondary {
+        background-color: #6c757d;
+      }
+
+      button.secondary:hover {
+        background-color: #5a6268;
+      }
+
+      button:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+      }
+
+      .results-section {
+        margin-top: 40px;
+        display: none;
+      }
+
+      .results-section.visible {
+        display: block;
+      }
+
+      .results-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #e1e4e8;
+      }
+
+      .results-header h2 {
+        color: #24292e;
+        font-size: 1.5em;
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+        margin-bottom: 30px;
+        padding: 20px;
+        background-color: #f6f8fa;
+        border-radius: 6px;
+      }
+
+      .stat-item {
+        text-align: center;
+      }
+
+      .stat-value {
+        font-size: 2em;
+        font-weight: 700;
+        color: #0366d6;
+      }
+
+      .stat-label {
+        font-size: 0.9em;
+        color: #586069;
+        margin-top: 5px;
+      }
+
+      .entity-section {
+        margin-bottom: 30px;
+      }
+
+      .entity-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 15px;
+        padding: 10px;
+        background-color: #f6f8fa;
+        border-radius: 6px;
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .entity-header:hover {
+        background-color: #e1e4e8;
+      }
+
+      .entity-header h3 {
+        flex: 1;
+        color: #24292e;
+        font-size: 1.2em;
+      }
+
+      .entity-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        background-color: #0366d6;
+        color: white;
+        border-radius: 12px;
+        font-size: 0.9em;
+        font-weight: 600;
+      }
+
+      .entity-icon {
+        font-size: 1.2em;
+        transition: transform 0.2s;
+      }
+
+      .entity-icon.collapsed {
+        transform: rotate(-90deg);
+      }
+
+      .entity-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 10px;
+        padding-left: 15px;
+      }
+
+      .entity-list.collapsed {
+        display: none;
+      }
+
+      .entity-item {
+        padding: 8px 12px;
+        background-color: #fff;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        word-break: break-word;
+      }
+
+      .entity-item:hover {
+        border-color: #0366d6;
+        background-color: #f1f8ff;
+      }
+
+      .highlighted-text {
+        padding: 20px;
+        background-color: #f6f8fa;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+        line-height: 2;
+        margin-bottom: 30px;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+      }
+
+      .highlight {
+        padding: 2px 4px;
+        border-radius: 3px;
+        font-weight: 600;
+        cursor: help;
+      }
+
+      .highlight.person {
+        background-color: #ffd6e0;
+        color: #c41e3a;
+      }
+
+      .highlight.place {
+        background-color: #d4f0ff;
+        color: #0969da;
+      }
+
+      .highlight.organization {
+        background-color: #d4f4dd;
+        color: #116329;
+      }
+
+      .highlight.date {
+        background-color: #fff4d6;
+        color: #9a6700;
+      }
+
+      .highlight.value {
+        background-color: #f0d4ff;
+        color: #8250df;
+      }
+
+      .highlight.topic {
+        background-color: #ffe4d1;
+        color: #d15704;
+      }
+
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        padding: 15px;
+        background-color: #f6f8fa;
+        border-radius: 6px;
+        margin-bottom: 20px;
+      }
+
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .legend-color {
+        width: 30px;
+        height: 20px;
+        border-radius: 3px;
+      }
+
+      .legend-color.person {
+        background-color: #ffd6e0;
+      }
+
+      .legend-color.place {
+        background-color: #d4f0ff;
+      }
+
+      .legend-color.organization {
+        background-color: #d4f4dd;
+      }
+
+      .legend-color.date {
+        background-color: #fff4d6;
+      }
+
+      .legend-color.value {
+        background-color: #f0d4ff;
+      }
+
+      .legend-color.topic {
+        background-color: #ffe4d1;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 40px;
+        color: #586069;
+        font-style: italic;
+      }
+
+      .loading {
+        display: none;
+        text-align: center;
+        padding: 20px;
+        color: #586069;
+      }
+
+      .loading.visible {
+        display: block;
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          padding: 20px;
+        }
+
+        .stats {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        .entity-list {
+          grid-template-columns: 1fr;
+        }
+
+        .legend {
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- =========================
+         HTML Structure
+         ========================= -->
+
+    <div class="container">
+      <h1>Named Entity Recognition</h1>
+      <p class="description">
+        Extract and identify named entities from text including people, places,
+        organizations, dates, values, and topics using natural language
+        processing.
+      </p>
+
+      <div class="input-section">
+        <label for="text-input">Enter or paste text to analyze:</label>
+        <textarea
+          id="text-input"
+          placeholder="Example: John Smith visited Apple headquarters in Cupertino, California on January 15th, 2024. He met with Tim Cook to discuss a $5 million partnership deal."
+        ></textarea>
+        <div class="button-group">
+          <button id="analyze-btn">Analyze Text</button>
+          <button id="clear-btn" class="secondary">Clear</button>
+          <button id="load-example-btn" class="secondary">Load Example</button>
+        </div>
+      </div>
+
+      <div class="loading" id="loading">Analyzing text...</div>
+
+      <div class="results-section" id="results-section">
+        <div class="results-header">
+          <h2>Analysis Results</h2>
+          <button id="export-btn" class="secondary">Export Results</button>
+        </div>
+
+        <div class="stats" id="stats"></div>
+
+        <div class="legend">
+          <div class="legend-item">
+            <div class="legend-color person"></div>
+            <span></span>People</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color place"></div>
+            <span>Places</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color organization"></div>
+            <span>Organizations</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color date"></div>
+            <span>Dates</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color value"></div>
+            <span>Values/Money</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color topic"></div>
+            <span>Topics</span>
+          </div>
+        </div>
+
+        <h3 style="margin-bottom: 15px">Highlighted Text</h3>
+        <div class="highlighted-text" id="highlighted-text"></div>
+
+        <h3 style="margin-bottom: 15px">Extracted Entities</h3>
+        <div id="entities-container"></div>
+      </div>
+    </div>
+
+    <!-- Compromise.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/compromise@14.13.0/builds/compromise.min.js"></script>
+
+    <script>
+      /* =========================
+         JavaScript
+         ========================= */
+
+      // State variables
+      let currentAnalysis = null;
+
+      // DOM elements
+      const textInput = document.getElementById("text-input");
+      const analyzeBtn = document.getElementById("analyze-btn");
+      const clearBtn = document.getElementById("clear-btn");
+      const loadExampleBtn = document.getElementById("load-example-btn");
+      const exportBtn = document.getElementById("export-btn");
+      const loading = document.getElementById("loading");
+      const resultsSection = document.getElementById("results-section");
+      const statsContainer = document.getElementById("stats");
+      const highlightedText = document.getElementById("highlighted-text");
+      const entitiesContainer = document.getElementById("entities-container");
+
+      // Example text
+      const exampleText = `John Smith and Sarah Johnson visited Apple headquarters in Cupertino, California on January 15th, 2024. They met with CEO Tim Cook to discuss a $5 million partnership deal for the upcoming product launch in March.
+
+The meeting took place at 10:30 AM and lasted approximately three hours. Representatives from Microsoft, Google, and Amazon were also invited to join a video conference call from their offices in Seattle, Mountain View, and New York City.
+
+The proposed project will involve collaboration between Stanford University and MIT, with research funding of €3.2 million provided by the European Union. Dr. Emily Chen, a leading AI researcher from Carnegie Mellon, will oversee the technical aspects.
+
+Key dates include the initial prototype demo on April 20th, beta testing throughout May and June, and the official product release scheduled for September 1st, 2024. The team expects to reach 1 million users within the first six months.`;
+
+      // Utility functions
+      function getUniqueEntities(entities) {
+        return [...new Set(entities.map((e) => e.toLowerCase()))].sort();
+      }
+
+      function createEntitySection(title, entities, type, icon) {
+        if (entities.length === 0) return "";
+
+        const sectionId = `section-${type}`;
+        const section = document.createElement("div");
+        section.className = "entity-section";
+
+        section.innerHTML = `
+          <div class="entity-header" onclick="toggleSection('${sectionId}')">
+            <span class="entity-icon" id="icon-${sectionId}">▼</span>
+            <h3>${icon} ${title}</h3>
+            <span class="entity-badge">${entities.length}</span>
+          </div>
+          <div class="entity-list" id="${sectionId}">
+            ${entities.map((entity) => `<div class="entity-item">${entity}</div>`).join("")}
+          </div>
+        `;
+
+        return section;
+      }
+
+      function highlightTextWithEntities(text, analysis) {
+        let highlightedHTML = text;
+        const replacements = [];
+
+        // Collect all entities with their positions
+        const allEntities = [
+          ...analysis.people.map((e) => ({ text: e, type: "person" })),
+          ...analysis.places.map((e) => ({ text: e, type: "place" })),
+          ...analysis.organizations.map((e) => ({ text: e, type: "organization" })),
+          ...analysis.dates.map((e) => ({ text: e, type: "date" })),
+          ...analysis.values.map((e) => ({ text: e, type: "value" })),
+          ...analysis.topics.map((e) => ({ text: e, type: "topic" })),
+        ];
+
+        // Sort by length (longest first) to avoid partial replacements
+        allEntities.sort((a, b) => b.text.length - a.text.length);
+
+        // Create regex patterns and replace
+        allEntities.forEach(({ text: entityText, type }) => {
+          // Escape special regex characters
+          const escapedText = entityText.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+          const regex = new RegExp(`\\b${escapedText}\\b`, "gi");
+
+          highlightedHTML = highlightedHTML.replace(regex, (match) => {
+            return `<span class="highlight ${type}" title="${type}: ${match}">${match}</span>`;
+          });
+        });
+
+        return highlightedHTML;
+      }
+
+      function analyzeText() {
+        const text = textInput.value.trim();
+
+        if (!text) {
+          alert("Please enter some text to analyze.");
+          return;
+        }
+
+        // Show loading state
+        loading.classList.add("visible");
+        resultsSection.classList.remove("visible");
+
+        // Use setTimeout to allow UI to update
+        setTimeout(() => {
+          try {
+            // Parse text with Compromise
+            const doc = nlp(text);
+
+            // Extract entities using available methods with error handling
+            let people = [];
+            let places = [];
+            let organizations = [];
+            let dates = [];
+            let values = [];
+            let topics = [];
+
+            try {
+              people = getUniqueEntities(doc.people().out("array"));
+            } catch (e) {
+              console.warn("Could not extract people:", e);
+            }
+
+            try {
+              places = getUniqueEntities(doc.places().out("array"));
+            } catch (e) {
+              console.warn("Could not extract places:", e);
+            }
+
+            try {
+              organizations = getUniqueEntities(doc.organizations().out("array"));
+            } catch (e) {
+              console.warn("Could not extract organizations:", e);
+            }
+
+            try {
+              // Dates - extract using match patterns
+              const dateMatches = doc.match("#Date+").out("array");
+              dates = getUniqueEntities(dateMatches);
+            } catch (e) {
+              console.warn("Could not extract dates:", e);
+            }
+
+            try {
+              // Money/Values - extract currency and numbers
+              const moneyMatches = doc.money().out("array");
+              values = getUniqueEntities(moneyMatches);
+            } catch (e) {
+              console.warn("Could not extract values:", e);
+            }
+
+            try {
+              // Topics - extract significant nouns and noun phrases
+              const topicMatches = doc.topics().out("array");
+              topics = getUniqueEntities(topicMatches);
+            } catch (e) {
+              console.warn("Could not extract topics:", e);
+            }
+
+            // Store analysis
+            currentAnalysis = {
+              text,
+              people,
+              places,
+              organizations,
+              dates,
+              values,
+              topics,
+            };
+
+            // Display results
+            displayResults(currentAnalysis);
+
+            // Hide loading, show results
+            loading.classList.remove("visible");
+            resultsSection.classList.add("visible");
+
+            // Scroll to results
+            resultsSection.scrollIntoView({ behavior: "smooth" });
+          } catch (error) {
+            console.error("Error analyzing text:", error);
+            alert("An error occurred while analyzing the text. Please try again.");
+            loading.classList.remove("visible");
+          }
+        }, 100);
+      }
+
+      function displayResults(analysis) {
+        // Calculate stats
+        const totalEntities =
+          analysis.people.length +
+          analysis.places.length +
+          analysis.organizations.length +
+          analysis.dates.length +
+          analysis.values.length +
+          analysis.topics.length;
+
+        // Display stats
+        statsContainer.innerHTML = `
+          <div class="stat-item">
+            <div class="stat-value">${totalEntities}</div>
+            <div class="stat-label">Total Entities</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">${analysis.people.length}</div>
+            <div class="stat-label">People</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">${analysis.places.length}</div>
+            <div class="stat-label">Places</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">${analysis.organizations.length}</div>
+            <div class="stat-label">Organizations</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">${analysis.dates.length}</div>
+            <div class="stat-label">Dates</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">${analysis.values.length}</div>
+            <div class="stat-label">Values</div>
+          </div>
+        `;
+
+        // Display highlighted text
+        highlightedText.innerHTML = highlightTextWithEntities(
+          analysis.text,
+          analysis
+        );
+
+        // Display entity sections
+        entitiesContainer.innerHTML = "";
+
+        if (totalEntities === 0) {
+          entitiesContainer.innerHTML = `
+            <div class="empty-state">
+              No entities were detected in the text. Try entering text with names, places, organizations, or dates.
+            </div>
+          `;
+          return;
+        }
+
+        const sections = [
+          {
+            title: "People",
+            entities: analysis.people,
+            type: "people",
+            icon: "👤",
+          },
+          {
+            title: "Places",
+            entities: analysis.places,
+            type: "places",
+            icon: "📍",
+          },
+          {
+            title: "Organizations",
+            entities: analysis.organizations,
+            type: "organizations",
+            icon: "🏢",
+          },
+          { title: "Dates", entities: analysis.dates, type: "dates", icon: "📅" },
+          {
+            title: "Values/Money",
+            entities: analysis.values,
+            type: "values",
+            icon: "💰",
+          },
+          {
+            title: "Topics",
+            entities: analysis.topics,
+            type: "topics",
+            icon: "🏷️",
+          },
+        ];
+
+        sections.forEach(({ title, entities, type, icon }) => {
+          if (entities.length > 0) {
+            const section = createEntitySection(title, entities, type, icon);
+            entitiesContainer.appendChild(section);
+          }
+        });
+      }
+
+      function toggleSection(sectionId) {
+        const section = document.getElementById(sectionId);
+        const icon = document.getElementById(`icon-${sectionId}`);
+
+        if (section.classList.contains("collapsed")) {
+          section.classList.remove("collapsed");
+          icon.classList.remove("collapsed");
+        } else {
+          section.classList.add("collapsed");
+          icon.classList.add("collapsed");
+        }
+      }
+
+      function exportResults() {
+        if (!currentAnalysis) return;
+
+        const exportData = {
+          analyzedAt: new Date().toISOString(),
+          text: currentAnalysis.text,
+          entities: {
+            people: currentAnalysis.people,
+            places: currentAnalysis.places,
+            organizations: currentAnalysis.organizations,
+            dates: currentAnalysis.dates,
+            values: currentAnalysis.values,
+            topics: currentAnalysis.topics,
+          },
+          statistics: {
+            totalEntities:
+              currentAnalysis.people.length +
+              currentAnalysis.places.length +
+              currentAnalysis.organizations.length +
+              currentAnalysis.dates.length +
+              currentAnalysis.values.length +
+              currentAnalysis.topics.length,
+            peopleCount: currentAnalysis.people.length,
+            placesCount: currentAnalysis.places.length,
+            organizationsCount: currentAnalysis.organizations.length,
+            datesCount: currentAnalysis.dates.length,
+            valuesCount: currentAnalysis.values.length,
+            topicsCount: currentAnalysis.topics.length,
+          },
+        };
+
+        const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+          type: "application/json",
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `ner-analysis-${Date.now()}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      function clearAll() {
+        textInput.value = "";
+        currentAnalysis = null;
+        resultsSection.classList.remove("visible");
+        textInput.focus();
+      }
+
+      function loadExample() {
+        textInput.value = exampleText;
+        textInput.focus();
+      }
+
+      // Event listeners
+      analyzeBtn.addEventListener("click", analyzeText);
+      clearBtn.addEventListener("click", clearAll);
+      loadExampleBtn.addEventListener("click", loadExample);
+      exportBtn.addEventListener("click", exportResults);
+
+      // Allow Enter+Ctrl/Cmd to analyze
+      textInput.addEventListener("keydown", (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+          analyzeText();
+        }
+      });
+
+      // Make toggleSection available globally for onclick handlers
+      window.toggleSection = toggleSection;
+
+      // Initialize
+      textInput.focus();
+    </script>
+  </body>
+</html>
