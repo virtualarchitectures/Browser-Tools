@@ -42,7 +42,7 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 ### Text and documents
 
 - **[Identifier Extractor](identifier-extractor.html)** — extract and analyse URLs, email addresses, IPv4/IPv6 addresses, phone numbers, and MAC addresses from text with filtering, sorting, and export options
-- **[Named Entity Recognition](named-entity-recognition.html)** — extract and identify named entities from text including people, places, organisations, dates and values using natural language processing
+- **[Named Entity Recognition](named-entity-recognition.html)** — extract and identify named entities from text including people, places and organisations using natural language processing
 - **[OCR Reader](ocr-reader.html)** — extract text from images and PDF files using optical character recognition with side-by-side preview
 - **[PDF Metadata Viewer](pdf-metadata.html)** — extract and view PDF metadata including title, author, dates, permissions, and security settings
 - **[Text Diff](text-diff.html)** — compare two text blocks and highlight added and removed content

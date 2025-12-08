@@ -220,14 +220,6 @@
         background-color: #fff5d4;
       }
 
-      .legend-color.date {
-        background-color: #ffe4f5;
-      }
-
-      .legend-color.value {
-        background-color: #e4f5ff;
-      }
-
       .highlighted-text {
         padding: 1.5rem;
         background-color: #fafbfc;
@@ -260,16 +252,6 @@
       .highlight.organization {
         background-color: #fff5d4;
         color: #7d4e00;
-      }
-
-      .highlight.date {
-        background-color: #ffe4f5;
-        color: #a0095b;
-      }
-
-      .highlight.value {
-        background-color: #e4f5ff;
-        color: #0969da;
       }
 
       .results-section {
@@ -444,9 +426,9 @@
       <header>
         <h1>Named Entity Recognition</h1>
         <p>
-          Extract and identify named entities from text including people,
-          places, organisations, dates and values using natural language
-          processing. All processing happens locally in your browser.
+          Extract and identify named entities from text including people, places
+          and organisations using natural language processing. All processing
+          happens locally in your browser.
         </p>
       </header>
 
@@ -499,14 +481,6 @@
             <div class="stat-value">0</div>
             <div class="stat-label">Organizations</div>
           </div>
-          <div class="stat-card">
-            <div class="stat-value">0</div>
-            <div class="stat-label">Dates</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-value">0</div>
-            <div class="stat-label">Values/Money</div>
-          </div>
         </div>
       </div>
 
@@ -525,14 +499,6 @@
             <div class="legend-item">
               <div class="legend-color organization"></div>
               <span>Organizations</span>
-            </div>
-            <div class="legend-item">
-              <div class="legend-color date"></div>
-              <span>Dates</span>
-            </div>
-            <div class="legend-item">
-              <div class="legend-color value"></div>
-              <span>Values/Money</span>
             </div>
           </div>
         </div>
@@ -623,14 +589,7 @@
                         <div class="stat-value">0</div>
                         <div class="stat-label">Organizations</div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-value">0</div>
-                        <div class="stat-label">Dates</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">0</div>
-                        <div class="stat-label">Values/Money</div>
-                    </div>
+                </div>
                 `;
 
         // Reset highlighted text
@@ -852,8 +811,6 @@
             text: e,
             type: "organization",
           })),
-          ...analysis.dates.map((e) => ({ text: e, type: "date" })),
-          ...analysis.values.map((e) => ({ text: e, type: "value" })),
         ];
 
         // Remove duplicates and sort by length (longest first) to avoid partial replacements
@@ -947,8 +904,6 @@
             let people = [];
             let places = [];
             let organizations = [];
-            let dates = [];
-            let values = [];
 
             // Extract people
             try {
@@ -989,58 +944,12 @@
               console.warn("Could not extract organizations:", e);
             }
 
-            // Extract dates
-            try {
-              const datePatterns = [
-                // Month DD, YYYY or Month DD YYYY
-                /\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2}(?:st|nd|rd|th)?,?\s+\d{4}/gi,
-                // MM/DD/YYYY or MM/DD/YY
-                /\b\d{1,2}\/\d{1,2}\/\d{2,4}\b/g,
-                // YYYY-MM-DD
-                /\b\d{4}-\d{2}-\d{2}\b/g,
-                // DD Month YYYY
-                /\b\d{1,2}(?:st|nd|rd|th)?\s+(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}/gi,
-                // Month YYYY
-                /\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}/gi,
-                // Just year when it appears to be a date reference (2020-2024 range for modern dates)
-                /\b(19\d{2}|20[0-2]\d)\b/g,
-              ];
-
-              const allDateMatches = [];
-              datePatterns.forEach((pattern) => {
-                const matches = text.match(pattern);
-                if (matches) {
-                  allDateMatches.push(...matches);
-                }
-              });
-
-              if (allDateMatches.length > 0) {
-                dates = allDateMatches;
-              }
-            } catch (e) {
-              console.warn("Could not extract dates:", e);
-            }
-
-            // Extract money/values
-            try {
-              const moneyMatches = text.match(
-                /\$[\d,]+(?:\.\d{2})?(?:\s*(?:million|billion|thousand|k|m|b))?|\b\d+(?:,\d{3})*(?:\.\d{2})?\s*(?:dollars|USD|EUR|GBP)/gi
-              );
-              if (moneyMatches) {
-                values = moneyMatches;
-              }
-            } catch (e) {
-              console.warn("Could not extract values:", e);
-            }
-
             // Store analysis
             currentAnalysis = {
               text,
               people,
               places,
               organizations,
-              dates,
-              values,
             };
 
             // Display results
@@ -1063,9 +972,7 @@
         const totalEntities =
           analysis.people.length +
           analysis.places.length +
-          analysis.organizations.length +
-          analysis.dates.length +
-          analysis.values.length;
+          analysis.organizations.length;
 
         // Display stats
         const uniquePeople = new Set(
@@ -1076,11 +983,6 @@
         ).size;
         const uniqueOrgs = new Set(
           analysis.organizations.map((o) => o.toLowerCase())
-        ).size;
-        const uniqueDates = new Set(analysis.dates.map((d) => d.toLowerCase()))
-          .size;
-        const uniqueValues = new Set(
-          analysis.values.map((v) => v.toLowerCase())
         ).size;
 
         statsGrid.innerHTML = `
@@ -1099,14 +1001,6 @@
           <div class="stat-card">
             <div class="stat-value">${uniqueOrgs}</div>
             <div class="stat-label">Organizations</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-value">${uniqueDates}</div>
-            <div class="stat-label">Dates</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-value">${uniqueValues}</div>
-            <div class="stat-label">Values</div>
           </div>
         `;
 
@@ -1143,16 +1037,6 @@
             title: "Organizations",
             entities: analysis.organizations,
             type: "organizations",
-          },
-          {
-            title: "Dates",
-            entities: analysis.dates,
-            type: "dates",
-          },
-          {
-            title: "Values/Money",
-            entities: analysis.values,
-            type: "values",
           },
         ];
 
