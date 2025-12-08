@@ -9,356 +9,405 @@
          CSS Styles
          ========================= */
 
+      :root {
+        --primary-color: #0366d6;
+        --bg-color: #f6f8fa;
+        --border-color: #e1e4e8;
+        --text-color: #24292e;
+        --secondary-text: #586069;
+      }
+
       * {
         box-sizing: border-box;
-        margin: 0;
-        padding: 0;
       }
 
       body {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica,
           Arial, sans-serif;
         line-height: 1.6;
-        color: #24292e;
-        background-color: #f6f8fa;
+        color: var(--text-color);
+        margin: 0;
         padding: 20px;
+        background-color: #fff;
       }
 
       .container {
         max-width: 1200px;
         margin: 0 auto;
-        background-color: white;
-        border-radius: 8px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
-        padding: 30px;
+      }
+
+      .back-link {
+        display: inline-block;
+        margin-bottom: 16px;
+        color: #0366d6;
+        text-decoration: none;
+        font-size: 14px;
+      }
+
+      .back-link:hover {
+        text-decoration: underline;
+      }
+
+      header {
+        margin-bottom: 2rem;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 1rem;
       }
 
       h1 {
-        color: #24292e;
-        margin-bottom: 10px;
-        font-size: 2em;
+        margin: 0 0 8px 0;
+        font-size: 1.5rem;
       }
 
-      .description {
-        color: #586069;
-        margin-bottom: 30px;
-        font-size: 1.1em;
+      header p {
+        margin: 0;
+        color: var(--secondary-text);
+        font-size: 14px;
       }
 
       .input-section {
-        margin-bottom: 30px;
+        display: grid;
+        gap: 1rem;
+        margin-bottom: 2rem;
       }
 
-      label {
-        display: block;
-        font-weight: 600;
-        margin-bottom: 8px;
-        color: #24292e;
+      .file-controls {
+        display: flex;
+        align-items: center;
+        gap: 0;
+        padding: 12px;
+        background: #ffffff;
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
+      }
+
+      .file-status {
+        font-size: 14px;
+        color: var(--text-color);
+        margin-left: 8px;
+        font-weight: 500;
       }
 
       textarea {
         width: 100%;
-        min-height: 200px;
+        height: 200px;
         padding: 12px;
-        border: 2px solid #e1e4e8;
+        border: 1px solid var(--border-color);
         border-radius: 6px;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica,
-          Arial, sans-serif;
+        font-family: inherit;
         font-size: 14px;
         resize: vertical;
-        transition: border-color 0.2s;
+        box-sizing: border-box;
       }
 
       textarea:focus {
         outline: none;
-        border-color: #0366d6;
+        border-color: var(--primary-color);
       }
 
-      .button-group {
+      .controls {
         display: flex;
-        gap: 10px;
-        margin-top: 15px;
+        gap: 1rem;
+        align-items: center;
         flex-wrap: wrap;
       }
 
+      .btn,
       button {
-        background-color: #0366d6;
+        background-color: var(--primary-color);
         color: white;
         border: none;
-        padding: 10px 20px;
+        padding: 8px 16px;
         border-radius: 6px;
         font-size: 14px;
-        font-weight: 600;
+        font-weight: 500;
+        font-family: inherit;
         cursor: pointer;
-        transition: background-color 0.2s;
+        text-decoration: none;
+        display: inline-block;
       }
 
+      .btn:hover,
       button:hover {
-        background-color: #0256c2;
+        opacity: 0.9;
       }
 
-      button:active {
-        background-color: #024ea2;
-      }
-
+      .btn.secondary,
       button.secondary {
-        background-color: #6c757d;
+        background-color: #eff3f6;
+        color: var(--text-color);
+        border: 1px solid rgba(27, 31, 35, 0.15);
       }
 
+      .btn.secondary:hover,
       button.secondary:hover {
-        background-color: #5a6268;
+        background: #f3f4f6;
+        opacity: 1;
+      }
+
+      label.btn {
+        margin: 0;
       }
 
       button:disabled {
         background-color: #ccc;
         cursor: not-allowed;
+        opacity: 0.6;
       }
 
-      .results-section {
-        margin-top: 40px;
-        display: none;
-      }
-
-      .results-section.visible {
-        display: block;
-      }
-
-      .results-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-        padding-bottom: 15px;
-        border-bottom: 2px solid #e1e4e8;
-      }
-
-      .results-header h2 {
-        color: #24292e;
-        font-size: 1.5em;
-      }
-
-      .stats {
+      .stats-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 15px;
-        margin-bottom: 30px;
-        padding: 20px;
-        background-color: #f6f8fa;
-        border-radius: 6px;
+        gap: 1rem;
+        margin-bottom: 2rem;
       }
 
-      .stat-item {
+      .stat-card {
+        padding: 1rem;
+        background-color: var(--bg-color);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
         text-align: center;
       }
 
       .stat-value {
-        font-size: 2em;
+        font-size: 2rem;
         font-weight: 700;
-        color: #0366d6;
+        color: var(--primary-color);
+        line-height: 1;
       }
 
       .stat-label {
-        font-size: 0.9em;
-        color: #586069;
-        margin-top: 5px;
-      }
-
-      .entity-section {
-        margin-bottom: 30px;
-      }
-
-      .entity-header {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 15px;
-        padding: 10px;
-        background-color: #f6f8fa;
-        border-radius: 6px;
-        cursor: pointer;
-        user-select: none;
-      }
-
-      .entity-header:hover {
-        background-color: #e1e4e8;
-      }
-
-      .entity-header h3 {
-        flex: 1;
-        color: #24292e;
-        font-size: 1.2em;
-      }
-
-      .entity-badge {
-        display: inline-block;
-        padding: 4px 12px;
-        background-color: #0366d6;
-        color: white;
-        border-radius: 12px;
-        font-size: 0.9em;
-        font-weight: 600;
-      }
-
-      .entity-icon {
-        font-size: 1.2em;
-        transition: transform 0.2s;
-      }
-
-      .entity-icon.collapsed {
-        transform: rotate(-90deg);
-      }
-
-      .entity-list {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 10px;
-        padding-left: 15px;
-      }
-
-      .entity-list.collapsed {
-        display: none;
-      }
-
-      .entity-item {
-        padding: 8px 12px;
-        background-color: #fff;
-        border: 1px solid #e1e4e8;
-        border-radius: 6px;
-        word-break: break-word;
-      }
-
-      .entity-item:hover {
-        border-color: #0366d6;
-        background-color: #f1f8ff;
-      }
-
-      .highlighted-text {
-        padding: 20px;
-        background-color: #f6f8fa;
-        border-radius: 6px;
-        border: 1px solid #e1e4e8;
-        line-height: 2;
-        margin-bottom: 30px;
-        white-space: pre-wrap;
-        word-wrap: break-word;
-      }
-
-      .highlight {
-        padding: 2px 4px;
-        border-radius: 3px;
-        font-weight: 600;
-        cursor: help;
-      }
-
-      .highlight.person {
-        background-color: #ffd6e0;
-        color: #c41e3a;
-      }
-
-      .highlight.place {
-        background-color: #d4f0ff;
-        color: #0969da;
-      }
-
-      .highlight.organization {
-        background-color: #d4f4dd;
-        color: #116329;
-      }
-
-      .highlight.date {
-        background-color: #fff4d6;
-        color: #9a6700;
-      }
-
-      .highlight.value {
-        background-color: #f0d4ff;
-        color: #8250df;
-      }
-
-      .highlight.topic {
-        background-color: #ffe4d1;
-        color: #d15704;
+        font-size: 0.875rem;
+        color: var(--secondary-text);
+        margin-top: 0.5rem;
+        font-weight: 500;
       }
 
       .legend {
         display: flex;
         flex-wrap: wrap;
-        gap: 15px;
-        padding: 15px;
-        background-color: #f6f8fa;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        padding: 1rem;
+        background-color: var(--bg-color);
         border-radius: 6px;
-        margin-bottom: 20px;
+        border: 1px solid var(--border-color);
       }
 
       .legend-item {
         display: flex;
         align-items: center;
         gap: 8px;
+        font-size: 14px;
       }
 
       .legend-color {
-        width: 30px;
-        height: 20px;
+        width: 16px;
+        height: 16px;
         border-radius: 3px;
       }
 
       .legend-color.person {
-        background-color: #ffd6e0;
+        background-color: #d4edff;
       }
 
       .legend-color.place {
-        background-color: #d4f0ff;
+        background-color: #dcffe4;
       }
 
       .legend-color.organization {
-        background-color: #d4f4dd;
+        background-color: #fff5d4;
       }
 
       .legend-color.date {
-        background-color: #fff4d6;
+        background-color: #ffe4f5;
       }
 
       .legend-color.value {
-        background-color: #f0d4ff;
+        background-color: #e4f5ff;
       }
 
-      .legend-color.topic {
-        background-color: #ffe4d1;
+      .highlighted-text {
+        padding: 1.5rem;
+        background-color: #fafbfc;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        margin-bottom: 2rem;
+        line-height: 1.8;
+        font-size: 14px;
+        max-height: 400px;
+        overflow-y: auto;
+      }
+
+      .highlight {
+        padding: 2px 4px;
+        border-radius: 3px;
+        font-weight: 500;
+        cursor: help;
+      }
+
+      .highlight.person {
+        background-color: #d4edff;
+        color: #0550ae;
+      }
+
+      .highlight.place {
+        background-color: #dcffe4;
+        color: #0f6e27;
+      }
+
+      .highlight.organization {
+        background-color: #fff5d4;
+        color: #7d4e00;
+      }
+
+      .highlight.date {
+        background-color: #ffe4f5;
+        color: #a0095b;
+      }
+
+      .highlight.value {
+        background-color: #e4f5ff;
+        color: #0969da;
+      }
+
+      .results-section {
+        margin-top: 2rem;
+      }
+
+      .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: var(--text-color);
+      }
+
+      .entities-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+      }
+
+      .table-container {
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        overflow: hidden;
+      }
+
+      .table-header {
+        background-color: var(--bg-color);
+        padding: 10px 15px;
+        font-weight: 600;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        min-height: 40px;
+      }
+
+      .table-header h3 {
+        margin: 0;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .entity-badge {
+        background-color: var(--primary-color);
+        color: white;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+      }
+
+      th,
+      td {
+        padding: 8px 15px;
+        text-align: left;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      th {
+        background-color: #fafbfc;
+        font-weight: 600;
+        color: var(--secondary-text);
+      }
+
+      td.count-cell {
+        text-align: right;
+        font-weight: 600;
+        color: var(--primary-color);
+        width: 100px;
+      }
+
+      tr:last-child td {
+        border-bottom: none;
+      }
+
+      tr:hover {
+        background-color: #f6f8fa;
       }
 
       .empty-state {
+        padding: 3rem;
         text-align: center;
-        padding: 40px;
-        color: #586069;
-        font-style: italic;
+        color: var(--secondary-text);
+        background-color: var(--bg-color);
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
       }
 
       .loading {
         display: none;
+        padding: 1rem;
         text-align: center;
-        padding: 20px;
-        color: #586069;
+        background-color: #fff3cd;
+        border: 1px solid #ffc107;
+        border-radius: 6px;
+        margin-bottom: 1rem;
+        color: #856404;
+        font-weight: 500;
       }
 
       .loading.visible {
         display: block;
       }
 
+      .hidden {
+        display: none;
+      }
+
       @media (max-width: 768px) {
         .container {
-          padding: 20px;
+          padding: 10px;
         }
 
-        .stats {
+        .stats-grid {
           grid-template-columns: repeat(2, 1fr);
         }
 
-        .entity-list {
+        .entities-grid {
           grid-template-columns: 1fr;
         }
 
         .legend {
           flex-direction: column;
+        }
+
+        td,
+        th {
+          padding: 6px 10px;
+          font-size: 0.85rem;
         }
       }
     </style>
@@ -369,40 +418,57 @@
          ========================= -->
 
     <div class="container">
-      <h1>Named Entity Recognition</h1>
-      <p class="description">
-        Extract and identify named entities from text including people, places,
-        organizations, dates, values, and topics using natural language
-        processing.
-      </p>
+      <a href="index.html" class="back-link">← Back to Browser Tools</a>
+
+      <header>
+        <h1>Named Entity Recognition</h1>
+        <p>
+          Extract and identify named entities from text including people,
+          places, organizations, dates, values, and topics using natural
+          language processing. All processing happens locally in your browser.
+        </p>
+      </header>
 
       <div class="input-section">
-        <label for="text-input">Enter or paste text to analyze:</label>
+        <div class="file-controls">
+          <input
+            type="file"
+            id="fileInput"
+            accept=".txt,.md,.csv,.html"
+            style="display: none"
+          />
+          <label for="fileInput" class="btn">Load File</label>
+          <span id="fileStatus" class="file-status">No file selected</span>
+          <button
+            id="clearFileBtn"
+            class="btn secondary"
+            style="margin-left: auto"
+          >
+            Clear
+          </button>
+        </div>
+
         <textarea
-          id="text-input"
-          placeholder="Example: John Smith visited Apple headquarters in Cupertino, California on January 15th, 2024. He met with Tim Cook to discuss a $5 million partnership deal."
+          id="textInput"
+          placeholder="Or paste your text here... Example: John Smith visited Apple headquarters in Cupertino, California on January 15th, 2024. He met with Tim Cook to discuss a $5 million partnership deal."
         ></textarea>
-        <div class="button-group">
-          <button id="analyze-btn">Analyze Text</button>
-          <button id="clear-btn" class="secondary">Clear</button>
-          <button id="load-example-btn" class="secondary">Load Example</button>
+
+        <div class="controls">
+          <button id="analyzeBtn">Analyze</button>
         </div>
       </div>
 
       <div class="loading" id="loading">Analyzing text...</div>
 
-      <div class="results-section" id="results-section">
-        <div class="results-header">
-          <h2>Analysis Results</h2>
-          <button id="export-btn" class="secondary">Export Results</button>
-        </div>
+      <div id="statsSection" class="hidden">
+        <div class="stats-grid" id="statsGrid"></div>
+      </div>
 
-        <div class="stats" id="stats"></div>
-
+      <div id="legendSection" class="hidden">
         <div class="legend">
           <div class="legend-item">
             <div class="legend-color person"></div>
-            <span></span>People</span>
+            <span>People</span>
           </div>
           <div class="legend-item">
             <div class="legend-color place"></div>
@@ -420,17 +486,17 @@
             <div class="legend-color value"></div>
             <span>Values/Money</span>
           </div>
-          <div class="legend-item">
-            <div class="legend-color topic"></div>
-            <span>Topics</span>
-          </div>
         </div>
+      </div>
 
-        <h3 style="margin-bottom: 15px">Highlighted Text</h3>
-        <div class="highlighted-text" id="highlighted-text"></div>
+      <div id="highlightedSection" class="hidden">
+        <h2 class="section-title">Highlighted Text</h2>
+        <div class="highlighted-text" id="highlightedText"></div>
+      </div>
 
-        <h3 style="margin-bottom: 15px">Extracted Entities</h3>
-        <div id="entities-container"></div>
+      <div id="entitiesSection" class="hidden">
+        <h2 class="section-title">Extracted Entities</h2>
+        <div id="entitiesContainer" class="entities-grid"></div>
       </div>
     </div>
 
@@ -446,83 +512,239 @@
       let currentAnalysis = null;
 
       // DOM elements
-      const textInput = document.getElementById("text-input");
-      const analyzeBtn = document.getElementById("analyze-btn");
-      const clearBtn = document.getElementById("clear-btn");
-      const loadExampleBtn = document.getElementById("load-example-btn");
-      const exportBtn = document.getElementById("export-btn");
+      const fileInput = document.getElementById("fileInput");
+      const fileStatus = document.getElementById("fileStatus");
+      const clearFileBtn = document.getElementById("clearFileBtn");
+      const textInput = document.getElementById("textInput");
+      const analyzeBtn = document.getElementById("analyzeBtn");
       const loading = document.getElementById("loading");
-      const resultsSection = document.getElementById("results-section");
-      const statsContainer = document.getElementById("stats");
-      const highlightedText = document.getElementById("highlighted-text");
-      const entitiesContainer = document.getElementById("entities-container");
+      const statsSection = document.getElementById("statsSection");
+      const statsGrid = document.getElementById("statsGrid");
+      const legendSection = document.getElementById("legendSection");
+      const highlightedSection = document.getElementById("highlightedSection");
+      const highlightedText = document.getElementById("highlightedText");
+      const entitiesSection = document.getElementById("entitiesSection");
+      const entitiesContainer = document.getElementById("entitiesContainer");
 
-      // Example text
-      const exampleText = `John Smith and Sarah Johnson visited Apple headquarters in Cupertino, California on January 15th, 2024. They met with CEO Tim Cook to discuss a $5 million partnership deal for the upcoming product launch in March.
+      // Event listeners
+      fileInput.addEventListener("change", handleFile);
+      clearFileBtn.addEventListener("click", clearFile);
+      analyzeBtn.addEventListener("click", analyzeText);
 
-The meeting took place at 10:30 AM and lasted approximately three hours. Representatives from Microsoft, Google, and Amazon were also invited to join a video conference call from their offices in Seattle, Mountain View, and New York City.
+      // File handling
+      function handleFile(e) {
+        const file = e.target.files[0];
+        if (!file) return;
 
-The proposed project will involve collaboration between Stanford University and MIT, with research funding of €3.2 million provided by the European Union. Dr. Emily Chen, a leading AI researcher from Carnegie Mellon, will oversee the technical aspects.
-
-Key dates include the initial prototype demo on April 20th, beta testing throughout May and June, and the official product release scheduled for September 1st, 2024. The team expects to reach 1 million users within the first six months.`;
-
-      // Utility functions
-      function getUniqueEntities(entities) {
-        return [...new Set(entities.map((e) => e.toLowerCase()))].sort();
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          textInput.value = event.target.result;
+          fileStatus.textContent = file.name;
+        };
+        reader.readAsText(file);
       }
 
-      function createEntitySection(title, entities, type, icon) {
+      function clearFile() {
+        fileInput.value = "";
+        fileStatus.textContent = "No file selected";
+        textInput.value = "";
+        hideResults();
+      }
+
+      function hideResults() {
+        statsSection.classList.add("hidden");
+        legendSection.classList.add("hidden");
+        highlightedSection.classList.add("hidden");
+        entitiesSection.classList.add("hidden");
+      }
+
+      function showResults() {
+        statsSection.classList.remove("hidden");
+        legendSection.classList.remove("hidden");
+        highlightedSection.classList.remove("hidden");
+        entitiesSection.classList.remove("hidden");
+      }
+
+      // Get unique entities with counts
+      // Normalize a single entity by removing possessives and punctuation
+      function normalizeEntity(entity) {
+        let normalized = entity.trim();
+
+        // Remove possessive 's or 'S (multiple passes to handle edge cases)
+        for (let i = 0; i < 3; i++) {
+          normalized = normalized
+            .replace(/[^\w\s][sS]$/, "") // Any punctuation + s/S at end
+            .replace(/\u2019[sS]$/, "") // Right single quote (common)
+            .replace(/\u0027[sS]$/, "") // Standard apostrophe
+            .trim();
+        }
+
+        // Remove any trailing/leading whitespace and punctuation (multiple passes)
+        for (let i = 0; i < 3; i++) {
+          normalized = normalized
+            .replace(/^[^\w]+/, "") // Leading punctuation
+            .replace(/[^\w]+$/, "") // Trailing punctuation and spaces
+            .trim();
+        }
+
+        return normalized;
+      }
+
+      function getEntityCounts(entities) {
+        const counts = {};
+        entities.forEach((entity) => {
+          const normalized = normalizeEntity(entity);
+          const key = normalized.toLowerCase();
+          if (key) {
+            // Only count if there's something left after normalization
+            if (!counts[key]) {
+              counts[key] = { name: normalized, count: 0 };
+            }
+            counts[key].count++;
+          }
+        });
+
+        return Object.entries(counts)
+          .map(([key, data]) => ({
+            entity: data.name,
+            count: data.count,
+          }))
+          .sort((a, b) => b.count - a.count);
+      }
+
+      // Create entity table
+      function createEntityTable(title, entities, type) {
         if (entities.length === 0) return "";
 
-        const sectionId = `section-${type}`;
-        const section = document.createElement("div");
-        section.className = "entity-section";
+        const entityCounts = getEntityCounts(entities);
+        const totalCount = entityCounts.reduce(
+          (sum, item) => sum + item.count,
+          0
+        );
 
-        section.innerHTML = `
-          <div class="entity-header" onclick="toggleSection('${sectionId}')">
-            <span class="entity-icon" id="icon-${sectionId}">▼</span>
-            <h3>${icon} ${title}</h3>
-            <span class="entity-badge">${entities.length}</span>
+        const container = document.createElement("div");
+        container.className = "table-container";
+
+        container.innerHTML = `
+          <div class="table-header">
+            <h3>${title} <span class="entity-badge">${
+          entityCounts.length
+        } unique</span></h3>
           </div>
-          <div class="entity-list" id="${sectionId}">
-            ${entities.map((entity) => `<div class="entity-item">${entity}</div>`).join("")}
+          <div style="max-height: 300px; overflow-y: auto">
+            <table>
+              <thead>
+                <tr>
+                  <th>Entity</th>
+                  <th style="text-align: right; width: 100px">Count</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${entityCounts
+                  .map(
+                    ({ entity, count }) => `
+                  <tr>
+                    <td>${escapeHtml(entity)}</td>
+                    <td class="count-cell">${count}</td>
+                  </tr>
+                `
+                  )
+                  .join("")}
+              </tbody>
+            </table>
           </div>
         `;
 
-        return section;
+        return container;
       }
 
+      // Highlight text with entities
       function highlightTextWithEntities(text, analysis) {
-        let highlightedHTML = text;
-        const replacements = [];
-
         // Collect all entities with their positions
         const allEntities = [
-          ...analysis.people.map((e) => ({ text: e, type: "person" })),
+          ...analysis.people.map((e) => ({
+            text: e,
+            type: "person",
+          })),
           ...analysis.places.map((e) => ({ text: e, type: "place" })),
-          ...analysis.organizations.map((e) => ({ text: e, type: "organization" })),
+          ...analysis.organizations.map((e) => ({
+            text: e,
+            type: "organization",
+          })),
           ...analysis.dates.map((e) => ({ text: e, type: "date" })),
           ...analysis.values.map((e) => ({ text: e, type: "value" })),
-          ...analysis.topics.map((e) => ({ text: e, type: "topic" })),
         ];
 
-        // Sort by length (longest first) to avoid partial replacements
-        allEntities.sort((a, b) => b.text.length - a.text.length);
+        // Remove duplicates and sort by length (longest first) to avoid partial replacements
+        const uniqueEntities = [];
+        const seen = new Set();
 
-        // Create regex patterns and replace
-        allEntities.forEach(({ text: entityText, type }) => {
+        allEntities.forEach((entity) => {
+          const key = `${entity.text.toLowerCase()}_${entity.type}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            uniqueEntities.push(entity);
+          }
+        });
+
+        uniqueEntities.sort((a, b) => b.text.length - a.text.length);
+
+        // Create a map of positions to avoid overlapping highlights
+        const positions = [];
+
+        uniqueEntities.forEach(({ text: entityText, type }) => {
           // Escape special regex characters
           const escapedText = entityText.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
           const regex = new RegExp(`\\b${escapedText}\\b`, "gi");
 
-          highlightedHTML = highlightedHTML.replace(regex, (match) => {
-            return `<span class="highlight ${type}" title="${type}: ${match}">${match}</span>`;
-          });
+          let match;
+          while ((match = regex.exec(text)) !== null) {
+            const start = match.index;
+            const end = start + match[0].length;
+
+            // Check if this position overlaps with existing highlights
+            const overlaps = positions.some(
+              (pos) =>
+                (start >= pos.start && start < pos.end) ||
+                (end > pos.start && end <= pos.end) ||
+                (start <= pos.start && end >= pos.end)
+            );
+
+            if (!overlaps) {
+              positions.push({
+                start,
+                end,
+                text: match[0],
+                type,
+              });
+            }
+          }
         });
+
+        // Sort positions by start index
+        positions.sort((a, b) => a.start - b.start);
+
+        // Build highlighted HTML
+        let highlightedHTML = "";
+        let lastIndex = 0;
+
+        positions.forEach(({ start, end, text: matchText, type }) => {
+          // Add text before the match
+          highlightedHTML += escapeHtml(text.substring(lastIndex, start));
+          // Add highlighted match
+          highlightedHTML += `<span class="highlight ${type}" title="${type}: ${escapeHtml(
+            matchText
+          )}">${escapeHtml(matchText)}</span>`;
+          lastIndex = end;
+        });
+
+        // Add remaining text
+        highlightedHTML += escapeHtml(text.substring(lastIndex));
 
         return highlightedHTML;
       }
 
+      // Analyze text function
       function analyzeText() {
         const text = textInput.value.trim();
 
@@ -533,7 +755,7 @@ Key dates include the initial prototype demo on April 20th, beta testing through
 
         // Show loading state
         loading.classList.add("visible");
-        resultsSection.classList.remove("visible");
+        hideResults();
 
         // Use setTimeout to allow UI to update
         setTimeout(() => {
@@ -541,54 +763,94 @@ Key dates include the initial prototype demo on April 20th, beta testing through
             // Parse text with Compromise
             const doc = nlp(text);
 
-            // Extract entities using available methods with error handling
+            // Extract entities
             let people = [];
             let places = [];
             let organizations = [];
             let dates = [];
             let values = [];
-            let topics = [];
 
+            // Extract people
             try {
-              people = getUniqueEntities(doc.people().out("array"));
+              const peopleTerms = doc.people();
+              if (peopleTerms && peopleTerms.out) {
+                people = peopleTerms
+                  .out("array")
+                  .map((p) => normalizeEntity(p))
+                  .filter((p) => p.length > 0);
+              }
             } catch (e) {
               console.warn("Could not extract people:", e);
             }
 
+            // Extract places
             try {
-              places = getUniqueEntities(doc.places().out("array"));
+              const placeTerms = doc.places();
+              if (placeTerms && placeTerms.out) {
+                places = placeTerms
+                  .out("array")
+                  .map((p) => normalizeEntity(p))
+                  .filter((p) => p.length > 0);
+              }
             } catch (e) {
               console.warn("Could not extract places:", e);
             }
 
+            // Extract organizations
             try {
-              organizations = getUniqueEntities(doc.organizations().out("array"));
+              const orgTerms = doc.organizations();
+              if (orgTerms && orgTerms.out) {
+                organizations = orgTerms
+                  .out("array")
+                  .map((o) => normalizeEntity(o))
+                  .filter((o) => o.length > 0);
+              }
             } catch (e) {
               console.warn("Could not extract organizations:", e);
             }
 
+            // Extract dates
             try {
-              // Dates - extract using match patterns
-              const dateMatches = doc.match("#Date+").out("array");
-              dates = getUniqueEntities(dateMatches);
+              const datePatterns = [
+                // Month DD, YYYY or Month DD YYYY
+                /\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2}(?:st|nd|rd|th)?,?\s+\d{4}/gi,
+                // MM/DD/YYYY or MM/DD/YY
+                /\b\d{1,2}\/\d{1,2}\/\d{2,4}\b/g,
+                // YYYY-MM-DD
+                /\b\d{4}-\d{2}-\d{2}\b/g,
+                // DD Month YYYY
+                /\b\d{1,2}(?:st|nd|rd|th)?\s+(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}/gi,
+                // Month YYYY
+                /\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}/gi,
+                // Just year when it appears to be a date reference (2020-2024 range for modern dates)
+                /\b(19\d{2}|20[0-2]\d)\b/g,
+              ];
+
+              const allDateMatches = [];
+              datePatterns.forEach((pattern) => {
+                const matches = text.match(pattern);
+                if (matches) {
+                  allDateMatches.push(...matches);
+                }
+              });
+
+              if (allDateMatches.length > 0) {
+                dates = allDateMatches;
+              }
             } catch (e) {
               console.warn("Could not extract dates:", e);
             }
 
+            // Extract money/values
             try {
-              // Money/Values - extract currency and numbers
-              const moneyMatches = doc.money().out("array");
-              values = getUniqueEntities(moneyMatches);
+              const moneyMatches = text.match(
+                /\$[\d,]+(?:\.\d{2})?(?:\s*(?:million|billion|thousand|k|m|b))?|\b\d+(?:,\d{3})*(?:\.\d{2})?\s*(?:dollars|USD|EUR|GBP)/gi
+              );
+              if (moneyMatches) {
+                values = moneyMatches;
+              }
             } catch (e) {
               console.warn("Could not extract values:", e);
-            }
-
-            try {
-              // Topics - extract significant nouns and noun phrases
-              const topicMatches = doc.topics().out("array");
-              topics = getUniqueEntities(topicMatches);
-            } catch (e) {
-              console.warn("Could not extract topics:", e);
             }
 
             // Store analysis
@@ -599,60 +861,71 @@ Key dates include the initial prototype demo on April 20th, beta testing through
               organizations,
               dates,
               values,
-              topics,
             };
 
             // Display results
             displayResults(currentAnalysis);
 
-            // Hide loading, show results
+            // Hide loading
             loading.classList.remove("visible");
-            resultsSection.classList.add("visible");
-
-            // Scroll to results
-            resultsSection.scrollIntoView({ behavior: "smooth" });
           } catch (error) {
-            console.error("Error analyzing text:", error);
-            alert("An error occurred while analyzing the text. Please try again.");
+            console.error("Analysis error:", error);
+            alert(
+              "An error occurred during analysis. Please check the console for details."
+            );
             loading.classList.remove("visible");
           }
         }, 100);
       }
 
+      // Display results
       function displayResults(analysis) {
-        // Calculate stats
         const totalEntities =
           analysis.people.length +
           analysis.places.length +
           analysis.organizations.length +
           analysis.dates.length +
-          analysis.values.length +
-          analysis.topics.length;
+          analysis.values.length;
 
         // Display stats
-        statsContainer.innerHTML = `
-          <div class="stat-item">
+        const uniquePeople = new Set(
+          analysis.people.map((p) => p.toLowerCase())
+        ).size;
+        const uniquePlaces = new Set(
+          analysis.places.map((p) => p.toLowerCase())
+        ).size;
+        const uniqueOrgs = new Set(
+          analysis.organizations.map((o) => o.toLowerCase())
+        ).size;
+        const uniqueDates = new Set(analysis.dates.map((d) => d.toLowerCase()))
+          .size;
+        const uniqueValues = new Set(
+          analysis.values.map((v) => v.toLowerCase())
+        ).size;
+
+        statsGrid.innerHTML = `
+          <div class="stat-card">
             <div class="stat-value">${totalEntities}</div>
             <div class="stat-label">Total Entities</div>
           </div>
-          <div class="stat-item">
-            <div class="stat-value">${analysis.people.length}</div>
+          <div class="stat-card">
+            <div class="stat-value">${uniquePeople}</div>
             <div class="stat-label">People</div>
           </div>
-          <div class="stat-item">
-            <div class="stat-value">${analysis.places.length}</div>
+          <div class="stat-card">
+            <div class="stat-value">${uniquePlaces}</div>
             <div class="stat-label">Places</div>
           </div>
-          <div class="stat-item">
-            <div class="stat-value">${analysis.organizations.length}</div>
+          <div class="stat-card">
+            <div class="stat-value">${uniqueOrgs}</div>
             <div class="stat-label">Organizations</div>
           </div>
-          <div class="stat-item">
-            <div class="stat-value">${analysis.dates.length}</div>
+          <div class="stat-card">
+            <div class="stat-value">${uniqueDates}</div>
             <div class="stat-label">Dates</div>
           </div>
-          <div class="stat-item">
-            <div class="stat-value">${analysis.values.length}</div>
+          <div class="stat-card">
+            <div class="stat-value">${uniqueValues}</div>
             <div class="stat-label">Values</div>
           </div>
         `;
@@ -663,7 +936,7 @@ Key dates include the initial prototype demo on April 20th, beta testing through
           analysis
         );
 
-        // Display entity sections
+        // Display entity tables
         entitiesContainer.innerHTML = "";
 
         if (totalEntities === 0) {
@@ -672,6 +945,7 @@ Key dates include the initial prototype demo on April 20th, beta testing through
               No entities were detected in the text. Try entering text with names, places, organizations, or dates.
             </div>
           `;
+          showResults();
           return;
         }
 
@@ -680,128 +954,45 @@ Key dates include the initial prototype demo on April 20th, beta testing through
             title: "People",
             entities: analysis.people,
             type: "people",
-            icon: "👤",
           },
           {
             title: "Places",
             entities: analysis.places,
             type: "places",
-            icon: "📍",
           },
           {
             title: "Organizations",
             entities: analysis.organizations,
             type: "organizations",
-            icon: "🏢",
           },
-          { title: "Dates", entities: analysis.dates, type: "dates", icon: "📅" },
+          {
+            title: "Dates",
+            entities: analysis.dates,
+            type: "dates",
+          },
           {
             title: "Values/Money",
             entities: analysis.values,
             type: "values",
-            icon: "💰",
-          },
-          {
-            title: "Topics",
-            entities: analysis.topics,
-            type: "topics",
-            icon: "🏷️",
           },
         ];
 
-        sections.forEach(({ title, entities, type, icon }) => {
+        sections.forEach(({ title, entities, type }) => {
           if (entities.length > 0) {
-            const section = createEntitySection(title, entities, type, icon);
-            entitiesContainer.appendChild(section);
+            const table = createEntityTable(title, entities, type);
+            entitiesContainer.appendChild(table);
           }
         });
+
+        showResults();
       }
 
-      function toggleSection(sectionId) {
-        const section = document.getElementById(sectionId);
-        const icon = document.getElementById(`icon-${sectionId}`);
-
-        if (section.classList.contains("collapsed")) {
-          section.classList.remove("collapsed");
-          icon.classList.remove("collapsed");
-        } else {
-          section.classList.add("collapsed");
-          icon.classList.add("collapsed");
-        }
+      // Utility function to escape HTML
+      function escapeHtml(text) {
+        const div = document.createElement("div");
+        div.textContent = text;
+        return div.innerHTML;
       }
-
-      function exportResults() {
-        if (!currentAnalysis) return;
-
-        const exportData = {
-          analyzedAt: new Date().toISOString(),
-          text: currentAnalysis.text,
-          entities: {
-            people: currentAnalysis.people,
-            places: currentAnalysis.places,
-            organizations: currentAnalysis.organizations,
-            dates: currentAnalysis.dates,
-            values: currentAnalysis.values,
-            topics: currentAnalysis.topics,
-          },
-          statistics: {
-            totalEntities:
-              currentAnalysis.people.length +
-              currentAnalysis.places.length +
-              currentAnalysis.organizations.length +
-              currentAnalysis.dates.length +
-              currentAnalysis.values.length +
-              currentAnalysis.topics.length,
-            peopleCount: currentAnalysis.people.length,
-            placesCount: currentAnalysis.places.length,
-            organizationsCount: currentAnalysis.organizations.length,
-            datesCount: currentAnalysis.dates.length,
-            valuesCount: currentAnalysis.values.length,
-            topicsCount: currentAnalysis.topics.length,
-          },
-        };
-
-        const blob = new Blob([JSON.stringify(exportData, null, 2)], {
-          type: "application/json",
-        });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `ner-analysis-${Date.now()}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
-      }
-
-      function clearAll() {
-        textInput.value = "";
-        currentAnalysis = null;
-        resultsSection.classList.remove("visible");
-        textInput.focus();
-      }
-
-      function loadExample() {
-        textInput.value = exampleText;
-        textInput.focus();
-      }
-
-      // Event listeners
-      analyzeBtn.addEventListener("click", analyzeText);
-      clearBtn.addEventListener("click", clearAll);
-      loadExampleBtn.addEventListener("click", loadExample);
-      exportBtn.addEventListener("click", exportResults);
-
-      // Allow Enter+Ctrl/Cmd to analyze
-      textInput.addEventListener("keydown", (e) => {
-        if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
-          analyzeText();
-        }
-      });
-
-      // Make toggleSection available globally for onclick handlers
-      window.toggleSection = toggleSection;
-
-      // Initialize
-      textInput.focus();
     </script>
   </body>
 </html>
