@@ -188,7 +188,7 @@
         display: flex;
         flex-wrap: wrap;
         gap: 1rem;
-        margin-bottom: 2rem;
+        margin-bottom: 1rem;
         padding: 1rem;
         background-color: var(--bg-color);
         border-radius: 6px;
@@ -322,6 +322,27 @@
         border-radius: 12px;
         font-size: 12px;
         font-weight: 600;
+      }
+
+      .table-search {
+        padding: 10px 15px;
+        background-color: #ffffff;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .table-search input {
+        width: 100%;
+        padding: 6px 10px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        font-size: 14px;
+        font-family: inherit;
+        box-sizing: border-box;
+      }
+
+      .table-search input:focus {
+        outline: none;
+        border-color: var(--primary-color);
       }
 
       table {
@@ -460,43 +481,75 @@
 
       <div class="loading" id="loading">Analyzing text...</div>
 
-      <div id="statsSection" class="hidden">
-        <div class="stats-grid" id="statsGrid"></div>
-      </div>
-
-      <div id="legendSection" class="hidden">
-        <div class="legend">
-          <div class="legend-item">
-            <div class="legend-color person"></div>
-            <span>People</span>
+      <div id="statsSection">
+        <div class="stats-grid" id="statsGrid">
+          <div class="stat-card">
+            <div class="stat-value">0</div>
+            <div class="stat-label">Total Entities</div>
           </div>
-          <div class="legend-item">
-            <div class="legend-color place"></div>
-            <span>Places</span>
+          <div class="stat-card">
+            <div class="stat-value">0</div>
+            <div class="stat-label">People</div>
           </div>
-          <div class="legend-item">
-            <div class="legend-color organization"></div>
-            <span>Organizations</span>
+          <div class="stat-card">
+            <div class="stat-value">0</div>
+            <div class="stat-label">Places</div>
           </div>
-          <div class="legend-item">
-            <div class="legend-color date"></div>
-            <span>Dates</span>
+          <div class="stat-card">
+            <div class="stat-value">0</div>
+            <div class="stat-label">Organizations</div>
           </div>
-          <div class="legend-item">
-            <div class="legend-color value"></div>
-            <span>Values/Money</span>
+          <div class="stat-card">
+            <div class="stat-value">0</div>
+            <div class="stat-label">Dates</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">0</div>
+            <div class="stat-label">Values/Money</div>
           </div>
         </div>
       </div>
 
-      <div id="highlightedSection" class="hidden">
+      <div id="highlightedSection">
         <h2 class="section-title">Highlighted Text</h2>
-        <div class="highlighted-text" id="highlightedText"></div>
+        <div id="legendSection">
+          <div class="legend">
+            <div class="legend-item">
+              <div class="legend-color person"></div>
+              <span>People</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color place"></div>
+              <span>Places</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color organization"></div>
+              <span>Organizations</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color date"></div>
+              <span>Dates</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color value"></div>
+              <span>Values/Money</span>
+            </div>
+          </div>
+        </div>
+        <div class="highlighted-text" id="highlightedText">
+          <p style="color: var(--secondary-text); font-style: italic">
+            Your text will appear here with highlighted entities...
+          </p>
+        </div>
       </div>
 
-      <div id="entitiesSection" class="hidden">
+      <div id="entitiesSection">
         <h2 class="section-title">Extracted Entities</h2>
-        <div id="entitiesContainer" class="entities-grid"></div>
+        <div id="entitiesContainer" class="entities-grid">
+          <div class="empty-state">
+            Enter or load text and click "Analyze" to extract named entities.
+          </div>
+        </div>
       </div>
     </div>
 
@@ -548,21 +601,53 @@
         fileInput.value = "";
         fileStatus.textContent = "No file selected";
         textInput.value = "";
-        hideResults();
+        resetToPlaceholder();
       }
 
-      function hideResults() {
-        statsSection.classList.add("hidden");
-        legendSection.classList.add("hidden");
-        highlightedSection.classList.add("hidden");
-        entitiesSection.classList.add("hidden");
-      }
+      function resetToPlaceholder() {
+        // Reset stats to zeros
+        statsGrid.innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-value">0</div>
+                        <div class="stat-label">Total Entities</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">0</div>
+                        <div class="stat-label">People</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">0</div>
+                        <div class="stat-label">Places</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">0</div>
+                        <div class="stat-label">Organizations</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">0</div>
+                        <div class="stat-label">Dates</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">0</div>
+                        <div class="stat-label">Values/Money</div>
+                    </div>
+                `;
 
-      function showResults() {
-        statsSection.classList.remove("hidden");
-        legendSection.classList.remove("hidden");
-        highlightedSection.classList.remove("hidden");
-        entitiesSection.classList.remove("hidden");
+        // Reset highlighted text
+        highlightedText.innerHTML = `
+                    <p style="color: var(--secondary-text); font-style: italic">
+                        Your analyzed text will appear here with highlighted
+                        entities...
+                    </p>
+                `;
+
+        // Reset entities container
+        entitiesContainer.innerHTML = `
+                    <div class="empty-state">
+                        Enter or load text and click "Analyze" to extract named
+                        entities.
+                    </div>
+                `;
       }
 
       // Get unique entities with counts
@@ -625,14 +710,34 @@
         const container = document.createElement("div");
         container.className = "table-container";
 
+        // Create unique IDs for this table
+        const tableId = `table-${type}`;
+        const searchId = `search-${type}`;
+        const downloadId = `download-${type}`;
+
         container.innerHTML = `
           <div class="table-header">
             <h3>${title} <span class="entity-badge">${
           entityCounts.length
         } unique</span></h3>
+            <button
+              id="${downloadId}"
+              class="btn"
+              style="padding: 4px 8px; font-size: 12px; margin-left: auto"
+              title="Download as CSV"
+            >
+              CSV
+            </button>
+          </div>
+          <div class="table-search">
+            <input
+              type="text"
+              id="${searchId}"
+              placeholder="Search ${title.toLowerCase()}..."
+            />
           </div>
           <div style="max-height: 300px; overflow-y: auto">
-            <table>
+            <table id="${tableId}">
               <thead>
                 <tr>
                   <th>Entity</th>
@@ -655,7 +760,83 @@
           </div>
         `;
 
+        // Add event listeners after the element is added to the DOM
+        setTimeout(() => {
+          const searchInput = document.getElementById(searchId);
+          const downloadBtn = document.getElementById(downloadId);
+
+          if (searchInput) {
+            searchInput.addEventListener("input", (e) => {
+              filterTable(tableId, e.target.value);
+            });
+          }
+
+          if (downloadBtn) {
+            downloadBtn.addEventListener("click", () => {
+              downloadCSV(tableId, `${type}-entities.csv`, ["Entity", "Count"]);
+            });
+          }
+        }, 0);
+
         return container;
+      }
+
+      // Filter table rows based on search term
+      function filterTable(tableId, searchTerm) {
+        const table = document.getElementById(tableId);
+        if (!table) return;
+
+        const rows = table.querySelectorAll("tbody tr");
+        const term = searchTerm.toLowerCase();
+
+        rows.forEach((row) => {
+          const firstCell = row.cells[0];
+          if (firstCell) {
+            const text = firstCell.textContent.toLowerCase();
+            if (text.includes(term)) {
+              row.style.display = "";
+            } else {
+              row.style.display = "none";
+            }
+          }
+        });
+      }
+
+      // Download table as CSV
+      function downloadCSV(tableId, filename, headers) {
+        const table = document.getElementById(tableId);
+        if (!table) return;
+
+        const rows = table.querySelectorAll("tbody tr");
+
+        // Build CSV content
+        let csvContent = headers.join(",") + "\n";
+
+        rows.forEach((row) => {
+          const cells = Array.from(row.cells);
+          const rowData = cells.map((cell) => {
+            let value = cell.textContent.trim();
+            // Escape quotes and wrap in quotes if contains comma
+            if (value.includes(",") || value.includes('"')) {
+              value = '"' + value.replace(/"/g, '""') + '"';
+            }
+            return value;
+          });
+          csvContent += rowData.join(",") + "\n";
+        });
+
+        downloadFile(csvContent, filename, "text/csv");
+      }
+
+      // Download file helper
+      function downloadFile(content, filename, mimeType) {
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
       }
 
       // Highlight text with entities
@@ -755,7 +936,6 @@
 
         // Show loading state
         loading.classList.add("visible");
-        hideResults();
 
         // Use setTimeout to allow UI to update
         setTimeout(() => {
@@ -941,11 +1121,10 @@
 
         if (totalEntities === 0) {
           entitiesContainer.innerHTML = `
-            <div class="empty-state">
-              No entities were detected in the text. Try entering text with names, places, organizations, or dates.
-            </div>
-          `;
-          showResults();
+                <div class="empty-state">
+                  No entities were detected in the text. Try entering text with names, places, organizations, or dates.
+                </div>
+              `;
           return;
         }
 
@@ -983,8 +1162,6 @@
             entitiesContainer.appendChild(table);
           }
         });
-
-        showResults();
       }
 
       // Utility function to escape HTML
