@@ -37,7 +37,7 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 
 ### Maps and spatial data
 
-- **[Feature Service Viewer](featureservice-viewer.html)** — load and visualize ArcGIS Feature Services and MapServer layers on an interactive map
+- **[Feature Service Viewer](feature-service-viewer.html)** — load and visualize ArcGIS Feature Services and MapServer layers on an interactive map
 - **[GeoJSON Viewer](geojson-viewer.html)** — visualize and explore GeoJSON files on an interactive map
 
 ### Text and documents
