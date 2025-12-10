@@ -843,7 +843,7 @@
         const url = URL.createObjectURL(file);
         videoElement.src = url;
         elements.videoContainer.classList.remove("hidden");
-        elements.currentFile.textContent = `📹 ${file.name}`;
+        elements.currentFile.textContent = `File name: ${file.name}`;
         elements.currentFile.classList.add("active");
         elements.analyzeBtn.disabled = false;
 
