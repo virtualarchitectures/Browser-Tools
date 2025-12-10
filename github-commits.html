@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GitHub Commits Viewer</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Arial, sans-serif;
+        line-height: 1.6;
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 20px;
+        color: #24292e;
+        background: #ffffff;
+      }
+      h1 {
+        border-bottom: 1px solid #eaecef;
+        padding-bottom: 0.3em;
+        margin-top: 0;
+        font-size: 32px;
+        font-weight: 600;
+      }
+      .controls {
+        display: flex;
+        gap: 8px;
+        align-items: flex-end;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+      }
+      .input-group {
+        flex: 1;
+        min-width: 300px;
+      }
+      .input-group label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #24292e;
+      }
+      .input-group input {
+        width: 100%;
+        padding: 8px 12px;
+        font-size: 14px;
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Arial, sans-serif;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        background: #ffffff;
+        color: #24292e;
+      }
+      .input-group input:focus {
+        outline: none;
+        border-color: #0366d6;
+        box-shadow: 0 0 0 3px rgba(3, 102, 214, 0.1);
+      }
+      .input-group .help-text {
+        font-size: 12px;
+        color: #586069;
+        margin-top: 4px;
+      }
+      .btn {
+        background: #fafbfc;
+        color: #24292e;
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+        cursor: pointer;
+        font-size: 14px;
+        line-height: 20px;
+        text-decoration: none;
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Arial, sans-serif;
+        white-space: nowrap;
+      }
+      .btn:hover {
+        background: #f3f4f6;
+      }
+      .btn.primary {
+        background: #0366d6;
+        color: #fff;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+      }
+      .btn.primary:hover {
+        background: #0256c5;
+      }
+      .btn.secondary {
+        background: #fafbfc;
+        color: #24292e;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+      }
+      .btn.secondary:hover {
+        background: #f3f4f6;
+      }
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .btn.secondary:disabled:hover {
+        background: #fafbfc;
+      }
+      .btn.primary:disabled:hover {
+        background: #0366d6;
+      }
+      .panel {
+        background: #f6f8fa;
+        padding: 16px;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+        margin-bottom: 16px;
+      }
+      .panel h2 {
+        margin-top: 0;
+        margin-bottom: 12px;
+        font-size: 20px;
+        font-weight: 600;
+        color: #24292e;
+        cursor: pointer;
+        user-select: none;
+        display: flex;
+        align-items: center;
+      }
+      .panel h2::before {
+        content: "▼";
+        display: inline-block;
+        margin-right: 8px;
+        transition: transform 0.2s;
+        font-size: 12px;
+      }
+      .panel h2.collapsed::before {
+        transform: rotate(-90deg);
+      }
+      .panel-content {
+        transition: max-height 0.3s ease;
+        overflow: hidden;
+      }
+      .panel-content.collapsed {
+        display: none;
+      }
+      .back-link {
+        display: inline-block;
+        margin-bottom: 16px;
+        color: #0366d6;
+        text-decoration: none;
+        font-size: 14px;
+      }
+      .back-link:hover {
+        text-decoration: underline;
+      }
+      .info {
+        font-size: 13px;
+        color: #586069;
+        margin-bottom: 12px;
+      }
+      .empty-state {
+        color: #586069;
+        font-style: italic;
+        text-align: center;
+        padding: 40px 20px;
+      }
+      .error-message {
+        background: #ffeef0;
+        color: #86181d;
+        padding: 12px;
+        border-radius: 6px;
+        border: 1px solid #f97583;
+        margin-bottom: 16px;
+        font-size: 14px;
+      }
+      .success-message {
+        background: #dcffe4;
+        color: #144620;
+        padding: 12px;
+        border-radius: 6px;
+        border: 1px solid #34d058;
+        margin-bottom: 16px;
+        font-size: 14px;
+      }
+      .commits-list {
+        background: #ffffff;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+      }
+      .commit-item {
+        padding: 16px;
+        border-bottom: 1px solid #e1e4e8;
+        transition: background 0.2s;
+      }
+      .commit-item:last-child {
+        border-bottom: none;
+      }
+      .commit-item:hover {
+        background: #f6f8fa;
+      }
+      .commit-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 8px;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .commit-message {
+        font-weight: 600;
+        color: #24292e;
+        font-size: 14px;
+        margin-bottom: 4px;
+        word-break: break-word;
+      }
+      .commit-sha {
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
+          monospace;
+        font-size: 12px;
+        color: #0366d6;
+        background: #f6f8fa;
+        padding: 2px 6px;
+        border-radius: 3px;
+        text-decoration: none;
+        white-space: nowrap;
+      }
+      .commit-sha:hover {
+        text-decoration: underline;
+      }
+      .commit-author {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+      .commit-avatar {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: 1px solid #e1e4e8;
+      }
+      .commit-author-name {
+        font-size: 13px;
+        color: #24292e;
+        font-weight: 500;
+      }
+      .commit-date {
+        font-size: 12px;
+        color: #586069;
+      }
+      .commit-stats {
+        display: flex;
+        gap: 16px;
+        font-size: 12px;
+        color: #586069;
+        margin-top: 8px;
+      }
+      .commit-stat {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .commit-stat.additions {
+        color: #28a745;
+      }
+      .commit-stat.deletions {
+        color: #d73a49;
+      }
+      .commit-stat.files {
+        color: #6f42c1;
+      }
+      .loading {
+        text-align: center;
+        padding: 40px 20px;
+        color: #586069;
+      }
+      .loading::after {
+        content: "...";
+        animation: dots 1.5s steps(4, end) infinite;
+      }
+      @keyframes dots {
+        0%,
+        20% {
+          content: ".";
+        }
+        40% {
+          content: "..";
+        }
+        60%,
+        100% {
+          content: "...";
+        }
+      }
+      .actions {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+      }
+      .options {
+        background: #ffffff;
+        padding: 12px;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+        margin-bottom: 12px;
+      }
+      .option-group {
+        margin-bottom: 12px;
+      }
+      .option-group:last-child {
+        margin-bottom: 0;
+      }
+      .option-group label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #24292e;
+      }
+      .option-group input[type="number"] {
+        width: 100%;
+        padding: 6px 12px;
+        font-size: 14px;
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Arial, sans-serif;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        background: #ffffff;
+        color: #24292e;
+      }
+      .option-group input[type="number"]:focus {
+        outline: none;
+        border-color: #0366d6;
+      }
+      .option-description {
+        font-size: 12px;
+        color: #586069;
+        margin-top: 4px;
+      }
+      .btn-group {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      @media (max-width: 768px) {
+        .commit-header {
+          flex-direction: column;
+        }
+        .controls {
+          flex-direction: column;
+          align-items: stretch;
+          flex-wrap: wrap;
+        }
+        .input-group {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a href="index.html" class="back-link">← Back to Browser Tools</a>
+
+    <h1>GitHub Commits Viewer</h1>
+
+    <div class="controls">
+      <div class="input-group">
+        <label for="repoUrl">Repository URL or Owner/Repo</label>
+        <input
+          type="text"
+          id="repoUrl"
+          placeholder="https://github.com/owner/repo or owner/repo"
+        />
+      </div>
+      <button id="fetchBtn" class="btn primary">Fetch Commits</button>
+      <button id="clearBtn" class="btn secondary">Clear</button>
+    </div>
+    <div class="help-text" style="margin-bottom: 16px">
+      Enter a GitHub repository URL or just owner/repo (e.g.,
+      virtualarchitectures/Browser-Tools)
+    </div>
+
+    <div id="errorMsg" class="error-message" style="display: none"></div>
+    <div id="successMsg" class="success-message" style="display: none"></div>
+
+    <div id="optionsPanel" class="panel" style="display: none">
+      <h2 id="optionsHeader">Options</h2>
+      <div id="optionsContent" class="panel-content">
+        <div class="options">
+          <div class="option-group">
+            <label for="commitLimit">Number of commits to fetch</label>
+            <input
+              type="number"
+              id="commitLimit"
+              min="1"
+              max="100"
+              value="30"
+            />
+            <div class="option-description">
+              Maximum 100 commits per request (GitHub API limit)
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="resultsPanel" class="panel" style="display: none">
+      <h2 id="resultsHeader">
+        <span id="resultsTitle">Commits</span>
+      </h2>
+      <div id="resultsContent" class="panel-content">
+        <div class="actions">
+          <button id="downloadJsonBtn" class="btn primary">
+            Download JSON
+          </button>
+          <button id="downloadCsvBtn" class="btn primary">Download CSV</button>
+          <button id="downloadMarkdownBtn" class="btn primary">
+            Download Markdown
+          </button>
+        </div>
+        <div class="info">
+          <span id="commitCount">0 commits</span> loaded from
+          <span id="repoName"></span>
+        </div>
+        <div id="commitsList" class="commits-list"></div>
+      </div>
+    </div>
+
+    <script>
+      /* =========================
+         DOM Elements
+         ========================= */
+      const repoUrlInput = document.getElementById("repoUrl");
+      const fetchBtn = document.getElementById("fetchBtn");
+      const errorMsg = document.getElementById("errorMsg");
+      const successMsg = document.getElementById("successMsg");
+      const optionsPanel = document.getElementById("optionsPanel");
+      const optionsHeader = document.getElementById("optionsHeader");
+      const optionsContent = document.getElementById("optionsContent");
+      const resultsPanel = document.getElementById("resultsPanel");
+      const resultsHeader = document.getElementById("resultsHeader");
+      const resultsContent = document.getElementById("resultsContent");
+      const resultsTitle = document.getElementById("resultsTitle");
+      const commitsList = document.getElementById("commitsList");
+      const commitCount = document.getElementById("commitCount");
+      const repoName = document.getElementById("repoName");
+      const commitLimit = document.getElementById("commitLimit");
+      const downloadJsonBtn = document.getElementById("downloadJsonBtn");
+      const downloadCsvBtn = document.getElementById("downloadCsvBtn");
+      const downloadMarkdownBtn = document.getElementById(
+        "downloadMarkdownBtn"
+      );
+      const clearBtn = document.getElementById("clearBtn");
+
+      /* =========================
+         State
+         ========================= */
+      let currentCommits = [];
+      let currentRepo = "";
+
+      /* =========================
+         Utility Functions
+         ========================= */
+
+      function showError(message) {
+        errorMsg.textContent = message;
+        errorMsg.style.display = "block";
+        successMsg.style.display = "none";
+      }
+
+      function showSuccess(message) {
+        successMsg.textContent = message;
+        successMsg.style.display = "block";
+        errorMsg.style.display = "none";
+      }
+
+      function hideMessages() {
+        errorMsg.style.display = "none";
+        successMsg.style.display = "none";
+      }
+
+      function parseRepoUrl(input) {
+        input = input.trim();
+
+        // If it's already in owner/repo format
+        if (/^[^/]+\/[^/]+$/.test(input)) {
+          return input;
+        }
+
+        // Try to extract from GitHub URL
+        const patterns = [
+          /github\.com\/([^/]+\/[^/]+)/,
+          /github\.com\/([^/]+\/[^/]+)\.git/,
+        ];
+
+        for (const pattern of patterns) {
+          const match = input.match(pattern);
+          if (match) {
+            return match[1].replace(/\.git$/, "");
+          }
+        }
+
+        return null;
+      }
+
+      function formatDate(dateString) {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+
+        if (diffMins < 1) return "just now";
+        if (diffMins < 60)
+          return `${diffMins} minute${diffMins > 1 ? "s" : ""} ago`;
+        if (diffHours < 24)
+          return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+        if (diffDays < 30)
+          return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
+
+        return date.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        });
+      }
+
+      function truncateMessage(message) {
+        const firstLine = message.split("\n")[0];
+        return firstLine.length > 100
+          ? firstLine.substring(0, 100) + "..."
+          : firstLine;
+      }
+
+      /* =========================
+         API Functions
+         ========================= */
+
+      async function fetchCommits(repo, limit = 30) {
+        const apiUrl = `https://api.github.com/repos/${repo}/commits?per_page=${limit}`;
+
+        try {
+          const response = await fetch(apiUrl);
+
+          if (!response.ok) {
+            if (response.status === 404) {
+              throw new Error("Repository not found. Please check the URL.");
+            } else if (response.status === 403) {
+              throw new Error(
+                "API rate limit exceeded. Please try again later."
+              );
+            } else {
+              throw new Error(`GitHub API error: ${response.status}`);
+            }
+          }
+
+          const commits = await response.json();
+          return commits;
+        } catch (error) {
+          if (error.message.includes("Failed to fetch")) {
+            throw new Error(
+              "Network error. Please check your internet connection."
+            );
+          }
+          throw error;
+        }
+      }
+
+      /* =========================
+         Display Functions
+         ========================= */
+
+      function displayCommits(commits, repo) {
+        currentCommits = commits;
+        currentRepo = repo;
+
+        commitsList.innerHTML = "";
+
+        if (!commits || commits.length === 0) {
+          commitsList.innerHTML =
+            '<div class="empty-state">No commits found</div>';
+          return;
+        }
+
+        commits.forEach((commit) => {
+          const commitItem = document.createElement("div");
+          commitItem.className = "commit-item";
+
+          const sha = commit.sha.substring(0, 7);
+          const message = truncateMessage(commit.commit.message);
+          const author = commit.commit.author.name;
+          const date = formatDate(commit.commit.author.date);
+          const avatarUrl = commit.author
+            ? commit.author.avatar_url
+            : `https://github.com/identicons/${commit.commit.author.email}.png`;
+          const commitUrl = commit.html_url;
+
+          commitItem.innerHTML = `
+            <div class="commit-header">
+              <div>
+                <div class="commit-message">${escapeHtml(message)}</div>
+                <div class="commit-author">
+                  <img src="${avatarUrl}" alt="${escapeHtml(
+            author
+          )}" class="commit-avatar" />
+                  <span class="commit-author-name">${escapeHtml(author)}</span>
+                  <span class="commit-date">committed ${date}</span>
+                </div>
+              </div>
+              <a href="${commitUrl}" target="_blank" class="commit-sha" title="View on GitHub">${sha}</a>
+            </div>
+          `;
+
+          commitsList.appendChild(commitItem);
+        });
+
+        // Update info
+        commitCount.textContent = `${commits.length} commit${
+          commits.length !== 1 ? "s" : ""
+        }`;
+        repoName.textContent = repo;
+
+        // Show results panel
+        resultsPanel.style.display = "block";
+      }
+
+      function escapeHtml(text) {
+        const div = document.createElement("div");
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      function commitsToCSV(commits, repo) {
+        const headers = ["Author", "Date", "Message", "Commit Link"];
+        const csvLines = [headers.join(",")];
+
+        commits.forEach((commit) => {
+          const author = escapeCSVField(commit.commit.author.name);
+          const date = escapeCSVField(commit.commit.author.date);
+          const message = escapeCSVField(
+            commit.commit.message.replace(/\n/g, " ")
+          );
+          const link = escapeCSVField(commit.html_url);
+
+          csvLines.push([author, date, message, link].join(","));
+        });
+
+        return csvLines.join("\n");
+      }
+
+      function escapeCSVField(field) {
+        const str = String(field);
+        if (str.includes(",") || str.includes('"') || str.includes("\n")) {
+          return '"' + str.replace(/"/g, '""') + '"';
+        }
+        return str;
+      }
+
+      function commitsToMarkdown(commits, repo) {
+        let markdown = `# Commits for ${repo}\n\n`;
+        markdown += "| Author | Date | Message | Link |\n";
+        markdown += "|--------|------|---------|------|\n";
+
+        commits.forEach((commit) => {
+          const author = commit.commit.author.name.replace(/\|/g, "\\|");
+          const date = commit.commit.author.date;
+          const message = commit.commit.message
+            .split("\n")[0]
+            .replace(/\|/g, "\\|");
+          const sha = commit.sha.substring(0, 7);
+          const link = `[${sha}](${commit.html_url})`;
+
+          markdown += `| ${author} | ${date} | ${message} | ${link} |\n`;
+        });
+
+        return markdown;
+      }
+
+      /* =========================
+         Event Handlers
+         ========================= */
+
+      fetchBtn.addEventListener("click", async () => {
+        hideMessages();
+
+        const input = repoUrlInput.value;
+        const repo = parseRepoUrl(input);
+
+        if (!repo) {
+          showError(
+            "Invalid repository format. Please enter a valid GitHub URL or owner/repo."
+          );
+          return;
+        }
+
+        const limit = parseInt(commitLimit.value) || 30;
+
+        // Show loading state
+        fetchBtn.disabled = true;
+        fetchBtn.textContent = "Fetching...";
+        commitsList.innerHTML = '<div class="loading">Loading commits</div>';
+
+        try {
+          const commits = await fetchCommits(repo, limit);
+          displayCommits(commits, repo);
+          showSuccess(
+            `Successfully loaded ${commits.length} commit${
+              commits.length !== 1 ? "s" : ""
+            } from ${repo}`
+          );
+
+          // Show options panel after first fetch
+          if (optionsPanel.style.display === "none") {
+            optionsPanel.style.display = "block";
+          }
+        } catch (error) {
+          showError(error.message);
+          commitsList.innerHTML = "";
+          resultsPanel.style.display = "none";
+        } finally {
+          fetchBtn.disabled = false;
+          fetchBtn.textContent = "Fetch Commits";
+        }
+      });
+
+      // Allow Enter key to trigger fetch
+      repoUrlInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+          fetchBtn.click();
+        }
+      });
+
+      // Download JSON button
+      downloadJsonBtn.addEventListener("click", () => {
+        const json = JSON.stringify(currentCommits, null, 2);
+        const blob = new Blob([json], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${currentRepo.replace("/", "-")}-commits.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showSuccess("JSON file downloaded!");
+      });
+
+      // Download CSV button
+      downloadCsvBtn.addEventListener("click", () => {
+        const csv = commitsToCSV(currentCommits, currentRepo);
+        const blob = new Blob([csv], { type: "text/csv" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${currentRepo.replace("/", "-")}-commits.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showSuccess("CSV file downloaded!");
+      });
+
+      // Download Markdown button
+      downloadMarkdownBtn.addEventListener("click", () => {
+        const markdown = commitsToMarkdown(currentCommits, currentRepo);
+        const blob = new Blob([markdown], { type: "text/markdown" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${currentRepo.replace("/", "-")}-commits.md`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showSuccess("Markdown file downloaded!");
+      });
+
+      // Clear button
+      clearBtn.addEventListener("click", () => {
+        currentCommits = [];
+        currentRepo = "";
+        commitsList.innerHTML = "";
+        resultsPanel.style.display = "none";
+        repoUrlInput.value = "";
+        hideMessages();
+      });
+
+      // Panel collapse/expand
+      optionsHeader.addEventListener("click", () => {
+        optionsHeader.classList.toggle("collapsed");
+        optionsContent.classList.toggle("collapsed");
+      });
+
+      resultsHeader.addEventListener("click", () => {
+        resultsHeader.classList.toggle("collapsed");
+        resultsContent.classList.toggle("collapsed");
+      });
+
+      /* =========================
+         Initialization
+         ========================= */
+
+      // Set default repository for demo purposes
+      repoUrlInput.value = "";
+      repoUrlInput.focus();
+    </script>
+  </body>
+</html>
