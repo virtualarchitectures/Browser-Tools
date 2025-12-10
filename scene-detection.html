@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Scene Detection Tool</title>
+    <style>
+      /* =========================
+           CSS Styles
+           ========================= */
+
+      /* Reset and base styles */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen, Ubuntu, Cantarell, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background: #f5f5f5;
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .back-link {
+        display: inline-block;
+        color: #007bff;
+        text-decoration: none;
+        margin-bottom: 20px;
+        font-size: 14px;
+      }
+
+      .back-link:hover {
+        text-decoration: underline;
+      }
+
+      h1 {
+        color: #333;
+        margin-bottom: 10px;
+        font-size: 2.5em;
+        font-weight: 400;
+      }
+
+      .subtitle {
+        color: #666;
+        margin-bottom: 30px;
+        font-size: 1em;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+
+      .main-content {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      @media (min-width: 768px) {
+        .main-content {
+          flex-direction: row;
+        }
+      }
+
+      /* Layout panels */
+      .video-panel {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .results-panel {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .panel-section {
+        background: white;
+        padding: 20px;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+      }
+
+      .panel-section h2 {
+        color: #333;
+        margin-bottom: 15px;
+        font-size: 1.2em;
+        font-weight: 600;
+      }
+
+      /* File input section */
+      .file-input-section {
+        margin-bottom: 20px;
+      }
+
+      .file-input-section label {
+        display: block;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 8px;
+      }
+
+      .file-input-wrapper {
+        position: relative;
+        display: inline-block;
+        width: 100%;
+      }
+
+      .file-input-button {
+        display: block;
+        width: 100%;
+        padding: 10px 20px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        transition: background 0.2s;
+      }
+
+      .file-input-button:hover {
+        background: #0056b3;
+      }
+
+      input[type="file"] {
+        position: absolute;
+        left: -9999px;
+      }
+
+      .current-file {
+        margin-top: 10px;
+        padding: 8px 12px;
+        background: #f8f9fa;
+        border-radius: 4px;
+        font-size: 14px;
+        color: #333;
+        display: none;
+        border: 1px solid #e9ecef;
+      }
+
+      .current-file.active {
+        display: block;
+      }
+
+      /* Video container */
+      .video-container {
+        background: #000;
+        border-radius: 4px;
+        overflow: hidden;
+        position: relative;
+        margin-bottom: 20px;
+      }
+
+      #video-player {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+
+      .video-container.hidden {
+        display: none;
+      }
+
+      /* Controls */
+      .controls-section {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+      }
+
+      .control-row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .control-row label {
+        font-weight: 600;
+        color: #333;
+        min-width: 120px;
+        font-size: 14px;
+      }
+
+      .control-row input[type="range"] {
+        flex: 1;
+        min-width: 150px;
+      }
+
+      .control-row input[type="number"] {
+        width: 80px;
+        padding: 6px 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+
+      .control-row .value-display {
+        min-width: 60px;
+        font-weight: 600;
+        color: #333;
+        font-size: 14px;
+      }
+
+      .control-description {
+        font-size: 13px;
+        color: #666;
+        margin-top: -10px;
+        margin-left: 130px;
+      }
+
+      button {
+        padding: 10px 20px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        transition: background 0.2s;
+      }
+
+      button:hover:not(:disabled) {
+        background: #0056b3;
+      }
+
+      button:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+      }
+
+      .button-group {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .button-secondary {
+        background: #6c757d;
+      }
+
+      .button-secondary:hover:not(:disabled) {
+        background: #5a6268;
+      }
+
+      .button-success {
+        background: #007bff;
+      }
+
+      .button-success:hover:not(:disabled) {
+        background: #0056b3;
+      }
+
+      /* Progress section */
+      .progress-section {
+        display: none;
+      }
+
+      .progress-section.active {
+        display: block;
+      }
+
+      .progress-bar-container {
+        width: 100%;
+        height: 30px;
+        background: #e9ecef;
+        border-radius: 4px;
+        overflow: hidden;
+        margin: 10px 0;
+        position: relative;
+      }
+
+      .progress-bar {
+        height: 100%;
+        background: #007bff;
+        transition: width 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        font-size: 12px;
+      }
+
+      .progress-text {
+        text-align: center;
+        color: #333;
+        font-size: 14px;
+        margin-top: 5px;
+      }
+
+      /* Results display */
+      .scenes-list {
+        max-height: 500px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+      }
+
+      .scene-item {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 15px;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        cursor: pointer;
+      }
+
+      .scene-item:hover {
+        border-color: #007bff;
+        box-shadow: 0 2px 4px rgba(0, 123, 255, 0.1);
+      }
+
+      .scene-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+
+      .scene-number {
+        font-weight: 600;
+        color: #333;
+        font-size: 1em;
+      }
+
+      .scene-time {
+        font-size: 0.9em;
+        color: #666;
+        font-family: "Courier New", monospace;
+      }
+
+      .scene-thumbnail {
+        width: 100%;
+        border-radius: 4px;
+        margin-top: 10px;
+        border: 1px solid #dee2e6;
+      }
+
+      .scene-details {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 10px;
+        font-size: 0.85em;
+        color: #666;
+      }
+
+      .scene-duration {
+        font-weight: 600;
+      }
+
+      .scene-confidence {
+        font-weight: 600;
+      }
+
+      .confidence-high {
+        color: #28a745;
+      }
+
+      .confidence-medium {
+        color: #ffc107;
+      }
+
+      .confidence-low {
+        color: #dc3545;
+      }
+
+      /* Export section */
+      .export-section {
+        display: none;
+      }
+
+      .export-section.active {
+        display: block;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+      }
+
+      .stat-item {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 4px;
+        border: 1px solid #dee2e6;
+        text-align: center;
+      }
+
+      .stat-value {
+        font-size: 2em;
+        font-weight: 700;
+        color: #333;
+        display: block;
+      }
+
+      .stat-label {
+        font-size: 0.85em;
+        color: #666;
+        margin-top: 5px;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: #6c757d;
+      }
+
+      .empty-state svg {
+        width: 64px;
+        height: 64px;
+        margin-bottom: 15px;
+        opacity: 0.3;
+      }
+
+      /* Scrollbar styling */
+      .scenes-list::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .scenes-list::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+      }
+
+      .scenes-list::-webkit-scrollbar-thumb {
+        background: #ccc;
+        border-radius: 4px;
+      }
+
+      .scenes-list::-webkit-scrollbar-thumb:hover {
+        background: #999;
+      }
+
+      /* Responsive */
+      @media (max-width: 767px) {
+        h1 {
+          font-size: 1.8em;
+        }
+
+        .main-content {
+          padding: 20px;
+        }
+
+        .control-row {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .control-row label {
+          min-width: auto;
+        }
+
+        .control-row input[type="range"] {
+          width: 100%;
+        }
+
+        .control-description {
+          margin-left: 0;
+        }
+
+        .stats-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* Canvas for processing (hidden) */
+      #processing-canvas {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- =========================
+         HTML Structure
+         ========================= -->
+
+    <a href="index.html" class="back-link">← Back to Browser Tools</a>
+
+    <h1>Scene Detection Tool</h1>
+    <p class="subtitle">
+      Automatically detect scene changes in a video using frame analysis
+    </p>
+
+    <div class="container">
+      <div class="main-content">
+        <!-- Video Panel -->
+        <div class="video-panel">
+          <!-- Video Input Section -->
+          <div class="panel-section">
+            <h2>Video</h2>
+            <div class="file-input-section">
+              <label for="video-input">Upload Video File:</label>
+              <div class="file-input-wrapper">
+                <button
+                  class="file-input-button"
+                  onclick="
+                                        document
+                                            .getElementById('video-input')
+                                            .click()
+                                    "
+                >
+                  Choose File
+                </button>
+                <input type="file" id="video-input" accept="video/*" />
+              </div>
+              <div id="current-file" class="current-file"></div>
+            </div>
+
+            <div class="video-container hidden" id="video-container">
+              <video id="video-player" controls></video>
+            </div>
+          </div>
+
+          <!-- Detection Settings -->
+          <div class="panel-section">
+            <h2>Detection Settings</h2>
+            <div class="controls-section">
+              <div class="control-row">
+                <label for="threshold-slider">Sensitivity:</label>
+                <input
+                  type="range"
+                  id="threshold-slider"
+                  min="1"
+                  max="50"
+                  value="15"
+                  step="1"
+                />
+                <span class="value-display" id="threshold-value">15</span>
+              </div>
+              <p class="control-description">
+                Controls how different frames must be to trigger a scene change
+                (1-50). Lower values = more sensitive (more scenes detected).
+              </p>
+
+              <div class="control-row">
+                <label for="min-duration">Min Scene (sec):</label>
+                <input
+                  type="number"
+                  id="min-duration"
+                  min="0.5"
+                  max="30"
+                  value="2"
+                  step="0.5"
+                />
+              </div>
+              <p class="control-description">
+                Minimum duration between scene changes. Prevents rapid scene
+                changes by enforcing a time gap (0.5-30 seconds).
+              </p>
+
+              <div class="control-row">
+                <label for="sample-rate">Sample Rate:</label>
+                <input
+                  type="range"
+                  id="sample-rate"
+                  min="1"
+                  max="10"
+                  value="3"
+                  step="1"
+                />
+                <span class="value-display" id="sample-rate-value">3 fps</span>
+              </div>
+              <p class="control-description">
+                How many frames per second to analyze (1-10 fps). Higher values
+                = more accurate but slower processing.
+              </p>
+            </div>
+
+            <div class="button-group" style="margin-top: 20px">
+              <button id="analyze-btn" disabled onclick="startAnalysis()">
+                Analyze Video
+              </button>
+              <button
+                id="stop-btn"
+                class="button-secondary"
+                disabled
+                onclick="stopAnalysis()"
+              >
+                Stop
+              </button>
+            </div>
+          </div>
+
+          <!-- Progress Section -->
+          <div class="panel-section progress-section" id="progress-section">
+            <h2>Processing</h2>
+            <div class="progress-bar-container">
+              <div class="progress-bar" id="progress-bar">0%</div>
+            </div>
+            <p class="progress-text" id="progress-text">
+              Analyzing video frames...
+            </p>
+          </div>
+        </div>
+
+        <!-- Results Panel -->
+        <div class="results-panel">
+          <!-- Statistics Section -->
+          <div class="panel-section export-section" id="export-section">
+            <h2>Statistics</h2>
+            <div class="stats-grid">
+              <div class="stat-item">
+                <span class="stat-value" id="total-scenes">0</span>
+                <span class="stat-label">Scenes Detected</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value" id="video-duration">0:00</span>
+                <span class="stat-label">Total Duration</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value" id="avg-scene-length">0:00</span>
+                <span class="stat-label">Avg Scene Length</span>
+              </div>
+            </div>
+
+            <div class="button-group">
+              <button class="button-success" onclick="exportJSON()">
+                Export as JSON
+              </button>
+              <button class="button-success" onclick="exportCSV()">
+                Export as CSV
+              </button>
+              <button class="button-success" onclick="exportTimecodes()">
+                Export Timecodes
+              </button>
+            </div>
+          </div>
+
+          <!-- Scenes List -->
+          <div class="panel-section">
+            <h2>Detected Scenes</h2>
+            <div class="scenes-list" id="scenes-list">
+              <div class="empty-state">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                  />
+                </svg>
+                <p>No scenes detected yet.</p>
+                <p style="font-size: 0.9em; margin-top: 5px">
+                  Load a video and click "Analyze Video" to begin.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hidden canvas for frame processing -->
+    <canvas id="processing-canvas"></canvas>
+
+    <script>
+      /* =========================
+           JavaScript
+           ========================= */
+
+      // State variables
+      let videoElement = null;
+      let scenes = [];
+      let isAnalyzing = false;
+      let shouldStop = false;
+      let previousFrameData = null;
+
+      // DOM elements
+      const elements = {
+        videoInput: document.getElementById("video-input"),
+        currentFile: document.getElementById("current-file"),
+        videoContainer: document.getElementById("video-container"),
+        videoPlayer: document.getElementById("video-player"),
+        analyzeBtn: document.getElementById("analyze-btn"),
+        stopBtn: document.getElementById("stop-btn"),
+        thresholdSlider: document.getElementById("threshold-slider"),
+        thresholdValue: document.getElementById("threshold-value"),
+        minDuration: document.getElementById("min-duration"),
+        sampleRate: document.getElementById("sample-rate"),
+        sampleRateValue: document.getElementById("sample-rate-value"),
+        progressSection: document.getElementById("progress-section"),
+        progressBar: document.getElementById("progress-bar"),
+        progressText: document.getElementById("progress-text"),
+        scenesList: document.getElementById("scenes-list"),
+        exportSection: document.getElementById("export-section"),
+        totalScenes: document.getElementById("total-scenes"),
+        videoDuration: document.getElementById("video-duration"),
+        avgSceneLength: document.getElementById("avg-scene-length"),
+        canvas: document.getElementById("processing-canvas"),
+      };
+
+      // Initialize
+      videoElement = elements.videoPlayer;
+
+      // Event listeners
+      elements.videoInput.addEventListener("change", handleVideoUpload);
+      elements.thresholdSlider.addEventListener(
+        "input",
+        updateThresholdDisplay
+      );
+      elements.sampleRate.addEventListener("input", updateSampleRateDisplay);
+
+      // Utility functions
+      function formatTime(seconds) {
+        const hrs = Math.floor(seconds / 3600);
+        const mins = Math.floor((seconds % 3600) / 60);
+        const secs = Math.floor(seconds % 60);
+        const ms = Math.floor((seconds % 1) * 1000);
+
+        if (hrs > 0) {
+          return `${hrs}:${mins.toString().padStart(2, "0")}:${secs
+            .toString()
+            .padStart(2, "0")}.${ms.toString().padStart(3, "0")}`;
+        }
+        return `${mins}:${secs.toString().padStart(2, "0")}.${ms
+          .toString()
+          .padStart(3, "0")}`;
+      }
+
+      function formatTimeSimple(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs.toString().padStart(2, "0")}`;
+      }
+
+      function updateThresholdDisplay() {
+        elements.thresholdValue.textContent = elements.thresholdSlider.value;
+      }
+
+      function updateSampleRateDisplay() {
+        elements.sampleRateValue.textContent =
+          elements.sampleRate.value + " fps";
+      }
+
+      // Video upload handler
+      function handleVideoUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        // Reset state
+        scenes = [];
+        previousFrameData = null;
+        updateScenesList();
+        elements.exportSection.classList.remove("active");
+
+        // Load video
+        const url = URL.createObjectURL(file);
+        videoElement.src = url;
+        elements.videoContainer.classList.remove("hidden");
+        elements.currentFile.textContent = `📹 ${file.name}`;
+        elements.currentFile.classList.add("active");
+        elements.analyzeBtn.disabled = false;
+
+        videoElement.addEventListener("loadedmetadata", () => {
+          console.log(
+            `Video loaded: ${videoElement.duration}s, ${videoElement.videoWidth}x${videoElement.videoHeight}`
+          );
+        });
+      }
+
+      // Scene detection algorithm
+      async function startAnalysis() {
+        if (isAnalyzing || !videoElement.src) return;
+
+        isAnalyzing = true;
+        shouldStop = false;
+        scenes = [];
+        previousFrameData = null;
+
+        elements.analyzeBtn.disabled = true;
+        elements.stopBtn.disabled = false;
+        elements.progressSection.classList.add("active");
+        elements.exportSection.classList.remove("active");
+
+        const threshold = parseFloat(elements.thresholdSlider.value);
+        const minDuration = parseFloat(elements.minDuration.value);
+        const sampleRate = parseInt(elements.sampleRate.value);
+        const interval = 1 / sampleRate;
+
+        const canvas = elements.canvas;
+        const ctx = canvas.getContext("2d", {
+          willReadFrequently: true,
+        });
+
+        // Set canvas size (smaller for faster processing)
+        const scaleFactor = 0.25;
+        canvas.width = videoElement.videoWidth * scaleFactor;
+        canvas.height = videoElement.videoHeight * scaleFactor;
+
+        const duration = videoElement.duration;
+        let currentTime = 0;
+        let lastSceneTime = 0;
+
+        // Add first scene at 0:00
+        await captureFrame(0);
+        scenes.push({
+          sceneNumber: 1,
+          startTime: 0,
+          thumbnail: canvas.toDataURL("image/jpeg", 0.7),
+          confidence: 100,
+        });
+
+        currentTime = interval;
+
+        while (currentTime < duration && !shouldStop) {
+          videoElement.currentTime = currentTime;
+
+          await new Promise((resolve) => {
+            videoElement.onseeked = resolve;
+          });
+
+          // Draw current frame to canvas
+          ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+          const currentFrameData = ctx.getImageData(
+            0,
+            0,
+            canvas.width,
+            canvas.height
+          );
+
+          if (previousFrameData) {
+            const difference = calculateFrameDifference(
+              previousFrameData,
+              currentFrameData
+            );
+
+            // Check if scene change detected
+            if (
+              difference > threshold &&
+              currentTime - lastSceneTime >= minDuration
+            ) {
+              scenes.push({
+                sceneNumber: scenes.length + 1,
+                startTime: currentTime,
+                thumbnail: canvas.toDataURL("image/jpeg", 0.7),
+                confidence: Math.min(100, Math.round(difference * 2)),
+              });
+              lastSceneTime = currentTime;
+              console.log(
+                `Scene detected at ${formatTime(
+                  currentTime
+                )}, difference: ${difference.toFixed(2)}`
+              );
+            }
+          }
+
+          previousFrameData = currentFrameData;
+          currentTime += interval;
+
+          // Update progress
+          const progress = Math.round((currentTime / duration) * 100);
+          elements.progressBar.style.width = progress + "%";
+          elements.progressBar.textContent = progress + "%";
+          elements.progressText.textContent = `Analyzing: ${formatTime(
+            currentTime
+          )} / ${formatTime(duration)}`;
+
+          // Allow UI to update
+          await new Promise((resolve) => setTimeout(resolve, 0));
+        }
+
+        // Analysis complete
+        isAnalyzing = false;
+        elements.analyzeBtn.disabled = false;
+        elements.stopBtn.disabled = true;
+
+        if (!shouldStop) {
+          elements.progressBar.style.width = "100%";
+          elements.progressBar.textContent = "100%";
+          elements.progressText.textContent = `Analysis complete! Found ${scenes.length} scenes.`;
+
+          // Calculate scene durations
+          for (let i = 0; i < scenes.length; i++) {
+            const nextTime =
+              i < scenes.length - 1 ? scenes[i + 1].startTime : duration;
+            scenes[i].duration = nextTime - scenes[i].startTime;
+          }
+
+          updateScenesList();
+          updateStatistics();
+          elements.exportSection.classList.add("active");
+        } else {
+          elements.progressText.textContent = "Analysis stopped by user.";
+        }
+      }
+
+      function stopAnalysis() {
+        shouldStop = true;
+        elements.stopBtn.disabled = true;
+      }
+
+      async function captureFrame(time) {
+        videoElement.currentTime = time;
+        return new Promise((resolve) => {
+          videoElement.onseeked = resolve;
+        });
+      }
+
+      function calculateFrameDifference(frame1, frame2) {
+        const data1 = frame1.data;
+        const data2 = frame2.data;
+        let totalDiff = 0;
+        const pixelCount = data1.length / 4;
+
+        for (let i = 0; i < data1.length; i += 4) {
+          const rDiff = Math.abs(data1[i] - data2[i]);
+          const gDiff = Math.abs(data1[i + 1] - data2[i + 1]);
+          const bDiff = Math.abs(data1[i + 2] - data2[i + 2]);
+          totalDiff += (rDiff + gDiff + bDiff) / 3;
+        }
+
+        return (totalDiff / pixelCount / 255) * 100;
+      }
+
+      function updateScenesList() {
+        if (scenes.length === 0) {
+          elements.scenesList.innerHTML = `
+                    <div class="empty-state">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        <p>No scenes detected yet.</p>
+                        <p style="font-size: 0.9em; margin-top: 5px;">Load a video and click "Analyze Video" to begin.</p>
+                    </div>
+                `;
+          return;
+        }
+
+        elements.scenesList.innerHTML = scenes
+          .map((scene) => {
+            const confidenceClass =
+              scene.confidence >= 75
+                ? "confidence-high"
+                : scene.confidence >= 50
+                ? "confidence-medium"
+                : "confidence-low";
+
+            return `
+                    <div class="scene-item" onclick="seekToScene(${
+                      scene.startTime
+                    })">
+                        <div class="scene-header">
+                            <span class="scene-number">Scene ${
+                              scene.sceneNumber
+                            }</span>
+                            <span class="scene-time">Starts at ${formatTime(
+                              scene.startTime
+                            )}</span>
+                        </div>
+                        <img src="${scene.thumbnail}" alt="Scene ${
+              scene.sceneNumber
+            }" class="scene-thumbnail">
+                        <div class="scene-details">
+                            <span class="scene-duration">Duration: ${
+                              scene.duration
+                                ? formatTimeSimple(scene.duration)
+                                : "N/A"
+                            }</span>
+                            <span class="scene-confidence ${confidenceClass}">Confidence: ${
+              scene.confidence
+            }%</span>
+                        </div>
+                    </div>
+                `;
+          })
+          .join("");
+      }
+
+      function updateStatistics() {
+        elements.totalScenes.textContent = scenes.length;
+        elements.videoDuration.textContent = formatTimeSimple(
+          videoElement.duration
+        );
+
+        if (scenes.length > 0) {
+          const totalDuration = scenes.reduce(
+            (sum, scene) => sum + (scene.duration || 0),
+            0
+          );
+          const avgDuration = totalDuration / scenes.length;
+          elements.avgSceneLength.textContent = formatTimeSimple(avgDuration);
+        }
+      }
+
+      function seekToScene(time) {
+        videoElement.currentTime = time;
+        videoElement.play();
+      }
+
+      // Export functions
+      function exportJSON() {
+        const data = {
+          videoInfo: {
+            duration: videoElement.duration,
+            width: videoElement.videoWidth,
+            height: videoElement.videoHeight,
+          },
+          detectionSettings: {
+            threshold: parseFloat(elements.thresholdSlider.value),
+            minDuration: parseFloat(elements.minDuration.value),
+            sampleRate: parseInt(elements.sampleRate.value),
+          },
+          scenes: scenes.map((scene) => ({
+            sceneNumber: scene.sceneNumber,
+            startTime: scene.startTime,
+            duration: scene.duration,
+            confidence: scene.confidence,
+          })),
+        };
+
+        const blob = new Blob([JSON.stringify(data, null, 2)], {
+          type: "application/json",
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "scene-detection.json";
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      function exportCSV() {
+        let csv =
+          "Scene Number,Start Time (s),Start Time (formatted),Duration (s),Confidence (%)\n";
+
+        scenes.forEach((scene) => {
+          csv += `${scene.sceneNumber},${scene.startTime.toFixed(
+            3
+          )},${formatTime(scene.startTime)},${(scene.duration || 0).toFixed(
+            3
+          )},${scene.confidence}\n`;
+        });
+
+        const blob = new Blob([csv], { type: "text/csv" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "scene-detection.csv";
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      function exportTimecodes() {
+        let timecodes = "# Scene Detection Timecodes\n\n";
+        timecodes += `Total Scenes: ${scenes.length}\n`;
+        timecodes += `Video Duration: ${formatTime(videoElement.duration)}\n\n`;
+        timecodes += "---\n\n";
+
+        scenes.forEach((scene) => {
+          timecodes += `Scene ${scene.sceneNumber}: ${formatTime(
+            scene.startTime
+          )}`;
+          if (scene.duration) {
+            timecodes += ` (Duration: ${formatTimeSimple(scene.duration)})`;
+          }
+          timecodes += `\n`;
+        });
+
+        const blob = new Blob([timecodes], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "scene-timecodes.txt";
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    </script>
+  </body>
+</html>
