@@ -355,9 +355,61 @@
       .scene-details {
         display: flex;
         justify-content: space-between;
+        align-items: center;
         margin-top: 10px;
         font-size: 0.85em;
         color: #666;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .scene-info {
+        display: flex;
+        gap: 15px;
+        flex: 1;
+      }
+
+      .scene-download-btn {
+        padding: 6px 12px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 500;
+        transition: background 0.2s;
+      }
+
+      .scene-download-btn:hover {
+        background: #0056b3;
+      }
+
+      .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+      }
+
+      .section-header h2 {
+        margin-bottom: 0;
+      }
+
+      .header-button {
+        padding: 8px 16px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+        transition: background 0.2s;
+      }
+
+      .header-button:hover {
+        background: #0056b3;
       }
 
       .scene-duration {
@@ -646,7 +698,12 @@
 
           <!-- Scenes List -->
           <div class="panel-section">
-            <h2>Detected Scenes</h2>
+            <div class="section-header">
+              <h2>Detected Scenes</h2>
+              <button class="header-button" onclick="downloadAllFrames()">
+                Download All Frames
+              </button>
+            </div>
             <div class="scenes-list" id="scenes-list">
               <div class="empty-state">
                 <svg
@@ -746,6 +803,22 @@
         return `${mins}:${secs.toString().padStart(2, "0")}`;
       }
 
+      function formatTimeForFilename(seconds) {
+        const hrs = Math.floor(seconds / 3600);
+        const mins = Math.floor((seconds % 3600) / 60);
+        const secs = Math.floor(seconds % 60);
+        const ms = Math.floor((seconds % 1) * 1000);
+
+        if (hrs > 0) {
+          return `${hrs}h${mins.toString().padStart(2, "0")}m${secs
+            .toString()
+            .padStart(2, "0")}s${ms.toString().padStart(3, "0")}ms`;
+        }
+        return `${mins}m${secs.toString().padStart(2, "0")}s${ms
+          .toString()
+          .padStart(3, "0")}ms`;
+      }
+
       function updateThresholdDisplay() {
         elements.thresholdValue.textContent = elements.thresholdSlider.value;
       }
@@ -835,6 +908,7 @@
           startTime: 0,
           thumbnail: captureCanvas.toDataURL("image/jpeg", 0.9),
           confidence: 100,
+          filename: `scene_001_${formatTimeForFilename(0)}.jpg`,
         });
 
         currentTime = interval;
@@ -874,11 +948,15 @@
                 captureCanvas.width,
                 captureCanvas.height
               );
+              const sceneNum = scenes.length + 1;
               scenes.push({
-                sceneNumber: scenes.length + 1,
+                sceneNumber: sceneNum,
                 startTime: currentTime,
                 thumbnail: captureCanvas.toDataURL("image/jpeg", 0.9),
                 confidence: Math.min(100, Math.round(difference * 2)),
+                filename: `scene_${sceneNum
+                  .toString()
+                  .padStart(3, "0")}_${formatTimeForFilename(currentTime)}.jpg`,
               });
               lastSceneTime = currentTime;
               console.log(
@@ -981,32 +1059,35 @@
                 : "confidence-low";
 
             return `
-                    <div class="scene-item" onclick="seekToScene(${
-                      scene.startTime
-                    })">
-                        <div class="scene-header">
-                            <span class="scene-number">Scene ${
-                              scene.sceneNumber
-                            }</span>
-                            <span class="scene-time">Starts at ${formatTime(
-                              scene.startTime
-                            )}</span>
-                        </div>
-                        <img src="${scene.thumbnail}" alt="Scene ${
+        <div class="scene-item">
+            <div class="scene-header" onclick="seekToScene(${scene.startTime})">
+                <span class="scene-number">Scene ${scene.sceneNumber}</span>
+                <span class="scene-time">Starts at ${formatTime(
+                  scene.startTime
+                )}</span>
+            </div>
+            <img src="${scene.thumbnail}" alt="Scene ${
               scene.sceneNumber
-            }" class="scene-thumbnail">
-                        <div class="scene-details">
-                            <span class="scene-duration">Duration: ${
-                              scene.duration
-                                ? formatTimeSimple(scene.duration)
-                                : "N/A"
-                            }</span>
-                            <span class="scene-confidence ${confidenceClass}">Confidence: ${
+            }" class="scene-thumbnail" onclick="seekToScene(${
+              scene.startTime
+            })">
+            <div class="scene-details">
+                <div class="scene-info">
+                    <span class="scene-duration">Duration: ${
+                      scene.duration ? formatTimeSimple(scene.duration) : "N/A"
+                    }</span>
+                    <span class="scene-confidence ${confidenceClass}">Confidence: ${
               scene.confidence
             }%</span>
-                        </div>
-                    </div>
-                `;
+                </div>
+                <button class="scene-download-btn" onclick="event.stopPropagation(); downloadFrame(${
+                  scene.sceneNumber - 1
+                })">
+                    Download Frame
+                </button>
+            </div>
+        </div>
+    `;
           })
           .join("");
       }
@@ -1032,6 +1113,44 @@
         videoElement.play();
       }
 
+      // Download individual frame
+      function downloadFrame(index) {
+        const scene = scenes[index];
+        if (!scene) return;
+
+        const link = document.createElement("a");
+        link.href = scene.thumbnail;
+        link.download = scene.filename;
+        link.click();
+      }
+
+      // Download all frames as a zip (using JSZip would be ideal, but we'll download individually with delay)
+      async function downloadAllFrames() {
+        if (scenes.length === 0) {
+          alert("No scenes to download");
+          return;
+        }
+
+        if (
+          !confirm(`This will download ${scenes.length} image files. Continue?`)
+        ) {
+          return;
+        }
+
+        for (let i = 0; i < scenes.length; i++) {
+          const scene = scenes[i];
+          const link = document.createElement("a");
+          link.href = scene.thumbnail;
+          link.download = scene.filename;
+          link.click();
+
+          // Small delay between downloads to prevent browser blocking
+          if (i < scenes.length - 1) {
+            await new Promise((resolve) => setTimeout(resolve, 100));
+          }
+        }
+      }
+
       // Export functions
       function exportJSON() {
         const data = {
@@ -1050,6 +1169,7 @@
             startTime: scene.startTime,
             duration: scene.duration,
             confidence: scene.confidence,
+            filename: scene.filename,
           })),
         };
 
@@ -1066,14 +1186,14 @@
 
       function exportCSV() {
         let csv =
-          "Scene Number,Start Time (s),Start Time (formatted),Duration (s),Confidence (%)\n";
+          "Scene Number,Start Time (s),Start Time (formatted),Duration (s),Confidence (%),Filename\n";
 
         scenes.forEach((scene) => {
           csv += `${scene.sceneNumber},${scene.startTime.toFixed(
             3
           )},${formatTime(scene.startTime)},${(scene.duration || 0).toFixed(
             3
-          )},${scene.confidence}\n`;
+          )},${scene.confidence},${scene.filename}\n`;
         });
 
         const blob = new Blob([csv], { type: "text/csv" });
@@ -1098,7 +1218,7 @@
           if (scene.duration) {
             timecodes += ` (Duration: ${formatTimeSimple(scene.duration)})`;
           }
-          timecodes += `\n`;
+          timecodes += ` - ${scene.filename}\n`;
         });
 
         const blob = new Blob([timecodes], { type: "text/plain" });
