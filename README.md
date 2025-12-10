@@ -44,6 +44,7 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 ### Media
 
 - **[Multi-Webcam Viewer](webcam-viewer.html)** — view multiple webcam feeds simultaneously with support for YouTube embeds, direct video streams (MP4, M3U8, HLS), and iframe-compatible sources
+- **[Scene Detection Tool](scene-detection.html)** — automatically detect scene changes in videos using frame analysis with adjustable sensitivity, minimum scene duration, and sample rate controls
 - **[Transcription Tool](transcribe.html)** — transcribe audio and video files with keyboard shortcuts, timestamps, and speed control
 
 ### Maps and Spatial Data
