@@ -1,0 +1,876 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>CSV Sentiment Analysis</title>
+
+        <style>
+            * {
+                box-sizing: border-box;
+            }
+            body {
+                font-family:
+                    Helvetica,
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    Arial,
+                    sans-serif;
+                line-height: 1.6;
+                max-width: 980px;
+                margin: 0 auto;
+                padding: 20px;
+                color: #24292e;
+                background: #ffffff;
+            }
+            h1 {
+                border-bottom: 1px solid #eaecef;
+                padding-bottom: 0.3em;
+                margin-top: 0;
+                font-size: 32px;
+                font-weight: 600;
+            }
+            .controls {
+                display: flex;
+                gap: 8px;
+                align-items: center;
+                margin-bottom: 16px;
+                flex-wrap: wrap;
+            }
+            input[type="file"] {
+                font-size: 16px;
+                font-family:
+                    Helvetica,
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    Arial,
+                    sans-serif;
+                color: transparent;
+                width: auto;
+                display: none;
+            }
+            .btn {
+                background: #fafbfc;
+                color: #24292e;
+                padding: 8px 12px;
+                border-radius: 6px;
+                border: 1px solid rgba(27, 31, 35, 0.15);
+                cursor: pointer;
+                font-size: 14px;
+                line-height: 20px;
+                text-decoration: none;
+                font-family:
+                    Helvetica,
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    Arial,
+                    sans-serif;
+            }
+            .btn:hover {
+                background: #f3f4f6;
+            }
+            .btn.primary {
+                background: #0366d6;
+                color: #fff;
+                border: 1px solid rgba(27, 31, 35, 0.15);
+            }
+            .btn.primary:hover {
+                background: #0256c5;
+            }
+            .btn.secondary {
+                background: #fafbfc;
+                color: #24292e;
+                border: 1px solid rgba(27, 31, 35, 0.15);
+            }
+            .btn.secondary:hover {
+                background: #f3f4f6;
+            }
+            .btn:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+            .btn.secondary:disabled:hover {
+                background: #fafbfc;
+            }
+            .btn.primary:disabled:hover {
+                background: #0366d6;
+            }
+            .panel {
+                background: #f6f8fa;
+                padding: 16px;
+                border-radius: 6px;
+                border: 1px solid #e1e4e8;
+                margin-bottom: 16px;
+            }
+            .panel h2 {
+                margin-top: 0;
+                margin-bottom: 12px;
+                font-size: 20px;
+                font-weight: 600;
+                color: #24292e;
+                cursor: pointer;
+                user-select: none;
+                display: flex;
+                align-items: center;
+            }
+            .panel h2::before {
+                content: "▼";
+                display: inline-block;
+                margin-right: 8px;
+                transition: transform 0.2s;
+                font-size: 12px;
+            }
+            .panel h2.collapsed::before {
+                transform: rotate(-90deg);
+            }
+            .panel-content {
+                transition: max-height 0.3s ease;
+                overflow: hidden;
+            }
+            .panel-content.collapsed {
+                display: none;
+            }
+            .table-wrapper {
+                background: #ffffff;
+                overflow-x: auto;
+                border-radius: 6px;
+                border: 1px solid #e1e4e8;
+                margin-bottom: 12px;
+                max-height: 400px;
+                overflow-y: auto;
+            }
+            .data-table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 14px;
+            }
+            .data-table th {
+                background: #0366d6;
+                padding: 10px 12px;
+                text-align: left;
+                font-weight: 600;
+                color: #ffffff;
+                border: 1px solid #0366d6;
+                position: sticky;
+                top: 0;
+                z-index: 1;
+            }
+            .data-table td {
+                padding: 8px 12px;
+                border: 1px solid #e1e4e8;
+                color: #24292e;
+            }
+            .data-table tr:hover {
+                background: #f6f8fa;
+            }
+            .sentiment-positive {
+                color: #28a745;
+                font-weight: 600;
+            }
+            .sentiment-negative {
+                color: #d73a49;
+                font-weight: 600;
+            }
+            .sentiment-neutral {
+                color: #586069;
+            }
+            .actions {
+                display: flex;
+                gap: 8px;
+                margin-bottom: 12px;
+            }
+            label.btn {
+                display: inline-block;
+                margin: 0;
+            }
+            .back-link {
+                display: inline-block;
+                margin-bottom: 16px;
+                color: #0366d6;
+                text-decoration: none;
+                font-size: 14px;
+            }
+            .back-link:hover {
+                text-decoration: underline;
+            }
+            .info {
+                font-size: 13px;
+                color: #586069;
+                margin-bottom: 12px;
+            }
+            .empty-state {
+                color: #586069;
+                font-style: italic;
+            }
+            .options {
+                background: #ffffff;
+                padding: 12px;
+                border-radius: 6px;
+                border: 1px solid #e1e4e8;
+                margin-bottom: 12px;
+            }
+            .option-group {
+                margin-bottom: 12px;
+            }
+            .option-group:last-child {
+                margin-bottom: 0;
+            }
+            .option-group label {
+                display: block;
+                margin-bottom: 6px;
+                font-size: 14px;
+                font-weight: 600;
+                color: #24292e;
+            }
+            .option-group select {
+                width: 100%;
+                padding: 6px 12px;
+                font-size: 16px;
+                font-family:
+                    Helvetica,
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    Arial,
+                    sans-serif;
+                border: 1px solid #e1e4e8;
+                border-radius: 6px;
+                background: #ffffff;
+                color: #24292e;
+            }
+            .option-group select:focus {
+                outline: none;
+                border-color: #0366d6;
+            }
+            .option-description {
+                font-size: 12px;
+                color: #586069;
+                margin-top: 4px;
+            }
+            .checkbox-group {
+                margin-top: 8px;
+            }
+            .checkbox-group label {
+                display: flex;
+                align-items: center;
+                font-weight: 400;
+                font-size: 14px;
+                margin-bottom: 6px;
+                cursor: pointer;
+            }
+            .checkbox-group input[type="checkbox"] {
+                margin-right: 8px;
+                cursor: pointer;
+            }
+            .summary-stats {
+                background: #ffffff;
+                padding: 12px;
+                border-radius: 6px;
+                border: 1px solid #e1e4e8;
+                margin-bottom: 12px;
+            }
+            .stats-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 12px;
+            }
+            .stat-item {
+                text-align: center;
+            }
+            .stat-value {
+                font-size: 24px;
+                font-weight: 600;
+                color: #24292e;
+            }
+            .stat-label {
+                font-size: 12px;
+                color: #586069;
+                margin-top: 4px;
+            }
+        </style>
+    </head>
+    <body>
+        <a href="index.html" class="back-link">← Back to Browser Tools</a>
+
+        <h1>CSV Sentiment Analysis</h1>
+
+        <div class="panel">
+            <h2>Step 1: Load CSV File</h2>
+            <div class="panel-content">
+                <div class="info">
+                    Upload a CSV file to analyze sentiment in a text column. The
+                    tool will add sentiment metrics to your data.
+                </div>
+                <div class="controls">
+                    <label for="fileInput" class="btn primary">Load CSV</label>
+                    <input type="file" id="fileInput" accept=".csv,text/csv" />
+                    <button class="btn secondary" id="clearBtn">Clear</button>
+                </div>
+                <div id="fileInfo" class="info" style="display: none"></div>
+            </div>
+        </div>
+
+        <div class="panel" id="configPanel" style="display: none">
+            <h2>Step 2: Configure Analysis</h2>
+            <div class="panel-content">
+                <div class="options">
+                    <div class="option-group">
+                        <label for="columnSelect"
+                            >Select Column to Analyze</label
+                        >
+                        <select id="columnSelect">
+                            <option value="">Choose a column...</option>
+                        </select>
+                        <div class="option-description">
+                            Select the text column you want to analyze for
+                            sentiment
+                        </div>
+                    </div>
+
+                    <div class="option-group">
+                        <label>Sentiment Metrics to Include</label>
+                        <div class="checkbox-group">
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    id="includeScore"
+                                    checked
+                                />
+                                Score (raw sentiment value)
+                            </label>
+                            <div
+                                class="option-description"
+                                style="margin-left: 28px; margin-bottom: 8px"
+                            >
+                                Integer value calculated by summing the valence
+                                of each sentiment-bearing word. Higher positive
+                                numbers indicate stronger positive sentiment,
+                                negative numbers indicate negative sentiment.
+                                Example: "love" = +3, "hate" = -3.
+                            </div>
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    id="includeComparative"
+                                    checked
+                                />
+                                Comparative (normalized score)
+                            </label>
+                            <div
+                                class="option-description"
+                                style="margin-left: 28px; margin-bottom: 8px"
+                            >
+                                Normalized score between -1 and 1, calculated by
+                                dividing the raw score by the number of words.
+                                Useful for comparing texts of different lengths.
+                                Values above 0.05 are typically positive, below
+                                -0.05 are negative, and between are neutral.
+                            </div>
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    id="includeClassification"
+                                    checked
+                                />
+                                Classification (Positive/Negative/Neutral)
+                            </label>
+                            <div
+                                class="option-description"
+                                style="margin-left: 28px; margin-bottom: 8px"
+                            >
+                                Simple categorical classification based on the
+                                comparative score. Positive if comparative &gt;
+                                0.05, Negative if &lt; -0.05, otherwise Neutral.
+                                This provides an easy-to-understand sentiment
+                                label.
+                            </div>
+                            <label>
+                                <input type="checkbox" id="includeWordCount" />
+                                Word Counts (positive/negative)
+                            </label>
+                            <div
+                                class="option-description"
+                                style="margin-left: 28px; margin-bottom: 8px"
+                            >
+                                Number of positive and negative words detected
+                                in the text. Helps understand the balance of
+                                sentiment-bearing words. Example: "I love this
+                                but hate that" has 1 positive word and 1
+                                negative word.
+                            </div>
+                            <label>
+                                <input type="checkbox" id="includeTokens" />
+                                Tokens (words contributing to sentiment)
+                            </label>
+                            <div
+                                class="option-description"
+                                style="margin-left: 28px; margin-bottom: 8px"
+                            >
+                                Comma-separated list of words that contributed
+                                to the sentiment score. Useful for understanding
+                                which specific words influenced the analysis.
+                                Includes both positive and negative sentiment
+                                words.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button class="btn primary" id="analyzeBtn" disabled>
+                        Analyze Sentiment
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel" id="resultsPanel" style="display: none">
+            <h2 id="resultsHeader">Analysis Results</h2>
+            <div class="panel-content" id="resultsContent">
+                <div class="summary-stats" id="summaryStats">
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-value" id="totalRows">0</div>
+                            <div class="stat-label">Total Rows</div>
+                        </div>
+                        <div class="stat-item">
+                            <div
+                                class="stat-value sentiment-positive"
+                                id="positiveCount"
+                            >
+                                0
+                            </div>
+                            <div class="stat-label">Positive</div>
+                        </div>
+                        <div class="stat-item">
+                            <div
+                                class="stat-value sentiment-neutral"
+                                id="neutralCount"
+                            >
+                                0
+                            </div>
+                            <div class="stat-label">Neutral</div>
+                        </div>
+                        <div class="stat-item">
+                            <div
+                                class="stat-value sentiment-negative"
+                                id="negativeCount"
+                            >
+                                0
+                            </div>
+                            <div class="stat-label">Negative</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="avgScore">0.00</div>
+                            <div class="stat-label">Average Score</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info">
+                    Preview of analyzed data (first 100 rows shown)
+                </div>
+                <div class="table-wrapper">
+                    <div id="resultsTable" class="empty-state">
+                        No results yet
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button class="btn primary" id="downloadBtn" disabled>
+                        Download CSV with Sentiment
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <script type="module">
+            /* =========================
+         JavaScript
+         ========================= */
+
+            // Import sentiment analyzer
+            import Sentiment from "https://cdn.jsdelivr.net/npm/sentiment@5.0.2/+esm";
+            const sentiment = new Sentiment();
+
+            // DOM elements
+            const fileInput = document.getElementById("fileInput");
+            const clearBtn = document.getElementById("clearBtn");
+            const fileInfo = document.getElementById("fileInfo");
+            const configPanel = document.getElementById("configPanel");
+            const columnSelect = document.getElementById("columnSelect");
+            const analyzeBtn = document.getElementById("analyzeBtn");
+            const resultsPanel = document.getElementById("resultsPanel");
+            const resultsTable = document.getElementById("resultsTable");
+            const downloadBtn = document.getElementById("downloadBtn");
+
+            // Metric checkboxes
+            const includeScore = document.getElementById("includeScore");
+            const includeComparative =
+                document.getElementById("includeComparative");
+            const includeClassification = document.getElementById(
+                "includeClassification",
+            );
+            const includeWordCount =
+                document.getElementById("includeWordCount");
+            const includeTokens = document.getElementById("includeTokens");
+
+            // Summary stats
+            const totalRows = document.getElementById("totalRows");
+            const positiveCount = document.getElementById("positiveCount");
+            const neutralCount = document.getElementById("neutralCount");
+            const negativeCount = document.getElementById("negativeCount");
+            const avgScore = document.getElementById("avgScore");
+
+            // State
+            let currentData = null;
+            let analyzedData = null;
+            let headers = [];
+
+            // Parse CSV data (handles quotes properly)
+            function parseCSV(text) {
+                const lines = [];
+                let currentLine = [];
+                let currentField = "";
+                let insideQuotes = false;
+
+                for (let i = 0; i < text.length; i++) {
+                    const char = text[i];
+                    const nextChar = text[i + 1];
+
+                    if (char === '"') {
+                        if (insideQuotes && nextChar === '"') {
+                            currentField += '"';
+                            i++;
+                        } else {
+                            insideQuotes = !insideQuotes;
+                        }
+                    } else if (char === "," && !insideQuotes) {
+                        currentLine.push(currentField);
+                        currentField = "";
+                    } else if (
+                        (char === "\n" || char === "\r") &&
+                        !insideQuotes
+                    ) {
+                        if (char === "\r" && nextChar === "\n") {
+                            i++;
+                        }
+                        if (currentField || currentLine.length > 0) {
+                            currentLine.push(currentField);
+                            if (
+                                currentLine.some((field) => field.trim() !== "")
+                            ) {
+                                lines.push(currentLine);
+                            }
+                            currentLine = [];
+                            currentField = "";
+                        }
+                    } else {
+                        currentField += char;
+                    }
+                }
+
+                if (currentField || currentLine.length > 0) {
+                    currentLine.push(currentField);
+                    if (currentLine.some((field) => field.trim() !== "")) {
+                        lines.push(currentLine);
+                    }
+                }
+
+                return lines;
+            }
+
+            // Analyze sentiment for text
+            function analyzeSentiment(text) {
+                if (!text || typeof text !== "string" || text.trim() === "") {
+                    return {
+                        score: 0,
+                        comparative: 0,
+                        calculation: [],
+                        tokens: [],
+                        words: [],
+                        positive: [],
+                        negative: [],
+                    };
+                }
+
+                return sentiment.analyze(text);
+            }
+
+            // Classify sentiment
+            function classifySentiment(comparative) {
+                if (comparative > 0.05) return "Positive";
+                if (comparative < -0.05) return "Negative";
+                return "Neutral";
+            }
+
+            // Perform sentiment analysis on dataset
+            function performAnalysis() {
+                const columnIndex = parseInt(columnSelect.value);
+                if (isNaN(columnIndex) || !currentData) return;
+
+                // Build new headers
+                const newHeaders = [...headers];
+
+                if (includeScore.checked) {
+                    newHeaders.push("sentiment_score");
+                }
+                if (includeComparative.checked) {
+                    newHeaders.push("sentiment_comparative");
+                }
+                if (includeClassification.checked) {
+                    newHeaders.push("sentiment_classification");
+                }
+                if (includeWordCount.checked) {
+                    newHeaders.push("positive_words");
+                    newHeaders.push("negative_words");
+                }
+                if (includeTokens.checked) {
+                    newHeaders.push("sentiment_tokens");
+                }
+
+                // Analyze each row
+                const results = [];
+                let positiveSum = 0;
+                let negativeSum = 0;
+                let neutralSum = 0;
+                let scoreSum = 0;
+
+                for (let i = 0; i < currentData.length; i++) {
+                    const row = [...currentData[i]];
+                    const text = row[columnIndex] || "";
+                    const result = analyzeSentiment(text);
+                    const classification = classifySentiment(
+                        result.comparative,
+                    );
+
+                    if (includeScore.checked) {
+                        row.push(result.score.toString());
+                    }
+                    if (includeComparative.checked) {
+                        row.push(result.comparative.toFixed(4));
+                    }
+                    if (includeClassification.checked) {
+                        row.push(classification);
+                    }
+                    if (includeWordCount.checked) {
+                        row.push(result.positive.length.toString());
+                        row.push(result.negative.length.toString());
+                    }
+                    if (includeTokens.checked) {
+                        row.push(result.words.join(", "));
+                    }
+
+                    results.push(row);
+
+                    // Update statistics
+                    if (classification === "Positive") positiveSum++;
+                    else if (classification === "Negative") negativeSum++;
+                    else neutralSum++;
+
+                    scoreSum += result.comparative;
+                }
+
+                analyzedData = {
+                    headers: newHeaders,
+                    rows: results,
+                    stats: {
+                        total: currentData.length,
+                        positive: positiveSum,
+                        negative: negativeSum,
+                        neutral: neutralSum,
+                        avgScore: scoreSum / currentData.length,
+                    },
+                };
+
+                displayResults();
+            }
+
+            // Display results
+            function displayResults() {
+                if (!analyzedData) return;
+
+                // Update summary statistics
+                totalRows.textContent = analyzedData.stats.total;
+                positiveCount.textContent = analyzedData.stats.positive;
+                neutralCount.textContent = analyzedData.stats.neutral;
+                negativeCount.textContent = analyzedData.stats.negative;
+                avgScore.textContent = analyzedData.stats.avgScore.toFixed(4);
+
+                // Display table (first 100 rows)
+                const table = document.createElement("table");
+                table.className = "data-table";
+
+                const thead = document.createElement("thead");
+                const headerRow = document.createElement("tr");
+
+                analyzedData.headers.forEach((header) => {
+                    const th = document.createElement("th");
+                    th.textContent = header;
+                    headerRow.appendChild(th);
+                });
+
+                thead.appendChild(headerRow);
+                table.appendChild(thead);
+
+                const tbody = document.createElement("tbody");
+                const rowsToShow = Math.min(100, analyzedData.rows.length);
+
+                for (let i = 0; i < rowsToShow; i++) {
+                    const tr = document.createElement("tr");
+                    analyzedData.rows[i].forEach((cell, idx) => {
+                        const td = document.createElement("td");
+                        td.textContent = cell;
+
+                        // Apply sentiment styling to classification column
+                        if (
+                            analyzedData.headers[idx].includes(
+                                "classification",
+                            ) &&
+                            includeClassification.checked
+                        ) {
+                            if (cell === "Positive") {
+                                td.className = "sentiment-positive";
+                            } else if (cell === "Negative") {
+                                td.className = "sentiment-negative";
+                            } else {
+                                td.className = "sentiment-neutral";
+                            }
+                        }
+
+                        tr.appendChild(td);
+                    });
+                    tbody.appendChild(tr);
+                }
+
+                table.appendChild(tbody);
+                resultsTable.innerHTML = "";
+                resultsTable.appendChild(table);
+
+                // Show results panel and enable download
+                resultsPanel.style.display = "block";
+                downloadBtn.disabled = false;
+            }
+
+            // Convert array to CSV string
+            function arrayToCSV(headers, rows) {
+                const escapeField = (field) => {
+                    const str = String(field);
+                    if (
+                        str.includes(",") ||
+                        str.includes('"') ||
+                        str.includes("\n")
+                    ) {
+                        return '"' + str.replace(/"/g, '""') + '"';
+                    }
+                    return str;
+                };
+
+                const lines = [headers.map(escapeField).join(",")];
+                rows.forEach((row) => {
+                    lines.push(row.map(escapeField).join(","));
+                });
+
+                return lines.join("\n");
+            }
+
+            // Download analyzed CSV
+            function downloadCSV() {
+                if (!analyzedData) return;
+
+                const csvContent = arrayToCSV(
+                    analyzedData.headers,
+                    analyzedData.rows,
+                );
+                const blob = new Blob([csvContent], { type: "text/csv" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "sentiment-analysis-results.csv";
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+
+            // Panel collapse functionality
+            document.querySelectorAll(".panel h2").forEach((header) => {
+                header.addEventListener("click", () => {
+                    header.classList.toggle("collapsed");
+                    const content = header.nextElementSibling;
+                    content.classList.toggle("collapsed");
+                });
+            });
+
+            // File input handler
+            fileInput.addEventListener("change", (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const text = e.target.result;
+                    const lines = parseCSV(text);
+
+                    if (lines.length < 2) {
+                        alert(
+                            "CSV must have at least a header row and one data row",
+                        );
+                        return;
+                    }
+
+                    headers = lines[0];
+                    currentData = lines.slice(1);
+
+                    // Populate column selector
+                    columnSelect.innerHTML =
+                        '<option value="">Choose a column...</option>';
+                    headers.forEach((header, idx) => {
+                        const option = document.createElement("option");
+                        option.value = idx;
+                        option.textContent = header;
+                        columnSelect.appendChild(option);
+                    });
+
+                    // Show file info and config panel
+                    fileInfo.textContent = `Loaded: ${file.name} (${headers.length} columns, ${currentData.length} rows)`;
+                    fileInfo.style.display = "block";
+                    configPanel.style.display = "block";
+                    resultsPanel.style.display = "none";
+                    analyzedData = null;
+                    downloadBtn.disabled = true;
+                };
+                reader.readAsText(file);
+            });
+
+            // Column selection handler
+            columnSelect.addEventListener("change", () => {
+                analyzeBtn.disabled = columnSelect.value === "";
+            });
+
+            // Analyze button handler
+            analyzeBtn.addEventListener("click", () => {
+                performAnalysis();
+            });
+
+            // Download button handler
+            downloadBtn.addEventListener("click", downloadCSV);
+
+            // Clear button handler
+            clearBtn.addEventListener("click", () => {
+                fileInput.value = "";
+                currentData = null;
+                analyzedData = null;
+                headers = [];
+                fileInfo.style.display = "none";
+                configPanel.style.display = "none";
+                resultsPanel.style.display = "none";
+                columnSelect.innerHTML =
+                    '<option value="">Choose a column...</option>';
+                analyzeBtn.disabled = true;
+                downloadBtn.disabled = true;
+            });
+        </script>
+    </body>
+</html>
