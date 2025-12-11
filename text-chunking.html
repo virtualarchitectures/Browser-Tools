@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Text Chunking Tool</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Arial, sans-serif;
+        line-height: 1.6;
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 20px;
+        color: #24292e;
+        background: #ffffff;
+      }
+      h1 {
+        border-bottom: 1px solid #eaecef;
+        padding-bottom: 0.3em;
+        margin-top: 0;
+        font-size: 32px;
+        font-weight: 600;
+      }
+      .back-link {
+        display: inline-block;
+        margin-bottom: 16px;
+        color: #0366d6;
+        text-decoration: none;
+        font-size: 14px;
+      }
+      .back-link:hover {
+        text-decoration: underline;
+      }
+      .instruction {
+        font-size: 13px;
+        color: #586069;
+        margin-bottom: 16px;
+        padding: 12px;
+        background: #f6f8fa;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+      }
+      .file-upload {
+        margin-bottom: 24px;
+        padding: 16px;
+        background: #ffffff;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+      }
+      .file-upload-label {
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: #24292e;
+      }
+      .file-input-wrapper {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        justify-content: space-between;
+      }
+      input[type="file"] {
+        display: none;
+      }
+      .btn {
+        background: #fafbfc;
+        color: #24292e;
+        padding: 8px 16px;
+        border-radius: 6px;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+        cursor: pointer;
+        font-size: 14px;
+        line-height: 20px;
+        text-decoration: none;
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Arial, sans-serif;
+      }
+      .btn:hover {
+        background: #f3f4f6;
+      }
+      .btn.primary {
+        background: #0366d6;
+        color: #fff;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+      }
+      .btn.primary:hover {
+        background: #0256c5;
+      }
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .btn:disabled:hover {
+        background: #fafbfc;
+      }
+      .btn.primary:disabled:hover {
+        background: #0366d6;
+      }
+      label.btn {
+        display: inline-block;
+        margin: 0;
+      }
+      .file-name {
+        font-size: 14px;
+        color: #586069;
+      }
+      .options-section {
+        margin-bottom: 24px;
+        padding: 16px;
+        background: #f6f8fa;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+      }
+      .options-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 16px;
+      }
+      .option-group {
+        display: flex;
+        flex-direction: column;
+      }
+      .option-group label {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 6px;
+        color: #24292e;
+      }
+      .option-group select,
+      .option-group input[type="number"] {
+        padding: 8px 12px;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        background: #ffffff;
+        color: #24292e;
+        font-size: 14px;
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Arial, sans-serif;
+      }
+      .option-group select:focus,
+      .option-group input[type="number"]:focus {
+        outline: none;
+        border-color: #0366d6;
+      }
+      .option-description {
+        font-size: 12px;
+        color: #586069;
+        margin-top: 4px;
+      }
+      .action-buttons {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+      }
+      .results-section {
+        margin-bottom: 24px;
+      }
+      .results-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+      .results-header h2 {
+        font-size: 16px;
+        font-weight: 600;
+        margin: 0;
+        color: #24292e;
+      }
+      .chunk-stats {
+        font-size: 14px;
+        color: #586069;
+      }
+      .table-search {
+        padding: 10px 15px;
+        background-color: #ffffff;
+        border-bottom: 1px solid #e1e4e8;
+      }
+      .table-search input {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        font-size: 14px;
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Arial, sans-serif;
+        box-sizing: border-box;
+      }
+      .table-search input:focus {
+        outline: none;
+        border-color: #0366d6;
+      }
+      .filter-info {
+        font-size: 12px;
+        color: #586069;
+        margin-top: 6px;
+      }
+      .table-wrapper {
+        border: 2px solid #d1d5da;
+        border-radius: 6px;
+        background: #ffffff;
+        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1);
+        position: relative;
+      }
+      .table-scroll {
+        overflow-x: auto;
+        overflow-y: auto;
+        max-height: 500px;
+        resize: vertical;
+        min-height: 300px;
+      }
+      .resize-handle {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 20px;
+        height: 20px;
+        cursor: nw-resize;
+        background: linear-gradient(135deg, transparent 50%, #d1d5da 50%);
+        border-bottom-right-radius: 6px;
+        z-index: 10;
+      }
+      .resize-handle::before {
+        content: "";
+        position: absolute;
+        bottom: 3px;
+        right: 3px;
+        width: 12px;
+        height: 12px;
+        background: linear-gradient(135deg, transparent 50%, #959da5 50%);
+        border-bottom-right-radius: 3px;
+      }
+      .data-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .data-table th {
+        background: #f6f8fa;
+        padding: 12px;
+        text-align: left;
+        font-size: 14px;
+        font-weight: 600;
+        color: #24292e;
+        border-bottom: 1px solid #e1e4e8;
+        border-right: 1px solid #e1e4e8;
+        position: sticky;
+        top: 0;
+        vertical-align: top;
+      }
+      .data-table th:last-child {
+        border-right: none;
+      }
+      .data-table td {
+        padding: 12px;
+        border-bottom: 1px solid #e1e4e8;
+        border-right: 1px solid #e1e4e8;
+        font-size: 14px;
+        color: #24292e;
+        vertical-align: top;
+      }
+      .data-table td:last-child {
+        border-right: none;
+      }
+      .data-table tr:hover {
+        background: #f6f8fa;
+      }
+      .data-table td.chunk-content {
+        max-width: 500px;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
+          monospace;
+        font-size: 13px;
+      }
+      .data-table td.chunk-number {
+        font-weight: 600;
+        text-align: center;
+      }
+      .data-table td.chunk-stats {
+        text-align: center;
+        color: #586069;
+      }
+      .empty-state {
+        text-align: center;
+        padding: 48px 20px;
+        color: #586069;
+        font-size: 14px;
+      }
+      @media (max-width: 768px) {
+        .options-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a href="index.html" class="back-link">← Back to Browser Tools</a>
+
+    <h1>Text Chunking Tool</h1>
+
+    <p class="instruction">
+      Upload a text document and select a chunking strategy to split the text
+      into manageable pieces. Useful for processing large documents, preparing
+      data for language models, or analyzing text structure.
+    </p>
+
+    <!-- File Upload -->
+    <div class="file-upload">
+      <label class="file-upload-label">Upload Text File</label>
+      <div class="file-input-wrapper">
+        <div style="display: flex; gap: 8px; align-items: center">
+          <input type="file" id="fileInput" accept=".txt,.md,.csv,.json,.log" />
+          <label for="fileInput" class="btn primary">Load File</label>
+          <span class="file-name" id="fileName">No file selected</span>
+        </div>
+        <button id="clearBtn" class="btn">Clear</button>
+      </div>
+    </div>
+
+    <!-- Chunking Options -->
+    <div class="options-section">
+      <div class="options-grid">
+        <div class="option-group">
+          <label for="strategy">Chunking Strategy</label>
+          <select id="strategy">
+            <option value="character">Fixed Character Count</option>
+            <option value="word">Fixed Word Count</option>
+            <option value="sentence">Sentence-Based</option>
+            <option value="paragraph">Paragraph-Based</option>
+            <option value="recursive">Recursive Split</option>
+            <option value="sliding">Sliding Window</option>
+          </select>
+          <span class="option-description" id="strategyDescription"
+            >Split text by fixed character count</span
+          >
+        </div>
+
+        <div class="option-group" id="chunkSizeGroup">
+          <label for="chunkSize">Chunk Size</label>
+          <input
+            type="number"
+            id="chunkSize"
+            value="1000"
+            min="1"
+            max="100000"
+          />
+          <span class="option-description">Number of characters per chunk</span>
+        </div>
+
+        <div class="option-group" id="overlapGroup">
+          <label for="overlap">Overlap</label>
+          <input type="number" id="overlap" value="0" min="0" max="5000" />
+          <span class="option-description"
+            >Characters to overlap between chunks</span
+          >
+        </div>
+
+        <div class="option-group" id="minChunkGroup">
+          <label for="minChunkSize">Minimum Chunk Size (Characters)</label>
+          <input
+            type="number"
+            id="minChunkSize"
+            value="50"
+            min="1"
+            max="10000"
+          />
+          <span class="option-description"
+            >Discard chunks smaller than this character count</span
+          >
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+      <button id="processBtn" class="btn primary" disabled>Process Text</button>
+      <button id="downloadBtn" class="btn primary" disabled>
+        Download CSV
+      </button>
+    </div>
+
+    <!-- Results -->
+    <div class="results-section" id="resultsSection" style="display: none">
+      <div class="results-header">
+        <h2>Chunks</h2>
+        <span class="chunk-stats" id="chunkStats"></span>
+      </div>
+      <div class="table-wrapper" id="tableWrapper">
+        <div class="table-search">
+          <input
+            type="text"
+            id="searchChunks"
+            placeholder="Search chunk content..."
+          />
+          <div class="filter-info" id="filterInfo"></div>
+        </div>
+        <div class="table-scroll" id="tableScroll">
+          <table class="data-table" id="resultsTable">
+            <thead>
+              <tr>
+                <th>Chunk</th>
+                <th>Content</th>
+                <th>Characters</th>
+                <th>Words</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+        <div class="resize-handle" id="resizeHandle"></div>
+      </div>
+    </div>
+
+    <div class="empty-state" id="emptyState">
+      Upload a text file and click "Process Text" to see chunks here.
+    </div>
+
+    <script>
+      /* =========================
+         State Variables
+         ========================= */
+
+      let currentText = "";
+      let currentChunks = [];
+
+      /* =========================
+         DOM Elements
+         ========================= */
+
+      const fileInput = document.getElementById("fileInput");
+      const fileName = document.getElementById("fileName");
+      const strategy = document.getElementById("strategy");
+      const chunkSize = document.getElementById("chunkSize");
+      const overlap = document.getElementById("overlap");
+      const minChunkSize = document.getElementById("minChunkSize");
+      const processBtn = document.getElementById("processBtn");
+      const downloadBtn = document.getElementById("downloadBtn");
+      const clearBtn = document.getElementById("clearBtn");
+      const resultsSection = document.getElementById("resultsSection");
+      const emptyState = document.getElementById("emptyState");
+      const tableBody = document.getElementById("tableBody");
+      const chunkStats = document.getElementById("chunkStats");
+      const searchChunks = document.getElementById("searchChunks");
+      const filterInfo = document.getElementById("filterInfo");
+      const tableWrapper = document.getElementById("tableWrapper");
+      const tableScroll = document.getElementById("tableScroll");
+      const resizeHandle = document.getElementById("resizeHandle");
+      const strategyDescription = document.getElementById(
+        "strategyDescription"
+      );
+      const chunkSizeGroup = document.getElementById("chunkSizeGroup");
+      const overlapGroup = document.getElementById("overlapGroup");
+      const minChunkGroup = document.getElementById("minChunkGroup");
+
+      /* =========================
+         Strategy Descriptions
+         ========================= */
+
+      const strategyDescriptions = {
+        character: "Split text by fixed character count",
+        word: "Split text by fixed word count",
+        sentence: "Split text by sentence boundaries with optional overlap",
+        paragraph: "Split text by paragraph breaks (double newlines)",
+        recursive:
+          "Try different delimiters in priority order (paragraphs, sentences, words)",
+        sliding: "Fixed-size window that slides across text with overlap",
+      };
+
+      /* =========================
+         Event Listeners
+         ========================= */
+
+      fileInput.addEventListener("change", handleFileSelect);
+      strategy.addEventListener("change", updateStrategyOptions);
+      processBtn.addEventListener("click", processText);
+      downloadBtn.addEventListener("click", downloadCSV);
+      clearBtn.addEventListener("click", clearAll);
+      searchChunks.addEventListener("input", filterChunks);
+
+      // Resize handle functionality
+      let isResizing = false;
+      let startY = 0;
+      let startHeight = 0;
+
+      resizeHandle.addEventListener("mousedown", (e) => {
+        isResizing = true;
+        startY = e.clientY;
+        startHeight = tableScroll.offsetHeight;
+        document.body.style.cursor = "nw-resize";
+        e.preventDefault();
+      });
+
+      document.addEventListener("mousemove", (e) => {
+        if (!isResizing) return;
+        const deltaY = e.clientY - startY;
+        const newHeight = startHeight + deltaY;
+        if (newHeight >= 300 && newHeight <= 1000) {
+          tableScroll.style.maxHeight = newHeight + "px";
+        }
+      });
+
+      document.addEventListener("mouseup", () => {
+        if (isResizing) {
+          isResizing = false;
+          document.body.style.cursor = "default";
+        }
+      });
+
+      /* =========================
+         File Handling
+         ========================= */
+
+      function handleFileSelect(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        fileName.textContent = file.name;
+
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          currentText = e.target.result;
+          processBtn.disabled = false;
+        };
+        reader.readAsText(file);
+      }
+
+      /* =========================
+         Strategy Options
+         ========================= */
+
+      function updateStrategyOptions() {
+        const selectedStrategy = strategy.value;
+        strategyDescription.textContent =
+          strategyDescriptions[selectedStrategy];
+
+        // Update chunk size label and description
+        const chunkSizeLabel = chunkSizeGroup.querySelector("label");
+        const chunkSizeDesc = chunkSizeGroup.querySelector(
+          ".option-description"
+        );
+
+        if (selectedStrategy === "word") {
+          chunkSizeLabel.textContent = "Chunk Size (Words)";
+          chunkSizeDesc.textContent = "Number of words per chunk";
+          chunkSize.value = "200";
+        } else if (selectedStrategy === "sentence") {
+          chunkSizeLabel.textContent = "Sentences Per Chunk";
+          chunkSizeDesc.textContent = "Number of sentences per chunk";
+          chunkSize.value = "5";
+        } else {
+          chunkSizeLabel.textContent = "Chunk Size (Characters)";
+          chunkSizeDesc.textContent = "Number of characters per chunk";
+          chunkSize.value = "1000";
+        }
+
+        // Show/hide options based on strategy
+        if (
+          selectedStrategy === "paragraph" ||
+          selectedStrategy === "sentence"
+        ) {
+          overlapGroup.style.display = "none";
+        } else {
+          overlapGroup.style.display = "flex";
+        }
+
+        if (selectedStrategy === "paragraph") {
+          chunkSizeGroup.style.display = "none";
+        } else {
+          chunkSizeGroup.style.display = "flex";
+        }
+      }
+
+      /* =========================
+         Chunking Functions
+         ========================= */
+
+      function chunkByCharacter(text, size, overlapAmount) {
+        const chunks = [];
+        const step = size - overlapAmount;
+
+        for (let i = 0; i < text.length; i += step) {
+          const chunk = text.slice(i, i + size);
+          if (chunk.length >= parseInt(minChunkSize.value)) {
+            chunks.push(chunk);
+          }
+          if (i + size >= text.length) break;
+        }
+
+        return chunks;
+      }
+
+      function chunkByWord(text, wordCount, overlapAmount) {
+        const words = text.split(/\s+/).filter((w) => w.length > 0);
+        const chunks = [];
+        const step = wordCount - overlapAmount;
+
+        for (let i = 0; i < words.length; i += step) {
+          const chunkWords = words.slice(i, i + wordCount);
+          const chunk = chunkWords.join(" ");
+          if (chunk.length >= parseInt(minChunkSize.value)) {
+            chunks.push(chunk);
+          }
+          if (i + wordCount >= words.length) break;
+        }
+
+        return chunks;
+      }
+
+      function chunkBySentence(text, sentenceCount) {
+        const sentences = text
+          .split(/(?<=[.!?])\s+/)
+          .filter((s) => s.trim().length > 0);
+        const chunks = [];
+
+        for (let i = 0; i < sentences.length; i += sentenceCount) {
+          const chunkSentences = sentences.slice(i, i + sentenceCount);
+          const chunk = chunkSentences.join(" ");
+          if (chunk.length >= parseInt(minChunkSize.value)) {
+            chunks.push(chunk);
+          }
+        }
+
+        return chunks;
+      }
+
+      function chunkByParagraph(text) {
+        const paragraphs = text
+          .split(/\n\s*\n/)
+          .filter((p) => p.trim().length > 0);
+        return paragraphs.filter(
+          (p) => p.length >= parseInt(minChunkSize.value)
+        );
+      }
+
+      function chunkRecursive(text, maxSize) {
+        const chunks = [];
+        const separators = ["\n\n", "\n", ". ", " "];
+
+        function splitText(text, sepIndex) {
+          if (text.length <= maxSize) {
+            if (text.length >= parseInt(minChunkSize.value)) {
+              return [text];
+            }
+            return [];
+          }
+
+          if (sepIndex >= separators.length) {
+            // No more separators, just split by character
+            return chunkByCharacter(text, maxSize, 0);
+          }
+
+          const separator = separators[sepIndex];
+          const parts = text.split(separator);
+          const result = [];
+          let currentChunk = "";
+
+          for (const part of parts) {
+            if (part.length > maxSize) {
+              // Part is too large, recursively split it
+              if (currentChunk) {
+                result.push(...splitText(currentChunk, sepIndex + 1));
+                currentChunk = "";
+              }
+              result.push(...splitText(part, sepIndex + 1));
+            } else if ((currentChunk + separator + part).length <= maxSize) {
+              // Add to current chunk
+              currentChunk += (currentChunk ? separator : "") + part;
+            } else {
+              // Current chunk is full
+              if (currentChunk) {
+                result.push(...splitText(currentChunk, sepIndex + 1));
+              }
+              currentChunk = part;
+            }
+          }
+
+          if (currentChunk) {
+            result.push(...splitText(currentChunk, sepIndex + 1));
+          }
+
+          return result;
+        }
+
+        return splitText(text, 0).filter(
+          (chunk) => chunk.trim().length >= parseInt(minChunkSize.value)
+        );
+      }
+
+      function chunkSlidingWindow(text, size, overlapAmount) {
+        return chunkByCharacter(text, size, overlapAmount);
+      }
+
+      /* =========================
+         Processing
+         ========================= */
+
+      function processText() {
+        if (!currentText) {
+          alert("Please upload a file first");
+          return;
+        }
+
+        const selectedStrategy = strategy.value;
+        const size = parseInt(chunkSize.value);
+        const overlapAmount = parseInt(overlap.value);
+
+        let chunks = [];
+
+        switch (selectedStrategy) {
+          case "character":
+            chunks = chunkByCharacter(currentText, size, overlapAmount);
+            break;
+          case "word":
+            chunks = chunkByWord(currentText, size, overlapAmount);
+            break;
+          case "sentence":
+            chunks = chunkBySentence(currentText, size);
+            break;
+          case "paragraph":
+            chunks = chunkByParagraph(currentText);
+            break;
+          case "recursive":
+            chunks = chunkRecursive(currentText, size);
+            break;
+          case "sliding":
+            chunks = chunkSlidingWindow(currentText, size, overlapAmount);
+            break;
+        }
+
+        currentChunks = chunks;
+        displayResults(chunks);
+      }
+
+      /* =========================
+         Display Results
+         ========================= */
+
+      function countWords(text) {
+        return text.split(/\s+/).filter((w) => w.length > 0).length;
+      }
+
+      function displayResults(chunks) {
+        if (chunks.length === 0) {
+          alert("No chunks generated. Try adjusting your settings.");
+          return;
+        }
+
+        emptyState.style.display = "none";
+        resultsSection.style.display = "block";
+
+        // Update stats
+        const totalChars = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+        const totalWords = chunks.reduce(
+          (sum, chunk) => sum + countWords(chunk),
+          0
+        );
+        chunkStats.textContent = `${
+          chunks.length
+        } chunks | ${totalChars.toLocaleString()} characters | ${totalWords.toLocaleString()} words`;
+
+        // Build table
+        tableBody.innerHTML = "";
+        chunks.forEach((chunk, index) => {
+          const tr = document.createElement("tr");
+
+          const tdNum = document.createElement("td");
+          tdNum.className = "chunk-number";
+          tdNum.textContent = index + 1;
+
+          const tdContent = document.createElement("td");
+          tdContent.className = "chunk-content";
+          tdContent.textContent = chunk;
+
+          const tdChars = document.createElement("td");
+          tdChars.className = "chunk-stats";
+          tdChars.textContent = chunk.length.toLocaleString();
+
+          const tdWords = document.createElement("td");
+          tdWords.className = "chunk-stats";
+          tdWords.textContent = countWords(chunk).toLocaleString();
+
+          tr.appendChild(tdNum);
+          tr.appendChild(tdContent);
+          tr.appendChild(tdChars);
+          tr.appendChild(tdWords);
+
+          tableBody.appendChild(tr);
+        });
+
+        downloadBtn.disabled = false;
+
+        // Scroll to results
+        resultsSection.scrollIntoView({
+          behavior: "smooth",
+          block: "nearest",
+        });
+      }
+
+      /* =========================
+         Search/Filter
+         ========================= */
+
+      function filterChunks() {
+        const searchTerm = searchChunks.value.toLowerCase();
+        const rows = tableBody.querySelectorAll("tr");
+        let visibleCount = 0;
+        const totalCount = rows.length;
+
+        rows.forEach((row) => {
+          const contentCell = row.cells[1];
+          if (contentCell) {
+            const text = contentCell.textContent.toLowerCase();
+            if (text.includes(searchTerm)) {
+              row.style.display = "";
+              visibleCount++;
+            } else {
+              row.style.display = "none";
+            }
+          }
+        });
+
+        // Update filter info
+        if (searchTerm) {
+          filterInfo.textContent = `Showing ${visibleCount} of ${totalCount} chunks`;
+        } else {
+          filterInfo.textContent = "";
+        }
+      }
+
+      /* =========================
+         CSV Export
+         ========================= */
+
+      function escapeCSV(text) {
+        // Replace newlines with spaces to prevent row breaks in CSV
+        let cleanedText = text.replace(/\n/g, " ").replace(/\r/g, "");
+
+        // Escape quotes and wrap in quotes if necessary
+        if (cleanedText.includes('"') || cleanedText.includes(",")) {
+          return '"' + cleanedText.replace(/"/g, '""') + '"';
+        }
+        return cleanedText;
+      }
+
+      function downloadCSV() {
+        if (currentChunks.length === 0) {
+          alert("No chunks to download");
+          return;
+        }
+
+        let csv = "Chunk,Content,Characters,Words\n";
+
+        currentChunks.forEach((chunk, index) => {
+          const chunkNum = index + 1;
+          const content = escapeCSV(chunk);
+          const chars = chunk.length;
+          const words = countWords(chunk);
+
+          csv += `${chunkNum},${content},${chars},${words}\n`;
+        });
+
+        const blob = new Blob([csv], {
+          type: "text/csv;charset=utf-8;",
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "text-chunks.csv";
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      /* =========================
+         Clear Function
+         ========================= */
+
+      function clearAll() {
+        currentText = "";
+        currentChunks = [];
+        fileInput.value = "";
+        fileName.textContent = "No file selected";
+        processBtn.disabled = true;
+        downloadBtn.disabled = true;
+        resultsSection.style.display = "none";
+        emptyState.style.display = "block";
+        tableBody.innerHTML = "";
+        searchChunks.value = "";
+        filterInfo.textContent = "";
+      }
+
+      /* =========================
+         Initialization
+         ========================= */
+
+      updateStrategyOptions();
+    </script>
+  </body>
+</html>
