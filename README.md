@@ -33,10 +33,6 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 - **[Text Diff](text-diff.html)** — compare two text blocks and highlight added and removed content
 - **[Text Tools](text-tools.html)** — text manipulation toolkit with case transformation, sorting, whitespace cleaning, encoding/decoding (Base64, URL), find & replace, and text tokenization
 
-### OSINT
-
-- **[Identifier Extractor](identifier-extractor.html)** — extract and analyse URLs, email addresses, IPv4/IPv6 addresses, phone numbers, and MAC addresses from text with filtering, sorting, and export options
-
 ### Image
 
 - **[EXIF Data Viewer](exif-viewer.html)** — extract and view EXIF metadata from photos including camera settings, GPS location, and timestamps
@@ -59,7 +55,11 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 - **[Named Entity Recognition](named-entity-recognition.html)** — extract and identify named entities from text including people, places and organisations using natural language processing
 - **[Word Frequency Counter](word-frequency.html)** — analyze word frequency, discover common phrases with n-grams (bigrams, trigrams, 4-grams, 5-grams), and get detailed text statistics with customisable stop word filtering
 
-### Programming and Development
+### OSINT
+
+- **[Identifier Extractor](identifier-extractor.html)** — extract and analyse URLs, email addresses, IPv4/IPv6 addresses, phone numbers, and MAC addresses from text with filtering, sorting, and export options
+
+### Software Development
 
 - **[GitHub Commits Viewer](github-commits.html)** — view and export commit history from GitHub repositories with support for CSV, JSON, and Markdown exports
 
