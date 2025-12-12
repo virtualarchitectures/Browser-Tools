@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Annotated Presentation Generator</title>
+    <style>
+      /* =========================
+         CSS Styles
+         ========================= */
+
+      /* Reset and base styles */
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Arial, sans-serif;
+        line-height: 1.6;
+        color: #24292e;
+        background-color: #ffffff;
+        padding: 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      /* Header and typography */
+      h1 {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        color: #24292e;
+      }
+
+      h2 {
+        font-size: 1.5rem;
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+        color: #24292e;
+      }
+
+      h3 {
+        font-size: 1.25rem;
+        margin-top: 1.5rem;
+        margin-bottom: 0.75rem;
+        color: #24292e;
+      }
+
+      p {
+        margin-bottom: 1rem;
+        color: #586069;
+      }
+
+      code {
+        background-color: #f6f8fa;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-family: monospace;
+        font-size: 0.9em;
+      }
+
+      /* Back link */
+      .back-link {
+        display: inline-block;
+        margin-bottom: 16px;
+        color: #0366d6;
+        text-decoration: none;
+        font-size: 14px;
+      }
+
+      .back-link:hover {
+        text-decoration: underline;
+      }
+
+      /* Links */
+      a {
+        color: #0366d6;
+        text-decoration: none;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+
+      /* Buttons */
+      .btn {
+        background: #fafbfc;
+        color: #24292e;
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+        cursor: pointer;
+        font-size: 14px;
+        line-height: 20px;
+        font-family: inherit;
+        display: inline-block;
+      }
+
+      .btn:hover {
+        background: #f3f4f6;
+      }
+
+      .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .btn.primary {
+        background: #0366d6;
+        color: #fff;
+        border-color: #0366d6;
+      }
+
+      .btn.primary:hover {
+        background: #0256c5;
+        border-color: #0256c5;
+      }
+
+      .btn.secondary {
+        background: #fafbfc;
+        color: #24292e;
+      }
+
+      .btn.secondary:hover {
+        background: #f3f4f6;
+      }
+
+      /* File input wrapper */
+      .file-input-wrapper {
+        position: relative;
+        overflow: hidden;
+        display: inline-block;
+      }
+
+      .file-input-wrapper input[type="file"] {
+        position: absolute;
+        font-size: 100px;
+        opacity: 0;
+        right: 0;
+        top: 0;
+        cursor: pointer;
+      }
+
+      /* Controls section */
+      .controls-section {
+        background-color: #f6f8fa;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        padding: 16px;
+        margin-bottom: 24px;
+      }
+
+      .controls-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      /* Slide bundle */
+      .bundle {
+        display: flex;
+        flex-direction: column;
+        background-color: #ffffff;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        margin-bottom: 24px;
+        overflow: hidden;
+      }
+
+      .slide-image {
+        background-color: #f6f8fa;
+        padding: 0;
+        border-bottom: 1px solid #e1e4e8;
+      }
+
+      .slide-image img {
+        width: 100%;
+        height: auto;
+        display: block;
+        border-radius: 0;
+      }
+
+      .slide-content {
+        padding: 16px;
+      }
+
+      .alt-text-container {
+        margin-bottom: 16px;
+      }
+
+      .annotation-container {
+        border-top: 1px solid #e1e4e8;
+        padding-top: 16px;
+      }
+
+      label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: #24292e;
+      }
+
+      textarea {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        font-family: inherit;
+        font-size: 14px;
+        line-height: 1.5;
+        resize: vertical;
+      }
+
+      textarea:focus {
+        outline: none;
+        border-color: #0366d6;
+        box-shadow: 0 0 0 3px rgba(3, 102, 214, 0.1);
+      }
+
+      .textarea-alt {
+        height: 100px;
+      }
+
+      .textarea-annotation {
+        height: 150px;
+        margin-top: 12px;
+      }
+
+      .annotation-preview {
+        background-color: #f6f8fa;
+        padding: 12px;
+        border-radius: 6px;
+        margin-bottom: 12px;
+        border: 1px solid #e1e4e8;
+        min-height: 40px;
+      }
+
+      .annotation-preview em {
+        color: #586069;
+      }
+
+      /* Template section */
+      .template-section {
+        background-color: #f6f8fa;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        padding: 16px;
+        margin-top: 32px;
+      }
+
+      .template-section textarea {
+        height: 150px;
+        font-family: monospace;
+        margin: 12px 0;
+      }
+
+      #templateOutput {
+        height: 300px;
+        margin-top: 16px;
+        font-family: monospace;
+      }
+
+      pre {
+        background-color: #f6f8fa;
+        padding: 12px;
+        border-radius: 6px;
+        overflow-x: auto;
+        font-size: 13px;
+        margin: 12px 0;
+        border: 1px solid #e1e4e8;
+      }
+
+      /* Responsive styles */
+      @media (min-width: 768px) {
+        .bundle {
+          flex-direction: row;
+        }
+
+        .slide-image {
+          width: 40%;
+          border-right: 1px solid #e1e4e8;
+          border-bottom: none;
+        }
+
+        .slide-content {
+          width: 60%;
+        }
+      }
+
+      @media (max-width: 767px) {
+        h1 {
+          font-size: 1.5rem;
+        }
+
+        .controls-group {
+          flex-direction: column;
+        }
+
+        .controls-group .btn,
+        .controls-group .file-input-wrapper {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- =========================
+         HTML Structure
+         ========================= -->
+
+    <a href="index.html" class="back-link">← Back to Browser Tools</a>
+    <h1>Annotated Presentation Generator</h1>
+
+    <div class="controls-section">
+      <p>
+        Select and load images of your presentation slides. Slides will be
+        ordered based on the file name. Write annotations in markdown and alt
+        text for images in plaintext. Enter "skip" as alt text to skip a slide.
+      </p>
+      <div class="controls-group">
+        <div class="file-input-wrapper btn primary">
+          Load Images
+          <input type="file" id="imageInput" multiple accept="image/*" />
+        </div>
+        <button id="restoreButton" class="btn secondary" style="display: none">
+          Restore annotations
+        </button>
+      </div>
+    </div>
+
+    <div id="preview"></div>
+
+    <div id="templateTool" class="template-section">
+      <h2>Generate HTML from Your Slides</h2>
+      <p>
+        Execute the following template against the slides on the page. An
+        <code>escapeHtml()</code> function is available.
+      </p>
+      <textarea id="templateToRun">
+<div class="slide">
+  <img src="${filename}" alt="${escapeHtml(alt)}">
+  ${markdownAsHtml}
+</div></textarea
+      >
+      <button id="executeTemplatesButton" class="btn primary">
+        Execute Template
+      </button>
+
+      <h3>Example Template</h3>
+      <p>Here's a common template pattern:</p>
+      <pre>
+&lt;div class="slide" id="${filename}"&gt;
+  &lt;img loading="lazy" src="slides/${filename}" alt="${escapeHtml(alt)}" style="max-width: 100%" /&gt;
+  &lt;div&gt;&lt;a style="float: right; text-decoration: none; border-bottom: none; padding-left: 1em;" href="slides/#${filename}"&gt;#&lt;/a&gt;
+  ${markdownAsHtml}
+  &lt;/div&gt;
+&lt;/div&gt;</pre
+      >
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+    <script>
+      /* =========================
+         JavaScript
+         ========================= */
+
+      // State variables
+      let images = [];
+      let previousAnnotationState = "";
+
+      // Initialization
+      document
+        .getElementById("imageInput")
+        .addEventListener("change", createSlidesForImages);
+      document
+        .getElementById("executeTemplatesButton")
+        .addEventListener("click", executeAllTemplates);
+      document
+        .getElementById("restoreButton")
+        .addEventListener("click", restoreTextAreas);
+
+      setInterval(saveTextAreas, 1000);
+
+      // Utility functions
+      function escapeHtml(s) {
+        if (!s) return "";
+        return s
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      // Save and restore functions
+      function saveTextAreas() {
+        const textareas = document.querySelectorAll("textarea");
+        const savedAnnotations = {};
+
+        textareas.forEach((textarea) => {
+          if (textarea.name && textarea.value.trim() !== "") {
+            savedAnnotations[textarea.name] = textarea.value;
+          }
+        });
+
+        const currentState = JSON.stringify(savedAnnotations);
+        if (currentState !== previousAnnotationState && currentState !== "{}") {
+          sessionStorage.setItem("savedAnnotations", currentState);
+          previousAnnotationState = currentState;
+        }
+      }
+
+      function restoreTextAreas() {
+        const savedAnnotations = JSON.parse(
+          sessionStorage.getItem("savedAnnotations") || "{}"
+        );
+
+        for (const key in savedAnnotations) {
+          const textarea = document.querySelector(`textarea[name="${key}"]`);
+          if (textarea) {
+            textarea.value = savedAnnotations[key];
+            // Trigger markdown rendering
+            const event = new Event("input", {
+              bubbles: true,
+              cancelable: true,
+            });
+            textarea.dispatchEvent(event);
+          }
+        }
+      }
+
+      function addRestoreButton() {
+        const savedAnnotations = JSON.parse(
+          sessionStorage.getItem("savedAnnotations") || "{}"
+        );
+
+        const button = document.getElementById("restoreButton");
+
+        // Only show if images are loaded
+        if (images.length === 0) {
+          button.style.display = "none";
+          return;
+        }
+
+        // Check if saved annotations match current images
+        let matchingCount = 0;
+        images.forEach((image) => {
+          const altKey = `image-${image.filename}-alt`;
+          const annotationKey = `image-${image.filename}-annotation`;
+          if (savedAnnotations[altKey] || savedAnnotations[annotationKey]) {
+            matchingCount++;
+          }
+        });
+
+        // Only show button if there are matching annotations
+        if (matchingCount > 0) {
+          const totalAnnotations = Object.keys(savedAnnotations).filter(
+            (key) => savedAnnotations[key].trim() !== ""
+          ).length;
+          button.style.display = "inline-block";
+          button.textContent = `Restore ${totalAnnotations} ${
+            totalAnnotations === 1 ? "annotation" : "annotations"
+          }`;
+        } else {
+          button.style.display = "none";
+        }
+      }
+
+      // Event handlers
+      function createSlidesForImages() {
+        const previewDiv = document.getElementById("preview");
+        const fileInput = document.getElementById("imageInput");
+        const files = fileInput.files;
+
+        if (files.length === 0) {
+          alert("Please select at least one image file");
+          return;
+        }
+
+        // Clear previous data
+        images = [];
+        previewDiv.innerHTML = "";
+
+        let processedCount = 0;
+
+        Array.from(files).forEach((file) => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const base64content = e.target.result;
+            const filename = file.name;
+            images.push({ filename, base64content });
+
+            processedCount++;
+            if (processedCount === files.length) {
+              allFilesProcessed();
+            }
+          };
+          reader.readAsDataURL(file);
+        });
+
+        function allFilesProcessed() {
+          // Sort images by filename
+          images.sort((a, b) => a.filename.localeCompare(b.filename));
+
+          // Create slides for each image
+          images.forEach((image) => {
+            const bundle = createSlideBundle(image);
+            previewDiv.appendChild(bundle);
+          });
+
+          addRestoreButton();
+        }
+      }
+
+      function createSlideBundle(image) {
+        const bundle = document.createElement("div");
+        bundle.classList.add("bundle");
+
+        // Create image container
+        const imgContainer = document.createElement("div");
+        imgContainer.classList.add("slide-image");
+
+        const imgTag = document.createElement("img");
+        imgTag.src = image.base64content;
+        imgTag.alt = "";
+        imgContainer.appendChild(imgTag);
+
+        // Create content container
+        const contentContainer = document.createElement("div");
+        contentContainer.classList.add("slide-content");
+
+        // Alt text section
+        const altTextContainer = document.createElement("div");
+        altTextContainer.classList.add("alt-text-container");
+
+        const altLabel = document.createElement("label");
+        altLabel.textContent = "Alt Text for Accessibility:";
+        altLabel.htmlFor = `image-${image.filename}-alt`;
+
+        const altTextarea = document.createElement("textarea");
+        altTextarea.placeholder =
+          "Describe the slide content for screen readers...";
+        altTextarea.className = "textarea-alt";
+        altTextarea.id = `image-${image.filename}-alt`;
+        altTextarea.name = `image-${image.filename}-alt`;
+        altTextarea.dataset.filename = image.filename;
+        altTextarea.dataset.name = "alt";
+
+        altTextContainer.appendChild(altLabel);
+        altTextContainer.appendChild(altTextarea);
+
+        // Annotation section
+        const annotationContainer = document.createElement("div");
+        annotationContainer.classList.add("annotation-container");
+
+        const annotationLabel = document.createElement("label");
+        annotationLabel.textContent = "Your Annotation (supports Markdown):";
+        annotationLabel.htmlFor = `image-${image.filename}-annotation`;
+
+        const annotationPreview = document.createElement("div");
+        annotationPreview.className = "annotation-preview";
+        annotationPreview.dataset.name = "markdownAsHtml";
+        annotationPreview.innerHTML =
+          "<em>Your annotation preview will appear here...</em>";
+
+        const annotationTextarea = document.createElement("textarea");
+        annotationTextarea.placeholder =
+          "Add your notes, explanations, or context using Markdown...";
+        annotationTextarea.className = "textarea-annotation";
+        annotationTextarea.id = `image-${image.filename}-annotation`;
+        annotationTextarea.dataset.filename = image.filename;
+        annotationTextarea.name = `image-${image.filename}-annotation`;
+        annotationTextarea.dataset.name = "annotation";
+        annotationTextarea.addEventListener("input", function () {
+          updatePreview(this);
+        });
+
+        annotationContainer.appendChild(annotationLabel);
+        annotationContainer.appendChild(annotationPreview);
+        annotationContainer.appendChild(annotationTextarea);
+
+        // Assemble content container
+        contentContainer.appendChild(altTextContainer);
+        contentContainer.appendChild(annotationContainer);
+
+        // Assemble bundle
+        bundle.appendChild(imgContainer);
+        bundle.appendChild(contentContainer);
+
+        return bundle;
+      }
+
+      function updatePreview(textarea) {
+        const annotationContainer = textarea.closest(".annotation-container");
+        const previewDiv = annotationContainer.querySelector(
+          ".annotation-preview"
+        );
+        const html = marked
+          .parse(textarea.value, { headerIds: false, mangle: false })
+          .trim();
+        previewDiv.innerHTML =
+          html || "<em>Your annotation preview will appear here...</em>";
+      }
+
+      function gatherData(selector) {
+        const elements = document.querySelectorAll(selector);
+        const dataObjects = [];
+
+        elements.forEach((element) => {
+          const inputs = Array.from(
+            element.querySelectorAll("textarea,[data-name]")
+          );
+          const elementData = {};
+
+          inputs.forEach((el) => {
+            if (el.dataset["name"] && el.tagName.toLowerCase() === "div") {
+              elementData[el.dataset["name"]] = el.innerHTML.trim();
+              return;
+            }
+
+            const elementName = el.dataset["name"] || el.getAttribute("name");
+            const elementValue = el.value;
+            elementData[elementName] = elementValue;
+
+            // Get data attributes
+            const dataAttributes = el.dataset;
+            for (const attribute in dataAttributes) {
+              if (attribute !== "name") {
+                elementData[attribute] = dataAttributes[attribute];
+              }
+            }
+          });
+
+          if (elementData.alt && elementData.alt.toLowerCase() === "skip") {
+            // Skip this slide
+          } else {
+            dataObjects.push(elementData);
+          }
+        });
+
+        return dataObjects;
+      }
+
+      function executeTemplates(template, arrayOfObjects) {
+        return arrayOfObjects.map((obj) => {
+          const keys = Array.from(Object.keys(obj));
+          const values = Array.from(Object.values(obj));
+          keys.push("escapeHtml");
+          values.push(escapeHtml);
+          const templateFunction = new Function(
+            ...keys,
+            `return \`${template}\`;`
+          );
+          return templateFunction(...values);
+        });
+      }
+
+      function executeAllTemplates() {
+        const template = document.getElementById("templateToRun");
+
+        try {
+          const objects = gatherData(".bundle");
+          const strings = executeTemplates(template.value, objects);
+
+          let textarea = document.getElementById("templateOutput");
+          if (!textarea) {
+            textarea = document.createElement("textarea");
+            textarea.id = "templateOutput";
+            document.getElementById("templateTool").appendChild(textarea);
+          }
+          textarea.value = strings.join("\n");
+        } catch (e) {
+          alert("Error: " + e.message);
+        }
+      }
+
+      // Expose gatherData to window for console debugging
+      window.gatherData = gatherData;
+    </script>
+  </body>
+</html>
