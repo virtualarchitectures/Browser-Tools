@@ -1,6 +1,8 @@
 # Browser Tools
 
-A collection of browser-based HTML+JavaScript tools for various tasks. Each tool has been built with the aid of LLMs and agentic coding tools. In each case AI has been used to tailor the tool to my own practical needs, and in broad alignment with the kinds of principles outlined under the headings of [malleable software](https://www.inkandswitch.com/essay/malleable-software/) and [resonant computing](https://resonantcomputing.org/). All tools run entirely in your browser with no server-side processing.
+A collection of browser-based HTML+JavaScript tools for various tasks. These tools are prototypes, not products. They have been developed quickly and iteratively using LLMs to test the afforances and limitations of agentic coding. Each tool has been tailored to my own practical needs. At the same time they are also intended to provide genuine utility and value for others.
+
+Some tools require external dependencies which are loaded from trusted CDNs. All tools run entirely in your browser with no server-side processing.
 
 ## Features
 
@@ -77,4 +79,6 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 
 ## Acknowledgement
 
-This set of tools has been developed using a range of agentic coding tools. This collection was inspired by [Simon Willison's](https://simonwillison.net/) experiment in prompt-driven development, using LLMs to develop his own set of standalone HTML + Javascript tools. Simon's code lives on GitHub in [simonw/tools](https://github.com/simonw/tools) and many of his tools used the Claude custom instructions [described here](https://simonwillison.net/2024/Dec/19/one-shot-python-tools/#custom-instructions).
+Development of this collection was inspired by [Simon Willison's](https://simonwillison.net/) experiments in prompt-driven development. Simon's own collection can be found at [https://tools.simonwillison.net/](https://tools.simonwillison.net/) The the code can be found on GitHub in [simonw/tools](https://github.com/simonw/tools). Simon also generously discusses both the [Claude custom instructions](https://simonwillison.net/2024/Dec/19/one-shot-python-tools/#custom-instructions) and [general patterns](https://simonwillison.net/2025/Dec/10/html-tools/) he uses for developing these tools on his blog.
+
+The majority of tools in my collection [virtualarchitectures/Browser-Tools](https://github.com/virtualarchitectures/Browser-Tools) have been developed using Anthropic's Claude running within the Zed agentic IDE. I've also used a combination of Claude, ChatGPT and Google Gemini within Continue.Dev in VS Code for more focused edits and refinement. In each case the LLM has been used to tailor the tool to meet my own practical needs. This practice is in broad alignment with approaches discussed elsewhere under the headings of [malleable software](https://www.inkandswitch.com/essay/malleable-software/) and [resonant computing](https://resonantcomputing.org/). More generally, my personal preference in the use of LLMs is toward local development on my own machine using open models in [Ollama](https://ollama.com/).
