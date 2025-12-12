@@ -203,6 +203,38 @@
         color: #24292e;
       }
 
+      input[type="text"] {
+        padding: 6px 12px;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        font-family: inherit;
+        font-size: 14px;
+        line-height: 20px;
+        width: 100%;
+        max-width: 500px;
+      }
+
+      input[type="text"]:focus {
+        outline: none;
+        border-color: #0366d6;
+        box-shadow: 0 0 0 3px rgba(3, 102, 214, 0.1);
+      }
+
+      .base-path-group {
+        margin-bottom: 16px;
+      }
+
+      .base-path-group label {
+        margin-bottom: 4px;
+      }
+
+      .helper-text {
+        font-size: 13px;
+        color: #586069;
+        margin-top: 4px;
+        margin-bottom: 0;
+      }
+
       textarea {
         width: 100%;
         padding: 8px 12px;
@@ -335,13 +367,27 @@
 
     <div id="templateTool" class="template-section">
       <h2>Generate HTML from Your Slides</h2>
+
+      <div class="base-path-group">
+        <label for="basePathInput">Image Base Path (optional):</label>
+        <input type="text" id="basePathInput" placeholder="slides/" value="" />
+        <p class="helper-text">
+          Leave empty to use just the filename, or specify a folder (e.g.,
+          <code>slides/</code>), relative path (e.g., <code>../images/</code>),
+          or URL prefix (e.g., <code>https://example.com/slides/</code>)
+        </p>
+      </div>
+
       <p>
         Execute the following template against the slides on the page. An
-        <code>escapeHtml()</code> function is available.
+        <code>escapeHtml()</code> function is available. You can use
+        <code>${fullImagePath}</code> for the complete path to each slide image,
+        or build your own manually using
+        <code>${basePath}${filename}</code>
       </p>
       <textarea id="templateToRun">
 <div class="slide">
-  <img src="${filename}" alt="${escapeHtml(alt)}">
+  <img src="${fullImagePath}" alt="${escapeHtml(alt)}">
   ${markdownAsHtml}
 </div></textarea
       >
@@ -350,11 +396,14 @@
       </button>
 
       <h3>Example Template</h3>
-      <p>Here's a common template pattern:</p>
+      <p>
+        Use <code>${fullImagePath}</code> for the complete path with your base
+        path included:
+      </p>
       <pre>
 &lt;div class="slide" id="${filename}"&gt;
-  &lt;img loading="lazy" src="slides/${filename}" alt="${escapeHtml(alt)}" style="max-width: 100%" /&gt;
-  &lt;div&gt;&lt;a style="float: right; text-decoration: none; border-bottom: none; padding-left: 1em;" href="slides/#${filename}"&gt;#&lt;/a&gt;
+  &lt;img loading="lazy" src="${fullImagePath}" alt="${escapeHtml(alt)}" style="max-width: 100%" /&gt;
+  &lt;div&gt;&lt;a style="float: right; text-decoration: none; border-bottom: none; padding-left: 1em;" href="${basePath}#${filename}"&gt;#&lt;/a&gt;
   ${markdownAsHtml}
   &lt;/div&gt;
 &lt;/div&gt;</pre
@@ -660,9 +709,17 @@
 
       function executeAllTemplates() {
         const template = document.getElementById("templateToRun");
+        const basePath = document.getElementById("basePathInput")?.value || "";
 
         try {
           const objects = gatherData(".bundle");
+
+          // Add basePath and fullImagePath to each object
+          objects.forEach((obj) => {
+            obj.basePath = basePath;
+            obj.fullImagePath = basePath + obj.filename;
+          });
+
           const strings = executeTemplates(template.value, objects);
 
           let textarea = document.getElementById("templateOutput");
