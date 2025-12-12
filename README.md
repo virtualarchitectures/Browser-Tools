@@ -29,6 +29,7 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 - **[OCR Reader](ocr-reader.html)** — extract text from images and PDF files using optical character recognition with side-by-side preview
 - **[PDF Metadata Viewer](pdf-metadata.html)** — extract and view PDF metadata including title, author, dates, permissions, and security settings
 - **[PDF to Images](pdf-to-images.html)** — extract high-quality images of pages from PDF documents with adjustable DPI and format options (PNG, JPEG, WebP)
+- **[Presentation Annotator](annotated-presentation.html)** — add alt text and markdown annotations to presentation slide images with template-based export and live preview
 - **[Text Chunking](text-chunking.html)** — split text documents into manageable chunks using multiple strategies (character count, word count, sentence-based, paragraph-based, recursive split, sliding window) with configurable overlap and export to CSV
 - **[Text Diff](text-diff.html)** — compare two text blocks and highlight added and removed content
 - **[Text Tools](text-tools.html)** — text manipulation toolkit with case transformation, sorting, whitespace cleaning, encoding/decoding (Base64, URL), find & replace, and text tokenization
