@@ -79,18 +79,25 @@ Each tool should typically be:
 - Responsive design with mobile-first approach
 - Simple, clean styling
 - Use CSS Grid and Flexbox for layouts
+- **NO emojis or icon characters** in UI unless explicitly requested by the user
+- Follow the standard color scheme and button styles (see "Standard Styling" section below)
 
 ### Dependencies
 
 **Minimal External Dependencies:**
 
-- Only include external libraries when absolutely necessary
-- Prefer CDN links over npm packages
+- Use vanilla JavaScript and browser APIs whenever possible
+- Only include external libraries when absolutely necessary for specialized functionality that cannot be reasonably implemented with native APIs
+- When external libraries are required, load them from **trusted CDNs only**:
+  - **cdnjs.cloudflare.com** (preferred)
+  - **cdn.jsdelivr.net** (acceptable alternative)
+- Always use specific version numbers in CDN URLs (never use `@latest`)
 - Document why each dependency is needed
 - Examples of acceptable dependencies:
   - Specialized libraries (e.g., exif-js for EXIF data, jsdiff for text comparison)
   - Mapping libraries (e.g., Leaflet for GeoJSON visualization)
   - PDF.js for PDF processing
+  - OCR libraries (e.g., Tesseract.js)
 
 **Unacceptable Dependencies:**
 
@@ -98,6 +105,7 @@ Each tool should typically be:
 - jQuery (use vanilla JavaScript instead)
 - Bootstrap (write custom CSS instead)
 - Lodash/Underscore (use native JavaScript methods)
+- Any CDN sources other than cdnjs or jsDelivr
 
 ### Browser Compatibility
 
@@ -147,6 +155,81 @@ Each tool should typically be:
 3. **Test Thoroughly**: Verify all functionality still works
 4. **Document Changes**: Add comments explaining significant modifications
 
+### Standard Styling
+
+All tools should follow this consistent visual style:
+
+**Color Scheme:**
+- Background: `#ffffff`
+- Text: `#24292e`
+- Secondary text: `#586069`
+- Border: `#e1e4e8`
+- Light background: `#f6f8fa`
+- Link/Primary blue: `#0366d6` (hover: `#0256c5`)
+- Light grey: `#fafbfc` (hover: `#f3f4f6`)
+
+**Typography:**
+```css
+font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+```
+
+**Button Styles:**
+- **Primary buttons** (main actions): Blue background (`#0366d6`), white text
+- **Secondary buttons** (less important actions): Light grey background (`#fafbfc`), dark text
+- All buttons: `8px 12px` padding, `6px` border-radius, `14px` font-size
+
+**Page Header Pattern:**
+Every tool must include a back link followed by the page title:
+```html
+<a href="index.html" class="back-link">← Back to Browser Tools</a>
+<h1>Tool Name</h1>
+```
+
+**Standard CSS for back link:**
+```css
+.back-link {
+  display: inline-block;
+  margin-bottom: 16px;
+  color: #0366d6;
+  text-decoration: none;
+  font-size: 14px;
+}
+.back-link:hover {
+  text-decoration: underline;
+}
+```
+
+**Standard button CSS:**
+```css
+.btn {
+  background: #fafbfc;
+  color: #24292e;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(27, 31, 35, 0.15);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 20px;
+}
+.btn:hover {
+  background: #f3f4f6;
+}
+.btn.primary {
+  background: #0366d6;
+  color: #fff;
+}
+.btn.primary:hover {
+  background: #0256c5;
+}
+.btn.secondary {
+  background: #fafbfc;
+  color: #24292e;
+}
+.btn.secondary:hover {
+  background: #f3f4f6;
+}
+```
+
 ### Code Organization Within a File
 
 ```html
@@ -171,6 +254,9 @@ Each tool should typically be:
     <!-- =========================
          HTML Structure
          ========================= -->
+    
+    <a href="index.html" class="back-link">← Back to Browser Tools</a>
+    <h1>Tool Name</h1>
 
     <script>
       /* =========================
@@ -259,7 +345,12 @@ Before considering a tool complete:
 - [ ] Drag-and-drop works correctly
 - [ ] Download/copy functionality works
 - [ ] No external dependencies unless documented and necessary
+- [ ] External dependencies loaded from cdnjs or jsDelivr only
 - [ ] Code is well-commented
+- [ ] Follows standard styling (colors, buttons, header with back link)
+- [ ] No emojis or icon characters in UI (unless explicitly requested)
+- [ ] Primary buttons are blue, secondary buttons are light grey
+- [ ] Includes "← Back to Browser Tools" link at top
 - [ ] Added to index.html
 - [ ] Documented in README.md
 
