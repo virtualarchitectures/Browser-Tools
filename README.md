@@ -77,7 +77,7 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 - **[Browser Fingerprint Viewer](browser-fingerprint.html)** — view browser fingerprint data that websites can collect including canvas fingerprinting, WebGL info, audio context, detected fonts, and device characteristics
 - **[Cookie & Storage Analysis](cookie-storage-analysis.html)** — examine all data websites can store on your device including cookies, localStorage, sessionStorage, IndexedDB, cache storage, and service workers with detailed analysis
 
-## Acknowledgement
+## Acknowledgements
 
 Development of this collection was inspired by [Simon Willison's](https://simonwillison.net/) experiments in prompt-driven development. Simon's own collection can be found at [https://tools.simonwillison.net/](https://tools.simonwillison.net/) The the code can be found on GitHub in [simonw/tools](https://github.com/simonw/tools). Simon also generously discusses both the [Claude custom instructions](https://simonwillison.net/2024/Dec/19/one-shot-python-tools/#custom-instructions) and [general patterns](https://simonwillison.net/2025/Dec/10/html-tools/) he uses for developing these tools on his blog.
 
