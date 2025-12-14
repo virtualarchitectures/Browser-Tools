@@ -67,6 +67,7 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 ### Software Development
 
 - **[GitHub Commits Viewer](github-commits.html)** — view and export commit history from GitHub repositories with support for CSV, JSON, and Markdown exports
+- **[Localhost Port Scanner](localhost-port-scanner.html)** — scan ports on your local machine to detect running services, Docker containers, and development servers with preset scans for common ports and custom range options
 
 ### Web Development
 
