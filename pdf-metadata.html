@@ -150,17 +150,20 @@
         margin-bottom: 12px;
       }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist/build/pdf.min.js"></script>
     <script type="module">
+      // Import PDF.js library
+      import * as pdfjsLib from "https://cdn.jsdelivr.net/npm/pdfjs-dist@5.4.449/+esm";
+
+      // Configure PDF.js worker
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        "https://cdn.jsdelivr.net/npm/pdfjs-dist@5.4.449/build/pdf.worker.mjs";
+
       const fileInput = document.getElementById("fileInput");
       const metadataPanel = document.getElementById("metadataPanel");
       const metadataOutput = document.getElementById("metadataOutput");
       const copyBtn = document.getElementById("copyBtn");
       const downloadBtn = document.getElementById("downloadBtn");
       const clearBtn = document.getElementById("clearBtn");
-
-      pdfjsLib.GlobalWorkerOptions.workerSrc =
-        "https://cdn.jsdelivr.net/npm/pdfjs-dist/build/pdf.worker.min.js";
 
       fileInput.addEventListener("change", async () => {
         const file = fileInput.files[0];
