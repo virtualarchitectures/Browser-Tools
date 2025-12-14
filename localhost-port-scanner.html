@@ -354,11 +354,11 @@
         <p class="description">
             Scan ports on your local machine to detect running services, Docker
             containers, and development servers. This tool uses browser-based
-            HTTP requests, iframes, and WebSocket connections to detect open
-            ports and gather information about running services. Due to browser
-            security restrictions, some services may show limited details (CORS
-            blocked), and only HTTP/HTTPS/WebSocket protocols can be reliably
-            detected.
+            HTTP requests (with CORS and no-cors modes) and WebSocket
+            connections to detect open ports and gather information about
+            running services. Due to browser security restrictions, some
+            services may show limited details (CORS blocked), and only
+            HTTP/HTTPS/WebSocket protocols can be reliably detected.
         </p>
 
         <div class="warning">
@@ -724,110 +724,40 @@
 
                         break; // Successfully got info, exit loop
                     } catch (error) {
-                        // Fetch failed - might be CORS block on open port
-                        // Try fallback detection before giving up
-                        continue;
-                    }
-                }
+                        // CORS error - try no-cors mode to detect if port is actually responding
+                        try {
+                            const controller = new AbortController();
+                            const timeoutId = setTimeout(
+                                () => controller.abort(),
+                                1500,
+                            );
 
-                // If fetch failed, try fallback detection methods
-                // This catches ports that are open but reject fetch (like ZAP proxy)
-                if (info.protocol === null) {
-                    const fallbackDetected = await tryFallbackDetection(port);
-                    if (fallbackDetected) {
-                        info.protocol = "HTTP";
-                        info.httpStatus = "CORS Blocked";
-                        info.server = "Unknown (CORS)";
+                            const noCorsResponse = await fetch(
+                                `${protocol}://127.0.0.1:${port}/`,
+                                {
+                                    method: "GET",
+                                    mode: "no-cors",
+                                    cache: "no-cache",
+                                    signal: controller.signal,
+                                },
+                            );
+
+                            clearTimeout(timeoutId);
+
+                            // If no-cors fetch succeeds, port is definitely open
+                            // but we can't read the response due to CORS
+                            info.protocol = protocol.toUpperCase();
+                            info.httpStatus = "CORS Blocked";
+                            info.server = "Unknown (CORS)";
+                            break;
+                        } catch (noCorsError) {
+                            // Both CORS and no-cors failed, try next protocol
+                            continue;
+                        }
                     }
                 }
 
                 return info;
-            }
-
-            // Fallback detection using multiple methods for CORS-restricted servers
-            async function tryFallbackDetection(port) {
-                // Try iframe loading first - works well with proxies
-                const iframeResult = await tryIframeDetection(port);
-                if (iframeResult) return true;
-
-                // Try image loading as secondary method
-                const imageResult = await tryImageDetection(port);
-                return imageResult;
-            }
-
-            // Try loading in an iframe to detect open ports
-            async function tryIframeDetection(port) {
-                return new Promise((resolve) => {
-                    const iframe = document.createElement("iframe");
-                    iframe.style.display = "none";
-                    let resolved = false;
-
-                    const timeout = setTimeout(() => {
-                        if (!resolved) {
-                            resolved = true;
-                            document.body.removeChild(iframe);
-                            resolve(false);
-                        }
-                    }, 800);
-
-                    iframe.onload = () => {
-                        if (!resolved) {
-                            resolved = true;
-                            clearTimeout(timeout);
-                            document.body.removeChild(iframe);
-                            resolve(true);
-                        }
-                    };
-
-                    iframe.onerror = () => {
-                        if (!resolved) {
-                            resolved = true;
-                            clearTimeout(timeout);
-                            document.body.removeChild(iframe);
-                            // iframe error often means port is open but blocked by X-Frame-Options
-                            resolve(true);
-                        }
-                    };
-
-                    document.body.appendChild(iframe);
-                    iframe.src = `http://127.0.0.1:${port}/?t=${Date.now()}`;
-                });
-            }
-
-            // Fallback detection using image loading
-            async function tryImageDetection(port) {
-                return new Promise((resolve) => {
-                    const img = new Image();
-                    const startTime = Date.now();
-                    let resolved = false;
-
-                    const timeout = setTimeout(() => {
-                        if (!resolved) {
-                            resolved = true;
-                            resolve(false);
-                        }
-                    }, 500);
-
-                    img.onerror = () => {
-                        if (!resolved) {
-                            resolved = true;
-                            clearTimeout(timeout);
-                            const elapsed = Date.now() - startTime;
-                            // Quick error (< 200ms) suggests port is open but returned error
-                            resolve(elapsed < 200);
-                        }
-                    };
-
-                    img.onload = () => {
-                        if (!resolved) {
-                            resolved = true;
-                            clearTimeout(timeout);
-                            resolve(true);
-                        }
-                    };
-
-                    img.src = `http://127.0.0.1:${port}/?t=${Date.now()}`;
-                });
             }
 
             // Scan multiple ports
