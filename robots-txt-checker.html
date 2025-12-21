@@ -189,6 +189,9 @@
         padding: 16px;
         background: #f6f8fa;
         border-bottom: 1px solid #e1e4e8;
+        display: flex;
+        align-items: center;
+        gap: 12px;
       }
 
       .panel-content {
@@ -337,7 +340,16 @@
 
     <div id="robotsSection" class="hidden">
       <div class="panel">
-        <div class="panel-header">Robots.txt Content</div>
+        <div class="panel-header">
+          Robots.txt Content
+          <button
+            id="downloadBtn"
+            class="btn primary"
+            style="margin-left: auto"
+          >
+            Download
+          </button>
+        </div>
         <div class="panel-content">
           <div id="robotsContent" class="robots-content"></div>
         </div>
@@ -400,9 +412,11 @@
       const pathUrlInput = document.getElementById("pathUrl");
       const checkBtn = document.getElementById("checkBtn");
       const resultBox = document.getElementById("resultBox");
+      const downloadBtn = document.getElementById("downloadBtn");
 
       let robotsRules = null;
       let baseUrl = "";
+      let robotsTxtContent = "";
 
       // Robots.txt parser class
       class RobotsParser {
@@ -659,6 +673,7 @@
         try {
           const robotsTxt = await fetchRobotsTxt(siteUrl);
 
+          robotsTxtContent = robotsTxt;
           robotsContent.textContent = robotsTxt;
           robotsSection.classList.remove("hidden");
 
@@ -782,6 +797,24 @@
         if (e.key === "Enter") {
           checkBtn.click();
         }
+      });
+
+      // Download robots.txt file
+      downloadBtn.addEventListener("click", () => {
+        if (!robotsTxtContent) {
+          showError("No robots.txt content to download");
+          return;
+        }
+
+        const blob = new Blob([robotsTxtContent], {
+          type: "text/plain",
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "robots.txt";
+        a.click();
+        URL.revokeObjectURL(url);
       });
     </script>
   </body>
