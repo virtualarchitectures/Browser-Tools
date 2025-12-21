@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Robots.txt Checker</title>
+    <style>
+      /* =========================
+         CSS Styles
+         ========================= */
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Arial, sans-serif;
+        line-height: 1.6;
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 20px;
+        color: #24292e;
+        background: #ffffff;
+      }
+
+      h1 {
+        border-bottom: 1px solid #eaecef;
+        padding-bottom: 0.3em;
+        margin-top: 0;
+        font-size: 32px;
+        font-weight: 600;
+      }
+
+      h2 {
+        font-size: 20px;
+        font-weight: 600;
+        margin-top: 24px;
+        margin-bottom: 16px;
+        border-bottom: 1px solid #eaecef;
+        padding-bottom: 0.3em;
+      }
+
+      .back-link {
+        display: inline-block;
+        margin-bottom: 16px;
+        color: #0366d6;
+        text-decoration: none;
+        font-size: 14px;
+      }
+
+      .back-link:hover {
+        text-decoration: underline;
+      }
+
+      .info {
+        font-size: 14px;
+        color: #586069;
+        margin-bottom: 24px;
+        padding: 12px;
+        background: #f6f8fa;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+      }
+
+      .warning {
+        font-size: 14px;
+        color: #856404;
+        margin-bottom: 16px;
+        padding: 12px;
+        background: #fff3cd;
+        border-radius: 6px;
+        border: 1px solid #ffc107;
+      }
+
+      .input-group {
+        margin-bottom: 16px;
+      }
+
+      .input-group label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #24292e;
+      }
+
+      .input-group input[type="text"],
+      .input-group input[type="url"] {
+        width: 100%;
+        padding: 8px 12px;
+        font-size: 14px;
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Arial, sans-serif;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        background: #ffffff;
+        color: #24292e;
+      }
+
+      .input-group input[type="text"]:focus,
+      .input-group input[type="url"]:focus {
+        outline: none;
+        border-color: #0366d6;
+        box-shadow: 0 0 0 3px rgba(3, 102, 214, 0.1);
+      }
+
+      .input-group select {
+        width: 100%;
+        padding: 8px 12px;
+        font-size: 14px;
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Arial, sans-serif;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        background: #ffffff;
+        color: #24292e;
+      }
+
+      .input-group select:focus {
+        outline: none;
+        border-color: #0366d6;
+        box-shadow: 0 0 0 3px rgba(3, 102, 214, 0.1);
+      }
+
+      .input-group .help-text {
+        font-size: 12px;
+        color: #586069;
+        margin-top: 4px;
+      }
+
+      .actions {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+      }
+
+      .btn {
+        background: #fafbfc;
+        color: #24292e;
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+        cursor: pointer;
+        font-size: 14px;
+        line-height: 20px;
+        text-decoration: none;
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Arial, sans-serif;
+        white-space: nowrap;
+      }
+
+      .btn:hover {
+        background: #f3f4f6;
+      }
+
+      .btn.primary {
+        background: #0366d6;
+        color: #fff;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+      }
+
+      .btn.primary:hover {
+        background: #0256c5;
+      }
+
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .btn.primary:disabled:hover {
+        background: #0366d6;
+      }
+
+      .panel {
+        background: #ffffff;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        margin-bottom: 16px;
+        overflow: hidden;
+      }
+
+      .panel-header {
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0;
+        padding: 16px;
+        background: #f6f8fa;
+        border-bottom: 1px solid #e1e4e8;
+      }
+
+      .panel-content {
+        padding: 16px;
+      }
+
+      .robots-content {
+        background: #f6f8fa;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        padding: 16px;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
+          monospace;
+        font-size: 13px;
+        line-height: 1.6;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        overflow-x: auto;
+        max-height: 400px;
+        overflow-y: auto;
+      }
+
+      .check-section {
+        margin-top: 24px;
+      }
+
+      .result-box {
+        margin-top: 16px;
+        padding: 16px;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+        background: #ffffff;
+      }
+
+      .result-allowed {
+        border-left: 4px solid #28a745;
+        background: #dcffe4;
+      }
+
+      .result-disallowed {
+        border-left: 4px solid #d73a49;
+        background: #ffdce0;
+      }
+
+      .result-title {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 8px;
+      }
+
+      .result-details {
+        font-size: 14px;
+        color: #586069;
+        margin-top: 8px;
+      }
+
+      .error-box {
+        padding: 16px;
+        background: #ffdce0;
+        border: 1px solid #d73a49;
+        border-radius: 6px;
+        color: #d73a49;
+        margin-top: 16px;
+      }
+
+      .loading {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid #e1e4e8;
+        border-top-color: #0366d6;
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+        margin-left: 8px;
+        vertical-align: middle;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      code {
+        background: #f6f8fa;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
+          monospace;
+        font-size: 12px;
+      }
+
+      @media (max-width: 768px) {
+        body {
+          padding: 12px;
+        }
+
+        h1 {
+          font-size: 24px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- =========================
+         HTML Structure
+         ========================= -->
+
+    <a href="index.html" class="back-link">← Back to Browser Tools</a>
+
+    <h1>Robots.txt Checker</h1>
+
+    <div class="info">
+      Enter a website URL to fetch its robots.txt file, then check whether
+      specific paths are allowed or disallowed for web crawlers.
+    </div>
+
+    <div class="warning">
+      <strong>Note:</strong> Due to CORS restrictions, this tool may not work
+      with all websites. For best results, use it with sites that have
+      permissive CORS policies or test with your own development servers.
+    </div>
+
+    <div class="input-group">
+      <label for="siteUrl">Website URL</label>
+      <input
+        type="url"
+        id="siteUrl"
+        placeholder="https://example.com"
+        value=""
+      />
+      <div class="help-text">
+        Enter the base URL of the website (e.g., https://example.com)
+      </div>
+    </div>
+
+    <div class="actions">
+      <button id="fetchBtn" class="btn primary">Fetch robots.txt</button>
+    </div>
+
+    <div id="errorBox" class="error-box hidden"></div>
+
+    <div id="robotsSection" class="hidden">
+      <div class="panel">
+        <div class="panel-header">Robots.txt Content</div>
+        <div class="panel-content">
+          <div id="robotsContent" class="robots-content"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="checkSection" class="check-section hidden">
+      <h2>Check URL Permissions</h2>
+
+      <div class="input-group">
+        <label for="userAgent">User-Agent</label>
+        <select id="userAgent">
+          <option value="*">* (All bots)</option>
+          <option value="Googlebot">Googlebot</option>
+          <option value="Bingbot">Bingbot</option>
+          <option value="Slurp">Yahoo Slurp</option>
+          <option value="DuckDuckBot">DuckDuckBot</option>
+          <option value="Baiduspider">Baiduspider</option>
+          <option value="YandexBot">YandexBot</option>
+          <option value="facebookexternalhit">Facebook Bot</option>
+          <option value="ia_archiver">Alexa Bot</option>
+        </select>
+        <div class="help-text">
+          Select the user-agent (bot) to check permissions for
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label for="pathUrl">Path or URL to Check</label>
+        <input
+          type="text"
+          id="pathUrl"
+          placeholder="/about or https://example.com/about"
+        />
+        <div class="help-text">
+          Enter a path (e.g., /about) or a full URL to check
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="checkBtn" class="btn primary">Check Permissions</button>
+      </div>
+
+      <div id="resultBox" class="result-box hidden"></div>
+    </div>
+
+    <script>
+      /* =========================
+         JavaScript
+         ========================= */
+
+      // State variables
+      const siteUrlInput = document.getElementById("siteUrl");
+      const fetchBtn = document.getElementById("fetchBtn");
+      const errorBox = document.getElementById("errorBox");
+      const robotsSection = document.getElementById("robotsSection");
+      const robotsContent = document.getElementById("robotsContent");
+      const checkSection = document.getElementById("checkSection");
+      const userAgentSelect = document.getElementById("userAgent");
+      const pathUrlInput = document.getElementById("pathUrl");
+      const checkBtn = document.getElementById("checkBtn");
+      const resultBox = document.getElementById("resultBox");
+
+      let robotsRules = null;
+      let baseUrl = "";
+
+      // Robots.txt parser class
+      class RobotsParser {
+        constructor(robotsTxt, baseUrl) {
+          this.baseUrl = baseUrl;
+          this.rules = this.parse(robotsTxt);
+        }
+
+        parse(robotsTxt) {
+          const lines = robotsTxt.split("\n");
+          const rules = {};
+          let currentAgent = null;
+
+          for (let line of lines) {
+            line = line.trim();
+
+            // Skip comments and empty lines
+            if (line.startsWith("#") || line === "") continue;
+
+            const colonIndex = line.indexOf(":");
+            if (colonIndex === -1) continue;
+
+            const directive = line
+              .substring(0, colonIndex)
+              .trim()
+              .toLowerCase();
+            const value = line.substring(colonIndex + 1).trim();
+
+            if (directive === "user-agent") {
+              currentAgent = value.toLowerCase();
+              if (!rules[currentAgent]) {
+                rules[currentAgent] = {
+                  allow: [],
+                  disallow: [],
+                };
+              }
+            } else if (
+              currentAgent &&
+              (directive === "allow" || directive === "disallow")
+            ) {
+              if (value) {
+                rules[currentAgent][directive].push(value);
+              }
+            }
+          }
+
+          return rules;
+        }
+
+        isAllowed(path, userAgent = "*") {
+          userAgent = userAgent.toLowerCase();
+
+          // Normalize path
+          if (!path.startsWith("/")) {
+            try {
+              const url = new URL(path);
+              path = url.pathname + url.search;
+            } catch (e) {
+              path = "/" + path;
+            }
+          }
+
+          // Get rules for specific user-agent and wildcard
+          const specificRules = this.rules[userAgent] || {
+            allow: [],
+            disallow: [],
+          };
+          const wildcardRules = this.rules["*"] || {
+            allow: [],
+            disallow: [],
+          };
+
+          // Combine rules (specific takes precedence)
+          const combinedRules = {
+            allow: [...specificRules.allow],
+            disallow: [...specificRules.disallow],
+          };
+
+          // Add wildcard rules if no specific rules exist
+          if (
+            !this.rules[userAgent] ||
+            (specificRules.allow.length === 0 &&
+              specificRules.disallow.length === 0)
+          ) {
+            combinedRules.allow.push(...wildcardRules.allow);
+            combinedRules.disallow.push(...wildcardRules.disallow);
+          }
+
+          // Check rules - most specific match wins
+          let matchedRule = null;
+          let matchLength = 0;
+          let isAllowed = true; // Default: allowed if no rules match
+
+          // Check disallow rules
+          for (const rule of combinedRules.disallow) {
+            if (this.matchesPattern(path, rule)) {
+              const ruleLength = this.getMatchLength(path, rule);
+              if (ruleLength > matchLength) {
+                matchLength = ruleLength;
+                matchedRule = rule;
+                isAllowed = false;
+              }
+            }
+          }
+
+          // Check allow rules (can override disallow)
+          for (const rule of combinedRules.allow) {
+            if (this.matchesPattern(path, rule)) {
+              const ruleLength = this.getMatchLength(path, rule);
+              if (ruleLength > matchLength) {
+                matchLength = ruleLength;
+                matchedRule = rule;
+                isAllowed = true;
+              }
+            }
+          }
+
+          return {
+            allowed: isAllowed,
+            matchedRule: matchedRule,
+            userAgent: userAgent,
+          };
+        }
+
+        matchesPattern(path, pattern) {
+          // Handle wildcards
+          if (pattern === "/") {
+            return true;
+          }
+
+          // Escape special regex characters except * and $
+          let regexPattern = pattern
+            .replace(/[.+?^{}()|[\]\\]/g, "\\$&")
+            .replace(/\*/g, ".*");
+
+          // Handle end-of-line anchor
+          if (regexPattern.endsWith("$")) {
+            regexPattern = "^" + regexPattern;
+          } else {
+            regexPattern = "^" + regexPattern;
+          }
+
+          try {
+            const regex = new RegExp(regexPattern);
+            return regex.test(path);
+          } catch (e) {
+            // If regex fails, do simple string matching
+            return path.startsWith(pattern);
+          }
+        }
+
+        getMatchLength(path, pattern) {
+          // Remove wildcards for length calculation
+          const cleanPattern = pattern.replace(/\*/g, "").replace(/\$/g, "");
+          return cleanPattern.length;
+        }
+
+        getAvailableUserAgents() {
+          return Object.keys(this.rules);
+        }
+      }
+
+      // Utility functions
+      function normalizeUrl(url) {
+        try {
+          if (!url.startsWith("http://") && !url.startsWith("https://")) {
+            url = "https://" + url;
+          }
+          const urlObj = new URL(url);
+          return urlObj.origin;
+        } catch (e) {
+          throw new Error("Invalid URL format");
+        }
+      }
+
+      function showError(message) {
+        errorBox.textContent = message;
+        errorBox.classList.remove("hidden");
+      }
+
+      function hideError() {
+        errorBox.classList.add("hidden");
+      }
+
+      async function fetchRobotsTxt(siteUrl) {
+        try {
+          baseUrl = normalizeUrl(siteUrl);
+          const robotsUrl = baseUrl + "/robots.txt";
+
+          // Try direct fetch first
+          try {
+            const response = await fetch(robotsUrl);
+
+            if (!response.ok) {
+              if (response.status === 404) {
+                throw new Error("No robots.txt file found at this URL (404)");
+              }
+              throw new Error(
+                `Failed to fetch robots.txt (HTTP ${response.status})`
+              );
+            }
+
+            const text = await response.text();
+            return text;
+          } catch (fetchError) {
+            // If direct fetch fails due to CORS, try using a CORS proxy
+            if (
+              fetchError.message.includes("CORS") ||
+              fetchError.name === "TypeError"
+            ) {
+              showError(
+                "Direct fetch failed due to CORS restrictions. Trying CORS proxy..."
+              );
+
+              const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(
+                robotsUrl
+              )}`;
+              const proxyResponse = await fetch(proxyUrl);
+
+              if (!proxyResponse.ok) {
+                throw new Error(
+                  "Failed to fetch via proxy. The website may not be accessible."
+                );
+              }
+
+              const text = await proxyResponse.text();
+              hideError();
+              return text;
+            }
+            throw fetchError;
+          }
+        } catch (error) {
+          throw error;
+        }
+      }
+
+      // Event handlers
+      fetchBtn.addEventListener("click", async () => {
+        const siteUrl = siteUrlInput.value.trim();
+
+        if (!siteUrl) {
+          showError("Please enter a website URL");
+          return;
+        }
+
+        hideError();
+        robotsSection.classList.add("hidden");
+        checkSection.classList.add("hidden");
+        resultBox.classList.add("hidden");
+
+        fetchBtn.disabled = true;
+        fetchBtn.innerHTML = 'Fetching... <span class="loading"></span>';
+
+        try {
+          const robotsTxt = await fetchRobotsTxt(siteUrl);
+
+          robotsContent.textContent = robotsTxt;
+          robotsSection.classList.remove("hidden");
+
+          // Parse robots.txt
+          robotsRules = new RobotsParser(robotsTxt, baseUrl);
+
+          // Update user-agent dropdown with available agents
+          const agents = robotsRules.getAvailableUserAgents();
+          const currentValue = userAgentSelect.value;
+
+          // Clear and rebuild options
+          userAgentSelect.innerHTML = "";
+
+          // Add wildcard option if it exists in rules
+          if (agents.includes("*")) {
+            const option = document.createElement("option");
+            option.value = "*";
+            option.textContent = "* (All bots)";
+            userAgentSelect.appendChild(option);
+          }
+
+          // Add other agents
+          for (const agent of agents) {
+            if (agent === "*") continue;
+            const option = document.createElement("option");
+            option.value = agent;
+            option.textContent = agent;
+            userAgentSelect.appendChild(option);
+          }
+
+          // Try to restore previous selection
+          if (
+            currentValue &&
+            Array.from(userAgentSelect.options).some(
+              (opt) => opt.value === currentValue
+            )
+          ) {
+            userAgentSelect.value = currentValue;
+          }
+
+          checkSection.classList.remove("hidden");
+          fetchBtn.innerHTML = "Fetch robots.txt";
+          fetchBtn.disabled = false;
+
+          // Scroll to robots section
+          robotsSection.scrollIntoView({
+            behavior: "smooth",
+            block: "nearest",
+          });
+        } catch (error) {
+          showError(error.message);
+          fetchBtn.innerHTML = "Fetch robots.txt";
+          fetchBtn.disabled = false;
+        }
+      });
+
+      checkBtn.addEventListener("click", () => {
+        const pathUrl = pathUrlInput.value.trim();
+        const userAgent = userAgentSelect.value;
+
+        if (!pathUrl) {
+          showError("Please enter a path or URL to check");
+          return;
+        }
+
+        if (!robotsRules) {
+          showError("Please fetch robots.txt first");
+          return;
+        }
+
+        hideError();
+
+        const result = robotsRules.isAllowed(pathUrl, userAgent);
+
+        resultBox.classList.remove("hidden");
+        resultBox.className = "result-box";
+
+        if (result.allowed) {
+          resultBox.classList.add("result-allowed");
+          resultBox.innerHTML = `
+            <div class="result-title">Allowed</div>
+            <div>This path is <strong>allowed</strong> for crawling by "${
+              result.userAgent === "*" ? "all bots" : result.userAgent
+            }".</div>
+            ${
+              result.matchedRule
+                ? `<div class="result-details">Matched rule: <code>${result.matchedRule}</code></div>`
+                : '<div class="result-details">No specific rules matched. Default: allowed</div>'
+            }
+          `;
+        } else {
+          resultBox.classList.add("result-disallowed");
+          resultBox.innerHTML = `
+            <div class="result-title">Disallowed</div>
+            <div>This path is <strong>disallowed</strong> for crawling by "${
+              result.userAgent === "*" ? "all bots" : result.userAgent
+            }".</div>
+            ${
+              result.matchedRule
+                ? `<div class="result-details">Matched rule: <code>${result.matchedRule}</code></div>`
+                : ""
+            }
+          `;
+        }
+
+        // Scroll to result
+        resultBox.scrollIntoView({
+          behavior: "smooth",
+          block: "nearest",
+        });
+      });
+
+      // Allow Enter key to trigger actions
+      siteUrlInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+          fetchBtn.click();
+        }
+      });
+
+      pathUrlInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+          checkBtn.click();
+        }
+      });
+    </script>
+  </body>
+</html>
