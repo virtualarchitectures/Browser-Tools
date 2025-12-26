@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PDF Editor</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <style>
+      /* =========================
+         CSS Styles
+         ========================= */
+
+      /* Reset and base styles */
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Arial, sans-serif;
+        line-height: 1.6;
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+        color: #24292e;
+        background: #ffffff;
+      }
+
+      h1 {
+        border-bottom: 1px solid #eaecef;
+        padding-bottom: 0.3em;
+        margin-top: 0;
+        font-size: 32px;
+        font-weight: 600;
+      }
+
+      /* Layout */
+      .back-link {
+        display: inline-block;
+        margin-bottom: 16px;
+        color: #0366d6;
+        text-decoration: none;
+        font-size: 14px;
+      }
+
+      .back-link:hover {
+        text-decoration: underline;
+      }
+
+      .description {
+        font-size: 14px;
+        color: #586069;
+        margin-bottom: 24px;
+        padding: 12px;
+        background: #f6f8fa;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+      }
+
+      .controls {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+      }
+
+      .file-input {
+        display: none;
+      }
+
+      .file-status {
+        margin-left: 8px;
+        font-size: 14px;
+        color: #586069;
+        flex: 1;
+      }
+
+      /* Buttons */
+      .btn {
+        background: #fafbfc;
+        color: #24292e;
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+        cursor: pointer;
+        font-size: 14px;
+        line-height: 20px;
+        text-decoration: none;
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Arial, sans-serif;
+        display: inline-block;
+      }
+
+      .btn:hover {
+        background: #f3f4f6;
+      }
+
+      .btn.primary {
+        background: #0366d6;
+        color: #fff;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+      }
+
+      .btn.primary:hover {
+        background: #0256c5;
+      }
+
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .btn:disabled:hover {
+        background: #fafbfc;
+      }
+
+      .btn.primary:disabled:hover {
+        background: #0366d6;
+      }
+
+      /* Page selection section */
+      .selection-section {
+        margin-bottom: 24px;
+        padding: 16px;
+        background: #f6f8fa;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+      }
+
+      .selection-section label {
+        display: block;
+        font-weight: 600;
+        font-size: 14px;
+        margin-bottom: 8px;
+        color: #24292e;
+      }
+
+      .selection-section input[type="text"] {
+        width: 100%;
+        padding: 8px 12px;
+        font-size: 14px;
+        border: 1px solid #d1d5da;
+        border-radius: 6px;
+        background: #ffffff;
+        color: #24292e;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
+          monospace;
+      }
+
+      .selection-section input[type="text"]:focus {
+        outline: none;
+        border-color: #0366d6;
+      }
+
+      .selection-section .hint {
+        font-size: 12px;
+        color: #586069;
+        margin-top: 6px;
+      }
+
+      /* Page grid */
+      .pages-container {
+        display: none;
+        margin-bottom: 24px;
+      }
+
+      .pages-container.visible {
+        display: block;
+      }
+
+      .pages-header {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 16px;
+        color: #24292e;
+      }
+
+      .pages-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+
+      .page-item {
+        position: relative;
+        border: 2px solid #e1e4e8;
+        border-radius: 6px;
+        overflow: hidden;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background: #ffffff;
+      }
+
+      .page-item:hover {
+        border-color: #0366d6;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .page-item.removed {
+        border-color: #cb2431;
+      }
+
+      .page-canvas-container {
+        position: relative;
+        width: 100%;
+        padding-top: 141.4%; /* A4 aspect ratio (1:√2) */
+        background: #f6f8fa;
+      }
+
+      .page-item canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+
+      .page-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        pointer-events: none;
+      }
+
+      .page-item.removed .page-overlay {
+        background: rgba(0, 0, 0, 0.6);
+      }
+
+      .page-overlay .remove-mark {
+        display: none;
+        font-size: 64px;
+        color: #cb2431;
+        font-weight: bold;
+        text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+      }
+
+      .page-item.removed .page-overlay .remove-mark {
+        display: block;
+      }
+
+      .page-number {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(0, 0, 0, 0.7);
+        color: #ffffff;
+        text-align: center;
+        padding: 6px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .page-item.removed .page-number {
+        background: rgba(203, 36, 49, 0.9);
+      }
+
+      /* Status message */
+      .status-message {
+        display: none;
+        padding: 12px 16px;
+        border-radius: 6px;
+        margin-bottom: 16px;
+        font-size: 14px;
+      }
+
+      .status-message.visible {
+        display: block;
+      }
+
+      .status-message.info {
+        background: #dbedff;
+        border: 1px solid #0366d6;
+        color: #0366d6;
+      }
+
+      .status-message.success {
+        background: #dcffe4;
+        border: 1px solid #28a745;
+        color: #176f2c;
+      }
+
+      .status-message.error {
+        background: #ffdce0;
+        border: 1px solid #cb2431;
+        color: #cb2431;
+      }
+
+      /* Download section */
+      .download-section {
+        display: none;
+        text-align: center;
+        padding: 20px;
+        background: #f6f8fa;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+      }
+
+      .download-section.visible {
+        display: block;
+      }
+
+      .download-info {
+        font-size: 14px;
+        color: #586069;
+        margin-bottom: 16px;
+      }
+
+      @media (max-width: 768px) {
+        .pages-grid {
+          grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+          gap: 12px;
+        }
+
+        .page-overlay .remove-mark {
+          font-size: 48px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a href="index.html" class="back-link">← Back to Browser Tools</a>
+
+    <h1>PDF Editor</h1>
+
+    <div class="description">
+      Remove pages from PDF documents by selecting page ranges or clicking page
+      previews. All processing happens in your browser.
+    </div>
+
+    <div class="status-message" id="statusMessage"></div>
+
+    <!-- File controls -->
+    <div class="controls">
+      <label for="fileInput" class="btn primary">Load PDF</label>
+      <input
+        type="file"
+        id="fileInput"
+        class="file-input"
+        accept="application/pdf"
+      />
+      <button id="clearBtn" class="btn" style="display: none">Clear</button>
+      <span class="file-status" id="fileStatus">No file loaded</span>
+    </div>
+
+    <!-- Page selection -->
+    <div class="selection-section" id="selectionSection" style="display: none">
+      <label for="pagesToRemove">Pages to remove:</label>
+      <input type="text" id="pagesToRemove" placeholder="e.g., 1,5-8" />
+      <div class="hint">
+        Enter page numbers separated by commas. Use hyphens for ranges (e.g.,
+        <code>1,5-8</code> removes pages 1, 5, 6, 7, and 8). Click page previews
+        to select or deselect.
+      </div>
+    </div>
+
+    <!-- Pages grid -->
+    <div class="pages-container" id="pagesContainer">
+      <div class="pages-header" id="pagesHeader">
+        Pages in document (click to toggle removal):
+      </div>
+      <div class="pages-grid" id="pagesGrid"></div>
+    </div>
+
+    <!-- Download section -->
+    <div class="download-section" id="downloadSection">
+      <div class="download-info" id="downloadInfo">
+        Ready to download edited PDF
+      </div>
+      <button id="downloadBtn" class="btn primary">Download Edited PDF</button>
+    </div>
+
+    <script type="module">
+      /* =========================
+         JavaScript
+         ========================= */
+
+      // Import PDF.js library
+      import * as pdfjsLib from "https://cdn.jsdelivr.net/npm/pdfjs-dist@5.4.449/+esm";
+
+      // Configure PDF.js worker
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        "https://cdn.jsdelivr.net/npm/pdfjs-dist@5.4.449/build/pdf.worker.mjs";
+
+      // State variables
+      let currentFile = null;
+      let pdfDocument = null;
+      let totalPages = 0;
+      let removedPages = new Set();
+
+      // DOM elements
+      const fileInput = document.getElementById("fileInput");
+      const fileStatus = document.getElementById("fileStatus");
+      const clearBtn = document.getElementById("clearBtn");
+      const statusMessage = document.getElementById("statusMessage");
+      const selectionSection = document.getElementById("selectionSection");
+      const pagesToRemoveInput = document.getElementById("pagesToRemove");
+      const pagesContainer = document.getElementById("pagesContainer");
+      const pagesHeader = document.getElementById("pagesHeader");
+      const pagesGrid = document.getElementById("pagesGrid");
+      const downloadSection = document.getElementById("downloadSection");
+      const downloadInfo = document.getElementById("downloadInfo");
+      const downloadBtn = document.getElementById("downloadBtn");
+
+      // Event listeners
+      fileInput.addEventListener("change", handleFileSelect);
+      clearBtn.addEventListener("click", clearAll);
+      pagesToRemoveInput.addEventListener("input", handlePagesInputChange);
+      downloadBtn.addEventListener("click", downloadEditedPDF);
+
+      // Utility functions
+      function showStatus(message, type = "info") {
+        statusMessage.textContent = message;
+        statusMessage.className = `status-message visible ${type}`;
+        setTimeout(() => {
+          statusMessage.classList.remove("visible");
+        }, 5000);
+      }
+
+      function clearAll() {
+        currentFile = null;
+        pdfDocument = null;
+        totalPages = 0;
+        removedPages.clear();
+        fileInput.value = "";
+        fileStatus.textContent = "No file loaded";
+        pagesToRemoveInput.value = "";
+        pagesGrid.innerHTML = "";
+        selectionSection.style.display = "none";
+        pagesContainer.classList.remove("visible");
+        downloadSection.classList.remove("visible");
+        clearBtn.style.display = "none";
+      }
+
+      function parsePageRanges(input) {
+        const pages = new Set();
+        if (!input.trim()) return pages;
+
+        const parts = input.split(",");
+        for (const part of parts) {
+          const trimmed = part.trim();
+          if (trimmed.includes("-")) {
+            // Range like "5-8"
+            const [start, end] = trimmed
+              .split("-")
+              .map((s) => parseInt(s.trim()));
+            if (!isNaN(start) && !isNaN(end)) {
+              for (
+                let i = Math.min(start, end);
+                i <= Math.max(start, end);
+                i++
+              ) {
+                if (i >= 1 && i <= totalPages) {
+                  pages.add(i);
+                }
+              }
+            }
+          } else {
+            // Single page
+            const page = parseInt(trimmed);
+            if (!isNaN(page) && page >= 1 && page <= totalPages) {
+              pages.add(page);
+            }
+          }
+        }
+        return pages;
+      }
+
+      function pagesToString(pagesSet) {
+        if (pagesSet.size === 0) return "";
+
+        const sorted = Array.from(pagesSet).sort((a, b) => a - b);
+        const ranges = [];
+        let start = sorted[0];
+        let end = sorted[0];
+
+        for (let i = 1; i < sorted.length; i++) {
+          if (sorted[i] === end + 1) {
+            end = sorted[i];
+          } else {
+            if (start === end) {
+              ranges.push(`${start}`);
+            } else if (end === start + 1) {
+              ranges.push(`${start},${end}`);
+            } else {
+              ranges.push(`${start}-${end}`);
+            }
+            start = sorted[i];
+            end = sorted[i];
+          }
+        }
+
+        // Add the last range
+        if (start === end) {
+          ranges.push(`${start}`);
+        } else if (end === start + 1) {
+          ranges.push(`${start},${end}`);
+        } else {
+          ranges.push(`${start}-${end}`);
+        }
+
+        return ranges.join(",");
+      }
+
+      function updatePageVisuals() {
+        const pageItems = pagesGrid.querySelectorAll(".page-item");
+        pageItems.forEach((item) => {
+          const pageNum = parseInt(item.dataset.page);
+          if (removedPages.has(pageNum)) {
+            item.classList.add("removed");
+          } else {
+            item.classList.remove("removed");
+          }
+        });
+        updateDownloadInfo();
+      }
+
+      function updateDownloadInfo() {
+        const remainingPages = totalPages - removedPages.size;
+        if (remainingPages === totalPages) {
+          downloadInfo.textContent = `All ${totalPages} pages will be included in the downloaded PDF`;
+        } else if (remainingPages === 0) {
+          downloadInfo.textContent =
+            "Warning: All pages are marked for removal. The downloaded PDF will be empty.";
+        } else {
+          downloadInfo.textContent = `${remainingPages} of ${totalPages} pages will be included in the downloaded PDF`;
+        }
+      }
+
+      function handlePagesInputChange() {
+        const input = pagesToRemoveInput.value;
+        removedPages = parsePageRanges(input);
+        updatePageVisuals();
+      }
+
+      function handlePageClick(pageNum) {
+        if (removedPages.has(pageNum)) {
+          removedPages.delete(pageNum);
+        } else {
+          removedPages.add(pageNum);
+        }
+
+        // Update input field
+        pagesToRemoveInput.value = pagesToString(removedPages);
+
+        // Update visuals
+        updatePageVisuals();
+      }
+
+      async function handleFileSelect(e) {
+        const files = e.target.files;
+        if (files.length > 0) {
+          await handleFile(files[0]);
+        }
+      }
+
+      async function handleFile(file) {
+        currentFile = file;
+        const fileName = file.name.toLowerCase();
+
+        // Validate file type
+        if (!fileName.endsWith(".pdf")) {
+          showStatus("Please select a PDF file", "error");
+          fileStatus.textContent = "No file loaded";
+          return;
+        }
+
+        fileStatus.textContent = file.name;
+        clearBtn.style.display = "inline-block";
+
+        try {
+          showStatus("Loading PDF...", "info");
+
+          // Load PDF
+          const arrayBuffer = await file.arrayBuffer();
+          pdfDocument = await pdfjsLib.getDocument({ data: arrayBuffer })
+            .promise;
+          totalPages = pdfDocument.numPages;
+
+          showStatus(`Loaded PDF with ${totalPages} pages`, "success");
+
+          // Show selection section
+          selectionSection.style.display = "block";
+          pagesContainer.classList.add("visible");
+          downloadSection.classList.add("visible");
+
+          // Render all pages
+          await renderAllPages();
+
+          updateDownloadInfo();
+        } catch (error) {
+          console.error("Error loading PDF:", error);
+          showStatus("Error loading PDF: " + error.message, "error");
+        }
+      }
+
+      async function renderAllPages() {
+        pagesGrid.innerHTML = "";
+        removedPages.clear();
+        pagesToRemoveInput.value = "";
+
+        pagesHeader.textContent = `Pages in document (click to toggle removal):`;
+
+        for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+          try {
+            const page = await pdfDocument.getPage(pageNum);
+            const scale = 0.5; // Small thumbnails
+            const viewport = page.getViewport({ scale });
+
+            // Create canvas
+            const canvas = document.createElement("canvas");
+            const context = canvas.getContext("2d");
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+
+            // Render page
+            await page.render({
+              canvasContext: context,
+              viewport: viewport,
+            }).promise;
+
+            // Create page item
+            const pageItem = document.createElement("div");
+            pageItem.className = "page-item";
+            pageItem.dataset.page = pageNum;
+            pageItem.addEventListener("click", () => handlePageClick(pageNum));
+
+            const canvasContainer = document.createElement("div");
+            canvasContainer.className = "page-canvas-container";
+            canvasContainer.appendChild(canvas);
+
+            const overlay = document.createElement("div");
+            overlay.className = "page-overlay";
+
+            const removeMark = document.createElement("div");
+            removeMark.className = "remove-mark";
+            removeMark.textContent = "✕";
+            overlay.appendChild(removeMark);
+
+            canvasContainer.appendChild(overlay);
+
+            const pageNumber = document.createElement("div");
+            pageNumber.className = "page-number";
+            pageNumber.textContent = `Page ${pageNum}`;
+
+            pageItem.appendChild(canvasContainer);
+            pageItem.appendChild(pageNumber);
+            pagesGrid.appendChild(pageItem);
+          } catch (error) {
+            console.error(`Error rendering page ${pageNum}:`, error);
+          }
+        }
+      }
+
+      async function downloadEditedPDF() {
+        if (!currentFile) return;
+
+        try {
+          downloadBtn.disabled = true;
+          showStatus("Creating edited PDF...", "info");
+
+          // Load the original PDF with pdf-lib
+          const existingPdfBytes = await currentFile.arrayBuffer();
+          const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
+
+          // Create a new PDF
+          const newPdfDoc = await PDFLib.PDFDocument.create();
+
+          // Copy pages that are not marked for removal
+          for (let i = 1; i <= totalPages; i++) {
+            if (!removedPages.has(i)) {
+              const [copiedPage] = await newPdfDoc.copyPages(pdfDoc, [i - 1]);
+              newPdfDoc.addPage(copiedPage);
+            }
+          }
+
+          // Save the new PDF
+          const pdfBytes = await newPdfDoc.save();
+          const blob = new Blob([pdfBytes], { type: "application/pdf" });
+          const url = URL.createObjectURL(blob);
+
+          // Download
+          const a = document.createElement("a");
+          a.href = url;
+          const originalName = currentFile.name.replace(/\.pdf$/i, "");
+          a.download = `${originalName}-EDITED.pdf`;
+          a.click();
+
+          URL.revokeObjectURL(url);
+
+          showStatus("PDF downloaded successfully!", "success");
+        } catch (error) {
+          console.error("Error creating PDF:", error);
+          showStatus("Error creating PDF: " + error.message, "error");
+        } finally {
+          downloadBtn.disabled = false;
+        }
+      }
+    </script>
+  </body>
+</html>
