@@ -57,12 +57,47 @@
         border: 1px solid #e1e4e8;
       }
 
+      /* Main layout */
+      .main-container {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 20px;
+        margin-bottom: 24px;
+      }
+
+      @media (min-width: 1024px) {
+        .main-container {
+          grid-template-columns: 350px 1fr;
+        }
+      }
+
+      /* Sidebar panel */
+      .sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .panel {
+        background: #f6f8fa;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        padding: 16px;
+      }
+
+      .panel-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: #24292e;
+        margin: 0 0 12px 0;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #e1e4e8;
+      }
+
       .controls {
         display: flex;
+        flex-direction: column;
         gap: 8px;
-        align-items: center;
-        margin-bottom: 16px;
-        flex-wrap: wrap;
       }
 
       .file-input {
@@ -70,9 +105,23 @@
       }
 
       .file-status {
-        margin-left: 8px;
-        font-size: 14px;
+        font-size: 13px;
         color: #586069;
+        padding: 8px 12px;
+        background: #ffffff;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+        min-height: 36px;
+        display: flex;
+        align-items: center;
+      }
+
+      .control-buttons {
+        display: flex;
+        gap: 8px;
+      }
+
+      .control-buttons .btn {
         flex: 1;
       }
 
@@ -120,18 +169,10 @@
       }
 
       /* Page selection section */
-      .selection-section {
-        margin-bottom: 24px;
-        padding: 16px;
-        background: #f6f8fa;
-        border-radius: 6px;
-        border: 1px solid #e1e4e8;
-      }
-
       .selection-section label {
         display: block;
         font-weight: 600;
-        font-size: 14px;
+        font-size: 13px;
         margin-bottom: 8px;
         color: #24292e;
       }
@@ -139,30 +180,106 @@
       .selection-section input[type="text"] {
         width: 100%;
         padding: 8px 12px;
-        font-size: 14px;
+        font-size: 13px;
         border: 1px solid #d1d5da;
         border-radius: 6px;
         background: #ffffff;
         color: #24292e;
         font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
           monospace;
+        margin-bottom: 8px;
       }
 
       .selection-section input[type="text"]:focus {
         outline: none;
         border-color: #0366d6;
+        box-shadow: 0 0 0 3px rgba(3, 102, 214, 0.1);
       }
 
       .selection-section .hint {
-        font-size: 12px;
+        font-size: 11px;
         color: #586069;
-        margin-top: 6px;
+        line-height: 1.5;
+      }
+
+      .selection-section .hint code {
+        background: #ffffff;
+        padding: 2px 4px;
+        border-radius: 3px;
+        font-size: 11px;
+      }
+
+      /* Stats panel */
+      .stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .stat-item {
+        background: #ffffff;
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+        text-align: center;
+      }
+
+      .stat-value {
+        font-size: 20px;
+        font-weight: 600;
+        color: #24292e;
+        display: block;
+      }
+
+      .stat-label {
+        font-size: 11px;
+        color: #586069;
+        display: block;
+        margin-top: 2px;
+      }
+
+      .stat-item.highlight {
+        background: #0366d6;
+        color: #ffffff;
+        border-color: #0366d6;
+      }
+
+      .stat-item.highlight .stat-value,
+      .stat-item.highlight .stat-label {
+        color: #ffffff;
+      }
+
+      .stat-item.warning {
+        background: #ffeef0;
+        border-color: #cb2431;
+      }
+
+      .stat-item.warning .stat-value {
+        color: #cb2431;
+      }
+
+      /* Action buttons */
+      .action-section {
+        margin-top: 12px;
+      }
+
+      .action-section .btn {
+        width: 100%;
+        padding: 10px 16px;
+        font-size: 14px;
+        font-weight: 600;
       }
 
       /* Page grid */
+      .content-area {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+      }
+
       .pages-container {
         display: none;
-        margin-bottom: 24px;
       }
 
       .pages-container.visible {
@@ -170,17 +287,71 @@
       }
 
       .pages-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
         font-size: 16px;
         font-weight: 600;
         margin-bottom: 16px;
         color: #24292e;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #e1e4e8;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .pages-header-text {
+        flex: 0 0 auto;
+      }
+
+      .loading-container {
+        display: none;
+        flex: 0 0 auto;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        color: #586069;
+      }
+
+      .loading-container.visible {
+        display: flex;
+      }
+
+      .loading-bar {
+        width: 150px;
+        height: 6px;
+        background: #e1e4e8;
+        border-radius: 3px;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .loading-bar-fill {
+        height: 100%;
+        background: #0366d6;
+        border-radius: 3px;
+        transition: width 0.3s ease;
+        width: 0%;
+      }
+
+      .loading-text {
+        white-space: nowrap;
       }
 
       .pages-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-        gap: 16px;
-        margin-bottom: 24px;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 12px;
+        padding: 16px;
+        background: #f6f8fa;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+      }
+
+      @media (min-width: 768px) {
+        .pages-grid {
+          grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        }
       }
 
       .page-item {
@@ -271,7 +442,8 @@
         padding: 12px 16px;
         border-radius: 6px;
         margin-bottom: 16px;
-        font-size: 14px;
+        font-size: 13px;
+        font-weight: 500;
       }
 
       .status-message.visible {
@@ -296,34 +468,57 @@
         color: #cb2431;
       }
 
-      /* Download section */
-      .download-section {
-        display: none;
+      /* Empty state */
+      .empty-state {
         text-align: center;
-        padding: 20px;
-        background: #f6f8fa;
-        border-radius: 6px;
-        border: 1px solid #e1e4e8;
-      }
-
-      .download-section.visible {
-        display: block;
-      }
-
-      .download-info {
-        font-size: 14px;
+        padding: 60px 20px;
         color: #586069;
+      }
+
+      .empty-state-icon {
+        font-size: 64px;
         margin-bottom: 16px;
+        opacity: 0.3;
+      }
+
+      .empty-state-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #24292e;
+        margin-bottom: 8px;
+      }
+
+      .empty-state-text {
+        font-size: 14px;
+      }
+
+      @media (max-width: 1023px) {
+        .main-container {
+          grid-template-columns: 1fr;
+        }
       }
 
       @media (max-width: 768px) {
+        body {
+          padding: 12px;
+        }
+
         .pages-grid {
-          grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-          gap: 12px;
+          grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+          gap: 8px;
+          padding: 12px;
         }
 
         .page-overlay .remove-mark {
-          font-size: 48px;
+          font-size: 40px;
+        }
+
+        .stats-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .stat-item {
+          padding: 10px 12px;
         }
       }
     </style>
@@ -340,44 +535,96 @@
 
     <div class="status-message" id="statusMessage"></div>
 
-    <!-- File controls -->
-    <div class="controls">
-      <label for="fileInput" class="btn primary">Load PDF</label>
-      <input
-        type="file"
-        id="fileInput"
-        class="file-input"
-        accept="application/pdf"
-      />
-      <button id="clearBtn" class="btn" style="display: none">Clear</button>
-      <span class="file-status" id="fileStatus">No file loaded</span>
-    </div>
+    <div class="main-container">
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <!-- File controls -->
+        <div class="panel">
+          <h2 class="panel-title">Load Document</h2>
+          <div class="controls">
+            <div class="control-buttons">
+              <label for="fileInput" class="btn primary">Load PDF</label>
+              <input
+                type="file"
+                id="fileInput"
+                class="file-input"
+                accept="application/pdf"
+              />
+              <button id="clearBtn" class="btn" style="display: none">
+                Clear
+              </button>
+            </div>
+            <div class="file-status" id="fileStatus">No file loaded</div>
+          </div>
+        </div>
 
-    <!-- Page selection -->
-    <div class="selection-section" id="selectionSection" style="display: none">
-      <label for="pagesToRemove">Pages to remove:</label>
-      <input type="text" id="pagesToRemove" placeholder="e.g., 1,5-8" />
-      <div class="hint">
-        Enter page numbers separated by commas. Use hyphens for ranges (e.g.,
-        <code>1,5-8</code> removes pages 1, 5, 6, 7, and 8). Click page previews
-        to select or deselect.
-      </div>
-    </div>
+        <!-- Stats panel -->
+        <div class="panel" id="statsPanel">
+          <h2 class="panel-title">Document Summary</h2>
+          <div class="stats-grid">
+            <div class="stat-item">
+              <span class="stat-value" id="totalPagesCount">0</span>
+              <span class="stat-label">Total</span>
+            </div>
+            <div class="stat-item highlight">
+              <span class="stat-value" id="remainingPagesCount">0</span>
+              <span class="stat-label">Keep</span>
+            </div>
+            <div class="stat-item warning">
+              <span class="stat-value" id="removedPagesCount">0</span>
+              <span class="stat-label">Remove</span>
+            </div>
+          </div>
+        </div>
 
-    <!-- Pages grid -->
-    <div class="pages-container" id="pagesContainer">
-      <div class="pages-header" id="pagesHeader">
-        Pages in document (click to toggle removal):
+        <!-- Page selection -->
+        <div class="panel selection-section" id="selectionSection">
+          <h2 class="panel-title">Select Pages to Remove</h2>
+          <label for="pagesToRemove">Page numbers:</label>
+          <input type="text" id="pagesToRemove" placeholder="e.g., 1,5-8" />
+          <div class="hint">
+            Enter page numbers separated by commas. Use hyphens for ranges
+            (e.g.,
+            <code>1,5-8</code> removes pages 1, 5, 6, 7, and 8). Click page
+            thumbnails below to toggle selection.
+          </div>
+          <div class="action-section">
+            <button id="downloadBtn" class="btn primary">
+              Download Edited PDF
+            </button>
+          </div>
+        </div>
       </div>
-      <div class="pages-grid" id="pagesGrid"></div>
-    </div>
 
-    <!-- Download section -->
-    <div class="download-section" id="downloadSection">
-      <div class="download-info" id="downloadInfo">
-        Ready to download edited PDF
+      <!-- Content area -->
+      <div class="content-area">
+        <!-- Pages grid -->
+        <div class="pages-container visible" id="pagesContainer">
+          <div class="pages-header" id="pagesHeader">
+            <span class="pages-header-text"
+              >Document Pages (click to toggle removal)</span
+            >
+            <div class="loading-container" id="loadingContainer">
+              <div class="loading-bar">
+                <div class="loading-bar-fill" id="loadingBarFill"></div>
+              </div>
+              <span class="loading-text" id="loadingText">Loading...</span>
+            </div>
+          </div>
+          <div class="pages-grid" id="pagesGrid">
+            <!-- Empty state -->
+            <div
+              class="empty-state"
+              id="emptyState"
+              style="grid-column: 1 / -1"
+            >
+              <div class="empty-state-icon">📄</div>
+              <div class="empty-state-title">No PDF Loaded</div>
+              <div class="empty-state-text">Load a PDF file to get started</div>
+            </div>
+          </div>
+        </div>
       </div>
-      <button id="downloadBtn" class="btn primary">Download Edited PDF</button>
     </div>
 
     <script type="module">
@@ -408,9 +655,16 @@
       const pagesContainer = document.getElementById("pagesContainer");
       const pagesHeader = document.getElementById("pagesHeader");
       const pagesGrid = document.getElementById("pagesGrid");
-      const downloadSection = document.getElementById("downloadSection");
-      const downloadInfo = document.getElementById("downloadInfo");
+      const totalPagesCount = document.getElementById("totalPagesCount");
+      const removedPagesCount = document.getElementById("removedPagesCount");
+      const remainingPagesCount = document.getElementById(
+        "remainingPagesCount"
+      );
       const downloadBtn = document.getElementById("downloadBtn");
+      const emptyState = document.getElementById("emptyState");
+      const loadingContainer = document.getElementById("loadingContainer");
+      const loadingBarFill = document.getElementById("loadingBarFill");
+      const loadingText = document.getElementById("loadingText");
 
       // Event listeners
       fileInput.addEventListener("change", handleFileSelect);
@@ -435,11 +689,14 @@
         fileInput.value = "";
         fileStatus.textContent = "No file loaded";
         pagesToRemoveInput.value = "";
-        pagesGrid.innerHTML = "";
-        selectionSection.style.display = "none";
-        pagesContainer.classList.remove("visible");
-        downloadSection.classList.remove("visible");
+        pagesGrid.innerHTML =
+          '<div class="empty-state" id="emptyState" style="grid-column: 1 / -1;"><div class="empty-state-icon">📄</div><div class="empty-state-title">No PDF Loaded</div><div class="empty-state-text">Load a PDF file to get started</div></div>';
         clearBtn.style.display = "none";
+        loadingContainer.classList.remove("visible");
+        // Reset summary counts
+        totalPagesCount.textContent = "0";
+        removedPagesCount.textContent = "0";
+        remainingPagesCount.textContent = "0";
       }
 
       function parsePageRanges(input) {
@@ -527,14 +784,9 @@
 
       function updateDownloadInfo() {
         const remainingPages = totalPages - removedPages.size;
-        if (remainingPages === totalPages) {
-          downloadInfo.textContent = `All ${totalPages} pages will be included in the downloaded PDF`;
-        } else if (remainingPages === 0) {
-          downloadInfo.textContent =
-            "Warning: All pages are marked for removal. The downloaded PDF will be empty.";
-        } else {
-          downloadInfo.textContent = `${remainingPages} of ${totalPages} pages will be included in the downloaded PDF`;
-        }
+        totalPagesCount.textContent = totalPages;
+        removedPagesCount.textContent = removedPages.size;
+        remainingPagesCount.textContent = remainingPages;
       }
 
       function handlePagesInputChange() {
@@ -583,16 +835,12 @@
 
           // Load PDF
           const arrayBuffer = await file.arrayBuffer();
-          pdfDocument = await pdfjsLib.getDocument({ data: arrayBuffer })
-            .promise;
+          pdfDocument = await pdfjsLib.getDocument({
+            data: arrayBuffer,
+          }).promise;
           totalPages = pdfDocument.numPages;
 
           showStatus(`Loaded PDF with ${totalPages} pages`, "success");
-
-          // Show selection section
-          selectionSection.style.display = "block";
-          pagesContainer.classList.add("visible");
-          downloadSection.classList.add("visible");
 
           // Render all pages
           await renderAllPages();
@@ -609,9 +857,14 @@
         removedPages.clear();
         pagesToRemoveInput.value = "";
 
-        pagesHeader.textContent = `Pages in document (click to toggle removal):`;
+        // Show loading bar
+        loadingContainer.classList.add("visible");
 
         for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+          // Update loading progress
+          const progress = (pageNum / totalPages) * 100;
+          loadingBarFill.style.width = progress + "%";
+          loadingText.textContent = `Loading ${pageNum}/${totalPages}`;
           try {
             const page = await pdfDocument.getPage(pageNum);
             const scale = 0.5; // Small thumbnails
@@ -660,6 +913,9 @@
             console.error(`Error rendering page ${pageNum}:`, error);
           }
         }
+
+        // Hide loading bar
+        loadingContainer.classList.remove("visible");
       }
 
       async function downloadEditedPDF() {
@@ -686,7 +942,9 @@
 
           // Save the new PDF
           const pdfBytes = await newPdfDoc.save();
-          const blob = new Blob([pdfBytes], { type: "application/pdf" });
+          const blob = new Blob([pdfBytes], {
+            type: "application/pdf",
+          });
           const url = URL.createObjectURL(blob);
 
           // Download
