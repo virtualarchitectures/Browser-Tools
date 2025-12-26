@@ -1,644 +1,608 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Browser Tools</title>
-        <style>
-            * {
-                box-sizing: border-box;
-            }
-            body {
-                font-family:
-                    Helvetica,
-                    -apple-system,
-                    BlinkMacSystemFont,
-                    "Segoe UI",
-                    Arial,
-                    sans-serif;
-                line-height: 1.6;
-                max-width: 980px;
-                margin: 0 auto;
-                padding: 20px;
-                color: #24292e;
-            }
-            h1 {
-                border-bottom: 1px solid #eaecef;
-                padding-bottom: 0.3em;
-            }
-            h2 {
-                border-bottom: 1px solid #eaecef;
-                padding-bottom: 0.3em;
-                margin-top: 24px;
-            }
-            a {
-                color: #0366d6;
-                text-decoration: none;
-            }
-            a:hover {
-                text-decoration: underline;
-            }
-            code {
-                background-color: rgba(27, 31, 35, 0.05);
-                border-radius: 3px;
-                padding: 0.2em 0.4em;
-            }
-            #search-box {
-                width: 100%;
-                padding: 12px;
-                font-size: 16px;
-                border: 2px solid #e1e4e8;
-                border-radius: 6px;
-                margin-bottom: 24px;
-                font-family:
-                    Helvetica,
-                    -apple-system,
-                    BlinkMacSystemFont,
-                    "Segoe UI",
-                    Arial,
-                    sans-serif;
-            }
-            #search-box:focus {
-                outline: none;
-                border-color: #0366d6;
-            }
-            .search-container {
-                position: relative;
-                margin-bottom: 24px;
-            }
-            .search-info {
-                font-size: 14px;
-                color: #586069;
-                margin-bottom: 16px;
-            }
-            ul {
-                list-style: none;
-                padding: 0;
-            }
-            li {
-                margin-bottom: 0.5em;
-            }
-            .tool-item {
-                transition: opacity 0.2s;
-            }
-            .tool-item.hidden {
-                display: none;
-            }
-            .search-results {
-                display: none;
-                border: 2px solid #e1e4e8;
-                border-radius: 6px;
-                padding: 16px;
-                margin-bottom: 24px;
-                background-color: #f6f8fa;
-            }
-            .search-results.visible {
-                display: block;
-            }
-            .search-results h3 {
-                margin-top: 0;
-                margin-bottom: 12px;
-                font-size: 16px;
-                color: #24292e;
-            }
-            .search-results ul {
-                margin: 0;
-            }
-            .search-results li {
-                margin-bottom: 8px;
-            }
-            .no-results {
-                display: none;
-                padding: 20px;
-                text-align: center;
-                color: #586069;
-                font-style: italic;
-            }
-            .no-results.visible {
-                display: block;
-            }
-            .all-tools {
-                display: block;
-            }
-            .footer {
-                margin-top: 48px;
-                padding-top: 24px;
-                border-top: 1px solid #eaecef;
-                text-align: center;
-                font-size: 14px;
-                color: #586069;
-            }
-            .footer a {
-                color: #0366d6;
-                font-weight: 500;
-            }
-        </style>
-    </head>
-    <body>
-        <h1>Virtual Architectures - Browser Tools</h1>
-        <p>
-            A collection of browser-based HTML+JavaScript tools for various
-            tasks. These tools are prototypes, not products. They have been
-            developed quickly and iteratively using LLMs to test the afforances
-            and limitations of agentic coding. Each tool has been tailored to my
-            own practical needs. At the same time they are also intended to
-            provide genuine utility and value for others.
-        </p>
-        <p>
-            Some tools require external dependencies which are loaded from
-            trusted CDNs. All tools run entirely in your browser with no
-            server-side processing.
-        </p>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Browser Tools</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Arial, sans-serif;
+        line-height: 1.6;
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 20px;
+        color: #24292e;
+      }
+      h1 {
+        border-bottom: 1px solid #eaecef;
+        padding-bottom: 0.3em;
+      }
+      h2 {
+        border-bottom: 1px solid #eaecef;
+        padding-bottom: 0.3em;
+        margin-top: 24px;
+      }
+      a {
+        color: #0366d6;
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+      code {
+        background-color: rgba(27, 31, 35, 0.05);
+        border-radius: 3px;
+        padding: 0.2em 0.4em;
+      }
+      #search-box {
+        width: 100%;
+        padding: 12px;
+        font-size: 16px;
+        border: 2px solid #e1e4e8;
+        border-radius: 6px;
+        margin-bottom: 24px;
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Arial, sans-serif;
+      }
+      #search-box:focus {
+        outline: none;
+        border-color: #0366d6;
+      }
+      .search-container {
+        position: relative;
+        margin-bottom: 24px;
+      }
+      .search-info {
+        font-size: 14px;
+        color: #586069;
+        margin-bottom: 16px;
+      }
+      ul {
+        list-style: none;
+        padding: 0;
+      }
+      li {
+        margin-bottom: 0.5em;
+      }
+      .tool-item {
+        transition: opacity 0.2s;
+      }
+      .tool-item.hidden {
+        display: none;
+      }
+      .search-results {
+        display: none;
+        border: 2px solid #e1e4e8;
+        border-radius: 6px;
+        padding: 16px;
+        margin-bottom: 24px;
+        background-color: #f6f8fa;
+      }
+      .search-results.visible {
+        display: block;
+      }
+      .search-results h3 {
+        margin-top: 0;
+        margin-bottom: 12px;
+        font-size: 16px;
+        color: #24292e;
+      }
+      .search-results ul {
+        margin: 0;
+      }
+      .search-results li {
+        margin-bottom: 8px;
+      }
+      .no-results {
+        display: none;
+        padding: 20px;
+        text-align: center;
+        color: #586069;
+        font-style: italic;
+      }
+      .no-results.visible {
+        display: block;
+      }
+      .all-tools {
+        display: block;
+      }
+      .footer {
+        margin-top: 48px;
+        padding-top: 24px;
+        border-top: 1px solid #eaecef;
+        text-align: center;
+        font-size: 14px;
+        color: #586069;
+      }
+      .footer a {
+        color: #0366d6;
+        font-weight: 500;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Virtual Architectures - Browser Tools</h1>
+    <p>
+      A collection of browser-based HTML+JavaScript tools for various tasks.
+      These tools are prototypes, not products. They have been developed quickly
+      and iteratively using LLMs to test the afforances and limitations of
+      agentic coding. Each tool has been tailored to my own practical needs. At
+      the same time they are also intended to provide genuine utility and value
+      for others.
+    </p>
+    <p>
+      Some tools require external dependencies which are loaded from trusted
+      CDNs. All tools run entirely in your browser with no server-side
+      processing.
+    </p>
 
-        <div class="search-container">
-            <input
-                type="text"
-                id="search-box"
-                placeholder="Search tools..."
-                autocomplete="off"
-            />
-            <div class="search-info" id="search-info"></div>
-        </div>
+    <div class="search-container">
+      <input
+        type="text"
+        id="search-box"
+        placeholder="Search tools..."
+        autocomplete="off"
+      />
+      <div class="search-info" id="search-info"></div>
+    </div>
 
-        <div class="search-results" id="search-results">
-            <h3>Search Results</h3>
-            <ul id="results-list"></ul>
-        </div>
+    <div class="search-results" id="search-results">
+      <h3>Search Results</h3>
+      <ul id="results-list"></ul>
+    </div>
 
-        <div class="no-results" id="no-results">
-            No tools found matching your search.
-        </div>
+    <div class="no-results" id="no-results">
+      No tools found matching your search.
+    </div>
 
-        <div class="all-tools" id="all-tools">
-            <h2>Data Processing</h2>
-            <ul id="data-section">
-                <li
-                    class="tool-item"
-                    data-keywords="csv json convert converter parse table data format export import spreadsheet excel comma separated values tabular dot notation nested jsonl ndjson"
-                >
-                    <a href="csv-to-json.html">CSV to JSON Converter</a> —
-                    convert CSV files to JSON format with support for dot
-                    notation parsing, multiple output formats (JSON Array, JSON
-                    Lines), and table preview
-                </li>
-                <li
-                    class="tool-item"
-                    data-keywords="json csv convert converter parse table data format export spreadsheet excel comma separated values tabular flatten nested array"
-                >
-                    <a href="json-to-csv.html">JSON to CSV Converter</a> —
-                    convert JSON files to CSV format with support for nested
-                    objects, array handling, and table preview
-                </li>
-            </ul>
+    <div class="all-tools" id="all-tools">
+      <h2>Data Processing</h2>
+      <ul id="data-section">
+        <li
+          class="tool-item"
+          data-keywords="csv json convert converter parse table data format export import spreadsheet excel comma separated values tabular dot notation nested jsonl ndjson"
+        >
+          <a href="csv-to-json.html">CSV to JSON Converter</a> — convert CSV
+          files to JSON format with support for dot notation parsing, multiple
+          output formats (JSON Array, JSON Lines), and table preview
+        </li>
+        <li
+          class="tool-item"
+          data-keywords="json csv convert converter parse table data format export spreadsheet excel comma separated values tabular flatten nested array"
+        >
+          <a href="json-to-csv.html">JSON to CSV Converter</a> — convert JSON
+          files to CSV format with support for nested objects, array handling,
+          and table preview
+        </li>
+      </ul>
 
-            <h2>Digital Forensics</h2>
-            <ul id="osint-section">
-                <li
-                    class="tool-item"
-                    data-keywords="email header analysis parse highlight ip address url syntax mime smtp received from authentication spf dkim"
-                >
-                    <a href="email-header-analysis.html"
-                        >Email Header Analysis</a
-                    >
-                    — analyse and highlight email headers with syntax
-                    highlighting for IPs, emails, and URLs
-                </li>
-            </ul>
+      <h2>Digital Forensics</h2>
+      <ul id="osint-section">
+        <li
+          class="tool-item"
+          data-keywords="email header analysis parse highlight ip address url syntax mime smtp received from authentication spf dkim"
+        >
+          <a href="email-header-analysis.html">Email Header Analysis</a>
+          — analyse and highlight email headers with syntax highlighting for
+          IPs, emails, and URLs
+        </li>
+      </ul>
 
-            <h2>Documents and Text</h2>
-            <ul id="text-section">
-                <li
-                    class="tool-item"
-                    data-keywords="ocr optical character recognition text extraction image pdf scan tesseract read extract document jpg png jpeg gif bmp webp"
-                >
-                    <a href="ocr-reader.html">OCR Reader</a> — extract text from
-                    images and PDF files using optical character recognition
-                    with side-by-side preview
-                </li>
-                <li
-                    class="tool-item"
-                    data-keywords="pdf metadata extract viewer title author date permissions security encryption copyright language filesize pages document properties info"
-                >
-                    <a href="pdf-metadata.html">PDF Metadata Viewer</a> —
-                    extract and view PDF metadata including title, author,
-                    dates, permissions, and security settings
-                </li>
-                <li
-                    class="tool-item"
-                    data-keywords="pdf crop cropper trim margins header footer page numbers remove white space borders edge cutting document editing resize dimension adjust boundaries"
-                >
-                    <a href="pdf-cropper.html">PDF Cropper</a> — remove headers,
-                    footers, page numbers, and margins from PDF documents by
-                    dragging bars to frame the content area you want to keep
-                </li>
-                <li
-                    class="tool-item"
-                    data-keywords="pdf images extract export convert high quality dpi png jpeg webp page rendering canvas zip download gallery preview document"
-                >
-                    <a href="pdf-to-images.html">PDF to Images</a>
-                    — extract high-quality images of pages from PDF documents
-                    with adjustable DPI and format options (PNG, JPEG, WebP)
-                </li>
-                <li
-                    class="tool-item"
-                    data-keywords="pdf editor edit remove delete pages page removal split extract organize reorder document editing modify trim"
-                >
-                    <a href="pdf-editor.html">PDF Editor</a>
-                    — remove pages from PDF documents by selecting page ranges
-                    or clicking page previews with visual page thumbnails
-                </li>
-                <li
-                    class="tool-item"
-                    data-keywords="presentation slides annotate annotation alt text markdown export template accessibility a11y image describe speaker notes"
-                >
-                    <a href="annotated-presentation.html"
-                        >Presentation Annotator</a
-                    >
-                    — add alt text and markdown annotations to presentation
-                    slide images with template-based export and live preview
-                </li>
-                <li
-                    class="tool-item"
-                    data-keywords="text chunking split divide segment chunk parser nlp language model llm context window overlap character word sentence paragraph recursive sliding window token processing batch"
-                >
-                    <a href="text-chunking.html">Text Chunking</a> — split text
-                    documents into manageable chunks using multiple strategies
-                    (character count, word count, sentence-based,
-                    paragraph-based, recursive split, sliding window) with
-                    configurable overlap and export to CSV
-                </li>
-                <li
-                    class="tool-item"
-                    data-keywords="compare difference changes added removed highlight text compare diff comparison"
-                >
-                    <a href="text-diff.html">Text Diff</a> — compare two text
-                    blocks and highlight added and removed content
-                </li>
-                <li
-                    class="tool-item"
-                    data-keywords="text tools manipulation transform case uppercase lowercase title sentence camel pascal snake kebab sort lines reverse clean whitespace trim remove duplicates base64 url encode decode find replace regex tokenize split join parse words"
-                >
-                    <a href="text-tools.html">Text Tools</a> — text manipulation
-                    toolkit with case transformation, sorting, whitespace
-                    cleaning, encoding/decoding (Base64, URL), find &amp;
-                    replace, and text tokenization
-                </li>
-            </ul>
+      <h2>Documents and Text</h2>
+      <ul id="text-section">
+        <li
+          class="tool-item"
+          data-keywords="ocr optical character recognition text extraction image pdf scan tesseract read extract document jpg png jpeg gif bmp webp"
+        >
+          <a href="ocr-reader.html">OCR Reader</a> — extract text from images
+          and PDF files using optical character recognition with side-by-side
+          preview
+        </li>
+        <li
+          class="tool-item"
+          data-keywords="pdf metadata extract viewer title author date permissions security encryption copyright language filesize pages document properties info"
+        >
+          <a href="pdf-metadata.html">PDF Metadata Viewer</a> — extract and view
+          PDF metadata including title, author, dates, permissions, and security
+          settings
+        </li>
+        <li
+          class="tool-item"
+          data-keywords="pdf crop cropper trim margins header footer page numbers remove white space borders edge cutting document editing resize dimension adjust boundaries"
+        >
+          <a href="pdf-cropper.html">PDF Cropper</a> — remove headers, footers,
+          page numbers, and margins from PDF documents by dragging bars to frame
+          the content area you want to keep
+        </li>
+        <li
+          class="tool-item"
+          data-keywords="pdf images extract export convert high quality dpi png jpeg webp page rendering canvas zip download gallery preview document"
+        >
+          <a href="pdf-to-images.html">PDF to Images</a>
+          — extract high-quality images of pages from PDF documents with
+          adjustable DPI and format options (PNG, JPEG, WebP)
+        </li>
+        <li
+          class="tool-item"
+          data-keywords="pdf editor edit remove delete pages page removal split extract organize reorder document editing modify trim"
+        >
+          <a href="pdf-editor.html">PDF Editor</a>
+          — remove pages from PDF documents by selecting page ranges or clicking
+          page previews with visual page thumbnails
+        </li>
+        <li
+          class="tool-item"
+          data-keywords="presentation slides annotate annotation alt text markdown export template accessibility a11y image describe speaker notes"
+        >
+          <a href="annotated-presentation.html">Presentation Annotator</a>
+          — add alt text and markdown annotations to presentation slide images
+          with template-based export and live preview
+        </li>
+        <li
+          class="tool-item"
+          data-keywords="text chunking split divide segment chunk parser nlp language model llm context window overlap character word sentence paragraph recursive sliding window token processing batch"
+        >
+          <a href="text-chunking.html">Text Chunking</a> — split text documents
+          into manageable chunks using multiple strategies (character count,
+          word count, sentence-based, paragraph-based, recursive split, sliding
+          window) with configurable overlap and export to CSV
+        </li>
+        <li
+          class="tool-item"
+          data-keywords="compare difference changes added removed highlight text compare diff comparison"
+        >
+          <a href="text-diff.html">Text Diff</a> — compare two text blocks and
+          highlight added and removed content
+        </li>
+        <li
+          class="tool-item"
+          data-keywords="text tools manipulation transform case uppercase lowercase title sentence camel pascal snake kebab sort lines reverse clean whitespace trim remove duplicates base64 url encode decode find replace regex tokenize split join parse words"
+        >
+          <a href="text-tools.html">Text Tools</a> — text manipulation toolkit
+          with case transformation, sorting, whitespace cleaning,
+          encoding/decoding (Base64, URL), find &amp; replace, and text
+          tokenization
+        </li>
+      </ul>
 
-            <h2>Image</h2>
-            <ul id="image-section">
-                <li
-                    class="tool-item"
-                    data-keywords="exif metadata photo camera gps location image jpg jpeg viewer extract settings date time exposure iso focal length"
-                >
-                    <a href="exif-viewer.html">EXIF Data Viewer</a> — extract
-                    and view EXIF metadata from photos including camera
-                    settings, GPS location, and timestamps
-                </li>
-                <li
-                    class="tool-item"
-                    data-keywords="image resize scale percentage pixels dimensions width height aspect ratio ui game scaling factor json"
-                >
-                    <a href="image-resize.html">Image Resize Tool</a> — resize
-                    images by percentage or pixels with precise scale factor
-                    control for copying scale factor to other images
-                </li>
-                <li
-                    class="tool-item"
-                    data-keywords="click coordinates pixel image points marker position xy"
-                >
-                    <a href="pixel-coords.html">Pixel Coordinates</a> — click on
-                    images to capture and record pixel coordinates
-                </li>
-            </ul>
+      <h2>Image</h2>
+      <ul id="image-section">
+        <li
+          class="tool-item"
+          data-keywords="exif metadata photo camera gps location image jpg jpeg viewer extract settings date time exposure iso focal length"
+        >
+          <a href="exif-viewer.html">EXIF Data Viewer</a> — extract and view
+          EXIF metadata from photos including camera settings, GPS location, and
+          timestamps
+        </li>
+        <li
+          class="tool-item"
+          data-keywords="image resize scale percentage pixels dimensions width height aspect ratio ui game scaling factor json"
+        >
+          <a href="image-resize.html">Image Resize Tool</a> — resize images by
+          percentage or pixels with precise scale factor control for copying
+          scale factor to other images
+        </li>
+        <li
+          class="tool-item"
+          data-keywords="click coordinates pixel image points marker position xy"
+        >
+          <a href="pixel-coords.html">Pixel Coordinates</a> — click on images to
+          capture and record pixel coordinates
+        </li>
+      </ul>
 
-            <h2>Media</h2>
-            <ul id="media-section">
-                <li
-                    class="tool-item"
-                    data-keywords="webcam viewer multi multiple camera feed stream video youtube embed hls m3u8 mp4 iframe live monitor display grid"
-                >
-                    <a href="webcam-viewer.html">Multi-Webcam Viewer</a> — view
-                    multiple webcam feeds simultaneously with support for
-                    YouTube embeds, direct video streams (MP4, M3U8, HLS), and
-                    iframe-compatible sources
-                </li>
-                <li
-                    class="tool-item"
-                    data-keywords="scene detection video analysis frame change automatic cut editing movie film sensitivity threshold sample rate export timecode json csv thumbnail preview"
-                >
-                    <a href="scene-detection.html">Scene Detection Tool</a> —
-                    automatically detect scene changes in videos using frame
-                    analysis with adjustable sensitivity, minimum scene
-                    duration, and sample rate controls
-                </li>
-                <li
-                    class="tool-item"
-                    data-keywords="transcribe transcription audio video media youtube keyboard shortcuts timestamp speed control playback rewind forward subtitle caption interview recording dictation"
-                >
-                    <a href="transcribe.html">Transcription Tool</a> —
-                    transcribe audio and video files with keyboard shortcuts,
-                    timestamps, and speed control
-                </li>
-            </ul>
+      <h2>Media</h2>
+      <ul id="media-section">
+        <li
+          class="tool-item"
+          data-keywords="webcam viewer multi multiple camera feed stream video youtube embed hls m3u8 mp4 iframe live monitor display grid"
+        >
+          <a href="webcam-viewer.html">Multi-Webcam Viewer</a> — view multiple
+          webcam feeds simultaneously with support for YouTube embeds, direct
+          video streams (MP4, M3U8, HLS), and iframe-compatible sources
+        </li>
+        <li
+          class="tool-item"
+          data-keywords="scene detection video analysis frame change automatic cut editing movie film sensitivity threshold sample rate export timecode json csv thumbnail preview"
+        >
+          <a href="scene-detection.html">Scene Detection Tool</a> —
+          automatically detect scene changes in videos using frame analysis with
+          adjustable sensitivity, minimum scene duration, and sample rate
+          controls
+        </li>
+        <li
+          class="tool-item"
+          data-keywords="transcribe transcription audio video media youtube keyboard shortcuts timestamp speed control playback rewind forward subtitle caption interview recording dictation"
+        >
+          <a href="transcribe.html">Transcription Tool</a> — transcribe audio
+          and video files with keyboard shortcuts, timestamps, and speed control
+        </li>
+      </ul>
 
-            <h2>Maps and Spatial Data</h2>
-            <ul id="maps-section">
-                <li
-                    class="tool-item"
-                    data-keywords="featureservice arcgis esri map visualization geographic spatial location coordinates gis mapping viewer interactive wfs"
-                >
-                    <a href="feature-service-viewer.html"
-                        >Feature Service Viewer</a
-                    >
-                    — load and visualize ArcGIS Feature Services and MapServer
-                    layers on an interactive map
-                </li>
-                <li
-                    class="tool-item"
-                    data-keywords="geojson map visualization geographic spatial location coordinates gis mapping viewer interactive"
-                >
-                    <a href="geojson-viewer.html">GeoJSON Viewer</a> — visualize
-                    and explore GeoJSON files on an interactive map
-                </li>
-            </ul>
+      <h2>Maps and Spatial Data</h2>
+      <ul id="maps-section">
+        <li
+          class="tool-item"
+          data-keywords="featureservice arcgis esri map visualization geographic spatial location coordinates gis mapping viewer interactive wfs"
+        >
+          <a href="feature-service-viewer.html">Feature Service Viewer</a>
+          — load and visualize ArcGIS Feature Services and MapServer layers on
+          an interactive map
+        </li>
+        <li
+          class="tool-item"
+          data-keywords="geojson map visualization geographic spatial location coordinates gis mapping viewer interactive"
+        >
+          <a href="geojson-viewer.html">GeoJSON Viewer</a> — visualize and
+          explore GeoJSON files on an interactive map
+        </li>
+      </ul>
 
-            <h2>Natural Language Processing (NLP)</h2>
-            <ul id="nlp-section">
-                <li
-                    class="tool-item"
-                    data-keywords="ner named entity recognition nlp natural language processing extract people person names places locations cities countries organizations companies dates times values money currency topics compromise ai machine learning text analysis identify entities"
-                >
-                    <a href="named-entity-recognition.html"
-                        >Named Entity Recognition</a
-                    >
-                    — extract and identify named entities from text including
-                    people, places and organisations using natural language
-                    processing
-                </li>
-                <li
-                    class="tool-item"
-                    data-keywords="sentiment analysis nlp natural language processing text analysis emotion opinion mining afinn lexicon positive negative neutral classification score comparative csv data analysis opinion polarity mood tone"
-                >
-                    <a href="sentiment-analysis.html">Sentiment Analysis</a> —
-                    analyze sentiment in CSV text columns using AFINN lexicon
-                    with configurable metrics (score, comparative,
-                    classification, word counts, tokens) and summary statistics
-                </li>
-                <li
-                    class="tool-item"
-                    data-keywords="word frequency counter analyze analysis text statistics ngram bigram trigram 4-gram 5-gram phrase stop words stopwords linguistics corpus count percent"
-                >
-                    <a href="word-frequency.html">Word Frequency Counter</a> —
-                    analyze word frequency, discover common phrases with n-grams
-                    (bigrams, trigrams, 4-grams, 5-grams), and get detailed text
-                    statistics with customisable stop word filtering
-                </li>
-            </ul>
+      <h2>Natural Language Processing (NLP)</h2>
+      <ul id="nlp-section">
+        <li
+          class="tool-item"
+          data-keywords="ner named entity recognition nlp natural language processing extract people person names places locations cities countries organizations companies dates times values money currency topics compromise ai machine learning text analysis identify entities"
+        >
+          <a href="named-entity-recognition.html">Named Entity Recognition</a>
+          — extract and identify named entities from text including people,
+          places and organisations using natural language processing
+        </li>
+        <li
+          class="tool-item"
+          data-keywords="sentiment analysis nlp natural language processing text analysis emotion opinion mining afinn lexicon positive negative neutral classification score comparative csv data analysis opinion polarity mood tone"
+        >
+          <a href="sentiment-analysis.html">Sentiment Analysis</a> — analyze
+          sentiment in CSV text columns using AFINN lexicon with configurable
+          metrics (score, comparative, classification, word counts, tokens) and
+          summary statistics
+        </li>
+        <li
+          class="tool-item"
+          data-keywords="word frequency counter analyze analysis text statistics ngram bigram trigram 4-gram 5-gram phrase stop words stopwords linguistics corpus count percent"
+        >
+          <a href="word-frequency.html">Word Frequency Counter</a> — analyze
+          word frequency, discover common phrases with n-grams (bigrams,
+          trigrams, 4-grams, 5-grams), and get detailed text statistics with
+          customisable stop word filtering
+        </li>
+      </ul>
 
-            <h2>OSINT</h2>
-            <ul id="osint-category-section">
-                <li
-                    class="tool-item"
-                    data-keywords="identifier extractor extract parse urls email addresses ipv4 ipv6 phone mac pattern detection link url finder web addresses mailto links hyperlinks http https sequence table csv download list"
-                >
-                    <a href="identifier-extractor.html">Identifier Extractor</a>
-                    — extract and analyze URLs, email addresses, IPv4/IPv6
-                    addresses, phone numbers, and MAC addresses from text with
-                    filtering, sorting, and export options
-                </li>
-            </ul>
+      <h2>OSINT</h2>
+      <ul id="osint-category-section">
+        <li
+          class="tool-item"
+          data-keywords="identifier extractor extract parse urls email addresses ipv4 ipv6 phone mac pattern detection link url finder web addresses mailto links hyperlinks http https sequence table csv download list"
+        >
+          <a href="identifier-extractor.html">Identifier Extractor</a>
+          — extract and analyze URLs, email addresses, IPv4/IPv6 addresses,
+          phone numbers, and MAC addresses from text with filtering, sorting,
+          and export options
+        </li>
+      </ul>
 
-            <h2>Software Development</h2>
-            <ul id="programming-section">
-                <li
-                    class="tool-item"
-                    data-keywords="github commits viewer repository repo history log api author message date sha link csv json markdown export download git version control source code development"
-                >
-                    <a href="github-commits.html">GitHub Commits Viewer</a> —
-                    view and export commit history from GitHub repositories with
-                    support for CSV, JSON, and Markdown exports
-                </li>
-                <li
-                    class="tool-item"
-                    data-keywords="localhost port scanner network scan detect docker container service development server database web api mysql postgresql redis mongodb elasticsearch kafka websocket http tcp open closed 127.0.0.1 local machine troubleshooting debugging netstat nmap check running"
-                >
-                    <a href="localhost-port-scanner.html"
-                        >Localhost Port Scanner</a
-                    >
-                    — scan ports on your local machine to detect running
-                    services, Docker containers, and development servers with
-                    preset scans for common ports and custom range options
-                </li>
-            </ul>
+      <h2>Software Development</h2>
+      <ul id="programming-section">
+        <li
+          class="tool-item"
+          data-keywords="github commits viewer repository repo history log api author message date sha link csv json markdown export download git version control source code development"
+        >
+          <a href="github-commits.html">GitHub Commits Viewer</a> — view and
+          export commit history from GitHub repositories with support for CSV,
+          JSON, and Markdown exports
+        </li>
+        <li
+          class="tool-item"
+          data-keywords="localhost port scanner network scan detect docker container service development server database web api mysql postgresql redis mongodb elasticsearch kafka websocket http tcp open closed 127.0.0.1 local machine troubleshooting debugging netstat nmap check running"
+        >
+          <a href="localhost-port-scanner.html">Localhost Port Scanner</a>
+          — scan ports on your local machine to detect running services, Docker
+          containers, and development servers with preset scans for common ports
+          and custom range options
+        </li>
+      </ul>
 
-            <h2>Web Development</h2>
-            <ul id="misc-section">
-                <li
-                    class="tool-item"
-                    data-keywords="favicon icon generator apple touch android chrome web app ico svg png sizes 16x16 32x32 180x180 192x192 512x512 website browser tab"
-                >
-                    <a href="favicon-generator.html">Favicon Generator</a> —
-                    generate favicons in multiple sizes and formats including
-                    SVG, ICO, Apple Touch Icons, and Android icons
-                </li>
-                <li
-                    class="tool-item"
-                    data-keywords="robots.txt checker parser seo crawl spider bot user-agent googlebot bingbot disallow allow web crawler permissions rules validation testing website robots file"
-                >
-                    <a href="robots-txt-checker.html">Robots.txt Checker</a> —
-                    fetch and parse robots.txt files from websites and check
-                    whether specific URLs or paths are allowed or disallowed for
-                    different web crawlers
-                </li>
-            </ul>
-        </div>
+      <h2>Web Development</h2>
+      <ul id="misc-section">
+        <li
+          class="tool-item"
+          data-keywords="favicon icon generator apple touch android chrome web app ico svg png sizes 16x16 32x32 180x180 192x192 512x512 website browser tab"
+        >
+          <a href="favicon-generator.html">Favicon Generator</a> — generate
+          favicons in multiple sizes and formats including SVG, ICO, Apple Touch
+          Icons, and Android icons
+        </li>
+        <li
+          class="tool-item"
+          data-keywords="robots.txt checker parser seo crawl spider bot user-agent googlebot bingbot disallow allow web crawler permissions rules validation testing website robots file"
+        >
+          <a href="robots-txt-checker.html">Robots.txt Checker</a> — fetch and
+          parse robots.txt files from websites and check whether specific URLs
+          or paths are allowed or disallowed for different web crawlers
+        </li>
+      </ul>
+    </div>
 
-        <h2>Web Privacy &amp; Security</h2>
-        <ul id="privacy-section">
-            <li
-                class="tool-item"
-                data-keywords="browser fingerprint privacy tracking canvas webgl audio font detection user agent screen resolution timezone cookies storage plugins features identification unique"
-            >
-                <a href="browser-fingerprint.html"
-                    >Browser Fingerprint Viewer</a
-                >
-                — view browser fingerprint data that websites can collect
-                including canvas fingerprinting, WebGL info, audio context,
-                detected fonts, and device characteristics
-            </li>
-            <li
-                class="tool-item"
-                data-keywords="cookie storage analysis localstorage sessionstorage indexeddb cache service worker quota privacy tracking persistent data first-party third-party secure httponly samesite"
-            >
-                <a href="cookie-storage-analysis.html"
-                    >Cookie &amp; Storage Analysis</a
-                >
-                — examine all data websites can store on your device including
-                cookies, localStorage, sessionStorage, IndexedDB, cache storage,
-                and service workers with detailed analysis
-            </li>
-        </ul>
+    <h2>Web Privacy &amp; Security</h2>
+    <ul id="privacy-section">
+      <li
+        class="tool-item"
+        data-keywords="browser fingerprint privacy tracking canvas webgl audio font detection user agent screen resolution timezone cookies storage plugins features identification unique"
+      >
+        <a href="browser-fingerprint.html">Browser Fingerprint Viewer</a>
+        — view browser fingerprint data that websites can collect including
+        canvas fingerprinting, WebGL info, audio context, detected fonts, and
+        device characteristics
+      </li>
+      <li
+        class="tool-item"
+        data-keywords="cookie storage analysis localstorage sessionstorage indexeddb cache service worker quota privacy tracking persistent data first-party third-party secure httponly samesite"
+      >
+        <a href="cookie-storage-analysis.html">Cookie &amp; Storage Analysis</a>
+        — examine all data websites can store on your device including cookies,
+        localStorage, sessionStorage, IndexedDB, cache storage, and service
+        workers with detailed analysis
+      </li>
+    </ul>
 
-        <h2>Acknowledgements</h2>
-        <p>
-            Development of this collection was inspired by Simon Willison's
-            experiments in prompt-driven development. Simon's collection can be
-            found at
-            <a
-                href="https://tools.simonwillison.net/"
-                target="_blank"
-                rel="noopener noreferrer"
-                >https://tools.simonwillison.net/</a
-            >, and his code can be found on GitHub in
-            <a
-                href="https://github.com/simonw/tools"
-                target="_blank"
-                rel="noopener noreferrer"
-                >simonw/tools</a
-            >. Simon also generously discusses both the
-            <a
-                href="https://simonwillison.net/2024/Dec/19/one-shot-python-tools/#custom-instructions"
-                target="_blank"
-                rel="noopener noreferrer"
-                >Claude custom instructions</a
-            >
-            and
-            <a
-                href="https://simonwillison.net/2025/Dec/10/html-tools/"
-                target="_blank"
-                rel="noopener noreferrer"
-                >general patterns</a
-            >
-            he uses for developing these tools on his blog.
-        </p>
-        <p>
-            The majority of tools in my collection
-            <a
-                href="https://github.com/virtualarchitectures/Browser-Tools"
-                target="_blank"
-                rel="noopener noreferrer"
-                >virtualarchitectures/Browser-Tools</a
-            >
-            have been developed using Anthropic's Claude running within the Zed
-            agentic IDE. I've also used a combination of Claude, ChatGPT and
-            Google Gemini within Continue.Dev in VS Code for more focused edits
-            and refinement. In each case the LLM has been used to tailor the
-            tool to meet my own practical needs. This practice is in broad
-            alignment with approaches discussed elsewhere under the headings of
-            <a
-                href="https://www.inkandswitch.com/essay/malleable-software/"
-                target="_blank"
-                rel="noopener noreferrer"
-                >malleable software</a
-            >
-            and
-            <a
-                href="https://resonantcomputing.org/"
-                target="_blank"
-                rel="noopener noreferrer"
-                >resonant computing</a
-            >. More generally, my personal preference in the use of LLMs is
-            toward local development on my own machine using open models in
-            <a
-                href="https://ollama.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-                >Ollama</a
-            >.
-        </p>
+    <h2>Acknowledgements</h2>
+    <p>
+      Development of this collection was inspired by Simon Willison's
+      experiments in prompt-driven development. Simon's collection can be found
+      at
+      <a
+        href="https://tools.simonwillison.net/"
+        target="_blank"
+        rel="noopener noreferrer"
+        >https://tools.simonwillison.net/</a
+      >, and his code can be found on GitHub in
+      <a
+        href="https://github.com/simonw/tools"
+        target="_blank"
+        rel="noopener noreferrer"
+        >simonw/tools</a
+      >. Simon also generously discusses both the
+      <a
+        href="https://simonwillison.net/2024/Dec/19/one-shot-python-tools/#custom-instructions"
+        target="_blank"
+        rel="noopener noreferrer"
+        >Claude custom instructions</a
+      >
+      and
+      <a
+        href="https://simonwillison.net/2025/Dec/10/html-tools/"
+        target="_blank"
+        rel="noopener noreferrer"
+        >general patterns</a
+      >
+      he uses for developing these tools on his blog.
+    </p>
+    <p>
+      The majority of tools in my collection
+      <a
+        href="https://github.com/virtualarchitectures/Browser-Tools"
+        target="_blank"
+        rel="noopener noreferrer"
+        >virtualarchitectures/Browser-Tools</a
+      >
+      have been developed using Anthropic's Claude running within the Zed
+      agentic IDE. I've also used a combination of Claude, ChatGPT and Google
+      Gemini within Continue.Dev in VS Code for more focused edits and
+      refinement. In each case the LLM has been used to tailor the tool to meet
+      my own practical needs. This practice is in broad alignment with
+      approaches discussed elsewhere under the headings of
+      <a
+        href="https://www.inkandswitch.com/essay/malleable-software/"
+        target="_blank"
+        rel="noopener noreferrer"
+        >malleable software</a
+      >
+      and
+      <a
+        href="https://resonantcomputing.org/"
+        target="_blank"
+        rel="noopener noreferrer"
+        >resonant computing</a
+      >. More generally, my personal preference in the use of LLMs is toward
+      local development on my own machine using open models in
+      <a href="https://ollama.com/" target="_blank" rel="noopener noreferrer"
+        >Ollama</a
+      >.
+    </p>
 
-        <div class="footer">
-            <p>
-                View the source code and contribute on
-                <a
-                    href="https://github.com/virtualarchitectures/Browser-Tools"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    >GitHub</a
-                >
-            </p>
-        </div>
+    <div class="footer">
+      <p>
+        View the source code and contribute on
+        <a
+          href="https://github.com/virtualarchitectures/Browser-Tools"
+          target="_blank"
+          rel="noopener noreferrer"
+          >GitHub</a
+        >
+      </p>
+    </div>
 
-        <script type="module">
-            const searchBox = document.getElementById("search-box");
-            const searchInfo = document.getElementById("search-info");
-            const noResults = document.getElementById("no-results");
-            const searchResults = document.getElementById("search-results");
-            const resultsList = document.getElementById("results-list");
-            const allTools = document.getElementById("all-tools");
-            const toolItems = document.querySelectorAll(".tool-item");
+    <script type="module">
+      const searchBox = document.getElementById("search-box");
+      const searchInfo = document.getElementById("search-info");
+      const noResults = document.getElementById("no-results");
+      const searchResults = document.getElementById("search-results");
+      const resultsList = document.getElementById("results-list");
+      const allTools = document.getElementById("all-tools");
+      const toolItems = document.querySelectorAll(".tool-item");
 
-            function performSearch() {
-                const query = searchBox.value.toLowerCase().trim();
+      function performSearch() {
+        const query = searchBox.value.toLowerCase().trim();
 
-                if (!query) {
-                    // Show all tools section, hide search results
-                    allTools.classList.remove("hidden");
-                    searchResults.classList.remove("visible");
-                    noResults.classList.remove("visible");
-                    searchInfo.textContent = "";
-                    return;
-                }
+        if (!query) {
+          // Show all tools section, hide search results
+          allTools.classList.remove("hidden");
+          searchResults.classList.remove("visible");
+          noResults.classList.remove("visible");
+          searchInfo.textContent = "";
+          return;
+        }
 
-                // Keep all tools visible, show search results above
-                searchResults.classList.add("visible");
+        // Keep all tools visible, show search results above
+        searchResults.classList.add("visible");
 
-                // Clear previous results
-                resultsList.innerHTML = "";
+        // Clear previous results
+        resultsList.innerHTML = "";
 
-                let matchCount = 0;
+        let matchCount = 0;
 
-                toolItems.forEach((item) => {
-                    // Skip placeholder items
-                    if (item.classList.contains("placeholder")) {
-                        return;
-                    }
+        toolItems.forEach((item) => {
+          // Skip placeholder items
+          if (item.classList.contains("placeholder")) {
+            return;
+          }
 
-                    const text = item.textContent.toLowerCase();
-                    const keywords = item.getAttribute("data-keywords") || "";
-                    const searchableText = text + " " + keywords.toLowerCase();
+          const text = item.textContent.toLowerCase();
+          const keywords = item.getAttribute("data-keywords") || "";
+          const searchableText = text + " " + keywords.toLowerCase();
 
-                    if (searchableText.includes(query)) {
-                        // Clone the item and add it to results
-                        const clone = item.cloneNode(true);
-                        clone.classList.remove("hidden");
-                        resultsList.appendChild(clone);
-                        matchCount++;
-                    }
-                });
+          if (searchableText.includes(query)) {
+            // Clone the item and add it to results
+            const clone = item.cloneNode(true);
+            clone.classList.remove("hidden");
+            resultsList.appendChild(clone);
+            matchCount++;
+          }
+        });
 
-                if (matchCount === 0) {
-                    searchResults.classList.remove("visible");
-                    noResults.classList.add("visible");
-                    searchInfo.textContent = "";
-                } else {
-                    noResults.classList.remove("visible");
-                    searchInfo.textContent = `Found ${matchCount} tool${
-                        matchCount === 1 ? "" : "s"
-                    }`;
-                }
-            }
+        if (matchCount === 0) {
+          searchResults.classList.remove("visible");
+          noResults.classList.add("visible");
+          searchInfo.textContent = "";
+        } else {
+          noResults.classList.remove("visible");
+          searchInfo.textContent = `Found ${matchCount} tool${
+            matchCount === 1 ? "" : "s"
+          }`;
+        }
+      }
 
-            // Search on input
-            searchBox.addEventListener("input", performSearch);
+      // Search on input
+      searchBox.addEventListener("input", performSearch);
 
-            // Focus search box on "/" key
-            document.addEventListener("keydown", (e) => {
-                if (e.key === "/" && document.activeElement !== searchBox) {
-                    e.preventDefault();
-                    searchBox.focus();
-                }
-                // Clear search on Escape
-                if (
-                    e.key === "Escape" &&
-                    document.activeElement === searchBox
-                ) {
-                    searchBox.value = "";
-                    performSearch();
-                    searchBox.blur();
-                }
-            });
-        </script>
-    </body>
+      // Focus search box on "/" key
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "/" && document.activeElement !== searchBox) {
+          e.preventDefault();
+          searchBox.focus();
+        }
+        // Clear search on Escape
+        if (e.key === "Escape" && document.activeElement === searchBox) {
+          searchBox.value = "";
+          performSearch();
+          searchBox.blur();
+        }
+      });
+    </script>
+  </body>
 </html>
