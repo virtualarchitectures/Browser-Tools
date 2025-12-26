@@ -923,25 +923,61 @@
 
         try {
           downloadBtn.disabled = true;
-          showStatus("Creating edited PDF...", "info");
+
+          // Show loading bar for processing
+          loadingContainer.classList.add("visible");
+          loadingBarFill.style.width = "0%";
+          loadingText.textContent = "Loading PDF...";
 
           // Load the original PDF with pdf-lib
+          // Use options to handle problematic PDFs with invalid objects or encryption
           const existingPdfBytes = await currentFile.arrayBuffer();
-          const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
+
+          const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes, {
+            ignoreEncryption: true,
+            throwOnInvalidObject: false,
+            updateMetadata: false,
+          });
+
+          loadingBarFill.style.width = "10%";
+          loadingText.textContent = "Creating new document...";
 
           // Create a new PDF
           const newPdfDoc = await PDFLib.PDFDocument.create();
 
           // Copy pages that are not marked for removal
+          let copiedCount = 0;
+          const totalToCopy = totalPages - removedPages.size;
+
           for (let i = 1; i <= totalPages; i++) {
             if (!removedPages.has(i)) {
-              const [copiedPage] = await newPdfDoc.copyPages(pdfDoc, [i - 1]);
-              newPdfDoc.addPage(copiedPage);
+              try {
+                const [copiedPage] = await newPdfDoc.copyPages(pdfDoc, [i - 1]);
+                newPdfDoc.addPage(copiedPage);
+                copiedCount++;
+
+                // Update progress (10% to 80% range for copying)
+                const copyProgress = 10 + (copiedCount / totalToCopy) * 70;
+                loadingBarFill.style.width = copyProgress + "%";
+                loadingText.textContent = `Copying pages... ${copiedCount}/${totalToCopy}`;
+
+                // Allow UI to update
+                await new Promise((resolve) => setTimeout(resolve, 0));
+              } catch (pageError) {
+                console.warn(`Warning: Could not copy page ${i}:`, pageError);
+              }
             }
           }
 
           // Save the new PDF
+          loadingBarFill.style.width = "85%";
+          loadingText.textContent = "Saving PDF...";
+
           const pdfBytes = await newPdfDoc.save();
+
+          loadingBarFill.style.width = "95%";
+          loadingText.textContent = "Preparing download...";
+
           const blob = new Blob([pdfBytes], {
             type: "application/pdf",
           });
@@ -956,10 +992,25 @@
 
           URL.revokeObjectURL(url);
 
-          showStatus("PDF downloaded successfully!", "success");
+          loadingBarFill.style.width = "100%";
+          loadingText.textContent = "Complete!";
+
+          setTimeout(() => {
+            loadingContainer.classList.remove("visible");
+          }, 1000);
+
+          showStatus(
+            `PDF downloaded successfully! (${copiedCount} pages)`,
+            "success"
+          );
         } catch (error) {
-          console.error("Error creating PDF:", error);
-          showStatus("Error creating PDF: " + error.message, "error");
+          loadingContainer.classList.remove("visible");
+          showStatus(
+            "Error creating PDF: " +
+              error.message +
+              ". This PDF may be too corrupted to edit. Try a different PDF repair tool first.",
+            "error"
+          );
         } finally {
           downloadBtn.disabled = false;
         }
