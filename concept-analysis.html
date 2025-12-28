@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Concept Analysis - Browser Tools</title>
+
+    <style>
+      /* =========================
+         CSS Styles
+         ========================= */
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Arial, sans-serif;
+        line-height: 1.6;
+        color: #24292e;
+        background: #ffffff;
+        padding: 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      h1 {
+        font-size: 32px;
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: #24292e;
+      }
+
+      .back-link {
+        display: inline-block;
+        margin-bottom: 16px;
+        color: #0366d6;
+        text-decoration: none;
+        font-size: 14px;
+      }
+
+      .back-link:hover {
+        text-decoration: underline;
+      }
+
+      .instruction {
+        font-size: 16px;
+        color: #586069;
+        margin-bottom: 24px;
+        padding: 12px;
+        background: #f6f8fa;
+        border-radius: 6px;
+        border-left: 3px solid #0366d6;
+      }
+
+      .panels-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+
+      .controls {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+
+      input[type="file"] {
+        display: none;
+      }
+
+      .btn {
+        background: #fafbfc;
+        color: #24292e;
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+        cursor: pointer;
+        font-size: 14px;
+        line-height: 20px;
+        font-family: inherit;
+        transition: background 0.2s;
+        white-space: nowrap;
+      }
+
+      .btn:hover {
+        background: #f3f4f6;
+      }
+
+      .btn.primary {
+        background: #0366d6;
+        color: #fff;
+        border-color: rgba(27, 31, 35, 0.15);
+      }
+
+      .btn.primary:hover {
+        background: #0256c5;
+      }
+
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .btn.primary:disabled:hover {
+        background: #0366d6;
+      }
+
+      label.btn {
+        display: inline-block;
+      }
+
+      .panel {
+        background: #fff;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        margin-bottom: 16px;
+        overflow: hidden;
+      }
+
+      .panel h2 {
+        font-size: 16px;
+        font-weight: 600;
+        padding: 12px 16px;
+        background: #f6f8fa;
+        border-bottom: 1px solid #e1e4e8;
+        margin: 0;
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .panel h2::before {
+        content: "▼";
+        display: inline-block;
+        margin-right: 8px;
+        transition: transform 0.2s;
+      }
+
+      .panel h2.collapsed::before {
+        transform: rotate(-90deg);
+      }
+
+      .panel-content {
+        padding: 16px;
+      }
+
+      .panel-content.collapsed {
+        display: none;
+      }
+
+      .search-input {
+        margin-bottom: 16px;
+      }
+
+      .search-input label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 6px;
+        font-size: 14px;
+      }
+
+      .search-input input,
+      .search-input textarea {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        font-size: 14px;
+        font-family: inherit;
+        background: #fff;
+        transition: border-color 0.2s;
+      }
+
+      .search-input input:focus,
+      .search-input textarea:focus {
+        outline: none;
+        border-color: #0366d6;
+        box-shadow: 0 0 0 3px rgba(3, 102, 214, 0.1);
+      }
+
+      .search-input textarea {
+        resize: vertical;
+        min-height: 80px;
+      }
+
+      .search-input small {
+        display: block;
+        color: #586069;
+        font-size: 12px;
+        margin-top: 4px;
+      }
+
+      .option-group {
+        margin-bottom: 20px;
+      }
+
+      .option-group:last-child {
+        margin-bottom: 0;
+      }
+
+      .option-group label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 8px;
+        font-size: 14px;
+      }
+
+      .checkbox-group {
+        margin-bottom: 12px;
+      }
+
+      .checkbox-group label {
+        display: flex;
+        align-items: center;
+        font-weight: normal;
+        cursor: pointer;
+        font-size: 14px;
+      }
+
+      .checkbox-group input[type="checkbox"] {
+        margin-right: 8px;
+      }
+
+      .option-description {
+        font-size: 13px;
+        color: #586069;
+        margin-left: 24px;
+      }
+
+      .action-buttons {
+        display: flex;
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      .results-section {
+        margin-top: 24px;
+      }
+
+      .panel.full-width {
+        grid-column: span 2;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #586069;
+      }
+
+      .extract-item {
+        background: #fff;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        padding: 16px;
+        margin-bottom: 12px;
+        transition: box-shadow 0.2s;
+      }
+
+      .extract-item:hover {
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+      }
+
+      .extract-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 12px;
+        gap: 12px;
+      }
+
+      .extract-categories {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+
+      .extract-category {
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        white-space: nowrap;
+      }
+
+      .extract-category.definition {
+        background: #dff6dd;
+        color: #0e6027;
+      }
+
+      .extract-category.distinction {
+        background: #fff5b1;
+        color: #735c0f;
+      }
+
+      .extract-category.explanation {
+        background: #ffeef0;
+        color: #86181d;
+      }
+
+      .extract-term {
+        font-weight: 600;
+        color: #0366d6;
+        font-size: 14px;
+      }
+
+      .extract-text {
+        font-size: 15px;
+        line-height: 1.6;
+        margin-bottom: 12px;
+      }
+
+      .extract-context {
+        background: #f6f8fa;
+        padding: 12px;
+        border-radius: 6px;
+        font-size: 14px;
+        color: #586069;
+        border-left: 3px solid #e1e4e8;
+        margin-top: 12px;
+      }
+
+      .extract-meta {
+        display: flex;
+        gap: 16px;
+        font-size: 13px;
+        color: #586069;
+        margin-top: 12px;
+        flex-wrap: wrap;
+      }
+
+      .extract-meta span {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .summary-stats {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+      }
+
+      .stat-item {
+        background: #f6f8fa;
+        padding: 16px;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+        text-align: center;
+        flex: 1;
+        min-width: 150px;
+      }
+
+      .stat-value {
+        font-size: 32px;
+        font-weight: 600;
+        color: #0366d6;
+      }
+
+      .stat-label {
+        font-size: 14px;
+        color: #586069;
+        margin-top: 4px;
+      }
+
+      .filter-controls {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+      }
+
+      .filter-controls label {
+        font-weight: 600;
+        font-size: 14px;
+      }
+
+      .filter-buttons {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .filter-btn {
+        padding: 6px 12px;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+        background: #fff;
+        cursor: pointer;
+        font-size: 13px;
+        transition: all 0.2s;
+      }
+
+      .filter-btn:hover {
+        background: #f6f8fa;
+      }
+
+      .filter-btn.active {
+        background: #0366d6;
+        color: #fff;
+        border-color: #0366d6;
+      }
+
+      .text-input-section {
+        margin-bottom: 16px;
+      }
+
+      .text-input-section label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 6px;
+        font-size: 14px;
+      }
+
+      .text-input-section textarea {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        font-size: 14px;
+        font-family: inherit;
+        background: #fff;
+        resize: vertical;
+        min-height: 150px;
+        transition: border-color 0.2s;
+      }
+
+      .text-input-section textarea:focus {
+        outline: none;
+        border-color: #0366d6;
+        box-shadow: 0 0 0 3px rgba(3, 102, 214, 0.1);
+      }
+
+      .nlp-status {
+        font-size: 12px;
+        color: #586069;
+        padding: 8px 12px;
+        background: #f6f8fa;
+        border-radius: 6px;
+        margin-bottom: 16px;
+      }
+
+      .nlp-status.success {
+        background: #dff6dd;
+        color: #0e6027;
+      }
+
+      .nlp-status.fallback {
+        background: #fff5b1;
+        color: #735c0f;
+      }
+
+      @media (max-width: 768px) {
+        .summary-stats {
+          flex-direction: column;
+        }
+
+        .extract-header {
+          flex-direction: column;
+        }
+
+        .panels-container {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a href="index.html" class="back-link">← Back to Browser Tools</a>
+
+    <h1>Concept Analysis</h1>
+
+    <div class="instruction">
+      Extract sentences containing specific concepts or phrases from text and
+      automatically categorize results as definitions, distinctions, or
+      explanations using NLP and RegEx.
+    </div>
+
+    <div class="panels-container">
+      <!-- Input Section -->
+      <div class="panel">
+        <h2>Input Text</h2>
+        <div class="panel-content">
+          <div class="controls" style="margin-bottom: 12px">
+            <label for="fileInput" class="btn primary">Load File</label>
+            <input type="file" id="fileInput" accept=".txt,.md" />
+            <span id="fileName"></span>
+            <button id="clearFileBtn" class="btn" style="display: none">
+              Clear
+            </button>
+          </div>
+
+          <div class="text-input-section">
+            <label for="textInput">Enter or paste text:</label>
+            <textarea
+              id="textInput"
+              placeholder="Paste your text here to extract content containing your search terms..."
+            ></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search Configuration -->
+      <div class="panel">
+        <h2>Configuration</h2>
+        <div class="panel-content">
+          <div class="search-input">
+            <label for="searchTerms">Search Terms (comma-separated):</label>
+            <input
+              type="text"
+              id="searchTerms"
+              placeholder="e.g., machine learning, neural network, artificial intelligence"
+            />
+            <div class="option-description">
+              Enter multiple concepts or phrases separated by commas. The
+              extractor will find sentences containing any of these terms and
+              categorize them as definitions, distinctions, or explanations.
+            </div>
+          </div>
+
+          <div class="option-group">
+            <label>Options:</label>
+            <div class="checkbox-group">
+              <label>
+                <input type="checkbox" id="caseSensitive" />
+                Case-sensitive matching
+              </label>
+            </div>
+            <div class="checkbox-group">
+              <label>
+                <input type="checkbox" id="showContext" checked />
+                Show surrounding context
+              </label>
+            </div>
+          </div>
+
+          <div class="action-buttons">
+            <button id="extractBtn" class="btn primary" disabled>
+              Extract Content
+            </button>
+            <button id="clearBtn" class="btn">Clear All</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results Section -->
+      <div class="panel full-width">
+        <h2>Results</h2>
+        <div class="panel-content">
+          <div id="nlpStatus" class="nlp-status" style="display: none"></div>
+
+          <div class="summary-stats" id="summaryStats"></div>
+
+          <div class="filter-controls">
+            <label>Filter by Category:</label>
+            <div class="filter-buttons">
+              <button
+                class="filter-btn active"
+                data-filter="all"
+                data-type="category"
+              >
+                All
+              </button>
+              <button
+                class="filter-btn"
+                data-filter="definition"
+                data-type="category"
+              >
+                Definitions
+              </button>
+              <button
+                class="filter-btn"
+                data-filter="distinction"
+                data-type="category"
+              >
+                Distinctions
+              </button>
+              <button
+                class="filter-btn"
+                data-filter="explanation"
+                data-type="category"
+              >
+                Explanations
+              </button>
+              <button
+                class="filter-btn"
+                data-filter="uncategorized"
+                data-type="category"
+              >
+                Uncategorized
+              </button>
+            </div>
+          </div>
+
+          <div class="filter-controls">
+            <label>Filter by Search Term:</label>
+            <div class="filter-buttons" id="termFilterButtons">
+              <button
+                class="filter-btn active"
+                data-filter="all"
+                data-type="term"
+              >
+                All
+              </button>
+            </div>
+          </div>
+
+          <div class="filter-controls">
+            <label>Sort by:</label>
+            <div class="filter-buttons">
+              <button class="filter-btn active" id="sortBySearchTerm">
+                Search Term
+              </button>
+              <button class="filter-btn" id="sortByPosition">Position</button>
+            </div>
+          </div>
+
+          <div id="extractsContainer"></div>
+
+          <div class="action-buttons">
+            <button id="downloadJsonBtn" class="btn">Download as JSON</button>
+            <button id="downloadCsvBtn" class="btn">Download as CSV</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/compromise@14.13.0/builds/compromise.min.js"></script>
+
+    <script>
+      /* =========================
+             JavaScript
+             ========================= */
+
+      // State variables
+      let currentText = "";
+      let extractedItems = [];
+      let nlpAvailable = false;
+
+      // DOM elements
+      const fileInput = document.getElementById("fileInput");
+      const fileName = document.getElementById("fileName");
+      const clearFileBtn = document.getElementById("clearFileBtn");
+      const textInput = document.getElementById("textInput");
+      const searchTerms = document.getElementById("searchTerms");
+      const caseSensitive = document.getElementById("caseSensitive");
+      const showContext = document.getElementById("showContext");
+      const extractBtn = document.getElementById("extractBtn");
+      const clearBtn = document.getElementById("clearBtn");
+      const resultsSection = document.getElementById("resultsSection");
+      const emptyState = document.getElementById("emptyState");
+      const extractsContainer = document.getElementById("extractsContainer");
+      const summaryStats = document.getElementById("summaryStats");
+      const downloadJsonBtn = document.getElementById("downloadJsonBtn");
+      const downloadCsvBtn = document.getElementById("downloadCsvBtn");
+      const filterBtns = document.querySelectorAll(".filter-btn");
+      const nlpStatus = document.getElementById("nlpStatus");
+
+      // Check NLP availability
+      if (typeof nlp !== "undefined") {
+        nlpAvailable = true;
+        nlpStatus.textContent = "NLP library loaded successfully";
+        nlpStatus.className = "nlp-status success";
+        nlpStatus.style.display = "block";
+      } else {
+        nlpStatus.textContent =
+          "NLP library not available - using RegEx fallback";
+        nlpStatus.className = "nlp-status fallback";
+        nlpStatus.style.display = "block";
+      }
+
+      // Panel collapse functionality
+      const panels = document.querySelectorAll(".panel h2");
+      panels.forEach((header) => {
+        header.addEventListener("click", () => {
+          header.classList.toggle("collapsed");
+          header.nextElementSibling.classList.toggle("collapsed");
+        });
+      });
+
+      // File handling
+      fileInput.addEventListener("change", handleFileSelect);
+      clearFileBtn.addEventListener("click", clearFile);
+
+      function handleFileSelect(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        fileName.textContent = file.name;
+        clearFileBtn.style.display = "inline-block";
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          currentText = e.target.result;
+          textInput.value = currentText;
+          updateExtractButton();
+        };
+        reader.readAsText(file);
+      }
+
+      function clearFile() {
+        fileInput.value = "";
+        fileName.textContent = "";
+        clearFileBtn.style.display = "none";
+        currentText = "";
+        textInput.value = "";
+        updateExtractButton();
+      }
+
+      // Text input handling
+      textInput.addEventListener("input", () => {
+        currentText = textInput.value;
+        updateExtractButton();
+      });
+
+      // Search terms handling
+      searchTerms.addEventListener("input", updateExtractButton);
+
+      function updateExtractButton() {
+        const hasText = currentText.trim().length > 0;
+        const hasTerms = searchTerms.value.trim().length > 0;
+        extractBtn.disabled = !(hasText && hasTerms);
+      }
+
+      // Extract button
+      extractBtn.addEventListener("click", extractContent);
+      clearBtn.addEventListener("click", () => {
+        extractedItems = [];
+        extractsContainer.innerHTML = "";
+        summaryStats.innerHTML = "";
+      });
+
+      // Main extraction function
+      function extractContent() {
+        const terms = searchTerms.value
+          .split(",")
+          .map((t) => t.trim())
+          .filter((t) => t.length > 0);
+        const text = currentText;
+
+        if (!terms.length || !text.trim()) {
+          alert("Please enter both text and search terms.");
+          return;
+        }
+
+        const sentenceMap = new Map(); // Map to group categories by sentence
+
+        // Process each search term
+        terms.forEach((term) => {
+          const escapedTerm = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+          const flags = caseSensitive.checked ? "g" : "gi";
+          const regex = new RegExp(escapedTerm, flags);
+
+          // Search through text for matches
+          let match;
+          while ((match = regex.exec(text)) !== null) {
+            const matchIndex = match.index;
+
+            // Extract the full sentence containing this match
+            const sentence = extractSentenceFromMatch(
+              text,
+              matchIndex,
+              matchIndex + match[0].length
+            );
+            const sentenceStart = text.indexOf(sentence);
+
+            const sentenceKey = `${sentence.trim()}-${term}`;
+
+            // Get or create entry for this sentence
+            if (!sentenceMap.has(sentenceKey)) {
+              sentenceMap.set(sentenceKey, {
+                sentence: sentence.trim(),
+                searchTerm: term,
+                categories: [],
+                context: showContext.checked
+                  ? extractContext(
+                      text,
+                      sentenceStart,
+                      sentenceStart + sentence.length
+                    )
+                  : "",
+                position: sentenceStart,
+              });
+            }
+
+            const entry = sentenceMap.get(sentenceKey);
+
+            // Check for each category type using NLP if available
+            if (nlpAvailable) {
+              const sentenceDoc = nlp(sentence);
+
+              const hasCopula = sentenceDoc.verbs("(is|are|was|were)").found;
+              const hasDefMarker =
+                /\b(defined as|refers to|means|known as)\b/i.test(sentence);
+              if (
+                (hasCopula || hasDefMarker) &&
+                !entry.categories.includes("definition")
+              ) {
+                entry.categories.push("definition");
+              }
+
+              const distinctionMarkers = [
+                "differs from",
+                "different from",
+                "versus",
+                "vs",
+                "unlike",
+                "whereas",
+                "while",
+                "in contrast",
+                "on the other hand",
+                "however",
+                "rather than",
+                "instead of",
+              ];
+              const hasDistinction = distinctionMarkers.some((marker) =>
+                sentence.toLowerCase().includes(marker)
+              );
+              if (hasDistinction && !entry.categories.includes("distinction")) {
+                entry.categories.push("distinction");
+              }
+
+              const explanationMarkers = [
+                "because",
+                "since",
+                "due to",
+                "as a result",
+                "therefore",
+                "thus",
+                "hence",
+                "consequently",
+                "leads to",
+                "causes",
+                "results in",
+                "so that",
+                "in order to",
+              ];
+              const hasExplanation = explanationMarkers.some((marker) =>
+                sentence.toLowerCase().includes(marker)
+              );
+              if (hasExplanation && !entry.categories.includes("explanation")) {
+                entry.categories.push("explanation");
+              }
+            } else {
+              // Use RegEx fallback for categorization
+              checkCategoriesWithRegex(sentence, entry);
+            }
+          }
+        });
+
+        // Convert map to array
+        extractedItems = Array.from(sentenceMap.values());
+        displayResults();
+      }
+
+      // Helper function to check categories using RegEx patterns
+      function checkCategoriesWithRegex(sentence, entry) {
+        const definitionPattern =
+          /\b(is|are|was|were|refers to|means|defined as|known as)\b/i;
+        const distinctionPattern =
+          /(differs from|different from|versus|vs|unlike|whereas|while|in contrast|rather than)/i;
+        const explanationPattern =
+          /(because|since|due to|therefore|thus|hence|leads to|causes|results in)/i;
+
+        if (
+          definitionPattern.test(sentence) &&
+          !entry.categories.includes("definition")
+        ) {
+          entry.categories.push("definition");
+        }
+        if (
+          distinctionPattern.test(sentence) &&
+          !entry.categories.includes("distinction")
+        ) {
+          entry.categories.push("distinction");
+        }
+        if (
+          explanationPattern.test(sentence) &&
+          !entry.categories.includes("explanation")
+        ) {
+          entry.categories.push("explanation");
+        }
+      }
+
+      // Extract a complete sentence containing the match (based on research-extractor.html)
+      function extractSentenceFromMatch(text, startIndex, endIndex) {
+        // Find the start of the sentence (look backward for sentence boundary)
+        let sentenceStart = startIndex;
+        for (let i = startIndex - 1; i >= 0; i--) {
+          const char = text[i];
+          const nextChar = i + 1 < text.length ? text[i + 1] : "";
+
+          // Found a sentence boundary (period/!/?  followed by space and capital letter or newline)
+          if (
+            (char === "." || char === "!" || char === "?") &&
+            (nextChar === " " || nextChar === "\n" || nextChar === "\r")
+          ) {
+            // Check if next non-whitespace char is uppercase or it's the end
+            let j = i + 1;
+            while (j < text.length && /\s/.test(text[j])) j++;
+            if (j >= text.length || /[A-Z]/.test(text[j])) {
+              sentenceStart = i + 1;
+              break;
+            }
+          }
+          // Beginning of text
+          if (i === 0) {
+            sentenceStart = 0;
+            break;
+          }
+        }
+
+        // Find the end of the sentence (look forward for sentence boundary)
+        let sentenceEnd = text.length;
+        for (let i = endIndex; i < text.length; i++) {
+          const char = text[i];
+          const nextChar = i + 1 < text.length ? text[i + 1] : "";
+
+          // Found a sentence boundary (period/!/?  followed by space and capital letter or newline or end)
+          if (char === "." || char === "!" || char === "?") {
+            // Check if this is followed by whitespace and then uppercase, or end of text
+            let j = i + 1;
+            while (j < text.length && /\s/.test(text[j])) j++;
+
+            if (
+              j >= text.length ||
+              /[A-Z]/.test(text[j]) ||
+              text[j] === '"' ||
+              text[j] === "'"
+            ) {
+              sentenceEnd = i + 1;
+              break;
+            }
+          }
+        }
+
+        let sentence = text.substring(sentenceStart, sentenceEnd).trim();
+        return sentence;
+      }
+
+      // Extract context around a sentence
+      function extractContext(text, startIndex, endIndex) {
+        // Find the main sentence boundaries
+        let mainSentenceStart = startIndex;
+        let mainSentenceEnd = endIndex;
+
+        // Adjust to sentence boundaries
+        while (mainSentenceStart > 0) {
+          const char = text[mainSentenceStart - 1];
+          if (char === "." || char === "!" || char === "?") {
+            break;
+          }
+          mainSentenceStart--;
+        }
+
+        while (mainSentenceEnd < text.length) {
+          const char = text[mainSentenceEnd];
+          if (char === "." || char === "!" || char === "?") {
+            mainSentenceEnd++;
+            break;
+          }
+          mainSentenceEnd++;
+        }
+
+        // Get 1 sentence before and 1 sentence after
+        // Limit how far back we search (500 chars max)
+        const searchBackwardLimit = Math.max(0, mainSentenceStart - 500);
+
+        let contextStart = mainSentenceStart;
+        let sentenceCount = 0;
+        const maxPreviousSentences = 1;
+
+        while (
+          contextStart > searchBackwardLimit &&
+          sentenceCount < maxPreviousSentences
+        ) {
+          const char = text[contextStart - 1];
+          if (char === "." || char === "!" || char === "?") {
+            sentenceCount++;
+            if (sentenceCount >= maxPreviousSentences) break;
+          }
+          contextStart--;
+        }
+
+        // Limit how far forward we search (1000 chars max)
+        const searchForwardLimit = Math.min(
+          text.length,
+          mainSentenceEnd + 1000
+        );
+
+        let contextEnd = mainSentenceEnd;
+        const maxNextSentences = 1;
+        sentenceCount = 0;
+
+        while (
+          contextEnd < searchForwardLimit &&
+          sentenceCount < maxNextSentences
+        ) {
+          const char = text[contextEnd];
+          if (char === "." || char === "!" || char === "?") {
+            sentenceCount++;
+            if (sentenceCount >= maxNextSentences) {
+              contextEnd++;
+              break;
+            }
+          }
+          contextEnd++;
+        }
+
+        return text.substring(contextStart, contextEnd).trim();
+      }
+
+      // Display results
+      function displayResults() {
+        if (extractedItems.length === 0) {
+          alert("No matches found.");
+          return;
+        }
+
+        // Calculate statistics
+        const stats = {
+          total: extractedItems.length,
+          definitions: extractedItems.filter((i) =>
+            i.categories.includes("definition")
+          ).length,
+          distinctions: extractedItems.filter((i) =>
+            i.categories.includes("distinction")
+          ).length,
+          explanations: extractedItems.filter((i) =>
+            i.categories.includes("explanation")
+          ).length,
+        };
+
+        // Get unique search terms and create term filter buttons
+        const uniqueTerms = [
+          ...new Set(extractedItems.map((item) => item.searchTerm)),
+        ];
+        const termFilterButtons = document.getElementById("termFilterButtons");
+        termFilterButtons.innerHTML = `
+                        <button class="filter-btn active" data-filter="all" data-type="term">All</button>
+                        ${uniqueTerms
+                          .map(
+                            (term) =>
+                              `<button class="filter-btn" data-filter="${escapeHtml(
+                                term
+                              )}" data-type="term">${escapeHtml(term)}</button>`
+                          )
+                          .join("")}
+                    `;
+
+        // Re-attach event listeners to new buttons
+        document
+          .querySelectorAll('.filter-btn[data-type="term"]')
+          .forEach((btn) => {
+            btn.addEventListener("click", handleFilterClick);
+          });
+
+        summaryStats.innerHTML = `
+              <div class="stat-item">
+                <div class="stat-value">${stats.total}</div>
+                <div class="stat-label">Total Extracts</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value">${stats.definitions}</div>
+                <div class="stat-label">Definitions</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value">${stats.distinctions}</div>
+                <div class="stat-label">Distinctions</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value">${stats.explanations}</div>
+                <div class="stat-label">Explanations</div>
+              </div>
+            `;
+
+        renderExtracts("all", "all");
+      }
+
+      // Render extract items
+      function renderExtracts(categoryFilter, termFilter) {
+        let filtered = extractedItems;
+
+        // Apply category filter
+        if (categoryFilter !== "all") {
+          if (categoryFilter === "uncategorized") {
+            filtered = filtered.filter(
+              (item) => !item.categories || item.categories.length === 0
+            );
+          } else {
+            filtered = filtered.filter(
+              (item) =>
+                item.categories && item.categories.includes(categoryFilter)
+            );
+          }
+        }
+
+        // Apply term filter
+        if (termFilter !== "all") {
+          filtered = filtered.filter((item) => item.searchTerm === termFilter);
+        }
+
+        // Apply sorting
+        if (currentSort === "position") {
+          filtered = [...filtered].sort((a, b) => a.position - b.position);
+        }
+
+        extractsContainer.innerHTML = filtered
+          .map(
+            (item) => `
+                <div class="extract-item">
+                  <div class="extract-header">
+                    <div class="extract-term">Search: "${escapeHtml(
+                      item.searchTerm
+                    )}"</div>
+                    <div class="extract-categories">
+                      ${
+                        item.categories && item.categories.length > 0
+                          ? item.categories
+                              .map(
+                                (cat) =>
+                                  `<div class="extract-category ${cat}">${cat}</div>`
+                              )
+                              .join("")
+                          : '<div class="extract-category" style="background: #e1e4e8; color: #586069;">No Category</div>'
+                      }
+                    </div>
+                  </div>
+                  <div class="extract-text">${escapeHtml(item.sentence)}</div>
+                  ${
+                    item.context
+                      ? `<div class="extract-context"><strong>Context:</strong> ${escapeHtml(
+                          item.context
+                        )}</div>`
+                      : ""
+                  }
+                  <div class="extract-meta">
+                    <span>Position: ${item.position}</span>
+                  </div>
+                </div>
+              `
+          )
+          .join("");
+      }
+
+      // HTML escape utility
+      function escapeHtml(text) {
+        const div = document.createElement("div");
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      // Filter buttons
+      let currentCategoryFilter = "all";
+      let currentTermFilter = "all";
+      let currentSort = "searchterm";
+
+      function handleFilterClick() {
+        const filter = this.dataset.filter;
+        const type = this.dataset.type;
+
+        if (type === "category") {
+          currentCategoryFilter = filter;
+          document
+            .querySelectorAll('.filter-btn[data-type="category"]')
+            .forEach((b) => b.classList.remove("active"));
+        } else if (type === "term") {
+          currentTermFilter = filter;
+          document
+            .querySelectorAll('.filter-btn[data-type="term"]')
+            .forEach((b) => b.classList.remove("active"));
+        }
+
+        this.classList.add("active");
+        renderExtracts(currentCategoryFilter, currentTermFilter);
+      }
+
+      filterBtns.forEach((btn) => {
+        btn.addEventListener("click", handleFilterClick);
+      });
+
+      // Sort buttons
+      const sortBySearchTermBtn = document.getElementById("sortBySearchTerm");
+      const sortByPositionBtn = document.getElementById("sortByPosition");
+
+      sortBySearchTermBtn.addEventListener("click", () => {
+        currentSort = "searchterm";
+        sortBySearchTermBtn.classList.add("active");
+        sortByPositionBtn.classList.remove("active");
+        renderExtracts(currentCategoryFilter, currentTermFilter);
+      });
+
+      sortByPositionBtn.addEventListener("click", () => {
+        currentSort = "position";
+        sortByPositionBtn.classList.add("active");
+        sortBySearchTermBtn.classList.remove("active");
+        renderExtracts(currentCategoryFilter, currentTermFilter);
+      });
+
+      // Download JSON
+      downloadJsonBtn.addEventListener("click", downloadJSON);
+
+      function downloadJSON() {
+        const dataStr = JSON.stringify(extractedItems, null, 2);
+        const blob = new Blob([dataStr], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "concept-extracts.json";
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      // Download CSV
+      downloadCsvBtn.addEventListener("click", downloadCSV);
+
+      function downloadCSV() {
+        const headers = [
+          "Categories",
+          "Search Term",
+          "Sentence",
+          "Context",
+          "Position",
+        ];
+
+        const rows = extractedItems.map((item) => [
+          item.categories.join("; "),
+          item.searchTerm,
+          item.sentence,
+          item.context || "",
+          item.position,
+        ]);
+
+        const csvContent = [
+          headers.map(escapeCSV).join(","),
+          ...rows.map((row) => row.map(escapeCSV).join(",")),
+        ].join("\n");
+
+        const blob = new Blob([csvContent], { type: "text/csv" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "concept-extracts.csv";
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      function escapeCSV(value) {
+        if (value === null || value === undefined) return "";
+        const stringValue = String(value)
+          .replace(/\r?\n/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+        if (
+          stringValue.includes(",") ||
+          stringValue.includes('"') ||
+          stringValue.includes("\n")
+        ) {
+          return `"${stringValue.replace(/"/g, '""')}"`;
+        }
+        return stringValue;
+      }
+    </script>
+  </body>
+</html>
