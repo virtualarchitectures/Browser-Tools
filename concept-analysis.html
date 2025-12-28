@@ -976,19 +976,71 @@
         const searchBackwardLimit = Math.max(0, mainSentenceStart - 500);
 
         let contextStart = mainSentenceStart;
-        let sentenceCount = 0;
-        const maxPreviousSentences = 1;
 
-        while (
-          contextStart > searchBackwardLimit &&
-          sentenceCount < maxPreviousSentences
-        ) {
-          const char = text[contextStart - 1];
+        // Search backwards to find the START of the previous sentence
+        // First, we need to find the end of the previous sentence (the punctuation before our main sentence)
+        let i = mainSentenceStart - 1;
+
+        // Skip any whitespace before the main sentence
+        while (i >= searchBackwardLimit && /\s/.test(text[i])) {
+          i--;
+        }
+
+        // Now find the punctuation that ends the previous sentence
+        let previousSentenceEnd = -1;
+        while (i >= searchBackwardLimit) {
+          const char = text[i];
           if (char === "." || char === "!" || char === "?") {
-            sentenceCount++;
-            if (sentenceCount >= maxPreviousSentences) break;
+            previousSentenceEnd = i;
+            break;
           }
-          contextStart--;
+          i--;
+        }
+
+        // If we found a previous sentence ending, now find where that sentence starts
+        if (previousSentenceEnd >= 0) {
+          // Start from just before the ending punctuation and go backwards
+          i = previousSentenceEnd - 1;
+
+          // Look for the previous sentence ending (which marks the start of our target sentence)
+          while (i >= searchBackwardLimit) {
+            const char = text[i];
+            if (char === "." || char === "!" || char === "?") {
+              // Found the sentence before our target - start after this punctuation
+              contextStart = i + 1;
+              // Skip leading whitespace
+              while (
+                contextStart < mainSentenceStart &&
+                /\s/.test(text[contextStart])
+              ) {
+                contextStart++;
+              }
+              break;
+            }
+            i--;
+          }
+
+          // If we didn't find another sentence ending, we're at the beginning
+          if (i < searchBackwardLimit) {
+            contextStart = searchBackwardLimit;
+            // Skip leading whitespace
+            while (
+              contextStart < mainSentenceStart &&
+              /\s/.test(text[contextStart])
+            ) {
+              contextStart++;
+            }
+          }
+        } else {
+          // No previous sentence found, start from the search limit
+          contextStart = searchBackwardLimit;
+          // Skip leading whitespace
+          while (
+            contextStart < mainSentenceStart &&
+            /\s/.test(text[contextStart])
+          ) {
+            contextStart++;
+          }
         }
 
         // Limit how far forward we search (1000 chars max)
