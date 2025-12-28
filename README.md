@@ -57,6 +57,7 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 
 ### Natural Language Processing (NLP)
 
+- **[Concept Analysis](concept-analysis.html)** — extract sentences containing specific concepts or phrases from text and automatically categorize results as definitions, distinctions, or explanations using NLP and RegEx
 - **[Named Entity Recognition](named-entity-recognition.html)** — extract and identify named entities from text including people, places and organisations using natural language processing
 - **[Sentiment Analysis](sentiment-analysis.html)** — analyze sentiment in CSV text columns using AFINN lexicon with configurable metrics (score, comparative, classification, word counts, tokens) and summary statistics
 - **[Word Frequency Counter](word-frequency.html)** — analyze word frequency, discover common phrases with n-grams (bigrams, trigrams, 4-grams, 5-grams), and get detailed text statistics with customisable stop word filtering
