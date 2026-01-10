@@ -50,6 +50,10 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 - **[Scene Detection Tool](scene-detection.html)** — automatically detect scene changes in videos using frame analysis with adjustable sensitivity, minimum scene duration, and sample rate controls
 - **[Transcription Tool](transcribe.html)** — transcribe audio and video files with keyboard shortcuts, timestamps, and speed control
 
+### Network Data
+
+- **[Network Diagram Builder](network-diagram.html)** — create network diagrams interactively by drawing nodes and edges with custom properties, export to Neo4j Cypher, NetworkX Python, GEXF, and GraphML formats
+
 ### Maps and Spatial Data
 
 - **[Feature Service Viewer](feature-service-viewer.html)** — load and visualize ArcGIS Feature Services and MapServer layers on an interactive map
