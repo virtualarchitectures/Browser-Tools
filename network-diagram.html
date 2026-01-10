@@ -1,0 +1,2114 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Network Diagram Builder</title>
+    <style>
+      /* =========================
+         CSS Styles
+         ========================= */
+
+      /* Reset and base styles */
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Arial, sans-serif;
+        background: #ffffff;
+        color: #24292e;
+        padding: 20px;
+        line-height: 1.5;
+      }
+
+      /* Layout */
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+
+      .back-link {
+        display: inline-block;
+        margin-bottom: 16px;
+        color: #0366d6;
+        text-decoration: none;
+        font-size: 14px;
+      }
+
+      .back-link:hover {
+        text-decoration: underline;
+      }
+
+      h1 {
+        margin-bottom: 16px;
+        font-size: 24px;
+        font-weight: 600;
+      }
+
+      .description {
+        color: #586069;
+        margin-bottom: 20px;
+        font-size: 14px;
+      }
+
+      /* Main layout */
+      .main-layout {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+      }
+
+      .canvas-container {
+        flex: 1;
+        min-width: 600px;
+        min-height: 500px;
+        height: calc(100vh - 250px);
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        overflow: hidden;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .sidebar {
+        width: 320px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      /* Canvas */
+      #networkCanvas {
+        display: block;
+        background: #f6f8fa;
+        cursor: crosshair;
+        flex: 1;
+        width: 100%;
+      }
+
+      /* Toolbar */
+      .toolbar {
+        display: flex;
+        gap: 8px;
+        padding: 12px;
+        background: #fafbfc;
+        border-bottom: 1px solid #e1e4e8;
+        flex-wrap: wrap;
+      }
+
+      /* Buttons */
+      .btn {
+        background: #fafbfc;
+        color: #24292e;
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+        cursor: pointer;
+        font-size: 14px;
+        line-height: 20px;
+      }
+
+      .btn:hover {
+        background: #f3f4f6;
+      }
+
+      .btn.primary {
+        background: #0366d6;
+        color: #fff;
+      }
+
+      .btn.primary:hover {
+        background: #0256c5;
+      }
+
+      .btn.secondary {
+        background: #fafbfc;
+        color: #24292e;
+      }
+
+      .btn.secondary:hover {
+        background: #f3f4f6;
+      }
+
+      .btn.active {
+        background: #0366d6;
+        color: #fff;
+        border-color: #0366d6;
+      }
+
+      .btn.danger {
+        background: #d73a49;
+        color: #fff;
+        border-color: #d73a49;
+      }
+
+      .btn.danger:hover {
+        background: #cb2431;
+      }
+
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      /* Panels */
+      .panel {
+        background: #fff;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        overflow: hidden;
+      }
+
+      .panel-header {
+        background: #f6f8fa;
+        padding: 10px 12px;
+        font-weight: 600;
+        font-size: 14px;
+        border-bottom: 1px solid #e1e4e8;
+      }
+
+      .panel-content {
+        padding: 12px;
+      }
+
+      /* Form elements */
+      .form-group {
+        margin-bottom: 12px;
+      }
+
+      .form-group:last-child {
+        margin-bottom: 0;
+      }
+
+      .form-group label {
+        display: block;
+        font-size: 12px;
+        font-weight: 600;
+        color: #586069;
+        margin-bottom: 4px;
+      }
+
+      .form-group input,
+      .form-group select,
+      .form-group textarea {
+        width: 100%;
+        padding: 8px 10px;
+        font-size: 14px;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        background: #fff;
+        color: #24292e;
+      }
+
+      .form-group input:focus,
+      .form-group select:focus,
+      .form-group textarea:focus {
+        outline: none;
+        border-color: #0366d6;
+        box-shadow: 0 0 0 3px rgba(3, 102, 214, 0.1);
+      }
+
+      .form-group input[type="color"] {
+        height: 36px;
+        padding: 4px;
+        cursor: pointer;
+      }
+
+      .form-row {
+        display: flex;
+        gap: 12px;
+      }
+
+      .form-row .form-group {
+        flex: 1;
+      }
+
+      /* Properties panel */
+      .properties-empty {
+        color: #586069;
+        font-size: 14px;
+        text-align: center;
+        padding: 20px;
+      }
+
+      /* Custom properties */
+      .custom-props-list {
+        max-height: 150px;
+        overflow-y: auto;
+        margin-bottom: 8px;
+      }
+
+      .custom-prop-item {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 8px;
+        align-items: center;
+      }
+
+      .custom-prop-item input {
+        flex: 1;
+        padding: 6px 8px;
+        font-size: 13px;
+        border: 1px solid #e1e4e8;
+        border-radius: 4px;
+      }
+
+      .custom-prop-item button {
+        padding: 4px 8px;
+        font-size: 12px;
+        background: #fafbfc;
+        border: 1px solid #e1e4e8;
+        border-radius: 4px;
+        cursor: pointer;
+        color: #d73a49;
+      }
+
+      .custom-prop-item button:hover {
+        background: #fef1f1;
+      }
+
+      /* Node/Edge list */
+      .element-list {
+        max-height: 200px;
+        overflow-y: auto;
+      }
+
+      .element-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px;
+        border-bottom: 1px solid #e1e4e8;
+        font-size: 13px;
+        cursor: pointer;
+      }
+
+      .element-item:last-child {
+        border-bottom: none;
+      }
+
+      .element-item:hover {
+        background: #f6f8fa;
+      }
+
+      .element-item.selected {
+        background: #e8f4fd;
+      }
+
+      .element-item-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .element-color-indicator {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+      }
+
+      /* Mode indicator */
+      .mode-indicator {
+        position: absolute;
+        top: 60px;
+        left: 12px;
+        background: rgba(0, 0, 0, 0.7);
+        color: #fff;
+        padding: 6px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        pointer-events: none;
+      }
+
+      /* Export format buttons */
+      .export-options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 8px;
+      }
+
+      /* File drop zone */
+      .drop-zone {
+        border: 2px dashed #e1e4e8;
+        border-radius: 6px;
+        padding: 20px;
+        text-align: center;
+        color: #586069;
+        font-size: 14px;
+        transition: all 0.2s;
+        cursor: pointer;
+      }
+
+      .drop-zone:hover,
+      .drop-zone.dragover {
+        border-color: #0366d6;
+        background: #f0f7ff;
+      }
+
+      .drop-zone input {
+        display: none;
+      }
+
+      /* Error message */
+      .error-message {
+        background: #fef1f1;
+        border: 1px solid #f8d7da;
+        color: #d73a49;
+        padding: 10px;
+        border-radius: 6px;
+        font-size: 14px;
+        display: none;
+      }
+
+      /* Success message */
+      .success-message {
+        background: #e6ffed;
+        border: 1px solid #a3d9a5;
+        color: #22863a;
+        padding: 10px;
+        border-radius: 6px;
+        font-size: 14px;
+        display: none;
+      }
+
+      /* Responsive */
+      @media (max-width: 1000px) {
+        .main-layout {
+          flex-direction: column;
+        }
+
+        .canvas-container {
+          min-width: auto;
+        }
+
+        .sidebar {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- =========================
+         HTML Structure
+         ========================= -->
+
+    <div class="container">
+      <a href="index.html" class="back-link">← Back to Browser Tools</a>
+      <h1>Network Diagram Builder</h1>
+      <p class="description">
+        Create network diagrams by drawing nodes and edges interactively.
+      </p>
+
+      <div class="main-layout">
+        <div class="canvas-container">
+          <div class="toolbar">
+            <button
+              class="btn"
+              id="selectMode"
+              title="Select and move elements"
+            >
+              Select
+            </button>
+            <button
+              class="btn active"
+              id="addNodeMode"
+              title="Click to add nodes"
+            >
+              Add Node
+            </button>
+            <button
+              class="btn"
+              id="addEdgeMode"
+              title="Click two nodes to connect"
+            >
+              Add Edge
+            </button>
+            <span style="border-left: 1px solid #e1e4e8; margin: 0 4px"></span>
+            <button
+              class="btn"
+              id="deleteSelected"
+              disabled
+              title="Delete selected element"
+            >
+              Delete
+            </button>
+            <button
+              class="btn secondary"
+              id="clearAll"
+              title="Clear all nodes and edges"
+            >
+              Clear All
+            </button>
+            <span style="border-left: 1px solid #e1e4e8; margin: 0 4px"></span>
+            <span style="flex: 1"></span>
+            <button class="btn" id="zoomIn" title="Zoom in">Zoom +</button>
+            <button class="btn" id="zoomOut" title="Zoom out">Zoom -</button>
+            <button class="btn" id="resetView" title="Reset zoom and pan">
+              Reset View
+            </button>
+          </div>
+          <canvas id="networkCanvas" width="800" height="500"></canvas>
+          <div class="mode-indicator" id="modeIndicator">Mode: Add Node</div>
+        </div>
+
+        <div class="sidebar">
+          <!-- Import/Export Panel -->
+          <div class="panel">
+            <div class="panel-header">Import / Export</div>
+            <div class="panel-content">
+              <div class="drop-zone" id="dropZone">
+                <div>Drop JSON file here or click to import</div>
+                <input type="file" id="fileInput" accept=".json" />
+              </div>
+              <div class="export-options">
+                <button
+                  class="btn primary"
+                  id="exportJSON"
+                  title="Export as JSON (loadable by this tool)"
+                >
+                  Export JSON
+                </button>
+                <button
+                  class="btn secondary"
+                  id="exportNeo4j"
+                  title="Export as Neo4j Cypher statements"
+                >
+                  Neo4j Cypher
+                </button>
+                <button
+                  class="btn secondary"
+                  id="exportNetworkX"
+                  title="Export as Python NetworkX code"
+                >
+                  NetworkX
+                </button>
+                <button
+                  class="btn secondary"
+                  id="exportGEXF"
+                  title="Export as GEXF (Gephi format)"
+                >
+                  GEXF
+                </button>
+                <button
+                  class="btn secondary"
+                  id="exportGraphML"
+                  title="Export as GraphML"
+                >
+                  GraphML
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Status Messages -->
+          <div id="errorMessage" class="error-message"></div>
+          <div id="successMessage" class="success-message"></div>
+
+          <!-- Properties Panel -->
+          <div class="panel">
+            <div class="panel-header">Properties</div>
+            <div class="panel-content" id="propertiesPanel">
+              <div class="properties-empty">
+                Select a node or edge to edit its properties
+              </div>
+            </div>
+          </div>
+
+          <!-- Elements Panel -->
+          <div class="panel">
+            <div class="panel-header">Elements</div>
+            <div class="panel-content">
+              <div style="margin-bottom: 8px; font-size: 12px; color: #586069">
+                Nodes: <span id="nodeCount">0</span> | Edges:
+                <span id="edgeCount">0</span>
+              </div>
+              <div class="element-list" id="elementList">
+                <div class="properties-empty">No elements yet</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      /* =========================
+         JavaScript
+         ========================= */
+
+      // -------------------------
+      // State variables
+      // -------------------------
+
+      let nodes = [];
+      let edges = [];
+      let selectedElement = null; // { type: 'node'|'edge', id: string }
+      let mode = "addNode"; // 'select', 'addNode', 'addEdge'
+      let edgeStartNode = null; // For edge creation
+
+      // Canvas state
+      let pan = { x: 0, y: 0 };
+      let zoom = 1;
+      let isDragging = false;
+      let isPanning = false;
+      let dragStart = { x: 0, y: 0 };
+      let draggedNode = null;
+
+      // Default properties
+      const defaultNodeProps = {
+        label: "Node",
+        color: "#0366d6",
+        size: 30,
+        shape: "circle",
+      };
+
+      const defaultEdgeProps = {
+        label: "",
+        color: "#586069",
+        width: 2,
+        directed: true,
+        style: "solid",
+      };
+
+      // Canvas and context
+      const canvas = document.getElementById("networkCanvas");
+      const ctx = canvas.getContext("2d");
+
+      // -------------------------
+      // Utility functions
+      // -------------------------
+
+      function generateId() {
+        return (
+          "id_" +
+          Date.now().toString(36) +
+          Math.random().toString(36).substr(2, 5)
+        );
+      }
+
+      function showError(message) {
+        const errorDiv = document.getElementById("errorMessage");
+        errorDiv.textContent = message;
+        errorDiv.style.display = "block";
+        setTimeout(() => {
+          errorDiv.style.display = "none";
+        }, 5000);
+      }
+
+      function showSuccess(message) {
+        const successDiv = document.getElementById("successMessage");
+        successDiv.textContent = message;
+        successDiv.style.display = "block";
+        setTimeout(() => {
+          successDiv.style.display = "none";
+        }, 3000);
+      }
+
+      function screenToWorld(screenX, screenY) {
+        const rect = canvas.getBoundingClientRect();
+        const x = (screenX - rect.left - pan.x) / zoom;
+        const y = (screenY - rect.top - pan.y) / zoom;
+        return { x, y };
+      }
+
+      function worldToScreen(worldX, worldY) {
+        return {
+          x: worldX * zoom + pan.x,
+          y: worldY * zoom + pan.y,
+        };
+      }
+
+      function getNodeAt(worldX, worldY) {
+        // Check in reverse order (top-most first)
+        for (let i = nodes.length - 1; i >= 0; i--) {
+          const node = nodes[i];
+          const dx = worldX - node.x;
+          const dy = worldY - node.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist <= node.size) {
+            return node;
+          }
+        }
+        return null;
+      }
+
+      function getEdgeAt(worldX, worldY) {
+        for (let i = edges.length - 1; i >= 0; i--) {
+          const edge = edges[i];
+          const sourceNode = nodes.find((n) => n.id === edge.source);
+          const targetNode = nodes.find((n) => n.id === edge.target);
+          if (!sourceNode || !targetNode) continue;
+
+          // Check distance from point to line segment
+          const dist = pointToLineDistance(
+            worldX,
+            worldY,
+            sourceNode.x,
+            sourceNode.y,
+            targetNode.x,
+            targetNode.y
+          );
+          if (dist <= 10) {
+            return edge;
+          }
+        }
+        return null;
+      }
+
+      function pointToLineDistance(px, py, x1, y1, x2, y2) {
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        const lengthSq = dx * dx + dy * dy;
+
+        if (lengthSq === 0) {
+          return Math.sqrt((px - x1) * (px - x1) + (py - y1) * (py - y1));
+        }
+
+        let t = ((px - x1) * dx + (py - y1) * dy) / lengthSq;
+        t = Math.max(0, Math.min(1, t));
+
+        const nearestX = x1 + t * dx;
+        const nearestY = y1 + t * dy;
+
+        return Math.sqrt(
+          (px - nearestX) * (px - nearestX) + (py - nearestY) * (py - nearestY)
+        );
+      }
+
+      // -------------------------
+      // Drawing functions
+      // -------------------------
+
+      function draw() {
+        // Clear canvas
+        ctx.fillStyle = "#f6f8fa";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Draw grid
+        drawGrid();
+
+        // Save context and apply transformations
+        ctx.save();
+        ctx.translate(pan.x, pan.y);
+        ctx.scale(zoom, zoom);
+
+        // Draw edges first (below nodes)
+        edges.forEach((edge) => {
+          const sourceNode = nodes.find((n) => n.id === edge.source);
+          const targetNode = nodes.find((n) => n.id === edge.target);
+          if (sourceNode && targetNode) {
+            drawEdge(edge, sourceNode, targetNode);
+          }
+        });
+
+        // Draw nodes
+        nodes.forEach((node) => drawNode(node));
+
+        // Draw edge creation preview
+        if (mode === "addEdge" && edgeStartNode) {
+          const rect = canvas.getBoundingClientRect();
+          const mousePos = lastMousePos || {
+            x: rect.width / 2,
+            y: rect.height / 2,
+          };
+          const worldMouse = screenToWorld(
+            mousePos.x + rect.left,
+            mousePos.y + rect.top
+          );
+
+          ctx.beginPath();
+          ctx.setLineDash([5, 5]);
+          ctx.strokeStyle = "#0366d6";
+          ctx.lineWidth = 2;
+          ctx.moveTo(edgeStartNode.x, edgeStartNode.y);
+          ctx.lineTo(worldMouse.x, worldMouse.y);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+
+        ctx.restore();
+
+        requestAnimationFrame(draw);
+      }
+
+      function drawGrid() {
+        const gridSize = 20 * zoom;
+        ctx.strokeStyle = "#e1e4e8";
+        ctx.lineWidth = 0.5;
+
+        const offsetX = pan.x % gridSize;
+        const offsetY = pan.y % gridSize;
+
+        ctx.beginPath();
+        for (let x = offsetX; x < canvas.width; x += gridSize) {
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, canvas.height);
+        }
+        for (let y = offsetY; y < canvas.height; y += gridSize) {
+          ctx.moveTo(0, y);
+          ctx.lineTo(canvas.width, y);
+        }
+        ctx.stroke();
+      }
+
+      function drawNode(node) {
+        const isSelected =
+          selectedElement &&
+          selectedElement.type === "node" &&
+          selectedElement.id === node.id;
+        const isEdgeStart = edgeStartNode && edgeStartNode.id === node.id;
+
+        ctx.save();
+
+        // Draw selection/highlight ring
+        if (isSelected || isEdgeStart) {
+          ctx.beginPath();
+          if (node.shape === "square") {
+            ctx.rect(
+              node.x - node.size - 4,
+              node.y - node.size - 4,
+              (node.size + 4) * 2,
+              (node.size + 4) * 2
+            );
+          } else if (node.shape === "diamond") {
+            const s = node.size + 4;
+            ctx.moveTo(node.x, node.y - s);
+            ctx.lineTo(node.x + s, node.y);
+            ctx.lineTo(node.x, node.y + s);
+            ctx.lineTo(node.x - s, node.y);
+            ctx.closePath();
+          } else {
+            ctx.arc(node.x, node.y, node.size + 4, 0, Math.PI * 2);
+          }
+          ctx.strokeStyle = isEdgeStart ? "#22863a" : "#0366d6";
+          ctx.lineWidth = 3;
+          ctx.stroke();
+        }
+
+        // Draw node shape
+        ctx.beginPath();
+        ctx.fillStyle = node.color;
+
+        if (node.shape === "square") {
+          ctx.rect(
+            node.x - node.size,
+            node.y - node.size,
+            node.size * 2,
+            node.size * 2
+          );
+        } else if (node.shape === "diamond") {
+          ctx.moveTo(node.x, node.y - node.size);
+          ctx.lineTo(node.x + node.size, node.y);
+          ctx.lineTo(node.x, node.y + node.size);
+          ctx.lineTo(node.x - node.size, node.y);
+          ctx.closePath();
+        } else {
+          ctx.arc(node.x, node.y, node.size, 0, Math.PI * 2);
+        }
+        ctx.fill();
+
+        // Draw border
+        ctx.strokeStyle = "rgba(0, 0, 0, 0.2)";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Draw label
+        if (node.label) {
+          ctx.fillStyle = "#24292e";
+          ctx.font = "12px Helvetica, Arial, sans-serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "top";
+          ctx.fillText(node.label, node.x, node.y + node.size + 6);
+        }
+
+        ctx.restore();
+      }
+
+      function drawEdge(edge, sourceNode, targetNode) {
+        const isSelected =
+          selectedElement &&
+          selectedElement.type === "edge" &&
+          selectedElement.id === edge.id;
+
+        ctx.save();
+
+        // Calculate direction
+        const dx = targetNode.x - sourceNode.x;
+        const dy = targetNode.y - sourceNode.y;
+        const length = Math.sqrt(dx * dx + dy * dy);
+        const ux = dx / length;
+        const uy = dy / length;
+
+        // Adjust start and end points to node edges
+        const startX = sourceNode.x + ux * sourceNode.size;
+        const startY = sourceNode.y + uy * sourceNode.size;
+        const endX = targetNode.x - ux * targetNode.size;
+        const endY = targetNode.y - uy * targetNode.size;
+
+        // Set line style
+        ctx.strokeStyle = isSelected ? "#0366d6" : edge.color;
+        ctx.lineWidth = isSelected ? edge.width + 2 : edge.width;
+
+        if (edge.style === "dashed") {
+          ctx.setLineDash([8, 4]);
+        } else if (edge.style === "dotted") {
+          ctx.setLineDash([2, 4]);
+        }
+
+        // Draw line
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);
+        ctx.lineTo(endX, endY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Draw arrow if directed
+        if (edge.directed) {
+          const arrowSize = 10;
+          const arrowX = endX;
+          const arrowY = endY;
+
+          ctx.beginPath();
+          ctx.fillStyle = isSelected ? "#0366d6" : edge.color;
+          ctx.moveTo(arrowX, arrowY);
+          ctx.lineTo(
+            arrowX - arrowSize * ux - arrowSize * 0.5 * uy,
+            arrowY - arrowSize * uy + arrowSize * 0.5 * ux
+          );
+          ctx.lineTo(
+            arrowX - arrowSize * ux + arrowSize * 0.5 * uy,
+            arrowY - arrowSize * uy - arrowSize * 0.5 * ux
+          );
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        // Draw label
+        if (edge.label) {
+          const midX = (startX + endX) / 2;
+          const midY = (startY + endY) / 2;
+
+          ctx.fillStyle = "#586069";
+          ctx.font = "11px Helvetica, Arial, sans-serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "bottom";
+
+          // Background for readability
+          const textWidth = ctx.measureText(edge.label).width;
+          ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+          ctx.fillRect(midX - textWidth / 2 - 2, midY - 14, textWidth + 4, 14);
+
+          ctx.fillStyle = "#586069";
+          ctx.fillText(edge.label, midX, midY);
+        }
+
+        ctx.restore();
+      }
+
+      // -------------------------
+      // UI update functions
+      // -------------------------
+
+      function updateElementList() {
+        const listEl = document.getElementById("elementList");
+        document.getElementById("nodeCount").textContent = nodes.length;
+        document.getElementById("edgeCount").textContent = edges.length;
+
+        if (nodes.length === 0 && edges.length === 0) {
+          listEl.innerHTML =
+            '<div class="properties-empty">No elements yet</div>';
+          return;
+        }
+
+        let html = "";
+
+        // Nodes
+        nodes.forEach((node) => {
+          const isSelected =
+            selectedElement &&
+            selectedElement.type === "node" &&
+            selectedElement.id === node.id;
+          html += `
+            <div class="element-item ${
+              isSelected ? "selected" : ""
+            }" data-type="node" data-id="${node.id}">
+              <span class="element-item-label">
+                <span class="element-color-indicator" style="background: ${
+                  node.color
+                }"></span>
+                ${escapeHtml(node.label || node.id)}
+              </span>
+              <span style="color: #586069; font-size: 11px;">node</span>
+            </div>
+          `;
+        });
+
+        // Edges
+        edges.forEach((edge) => {
+          const sourceNode = nodes.find((n) => n.id === edge.source);
+          const targetNode = nodes.find((n) => n.id === edge.target);
+          const isSelected =
+            selectedElement &&
+            selectedElement.type === "edge" &&
+            selectedElement.id === edge.id;
+          const edgeLabel =
+            edge.label ||
+            `${sourceNode?.label || edge.source} → ${
+              targetNode?.label || edge.target
+            }`;
+          html += `
+            <div class="element-item ${
+              isSelected ? "selected" : ""
+            }" data-type="edge" data-id="${edge.id}">
+              <span class="element-item-label">
+                <span class="element-color-indicator" style="background: ${
+                  edge.color
+                }; border-radius: 0;"></span>
+                ${escapeHtml(edgeLabel)}
+              </span>
+              <span style="color: #586069; font-size: 11px;">edge</span>
+            </div>
+          `;
+        });
+
+        listEl.innerHTML = html;
+
+        // Add click handlers
+        listEl.querySelectorAll(".element-item").forEach((el) => {
+          el.addEventListener("click", () => {
+            const type = el.dataset.type;
+            const id = el.dataset.id;
+            selectElement(type, id);
+          });
+        });
+      }
+
+      function escapeHtml(text) {
+        const div = document.createElement("div");
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      function updatePropertiesPanel() {
+        const panel = document.getElementById("propertiesPanel");
+
+        if (!selectedElement) {
+          panel.innerHTML =
+            '<div class="properties-empty">Select a node or edge to edit its properties</div>';
+          document.getElementById("deleteSelected").disabled = true;
+          return;
+        }
+
+        document.getElementById("deleteSelected").disabled = false;
+
+        if (selectedElement.type === "node") {
+          const node = nodes.find((n) => n.id === selectedElement.id);
+          if (!node) return;
+
+          panel.innerHTML = `
+            <div class="form-group">
+              <label>Node ID</label>
+              <input type="text" id="propId" value="${escapeHtml(node.id)}" />
+            </div>
+            <div class="form-group">
+              <label>Label</label>
+              <input type="text" id="propLabel" value="${escapeHtml(
+                node.label
+              )}" />
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Color</label>
+                <input type="color" id="propColor" value="${node.color}" />
+              </div>
+              <div class="form-group">
+                <label>Size</label>
+                <input type="number" id="propSize" value="${
+                  node.size
+                }" min="10" max="100" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Shape</label>
+              <select id="propShape">
+                <option value="circle" ${
+                  node.shape === "circle" ? "selected" : ""
+                }>Circle</option>
+                <option value="square" ${
+                  node.shape === "square" ? "selected" : ""
+                }>Square</option>
+                <option value="diamond" ${
+                  node.shape === "diamond" ? "selected" : ""
+                }>Diamond</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Custom Properties</label>
+              <div class="custom-props-list" id="customPropsList"></div>
+              <button class="btn" id="addCustomProp" style="width: 100%;">Add Custom Property</button>
+            </div>
+          `;
+
+          // Populate custom properties
+          renderCustomProps(node);
+
+          // Add event listeners
+          addPropertyListeners("node", node);
+        } else if (selectedElement.type === "edge") {
+          const edge = edges.find((e) => e.id === selectedElement.id);
+          if (!edge) return;
+
+          panel.innerHTML = `
+            <div class="form-group">
+              <label>Edge ID</label>
+              <input type="text" id="propId" value="${escapeHtml(edge.id)}" />
+            </div>
+            <div class="form-group">
+              <label>Label</label>
+              <input type="text" id="propLabel" value="${escapeHtml(
+                edge.label || ""
+              )}" />
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Source</label>
+                <select id="propSource">
+                  ${nodes
+                    .map(
+                      (n) =>
+                        `<option value="${n.id}" ${
+                          n.id === edge.source ? "selected" : ""
+                        }>${escapeHtml(n.label || n.id)}</option>`
+                    )
+                    .join("")}
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Target</label>
+                <select id="propTarget">
+                  ${nodes
+                    .map(
+                      (n) =>
+                        `<option value="${n.id}" ${
+                          n.id === edge.target ? "selected" : ""
+                        }>${escapeHtml(n.label || n.id)}</option>`
+                    )
+                    .join("")}
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Color</label>
+                <input type="color" id="propColor" value="${edge.color}" />
+              </div>
+              <div class="form-group">
+                <label>Width</label>
+                <input type="number" id="propWidth" value="${
+                  edge.width
+                }" min="1" max="20" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Style</label>
+                <select id="propStyle">
+                  <option value="solid" ${
+                    edge.style === "solid" ? "selected" : ""
+                  }>Solid</option>
+                  <option value="dashed" ${
+                    edge.style === "dashed" ? "selected" : ""
+                  }>Dashed</option>
+                  <option value="dotted" ${
+                    edge.style === "dotted" ? "selected" : ""
+                  }>Dotted</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Directed</label>
+                <select id="propDirected">
+                  <option value="true" ${
+                    edge.directed ? "selected" : ""
+                  }>Yes (arrow)</option>
+                  <option value="false" ${
+                    !edge.directed ? "selected" : ""
+                  }>No</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Custom Properties</label>
+              <div class="custom-props-list" id="customPropsList"></div>
+              <button class="btn" id="addCustomProp" style="width: 100%;">Add Custom Property</button>
+            </div>
+          `;
+
+          // Populate custom properties
+          renderCustomProps(edge);
+
+          // Add event listeners
+          addPropertyListeners("edge", edge);
+        }
+      }
+
+      function renderCustomProps(element) {
+        const container = document.getElementById("customPropsList");
+        if (!container) return;
+
+        const reservedProps = [
+          "id",
+          "label",
+          "color",
+          "size",
+          "shape",
+          "x",
+          "y",
+          "source",
+          "target",
+          "width",
+          "style",
+          "directed",
+          "customProps",
+        ];
+        const customProps = element.customProps || {};
+
+        let html = "";
+        Object.entries(customProps).forEach(([key, value]) => {
+          html += `
+            <div class="custom-prop-item">
+              <input type="text" class="prop-key" value="${escapeHtml(
+                key
+              )}" placeholder="Key" />
+              <input type="text" class="prop-value" value="${escapeHtml(
+                String(value)
+              )}" placeholder="Value" />
+              <button class="delete-prop" data-key="${escapeHtml(
+                key
+              )}">X</button>
+            </div>
+          `;
+        });
+        container.innerHTML = html;
+
+        // Add listeners for custom prop changes
+        container.querySelectorAll(".custom-prop-item").forEach((item) => {
+          const keyInput = item.querySelector(".prop-key");
+          const valueInput = item.querySelector(".prop-value");
+          const deleteBtn = item.querySelector(".delete-prop");
+          const originalKey = deleteBtn.dataset.key;
+
+          keyInput.addEventListener("change", () => {
+            const newKey = keyInput.value.trim();
+            if (newKey && newKey !== originalKey) {
+              if (!element.customProps) element.customProps = {};
+              const oldValue = element.customProps[originalKey];
+              delete element.customProps[originalKey];
+              element.customProps[newKey] = oldValue;
+              updatePropertiesPanel();
+            }
+          });
+
+          valueInput.addEventListener("change", () => {
+            if (!element.customProps) element.customProps = {};
+            element.customProps[originalKey] = valueInput.value;
+          });
+
+          deleteBtn.addEventListener("click", () => {
+            if (element.customProps) {
+              delete element.customProps[originalKey];
+            }
+            renderCustomProps(element);
+          });
+        });
+      }
+
+      function addPropertyListeners(type, element) {
+        const propId = document.getElementById("propId");
+        const propLabel = document.getElementById("propLabel");
+        const propColor = document.getElementById("propColor");
+        const addCustomPropBtn = document.getElementById("addCustomProp");
+
+        propId.addEventListener("change", () => {
+          const newId = propId.value.trim();
+          if (!newId) {
+            showError("ID cannot be empty");
+            propId.value = element.id;
+            return;
+          }
+          // Check for duplicate IDs
+          const existingNode = nodes.find(
+            (n) => n.id === newId && n.id !== element.id
+          );
+          const existingEdge = edges.find(
+            (e) => e.id === newId && e.id !== element.id
+          );
+          if (existingNode || existingEdge) {
+            showError("An element with this ID already exists");
+            propId.value = element.id;
+            return;
+          }
+          // Update references if it's a node
+          if (type === "node") {
+            edges.forEach((e) => {
+              if (e.source === element.id) e.source = newId;
+              if (e.target === element.id) e.target = newId;
+            });
+          }
+          element.id = newId;
+          selectedElement.id = newId;
+          updateElementList();
+        });
+
+        propLabel.addEventListener("input", () => {
+          element.label = propLabel.value;
+          updateElementList();
+        });
+
+        propColor.addEventListener("input", () => {
+          element.color = propColor.value;
+          updateElementList();
+        });
+
+        if (type === "node") {
+          const propSize = document.getElementById("propSize");
+          const propShape = document.getElementById("propShape");
+
+          propSize.addEventListener("input", () => {
+            element.size = parseInt(propSize.value) || 30;
+          });
+
+          propShape.addEventListener("change", () => {
+            element.shape = propShape.value;
+          });
+        } else if (type === "edge") {
+          const propSource = document.getElementById("propSource");
+          const propTarget = document.getElementById("propTarget");
+          const propWidth = document.getElementById("propWidth");
+          const propStyle = document.getElementById("propStyle");
+          const propDirected = document.getElementById("propDirected");
+
+          propSource.addEventListener("change", () => {
+            element.source = propSource.value;
+            updateElementList();
+          });
+
+          propTarget.addEventListener("change", () => {
+            element.target = propTarget.value;
+            updateElementList();
+          });
+
+          propWidth.addEventListener("input", () => {
+            element.width = parseInt(propWidth.value) || 2;
+          });
+
+          propStyle.addEventListener("change", () => {
+            element.style = propStyle.value;
+          });
+
+          propDirected.addEventListener("change", () => {
+            element.directed = propDirected.value === "true";
+          });
+        }
+
+        addCustomPropBtn.addEventListener("click", () => {
+          if (!element.customProps) element.customProps = {};
+          let propNum = 1;
+          while (element.customProps[`property${propNum}`] !== undefined)
+            propNum++;
+          element.customProps[`property${propNum}`] = "";
+          renderCustomProps(element);
+        });
+      }
+
+      function selectElement(type, id) {
+        selectedElement = { type, id };
+        updatePropertiesPanel();
+        updateElementList();
+      }
+
+      function deselectElement() {
+        selectedElement = null;
+        updatePropertiesPanel();
+        updateElementList();
+      }
+
+      function setMode(newMode) {
+        mode = newMode;
+        edgeStartNode = null;
+
+        // Update button states
+        document
+          .getElementById("selectMode")
+          .classList.toggle("active", mode === "select");
+        document
+          .getElementById("addNodeMode")
+          .classList.toggle("active", mode === "addNode");
+        document
+          .getElementById("addEdgeMode")
+          .classList.toggle("active", mode === "addEdge");
+
+        // Update cursor
+        if (mode === "select") {
+          canvas.style.cursor = "default";
+        } else {
+          canvas.style.cursor = "crosshair";
+        }
+
+        // Update mode indicator
+        const modeNames = {
+          select: "Select",
+          addNode: "Add Node",
+          addEdge: "Add Edge",
+        };
+        document.getElementById("modeIndicator").textContent =
+          "Mode: " + modeNames[mode];
+      }
+
+      // -------------------------
+      // Event handlers
+      // -------------------------
+
+      let lastMousePos = null;
+
+      canvas.addEventListener("mousedown", (e) => {
+        const worldPos = screenToWorld(e.clientX, e.clientY);
+        lastMousePos = {
+          x: e.clientX - canvas.getBoundingClientRect().left,
+          y: e.clientY - canvas.getBoundingClientRect().top,
+        };
+
+        if (e.button === 1 || (e.button === 0 && e.shiftKey)) {
+          // Middle click or shift+click for panning
+          isPanning = true;
+          dragStart = { x: e.clientX - pan.x, y: e.clientY - pan.y };
+          canvas.style.cursor = "grabbing";
+          return;
+        }
+
+        if (mode === "select") {
+          const node = getNodeAt(worldPos.x, worldPos.y);
+          if (node) {
+            selectElement("node", node.id);
+            draggedNode = node;
+            isDragging = true;
+            dragStart = { x: worldPos.x - node.x, y: worldPos.y - node.y };
+          } else {
+            const edge = getEdgeAt(worldPos.x, worldPos.y);
+            if (edge) {
+              selectElement("edge", edge.id);
+            } else {
+              deselectElement();
+            }
+          }
+        } else if (mode === "addNode") {
+          // Create new node
+          const newNode = {
+            id: generateId(),
+            x: worldPos.x,
+            y: worldPos.y,
+            label: "Node " + (nodes.length + 1),
+            color: defaultNodeProps.color,
+            size: defaultNodeProps.size,
+            shape: defaultNodeProps.shape,
+            customProps: {},
+          };
+          nodes.push(newNode);
+          selectElement("node", newNode.id);
+          updateElementList();
+          showSuccess("Node created");
+        } else if (mode === "addEdge") {
+          const node = getNodeAt(worldPos.x, worldPos.y);
+          if (node) {
+            if (!edgeStartNode) {
+              edgeStartNode = node;
+            } else if (node.id !== edgeStartNode.id) {
+              // Check if edge already exists
+              const existingEdge = edges.find(
+                (e) =>
+                  (e.source === edgeStartNode.id && e.target === node.id) ||
+                  (e.source === node.id && e.target === edgeStartNode.id)
+              );
+              if (existingEdge) {
+                showError("An edge already exists between these nodes");
+                edgeStartNode = null;
+                return;
+              }
+
+              // Create new edge
+              const newEdge = {
+                id: generateId(),
+                source: edgeStartNode.id,
+                target: node.id,
+                label: "",
+                color: defaultEdgeProps.color,
+                width: defaultEdgeProps.width,
+                directed: defaultEdgeProps.directed,
+                style: defaultEdgeProps.style,
+                customProps: {},
+              };
+              edges.push(newEdge);
+              selectElement("edge", newEdge.id);
+              updateElementList();
+              showSuccess("Edge created");
+              edgeStartNode = null;
+            }
+          }
+        }
+      });
+
+      canvas.addEventListener("mousemove", (e) => {
+        const rect = canvas.getBoundingClientRect();
+        lastMousePos = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+
+        if (isPanning) {
+          pan.x = e.clientX - dragStart.x;
+          pan.y = e.clientY - dragStart.y;
+          return;
+        }
+
+        if (isDragging && draggedNode) {
+          const worldPos = screenToWorld(e.clientX, e.clientY);
+          draggedNode.x = worldPos.x - dragStart.x;
+          draggedNode.y = worldPos.y - dragStart.y;
+        }
+      });
+
+      canvas.addEventListener("mouseup", () => {
+        isDragging = false;
+        isPanning = false;
+        draggedNode = null;
+        if (mode === "select") {
+          canvas.style.cursor = "default";
+        } else {
+          canvas.style.cursor = "crosshair";
+        }
+      });
+
+      canvas.addEventListener("mouseleave", () => {
+        isDragging = false;
+        isPanning = false;
+        draggedNode = null;
+      });
+
+      canvas.addEventListener("wheel", (e) => {
+        e.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+        const newZoom = Math.max(0.1, Math.min(5, zoom * zoomFactor));
+
+        // Zoom towards mouse position
+        const worldX = (mouseX - pan.x) / zoom;
+        const worldY = (mouseY - pan.y) / zoom;
+
+        zoom = newZoom;
+
+        pan.x = mouseX - worldX * zoom;
+        pan.y = mouseY - worldY * zoom;
+      });
+
+      // Keyboard shortcuts
+      document.addEventListener("keydown", (e) => {
+        if (
+          e.target.tagName === "INPUT" ||
+          e.target.tagName === "TEXTAREA" ||
+          e.target.tagName === "SELECT"
+        ) {
+          return;
+        }
+
+        if (e.key === "Delete" || e.key === "Backspace") {
+          deleteSelectedElement();
+        } else if (e.key === "Escape") {
+          deselectElement();
+          edgeStartNode = null;
+        } else if (e.key === "v" || e.key === "V") {
+          setMode("select");
+        } else if (e.key === "n" || e.key === "N") {
+          setMode("addNode");
+        } else if (e.key === "e" || e.key === "E") {
+          setMode("addEdge");
+        }
+      });
+
+      function deleteSelectedElement() {
+        if (!selectedElement) return;
+
+        if (selectedElement.type === "node") {
+          // Remove connected edges
+          edges = edges.filter(
+            (e) =>
+              e.source !== selectedElement.id && e.target !== selectedElement.id
+          );
+          // Remove node
+          nodes = nodes.filter((n) => n.id !== selectedElement.id);
+        } else if (selectedElement.type === "edge") {
+          edges = edges.filter((e) => e.id !== selectedElement.id);
+        }
+
+        deselectElement();
+        updateElementList();
+        showSuccess("Element deleted");
+      }
+
+      // Toolbar buttons
+      document
+        .getElementById("selectMode")
+        .addEventListener("click", () => setMode("select"));
+      document
+        .getElementById("addNodeMode")
+        .addEventListener("click", () => setMode("addNode"));
+      document
+        .getElementById("addEdgeMode")
+        .addEventListener("click", () => setMode("addEdge"));
+      document
+        .getElementById("deleteSelected")
+        .addEventListener("click", deleteSelectedElement);
+
+      document.getElementById("clearAll").addEventListener("click", () => {
+        if (nodes.length === 0 && edges.length === 0) return;
+        if (confirm("Are you sure you want to clear all nodes and edges?")) {
+          nodes = [];
+          edges = [];
+          deselectElement();
+          updateElementList();
+          showSuccess("All elements cleared");
+        }
+      });
+
+      document.getElementById("zoomIn").addEventListener("click", () => {
+        zoom = Math.min(5, zoom * 1.2);
+      });
+
+      document.getElementById("zoomOut").addEventListener("click", () => {
+        zoom = Math.max(0.1, zoom / 1.2);
+      });
+
+      document.getElementById("resetView").addEventListener("click", () => {
+        zoom = 1;
+        pan = { x: 0, y: 0 };
+      });
+
+      // -------------------------
+      // Import/Export functions
+      // -------------------------
+
+      function getNetworkData() {
+        return {
+          format: "network-diagram-builder",
+          version: "1.0",
+          nodes: nodes.map((n) => ({
+            id: n.id,
+            label: n.label,
+            x: n.x,
+            y: n.y,
+            color: n.color,
+            size: n.size,
+            shape: n.shape,
+            ...(Object.keys(n.customProps || {}).length > 0
+              ? { properties: n.customProps }
+              : {}),
+          })),
+          edges: edges.map((e) => ({
+            id: e.id,
+            source: e.source,
+            target: e.target,
+            label: e.label || undefined,
+            color: e.color,
+            width: e.width,
+            directed: e.directed,
+            style: e.style,
+            ...(Object.keys(e.customProps || {}).length > 0
+              ? { properties: e.customProps }
+              : {}),
+          })),
+        };
+      }
+
+      function loadNetworkData(data) {
+        try {
+          // Validate format
+          if (!data.nodes || !Array.isArray(data.nodes)) {
+            throw new Error("Invalid format: missing nodes array");
+          }
+          if (!data.edges || !Array.isArray(data.edges)) {
+            throw new Error("Invalid format: missing edges array");
+          }
+
+          // Load nodes
+          nodes = data.nodes.map((n) => ({
+            id: n.id || generateId(),
+            label: n.label || "Node",
+            x: n.x !== undefined ? n.x : Math.random() * 400 + 100,
+            y: n.y !== undefined ? n.y : Math.random() * 300 + 100,
+            color: n.color || defaultNodeProps.color,
+            size: n.size || defaultNodeProps.size,
+            shape: n.shape || defaultNodeProps.shape,
+            customProps: n.properties || {},
+          }));
+
+          // Load edges
+          edges = data.edges.map((e) => ({
+            id: e.id || generateId(),
+            source: e.source,
+            target: e.target,
+            label: e.label || "",
+            color: e.color || defaultEdgeProps.color,
+            width: e.width || defaultEdgeProps.width,
+            directed:
+              e.directed !== undefined ? e.directed : defaultEdgeProps.directed,
+            style: e.style || defaultEdgeProps.style,
+            customProps: e.properties || {},
+          }));
+
+          deselectElement();
+          updateElementList();
+          showSuccess(`Loaded ${nodes.length} nodes and ${edges.length} edges`);
+
+          // Center view on loaded data
+          if (nodes.length > 0) {
+            const avgX = nodes.reduce((sum, n) => sum + n.x, 0) / nodes.length;
+            const avgY = nodes.reduce((sum, n) => sum + n.y, 0) / nodes.length;
+            pan.x = canvas.width / 2 - avgX * zoom;
+            pan.y = canvas.height / 2 - avgY * zoom;
+          }
+        } catch (error) {
+          throw error;
+        }
+      }
+
+      function downloadFile(content, filename, mimeType) {
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      // Export JSON
+      document.getElementById("exportJSON").addEventListener("click", () => {
+        const data = getNetworkData();
+        const json = JSON.stringify(data, null, 2);
+        downloadFile(json, "network-diagram.json", "application/json");
+        showSuccess("Exported as JSON");
+      });
+
+      // Export Neo4j Cypher
+      document.getElementById("exportNeo4j").addEventListener("click", () => {
+        let cypher =
+          "// Neo4j Cypher statements generated by Network Diagram Builder\n";
+        cypher += "// Run these statements to create the network in Neo4j\n\n";
+
+        // Create nodes
+        cypher += "// Create nodes\n";
+        nodes.forEach((node) => {
+          const props = {
+            id: node.id,
+            label: node.label,
+            color: node.color,
+            size: node.size,
+            shape: node.shape,
+            ...(node.customProps || {}),
+          };
+          const propsStr = Object.entries(props)
+            .map(([k, v]) => `${k}: ${JSON.stringify(v)}`)
+            .join(", ");
+          cypher += `CREATE (n${sanitizeId(node.id)}:Node {${propsStr}})\n`;
+        });
+
+        cypher += "\n// Create relationships\n";
+        edges.forEach((edge) => {
+          const relType = edge.label
+            ? edge.label.toUpperCase().replace(/[^A-Z0-9_]/g, "_")
+            : "CONNECTED_TO";
+          const props = {
+            id: edge.id,
+            color: edge.color,
+            width: edge.width,
+            style: edge.style,
+            ...(edge.customProps || {}),
+          };
+          const propsStr = Object.entries(props)
+            .map(([k, v]) => `${k}: ${JSON.stringify(v)}`)
+            .join(", ");
+
+          if (edge.directed) {
+            cypher += `CREATE (n${sanitizeId(
+              edge.source
+            )})-[:${relType} {${propsStr}}]->(n${sanitizeId(edge.target)})\n`;
+          } else {
+            cypher += `CREATE (n${sanitizeId(
+              edge.source
+            )})-[:${relType} {${propsStr}}]-(n${sanitizeId(edge.target)})\n`;
+          }
+        });
+
+        downloadFile(cypher, "network-diagram.cypher", "text/plain");
+        showSuccess("Exported as Neo4j Cypher");
+      });
+
+      function sanitizeId(id) {
+        return id.replace(/[^a-zA-Z0-9]/g, "_");
+      }
+
+      // Export NetworkX Python
+      document
+        .getElementById("exportNetworkX")
+        .addEventListener("click", () => {
+          let python =
+            "# NetworkX Python code generated by Network Diagram Builder\n";
+          python += "import networkx as nx\n";
+          python += "import json\n\n";
+
+          const isDirected = edges.some((e) => e.directed);
+          python += `# Create ${
+            isDirected ? "directed" : "undirected"
+          } graph\n`;
+          python += `G = nx.${isDirected ? "DiGraph" : "Graph"}()\n\n`;
+
+          python += "# Add nodes with attributes\n";
+          nodes.forEach((node) => {
+            const attrs = {
+              label: node.label,
+              color: node.color,
+              size: node.size,
+              shape: node.shape,
+              pos: [node.x, node.y],
+              ...(node.customProps || {}),
+            };
+            python += `G.add_node(${JSON.stringify(
+              node.id
+            )}, **${JSON.stringify(attrs)})\n`;
+          });
+
+          python += "\n# Add edges with attributes\n";
+          edges.forEach((edge) => {
+            const attrs = {
+              label: edge.label || null,
+              color: edge.color,
+              width: edge.width,
+              style: edge.style,
+              directed: edge.directed,
+              ...(edge.customProps || {}),
+            };
+            python += `G.add_edge(${JSON.stringify(
+              edge.source
+            )}, ${JSON.stringify(edge.target)}, **${JSON.stringify(attrs)})\n`;
+          });
+
+          python += "\n# Example: Print graph info\n";
+          python += 'print(f"Nodes: {G.number_of_nodes()}")\n';
+          python += 'print(f"Edges: {G.number_of_edges()}")\n';
+          python += "\n# Example: Draw the graph (requires matplotlib)\n";
+          python += "# import matplotlib.pyplot as plt\n";
+          python += '# pos = nx.get_node_attributes(G, "pos")\n';
+          python += "# nx.draw(G, pos, with_labels=True)\n";
+          python += "# plt.show()\n";
+
+          downloadFile(python, "network-diagram.py", "text/x-python");
+          showSuccess("Exported as NetworkX Python");
+        });
+
+      // Export GEXF (Gephi format)
+      document.getElementById("exportGEXF").addEventListener("click", () => {
+        let gexf = '<?xml version="1.0" encoding="UTF-8"?>\n';
+        gexf += '<gexf xmlns="http://www.gexf.net/1.2draft" version="1.2">\n';
+        gexf +=
+          '  <meta lastmodifieddate="' +
+          new Date().toISOString().split("T")[0] +
+          '">\n';
+        gexf += "    <creator>Network Diagram Builder</creator>\n";
+        gexf += "  </meta>\n";
+
+        const isDirected = edges.some((e) => e.directed);
+        gexf += `  <graph defaultedgetype="${
+          isDirected ? "directed" : "undirected"
+        }">\n`;
+
+        // Node attributes
+        gexf += '    <attributes class="node">\n';
+        gexf += '      <attribute id="0" title="label" type="string"/>\n';
+        gexf += '      <attribute id="1" title="color" type="string"/>\n';
+        gexf += '      <attribute id="2" title="size" type="float"/>\n';
+        gexf += '      <attribute id="3" title="shape" type="string"/>\n';
+        gexf += "    </attributes>\n";
+
+        // Edge attributes
+        gexf += '    <attributes class="edge">\n';
+        gexf += '      <attribute id="0" title="label" type="string"/>\n';
+        gexf += '      <attribute id="1" title="color" type="string"/>\n';
+        gexf += '      <attribute id="2" title="width" type="float"/>\n';
+        gexf += '      <attribute id="3" title="style" type="string"/>\n';
+        gexf += "    </attributes>\n";
+
+        // Nodes
+        gexf += "    <nodes>\n";
+        nodes.forEach((node) => {
+          gexf += `      <node id="${escapeXml(node.id)}" label="${escapeXml(
+            node.label
+          )}">\n`;
+          gexf += "        <attvalues>\n";
+          gexf += `          <attvalue for="0" value="${escapeXml(
+            node.label
+          )}"/>\n`;
+          gexf += `          <attvalue for="1" value="${escapeXml(
+            node.color
+          )}"/>\n`;
+          gexf += `          <attvalue for="2" value="${node.size}"/>\n`;
+          gexf += `          <attvalue for="3" value="${escapeXml(
+            node.shape
+          )}"/>\n`;
+          gexf += "        </attvalues>\n";
+          gexf += `        <viz:position x="${node.x}" y="${node.y}" xmlns:viz="http://www.gexf.net/1.2draft/viz"/>\n`;
+          gexf += `        <viz:size value="${node.size}" xmlns:viz="http://www.gexf.net/1.2draft/viz"/>\n`;
+          gexf += `        <viz:color hex="${node.color}" xmlns:viz="http://www.gexf.net/1.2draft/viz"/>\n`;
+          gexf += "      </node>\n";
+        });
+        gexf += "    </nodes>\n";
+
+        // Edges
+        gexf += "    <edges>\n";
+        edges.forEach((edge, i) => {
+          const edgeType = edge.directed ? "directed" : "undirected";
+          gexf += `      <edge id="${escapeXml(edge.id)}" source="${escapeXml(
+            edge.source
+          )}" target="${escapeXml(edge.target)}" type="${edgeType}"${
+            edge.label ? ` label="${escapeXml(edge.label)}"` : ""
+          }>\n`;
+          gexf += "        <attvalues>\n";
+          gexf += `          <attvalue for="0" value="${escapeXml(
+            edge.label || ""
+          )}"/>\n`;
+          gexf += `          <attvalue for="1" value="${escapeXml(
+            edge.color
+          )}"/>\n`;
+          gexf += `          <attvalue for="2" value="${edge.width}"/>\n`;
+          gexf += `          <attvalue for="3" value="${escapeXml(
+            edge.style
+          )}"/>\n`;
+          gexf += "        </attvalues>\n";
+          gexf += "      </edge>\n";
+        });
+        gexf += "    </edges>\n";
+
+        gexf += "  </graph>\n";
+        gexf += "</gexf>\n";
+
+        downloadFile(gexf, "network-diagram.gexf", "application/gexf+xml");
+        showSuccess("Exported as GEXF (Gephi)");
+      });
+
+      // Export GraphML
+      document.getElementById("exportGraphML").addEventListener("click", () => {
+        let graphml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+        graphml += '<graphml xmlns="http://graphml.graphdrawing.org/xmlns"\n';
+        graphml +=
+          '         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n';
+        graphml +=
+          '         xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd">\n';
+
+        // Define node attributes
+        graphml +=
+          '  <key id="label" for="node" attr.name="label" attr.type="string"/>\n';
+        graphml +=
+          '  <key id="color" for="node" attr.name="color" attr.type="string"/>\n';
+        graphml +=
+          '  <key id="size" for="node" attr.name="size" attr.type="double"/>\n';
+        graphml +=
+          '  <key id="shape" for="node" attr.name="shape" attr.type="string"/>\n';
+        graphml +=
+          '  <key id="x" for="node" attr.name="x" attr.type="double"/>\n';
+        graphml +=
+          '  <key id="y" for="node" attr.name="y" attr.type="double"/>\n';
+
+        // Define edge attributes
+        graphml +=
+          '  <key id="elabel" for="edge" attr.name="label" attr.type="string"/>\n';
+        graphml +=
+          '  <key id="ecolor" for="edge" attr.name="color" attr.type="string"/>\n';
+        graphml +=
+          '  <key id="width" for="edge" attr.name="width" attr.type="double"/>\n';
+        graphml +=
+          '  <key id="style" for="edge" attr.name="style" attr.type="string"/>\n';
+        graphml +=
+          '  <key id="directed" for="edge" attr.name="directed" attr.type="boolean"/>\n';
+
+        // Add custom property keys
+        const nodeCustomKeys = new Set();
+        const edgeCustomKeys = new Set();
+        nodes.forEach((n) =>
+          Object.keys(n.customProps || {}).forEach((k) => nodeCustomKeys.add(k))
+        );
+        edges.forEach((e) =>
+          Object.keys(e.customProps || {}).forEach((k) => edgeCustomKeys.add(k))
+        );
+
+        nodeCustomKeys.forEach((key) => {
+          graphml += `  <key id="nc_${escapeXml(
+            key
+          )}" for="node" attr.name="${escapeXml(key)}" attr.type="string"/>\n`;
+        });
+        edgeCustomKeys.forEach((key) => {
+          graphml += `  <key id="ec_${escapeXml(
+            key
+          )}" for="edge" attr.name="${escapeXml(key)}" attr.type="string"/>\n`;
+        });
+
+        const isDirected = edges.some((e) => e.directed);
+        graphml += `  <graph id="G" edgedefault="${
+          isDirected ? "directed" : "undirected"
+        }">\n`;
+
+        // Nodes
+        nodes.forEach((node) => {
+          graphml += `    <node id="${escapeXml(node.id)}">\n`;
+          graphml += `      <data key="label">${escapeXml(
+            node.label
+          )}</data>\n`;
+          graphml += `      <data key="color">${escapeXml(
+            node.color
+          )}</data>\n`;
+          graphml += `      <data key="size">${node.size}</data>\n`;
+          graphml += `      <data key="shape">${escapeXml(
+            node.shape
+          )}</data>\n`;
+          graphml += `      <data key="x">${node.x}</data>\n`;
+          graphml += `      <data key="y">${node.y}</data>\n`;
+          Object.entries(node.customProps || {}).forEach(([k, v]) => {
+            graphml += `      <data key="nc_${escapeXml(k)}">${escapeXml(
+              String(v)
+            )}</data>\n`;
+          });
+          graphml += "    </node>\n";
+        });
+
+        // Edges
+        edges.forEach((edge) => {
+          graphml += `    <edge id="${escapeXml(edge.id)}" source="${escapeXml(
+            edge.source
+          )}" target="${escapeXml(edge.target)}">\n`;
+          graphml += `      <data key="elabel">${escapeXml(
+            edge.label || ""
+          )}</data>\n`;
+          graphml += `      <data key="ecolor">${escapeXml(
+            edge.color
+          )}</data>\n`;
+          graphml += `      <data key="width">${edge.width}</data>\n`;
+          graphml += `      <data key="style">${escapeXml(
+            edge.style
+          )}</data>\n`;
+          graphml += `      <data key="directed">${edge.directed}</data>\n`;
+          Object.entries(edge.customProps || {}).forEach(([k, v]) => {
+            graphml += `      <data key="ec_${escapeXml(k)}">${escapeXml(
+              String(v)
+            )}</data>\n`;
+          });
+          graphml += "    </edge>\n";
+        });
+
+        graphml += "  </graph>\n";
+        graphml += "</graphml>\n";
+
+        downloadFile(
+          graphml,
+          "network-diagram.graphml",
+          "application/graphml+xml"
+        );
+        showSuccess("Exported as GraphML");
+      });
+
+      function escapeXml(str) {
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&apos;");
+      }
+
+      // File import
+      const dropZone = document.getElementById("dropZone");
+      const fileInput = document.getElementById("fileInput");
+
+      dropZone.addEventListener("click", () => fileInput.click());
+
+      dropZone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropZone.classList.add("dragover");
+      });
+
+      dropZone.addEventListener("dragleave", () => {
+        dropZone.classList.remove("dragover");
+      });
+
+      dropZone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropZone.classList.remove("dragover");
+        const file = e.dataTransfer.files[0];
+        if (file) handleFile(file);
+      });
+
+      fileInput.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (file) handleFile(file);
+        fileInput.value = "";
+      });
+
+      function handleFile(file) {
+        if (!file.name.endsWith(".json")) {
+          showError("Please upload a JSON file");
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const data = JSON.parse(e.target.result);
+            loadNetworkData(data);
+          } catch (error) {
+            showError("Failed to parse JSON: " + error.message);
+          }
+        };
+        reader.onerror = () => {
+          showError("Failed to read file");
+        };
+        reader.readAsText(file);
+      }
+
+      // -------------------------
+      // Resize handling
+      // -------------------------
+
+      function resizeCanvas() {
+        const container = canvas.parentElement;
+        const toolbar = container.querySelector(".toolbar");
+        const containerRect = container.getBoundingClientRect();
+
+        canvas.width = containerRect.width;
+        canvas.height = containerRect.height - toolbar.offsetHeight;
+      }
+
+      window.addEventListener("resize", resizeCanvas);
+
+      // -------------------------
+      // Initialization
+      // -------------------------
+
+      resizeCanvas();
+      updateElementList();
+      setMode("addNode");
+      draw();
+    </script>
+  </body>
+</html>
