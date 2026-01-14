@@ -404,12 +404,68 @@
       <h1>Network Diagram Builder</h1>
       <p class="description">
         Create network diagrams by drawing nodes and edges interactively.
-        <span style="margin-left: 16px; font-size: 11px; color: #586069;"><strong>Shortcuts:</strong>
-          <kbd style="background: #f6f8fa; padding: 1px 5px; border-radius: 3px; border: 1px solid #e1e4e8; font-family: monospace; margin-left: 4px;">V</kbd> Select
-          <kbd style="background: #f6f8fa; padding: 1px 5px; border-radius: 3px; border: 1px solid #e1e4e8; font-family: monospace; margin-left: 6px;">N</kbd> Node
-          <kbd style="background: #f6f8fa; padding: 1px 5px; border-radius: 3px; border: 1px solid #e1e4e8; font-family: monospace; margin-left: 6px;">E</kbd> Edge
-          <kbd style="background: #f6f8fa; padding: 1px 5px; border-radius: 3px; border: 1px solid #e1e4e8; font-family: monospace; margin-left: 6px;">Del</kbd> Delete
-          <kbd style="background: #f6f8fa; padding: 1px 5px; border-radius: 3px; border: 1px solid #e1e4e8; font-family: monospace; margin-left: 6px;">Esc</kbd> Deselect
+        <span style="margin-left: 16px; font-size: 11px; color: #586069"
+          ><strong>Shortcuts:</strong>
+          <kbd
+            style="
+              background: #f6f8fa;
+              padding: 1px 5px;
+              border-radius: 3px;
+              border: 1px solid #e1e4e8;
+              font-family: monospace;
+              margin-left: 4px;
+            "
+            >S</kbd
+          >
+          Select
+          <kbd
+            style="
+              background: #f6f8fa;
+              padding: 1px 5px;
+              border-radius: 3px;
+              border: 1px solid #e1e4e8;
+              font-family: monospace;
+              margin-left: 6px;
+            "
+            >N</kbd
+          >
+          Node
+          <kbd
+            style="
+              background: #f6f8fa;
+              padding: 1px 5px;
+              border-radius: 3px;
+              border: 1px solid #e1e4e8;
+              font-family: monospace;
+              margin-left: 6px;
+            "
+            >E</kbd
+          >
+          Edge
+          <kbd
+            style="
+              background: #f6f8fa;
+              padding: 1px 5px;
+              border-radius: 3px;
+              border: 1px solid #e1e4e8;
+              font-family: monospace;
+              margin-left: 6px;
+            "
+            >Del</kbd
+          >
+          Delete
+          <kbd
+            style="
+              background: #f6f8fa;
+              padding: 1px 5px;
+              border-radius: 3px;
+              border: 1px solid #e1e4e8;
+              font-family: monospace;
+              margin-left: 6px;
+            "
+            >Esc</kbd
+          >
+          Deselect
         </span>
       </p>
 
@@ -541,7 +597,6 @@
               </div>
             </div>
           </div>
-
         </div>
       </div>
     </div>
@@ -1539,7 +1594,7 @@
         } else if (e.key === "Escape") {
           deselectElement();
           edgeStartNode = null;
-        } else if (e.key === "v" || e.key === "V") {
+        } else if (e.key === "s" || e.key === "S") {
           setMode("select");
         } else if (e.key === "n" || e.key === "N") {
           setMode("addNode");
