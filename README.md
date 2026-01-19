@@ -41,7 +41,9 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 ### Image
 
 - **[EXIF Data Viewer](exif-viewer.html)** — extract and view EXIF metadata from photos including camera settings, GPS location, and timestamps
+- **[Image Crop Tool](image-crop.html)** — crop images with interactive selection, aspect ratio presets, and precise dimension controls
 - **[Image Resize Tool](image-resize.html)** — resize images by percentage or pixels with precise scale factor control for copying scale factor to other images
+- **[Image Rotate Tool](image-rotate.html)** — rotate images by any angle with fine control, flip horizontally or vertically
 - **[Pixel Coordinates](pixel-coords.html)** — click on images to capture and record pixel coordinates
 
 ### Media
