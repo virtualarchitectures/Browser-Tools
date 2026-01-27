@@ -127,7 +127,6 @@
         width: 100%;
         border-collapse: collapse;
         font-size: 14px;
-        table-layout: fixed;
       }
       .data-table th {
         background: #0366d6;
@@ -142,7 +141,7 @@
       .data-table th .header-cell {
         display: flex;
         align-items: center;
-        min-width: 0;
+        min-width: 50px;
         overflow: hidden;
       }
       .data-table th input {
@@ -161,7 +160,7 @@
           Arial,
           sans-serif;
         outline: none;
-        min-width: 0;
+        min-width: 50px;
         text-overflow: ellipsis;
         overflow: hidden;
       }
@@ -733,6 +732,9 @@
          ========================= */
 
       function buildTableFromData(headers, rows) {
+        // Reset table layout to auto for natural column widths
+        document.getElementById("dataTable").style.tableLayout = "auto";
+
         // Build header row
         let headerHTML = '<th class="delete-row-header"></th>';
         headerHTML += '<th class="row-number-header"></th>';
@@ -906,6 +908,9 @@
       }
 
       function clearAll() {
+        // Reset table layout to auto for natural column widths
+        document.getElementById("dataTable").style.tableLayout = "auto";
+
         headerRow.innerHTML = `
           <th class="delete-row-header"></th>
           <th class="row-number-header"></th>
@@ -1099,12 +1104,31 @@
          ========================= */
 
       let resizing = null;
+      const dataTable = document.getElementById("dataTable");
+
+      function lockColumnWidths() {
+        // Capture current widths of all columns and apply as fixed widths
+        const allThs = headerRow.querySelectorAll("th");
+        allThs.forEach((th) => {
+          const width = th.offsetWidth;
+          th.style.width = width + "px";
+          th.style.minWidth = width + "px";
+        });
+        // Switch to fixed layout
+        dataTable.style.tableLayout = "fixed";
+      }
 
       function initResize(e) {
         const handle = e.target;
         if (!handle.classList.contains("resize-handle")) return;
 
         e.preventDefault();
+
+        // Lock all column widths before resizing starts
+        if (dataTable.style.tableLayout !== "fixed") {
+          lockColumnWidths();
+        }
+
         const th = handle.parentElement;
         const startX = e.pageX;
         const startWidth = th.offsetWidth;
@@ -1120,7 +1144,7 @@
         if (!resizing) return;
 
         const diff = e.pageX - resizing.startX;
-        const newWidth = Math.max(20, resizing.startWidth + diff);
+        const newWidth = Math.max(50, resizing.startWidth + diff);
         resizing.th.style.width = newWidth + "px";
         resizing.th.style.minWidth = newWidth + "px";
       }
