@@ -127,6 +127,7 @@
         width: 100%;
         border-collapse: collapse;
         font-size: 14px;
+        table-layout: fixed;
       }
       .data-table th {
         background: #0366d6;
@@ -136,10 +137,13 @@
         color: #ffffff;
         border: 1px solid #0366d6;
         position: relative;
+        overflow: hidden;
       }
       .data-table th .header-cell {
         display: flex;
         align-items: center;
+        min-width: 0;
+        overflow: hidden;
       }
       .data-table th input {
         flex: 1;
@@ -157,7 +161,9 @@
           Arial,
           sans-serif;
         outline: none;
-        min-width: 80px;
+        min-width: 0;
+        text-overflow: ellipsis;
+        overflow: hidden;
       }
       .data-table th input::placeholder {
         color: rgba(255, 255, 255, 0.7);
@@ -187,10 +193,25 @@
         border-color: rgba(27, 31, 35, 0.15);
         color: #cb2431;
       }
+      .data-table th .resize-handle {
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 5px;
+        cursor: col-resize;
+        background: transparent;
+        z-index: 1;
+      }
+      .data-table th .resize-handle:hover,
+      .data-table th .resize-handle.resizing {
+        background: rgba(255, 255, 255, 0.3);
+      }
       .data-table td {
         padding: 0;
         border: 1px solid #e1e4e8;
         color: #24292e;
+        overflow: hidden;
       }
       .data-table td input {
         width: 100%;
@@ -206,6 +227,8 @@
           Arial,
           sans-serif;
         outline: none;
+        text-overflow: ellipsis;
+        overflow: hidden;
       }
       .data-table td input:focus {
         background: #f0f7ff;
@@ -393,8 +416,8 @@
       <h2>Edit Your Table</h2>
       <div class="info">
         Load a CSV file or create a new table. Click column headers and cells to
-        edit. Use Tab to move between cells. Use the x buttons to delete rows or
-        columns.
+        edit. Use Tab to move between cells. Drag column edges to resize. Use
+        the x buttons to delete rows or columns.
       </div>
       <div class="info">
         This tool works best with small to medium datasets. Performance may slow
@@ -428,6 +451,7 @@
                     x
                   </button>
                 </div>
+                <div class="resize-handle"></div>
               </th>
               <th>
                 <div class="header-cell">
@@ -436,6 +460,7 @@
                     x
                   </button>
                 </div>
+                <div class="resize-handle"></div>
               </th>
               <th>
                 <div class="header-cell">
@@ -444,6 +469,7 @@
                     x
                   </button>
                 </div>
+                <div class="resize-handle"></div>
               </th>
             </tr>
           </thead>
@@ -716,7 +742,7 @@
             .replace(/</g, "&lt;")
             .replace(/>/g, "&gt;")
             .replace(/"/g, "&quot;");
-          headerHTML += `<th><div class="header-cell"><input type="text" value="${escapedHeader}" /><button class="delete-col-btn" title="Delete column">x</button></div></th>`;
+          headerHTML += `<th><div class="header-cell"><input type="text" value="${escapedHeader}" /><button class="delete-col-btn" title="Delete column">x</button></div><div class="resize-handle"></div></th>`;
         });
         headerRow.innerHTML = headerHTML;
 
@@ -771,7 +797,7 @@
         const newColIndex = colCount + 1;
 
         const newTh = document.createElement("th");
-        newTh.innerHTML = `<div class="header-cell"><input type="text" value="Column ${newColIndex}" /><button class="delete-col-btn" title="Delete column">x</button></div>`;
+        newTh.innerHTML = `<div class="header-cell"><input type="text" value="Column ${newColIndex}" /><button class="delete-col-btn" title="Delete column">x</button></div><div class="resize-handle"></div>`;
         headerRow.appendChild(newTh);
 
         const rows = tableBody.querySelectorAll("tr");
@@ -888,18 +914,21 @@
               <input type="text" value="Column 1" />
               <button class="delete-col-btn" title="Delete column">x</button>
             </div>
+            <div class="resize-handle"></div>
           </th>
           <th>
             <div class="header-cell">
               <input type="text" value="Column 2" />
               <button class="delete-col-btn" title="Delete column">x</button>
             </div>
+            <div class="resize-handle"></div>
           </th>
           <th>
             <div class="header-cell">
               <input type="text" value="Column 3" />
               <button class="delete-col-btn" title="Delete column">x</button>
             </div>
+            <div class="resize-handle"></div>
           </th>
         `;
 
@@ -1064,6 +1093,48 @@
             alert("Could not copy: " + err);
           });
       });
+
+      /* =========================
+         Column Resizing
+         ========================= */
+
+      let resizing = null;
+
+      function initResize(e) {
+        const handle = e.target;
+        if (!handle.classList.contains("resize-handle")) return;
+
+        e.preventDefault();
+        const th = handle.parentElement;
+        const startX = e.pageX;
+        const startWidth = th.offsetWidth;
+
+        handle.classList.add("resizing");
+        resizing = { th, startX, startWidth, handle };
+
+        document.addEventListener("mousemove", doResize);
+        document.addEventListener("mouseup", stopResize);
+      }
+
+      function doResize(e) {
+        if (!resizing) return;
+
+        const diff = e.pageX - resizing.startX;
+        const newWidth = Math.max(20, resizing.startWidth + diff);
+        resizing.th.style.width = newWidth + "px";
+        resizing.th.style.minWidth = newWidth + "px";
+      }
+
+      function stopResize() {
+        if (resizing) {
+          resizing.handle.classList.remove("resizing");
+          resizing = null;
+        }
+        document.removeEventListener("mousemove", doResize);
+        document.removeEventListener("mouseup", stopResize);
+      }
+
+      headerRow.addEventListener("mousedown", initResize);
 
       /* =========================
          Initialization
