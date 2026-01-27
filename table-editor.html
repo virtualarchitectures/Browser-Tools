@@ -1,0 +1,1075 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Table Editor</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family:
+          Helvetica,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Arial,
+          sans-serif;
+        line-height: 1.6;
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 20px;
+        color: #24292e;
+        background: #ffffff;
+      }
+      h1 {
+        border-bottom: 1px solid #eaecef;
+        padding-bottom: 0.3em;
+        margin-top: 0;
+        font-size: 32px;
+        font-weight: 600;
+      }
+      .back-link {
+        display: inline-block;
+        margin-bottom: 16px;
+        color: #0366d6;
+        text-decoration: none;
+        font-size: 14px;
+      }
+      .back-link:hover {
+        text-decoration: underline;
+      }
+      .controls {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+      }
+      .btn {
+        background: #fafbfc;
+        color: #24292e;
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+        cursor: pointer;
+        font-size: 14px;
+        line-height: 20px;
+        text-decoration: none;
+        font-family:
+          Helvetica,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Arial,
+          sans-serif;
+      }
+      .btn:hover {
+        background: #f3f4f6;
+      }
+      .btn.primary {
+        background: #0366d6;
+        color: #fff;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+      }
+      .btn.primary:hover {
+        background: #0256c5;
+      }
+      .btn.secondary {
+        background: #fafbfc;
+        color: #24292e;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+      }
+      .btn.secondary:hover {
+        background: #f3f4f6;
+      }
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .btn.secondary:disabled:hover {
+        background: #fafbfc;
+      }
+      .btn.primary:disabled:hover {
+        background: #0366d6;
+      }
+      .btn.danger {
+        background: #fafbfc;
+        color: #cb2431;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+      }
+      .btn.danger:hover {
+        background: #ffeef0;
+      }
+      .panel {
+        background: #f6f8fa;
+        padding: 16px;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+        margin-bottom: 16px;
+      }
+      .panel h2 {
+        margin-top: 0;
+        margin-bottom: 12px;
+        font-size: 20px;
+        font-weight: 600;
+        color: #24292e;
+      }
+      .table-wrapper {
+        background: #ffffff;
+        overflow-x: auto;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+        margin-bottom: 12px;
+      }
+      .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+      .data-table th {
+        background: #0366d6;
+        padding: 0;
+        text-align: left;
+        font-weight: 600;
+        color: #ffffff;
+        border: 1px solid #0366d6;
+        position: relative;
+      }
+      .data-table th .header-cell {
+        display: flex;
+        align-items: center;
+      }
+      .data-table th input {
+        flex: 1;
+        padding: 10px 8px 10px 12px;
+        border: none;
+        background: transparent;
+        color: #ffffff;
+        font-weight: 600;
+        font-size: 14px;
+        font-family:
+          Helvetica,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Arial,
+          sans-serif;
+        outline: none;
+        min-width: 80px;
+      }
+      .data-table th input::placeholder {
+        color: rgba(255, 255, 255, 0.7);
+      }
+      .data-table th input:focus {
+        background: rgba(0, 0, 0, 0.1);
+      }
+      .data-table th .delete-col-btn {
+        background: #fafbfc;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+        border-radius: 4px;
+        color: #586069;
+        cursor: pointer;
+        width: 22px;
+        height: 22px;
+        margin: 4px 6px 4px 4px;
+        font-size: 12px;
+        font-weight: bold;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .data-table th .delete-col-btn:hover {
+        background: #ffeef0;
+        border-color: rgba(27, 31, 35, 0.15);
+        color: #cb2431;
+      }
+      .data-table td {
+        padding: 0;
+        border: 1px solid #e1e4e8;
+        color: #24292e;
+      }
+      .data-table td input {
+        width: 100%;
+        padding: 8px 12px;
+        border: none;
+        background: transparent;
+        font-size: 14px;
+        font-family:
+          Helvetica,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Arial,
+          sans-serif;
+        outline: none;
+      }
+      .data-table td input:focus {
+        background: #f0f7ff;
+      }
+      .data-table tr:hover td:not(.delete-row-cell) {
+        background: #f6f8fa;
+      }
+      .data-table .row-number {
+        background: #f6f8fa;
+        color: #586069;
+        font-size: 12px;
+        text-align: center;
+        width: 40px;
+        min-width: 40px;
+        padding: 8px 4px;
+        user-select: none;
+      }
+      .data-table th.row-number-header {
+        background: #f6f8fa;
+        width: 40px;
+        min-width: 40px;
+        border-color: #e1e4e8;
+      }
+      .data-table th.delete-row-header {
+        background: #f6f8fa;
+        width: 36px;
+        min-width: 36px;
+        border-color: #e1e4e8;
+      }
+      .data-table .delete-row-cell {
+        background: #f6f8fa;
+        width: 36px;
+        min-width: 36px;
+        padding: 0;
+        text-align: center;
+        border-color: #e1e4e8;
+      }
+      .data-table .delete-row-btn {
+        background: #fafbfc;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+        border-radius: 4px;
+        color: #586069;
+        cursor: pointer;
+        width: 22px;
+        height: 22px;
+        font-size: 12px;
+        font-weight: bold;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .data-table .delete-row-btn:hover {
+        background: #ffeef0;
+        border-color: rgba(27, 31, 35, 0.15);
+        color: #cb2431;
+      }
+      .info {
+        font-size: 13px;
+        color: #586069;
+        margin-bottom: 12px;
+      }
+      .export-section {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .export-options {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .export-buttons {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .export-options label {
+        font-size: 14px;
+        color: #24292e;
+      }
+      .export-options select {
+        padding: 6px 12px;
+        font-size: 14px;
+        font-family:
+          Helvetica,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Arial,
+          sans-serif;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        background: #ffffff;
+        color: #24292e;
+      }
+      .export-options select:focus {
+        outline: none;
+        border-color: #0366d6;
+      }
+      .checkbox-label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 14px;
+        color: #24292e;
+        cursor: pointer;
+        user-select: none;
+      }
+      .checkbox-label input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+      }
+      .output-panel {
+        background: #ffffff;
+        padding: 12px;
+        overflow-x: auto;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+        font-family:
+          "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 14px;
+        color: #24292e;
+        margin-top: 12px;
+        min-height: 150px;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+      }
+      .empty-state {
+        color: #586069;
+        font-style: italic;
+      }
+      .status {
+        font-size: 13px;
+        color: #586069;
+        margin-top: 8px;
+      }
+      .keyboard-hint {
+        font-size: 12px;
+        color: #586069;
+        margin-top: 8px;
+      }
+      kbd {
+        display: inline-block;
+        padding: 2px 5px;
+        font-family:
+          "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 11px;
+        line-height: 1.4;
+        color: #24292e;
+        background: #fafbfc;
+        border: 1px solid #d1d5da;
+        border-radius: 3px;
+        box-shadow: inset 0 -1px 0 #d1d5da;
+      }
+      input[type="file"] {
+        display: none;
+      }
+      label.btn {
+        display: inline-block;
+        margin: 0;
+      }
+      .control-group {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .separator {
+        width: 1px;
+        height: 24px;
+        background: #e1e4e8;
+        margin: 0 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <a href="index.html" class="back-link">← Back to Browser Tools</a>
+
+    <h1>Table Editor</h1>
+
+    <div class="panel">
+      <h2>Edit Your Table</h2>
+      <div class="info">
+        Load a CSV file or create a new table. Click column headers and cells to
+        edit. Use Tab to move between cells. Use the x buttons to delete rows or
+        columns.
+      </div>
+      <div class="info">
+        This tool works best with small to medium datasets. Performance may slow
+        with more than a few thousand rows or many columns. For larger datasets,
+        disable live preview and use the Refresh Preview button.
+      </div>
+      <div class="controls">
+        <div class="control-group">
+          <label for="fileInput" class="btn primary">Load CSV</label>
+          <input type="file" id="fileInput" accept=".csv,text/csv" />
+        </div>
+        <div class="separator"></div>
+        <div class="control-group">
+          <button class="btn secondary" id="addRowBtn">Add Row</button>
+          <button class="btn secondary" id="addColBtn">Add Column</button>
+        </div>
+        <div class="separator"></div>
+        <button class="btn danger" id="clearBtn">Clear All</button>
+      </div>
+      <div class="status" id="status">3 columns, 3 rows</div>
+      <div class="table-wrapper">
+        <table class="data-table" id="dataTable">
+          <thead>
+            <tr id="headerRow">
+              <th class="delete-row-header"></th>
+              <th class="row-number-header"></th>
+              <th>
+                <div class="header-cell">
+                  <input type="text" value="Column 1" />
+                  <button class="delete-col-btn" title="Delete column">
+                    x
+                  </button>
+                </div>
+              </th>
+              <th>
+                <div class="header-cell">
+                  <input type="text" value="Column 2" />
+                  <button class="delete-col-btn" title="Delete column">
+                    x
+                  </button>
+                </div>
+              </th>
+              <th>
+                <div class="header-cell">
+                  <input type="text" value="Column 3" />
+                  <button class="delete-col-btn" title="Delete column">
+                    x
+                  </button>
+                </div>
+              </th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr>
+              <td class="delete-row-cell">
+                <button class="delete-row-btn" title="Delete row">x</button>
+              </td>
+              <td class="row-number">1</td>
+              <td><input type="text" value="" /></td>
+              <td><input type="text" value="" /></td>
+              <td><input type="text" value="" /></td>
+            </tr>
+            <tr>
+              <td class="delete-row-cell">
+                <button class="delete-row-btn" title="Delete row">x</button>
+              </td>
+              <td class="row-number">2</td>
+              <td><input type="text" value="" /></td>
+              <td><input type="text" value="" /></td>
+              <td><input type="text" value="" /></td>
+            </tr>
+            <tr>
+              <td class="delete-row-cell">
+                <button class="delete-row-btn" title="Delete row">x</button>
+              </td>
+              <td class="row-number">3</td>
+              <td><input type="text" value="" /></td>
+              <td><input type="text" value="" /></td>
+              <td><input type="text" value="" /></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="keyboard-hint">
+        <kbd>Tab</kbd> to move forward, <kbd>Shift</kbd>+<kbd>Tab</kbd> to move
+        back, <kbd>Enter</kbd> to add a new row at the end
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Export</h2>
+      <div class="export-section">
+        <div class="export-options">
+          <label for="formatSelect">Format:</label>
+          <select id="formatSelect">
+            <option value="csv">CSV</option>
+            <option value="json">JSON</option>
+            <option value="jsonlines">JSON Lines</option>
+          </select>
+          <button class="btn secondary" id="refreshPreviewBtn">
+            Refresh Preview
+          </button>
+          <label class="checkbox-label">
+            <input type="checkbox" id="livePreviewToggle" />
+            Enable live preview
+          </label>
+        </div>
+        <div class="export-buttons">
+          <button class="btn primary" id="downloadBtn">Download</button>
+          <button class="btn primary" id="copyBtn">Copy to Clipboard</button>
+        </div>
+      </div>
+      <div class="output-panel" id="outputPanel">
+        <span class="empty-state">Output preview will appear here</span>
+      </div>
+    </div>
+
+    <script>
+      /* =========================
+         State and DOM References
+         ========================= */
+
+      const headerRow = document.getElementById("headerRow");
+      const tableBody = document.getElementById("tableBody");
+      const fileInput = document.getElementById("fileInput");
+      const addRowBtn = document.getElementById("addRowBtn");
+      const addColBtn = document.getElementById("addColBtn");
+      const clearBtn = document.getElementById("clearBtn");
+      const downloadBtn = document.getElementById("downloadBtn");
+      const copyBtn = document.getElementById("copyBtn");
+      const formatSelect = document.getElementById("formatSelect");
+      const livePreviewToggle = document.getElementById("livePreviewToggle");
+      const refreshPreviewBtn = document.getElementById("refreshPreviewBtn");
+      const outputPanel = document.getElementById("outputPanel");
+      const status = document.getElementById("status");
+
+      /* =========================
+         CSV Parsing
+         ========================= */
+
+      function parseCSV(text) {
+        const lines = [];
+        let currentLine = [];
+        let currentField = "";
+        let insideQuotes = false;
+
+        for (let i = 0; i < text.length; i++) {
+          const char = text[i];
+          const nextChar = text[i + 1];
+
+          if (char === '"') {
+            if (insideQuotes && nextChar === '"') {
+              currentField += '"';
+              i++;
+            } else {
+              insideQuotes = !insideQuotes;
+            }
+          } else if (char === "," && !insideQuotes) {
+            currentLine.push(currentField);
+            currentField = "";
+          } else if ((char === "\n" || char === "\r") && !insideQuotes) {
+            if (char === "\r" && nextChar === "\n") {
+              i++;
+            }
+            if (currentField || currentLine.length > 0) {
+              currentLine.push(currentField);
+              if (currentLine.some((field) => field.trim() !== "")) {
+                lines.push(currentLine);
+              }
+              currentLine = [];
+              currentField = "";
+            }
+          } else {
+            currentField += char;
+          }
+        }
+
+        if (currentField || currentLine.length > 0) {
+          currentLine.push(currentField);
+          if (currentLine.some((field) => field.trim() !== "")) {
+            lines.push(currentLine);
+          }
+        }
+
+        return lines;
+      }
+
+      /* =========================
+         Utility Functions
+         ========================= */
+
+      function getColumnCount() {
+        const headerInputs = headerRow.querySelectorAll("th input");
+        return headerInputs.length;
+      }
+
+      function getRowCount() {
+        return tableBody.querySelectorAll("tr").length;
+      }
+
+      function updateStatus() {
+        const cols = getColumnCount();
+        const rows = getRowCount();
+        status.textContent = `${cols} column${cols !== 1 ? "s" : ""}, ${rows} row${rows !== 1 ? "s" : ""}`;
+      }
+
+      function updateRowNumbers() {
+        const rows = tableBody.querySelectorAll("tr");
+        rows.forEach((row, index) => {
+          const rowNum = row.querySelector(".row-number");
+          if (rowNum) {
+            rowNum.textContent = index + 1;
+          }
+        });
+      }
+
+      function getTableData() {
+        const headers = [];
+        const headerInputs = headerRow.querySelectorAll("th input");
+        headerInputs.forEach((input) => {
+          headers.push(input.value || "");
+        });
+
+        const rows = [];
+        const bodyRows = tableBody.querySelectorAll("tr");
+        bodyRows.forEach((row) => {
+          const rowData = [];
+          const cells = row.querySelectorAll(
+            "td:not(.row-number):not(.delete-row-cell) input",
+          );
+          cells.forEach((input) => {
+            rowData.push(input.value || "");
+          });
+          rows.push(rowData);
+        });
+
+        return { headers, rows };
+      }
+
+      function escapeCSV(value) {
+        const str = String(value);
+        if (str.includes(",") || str.includes('"') || str.includes("\n")) {
+          return '"' + str.replace(/"/g, '""') + '"';
+        }
+        return str;
+      }
+
+      function formatAsCSV(data) {
+        const lines = [];
+        lines.push(data.headers.map(escapeCSV).join(","));
+        data.rows.forEach((row) => {
+          lines.push(row.map(escapeCSV).join(","));
+        });
+        return lines.join("\n");
+      }
+
+      function formatAsJSON(data) {
+        const result = data.rows.map((row) => {
+          const obj = {};
+          data.headers.forEach((header, index) => {
+            obj[header || `column${index + 1}`] = row[index] || "";
+          });
+          return obj;
+        });
+        return JSON.stringify(result, null, 2);
+      }
+
+      function formatAsJSONLines(data) {
+        const lines = data.rows.map((row) => {
+          const obj = {};
+          data.headers.forEach((header, index) => {
+            obj[header || `column${index + 1}`] = row[index] || "";
+          });
+          return JSON.stringify(obj);
+        });
+        return lines.join("\n");
+      }
+
+      function getFormattedOutput() {
+        const data = getTableData();
+        const format = formatSelect.value;
+
+        switch (format) {
+          case "csv":
+            return formatAsCSV(data);
+          case "json":
+            return formatAsJSON(data);
+          case "jsonlines":
+            return formatAsJSONLines(data);
+          default:
+            return "";
+        }
+      }
+
+      function updatePreview(force = false) {
+        if (!force && !livePreviewToggle.checked) {
+          return;
+        }
+        const output = getFormattedOutput();
+        if (output) {
+          outputPanel.textContent = output;
+        } else {
+          outputPanel.innerHTML =
+            '<span class="empty-state">No data to export</span>';
+        }
+      }
+
+      /* =========================
+         Table Manipulation
+         ========================= */
+
+      function buildTableFromData(headers, rows) {
+        // Build header row
+        let headerHTML = '<th class="delete-row-header"></th>';
+        headerHTML += '<th class="row-number-header"></th>';
+        headers.forEach((header) => {
+          const escapedHeader = header
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;");
+          headerHTML += `<th><div class="header-cell"><input type="text" value="${escapedHeader}" /><button class="delete-col-btn" title="Delete column">x</button></div></th>`;
+        });
+        headerRow.innerHTML = headerHTML;
+
+        // Build body rows
+        let bodyHTML = "";
+        rows.forEach((row, rowIndex) => {
+          bodyHTML += "<tr>";
+          bodyHTML +=
+            '<td class="delete-row-cell"><button class="delete-row-btn" title="Delete row">x</button></td>';
+          bodyHTML += `<td class="row-number">${rowIndex + 1}</td>`;
+          row.forEach((cell) => {
+            const escapedCell = cell
+              .replace(/&/g, "&amp;")
+              .replace(/</g, "&lt;")
+              .replace(/>/g, "&gt;")
+              .replace(/"/g, "&quot;");
+            bodyHTML += `<td><input type="text" value="${escapedCell}" /></td>`;
+          });
+          // Pad with empty cells if row is shorter than headers
+          for (let i = row.length; i < headers.length; i++) {
+            bodyHTML += '<td><input type="text" value="" /></td>';
+          }
+          bodyHTML += "</tr>";
+        });
+        tableBody.innerHTML = bodyHTML;
+
+        updateStatus();
+        updatePreview();
+      }
+
+      function loadCSV(text) {
+        const lines = parseCSV(text);
+
+        if (lines.length === 0) {
+          alert("CSV file appears to be empty");
+          return;
+        }
+
+        const headers = lines[0];
+        const rows = lines.slice(1);
+
+        // If no data rows, create one empty row
+        if (rows.length === 0) {
+          rows.push(headers.map(() => ""));
+        }
+
+        buildTableFromData(headers, rows);
+      }
+
+      function addColumn() {
+        const colCount = getColumnCount();
+        const newColIndex = colCount + 1;
+
+        const newTh = document.createElement("th");
+        newTh.innerHTML = `<div class="header-cell"><input type="text" value="Column ${newColIndex}" /><button class="delete-col-btn" title="Delete column">x</button></div>`;
+        headerRow.appendChild(newTh);
+
+        const rows = tableBody.querySelectorAll("tr");
+        rows.forEach((row) => {
+          const newTd = document.createElement("td");
+          newTd.innerHTML = '<input type="text" value="" />';
+          row.appendChild(newTd);
+        });
+
+        updateStatus();
+        updatePreview();
+      }
+
+      function addRow() {
+        const colCount = getColumnCount();
+        const newRow = document.createElement("tr");
+
+        // Add delete button cell
+        const deleteCell = document.createElement("td");
+        deleteCell.className = "delete-row-cell";
+        deleteCell.innerHTML =
+          '<button class="delete-row-btn" title="Delete row">x</button>';
+        newRow.appendChild(deleteCell);
+
+        // Add row number cell
+        const rowNumTd = document.createElement("td");
+        rowNumTd.className = "row-number";
+        newRow.appendChild(rowNumTd);
+
+        // Add data cells
+        for (let i = 0; i < colCount; i++) {
+          const td = document.createElement("td");
+          td.innerHTML = '<input type="text" value="" />';
+          newRow.appendChild(td);
+        }
+
+        tableBody.appendChild(newRow);
+        updateRowNumbers();
+        updateStatus();
+        updatePreview();
+
+        const firstInput = newRow.querySelector(
+          "td:not(.row-number):not(.delete-row-cell) input",
+        );
+        if (firstInput) {
+          firstInput.focus();
+        }
+      }
+
+      function deleteRow(rowElement) {
+        if (getRowCount() <= 1) {
+          // Don't delete last row, just clear it
+          const inputs = rowElement.querySelectorAll(
+            "td:not(.row-number):not(.delete-row-cell) input",
+          );
+          inputs.forEach((input) => (input.value = ""));
+        } else {
+          rowElement.remove();
+          updateRowNumbers();
+        }
+        updateStatus();
+        updatePreview();
+      }
+
+      function deleteColumn(colIndex) {
+        const colCount = getColumnCount();
+
+        if (colCount <= 1) {
+          // Don't delete last column, just clear it
+          const headerInputs = headerRow.querySelectorAll("th input");
+          if (headerInputs[0]) {
+            headerInputs[0].value = "Column 1";
+          }
+          const rows = tableBody.querySelectorAll("tr");
+          rows.forEach((row) => {
+            const cells = row.querySelectorAll(
+              "td:not(.row-number):not(.delete-row-cell) input",
+            );
+            if (cells[0]) {
+              cells[0].value = "";
+            }
+          });
+        } else {
+          // Remove header (skip delete-row-header and row-number-header)
+          const headerThs = headerRow.querySelectorAll(
+            "th:not(.delete-row-header):not(.row-number-header)",
+          );
+          if (headerThs[colIndex]) {
+            headerThs[colIndex].remove();
+          }
+
+          // Remove cell from each row
+          const rows = tableBody.querySelectorAll("tr");
+          rows.forEach((row) => {
+            const cells = row.querySelectorAll(
+              "td:not(.row-number):not(.delete-row-cell)",
+            );
+            if (cells[colIndex]) {
+              cells[colIndex].remove();
+            }
+          });
+        }
+
+        updateStatus();
+        updatePreview();
+      }
+
+      function clearAll() {
+        headerRow.innerHTML = `
+          <th class="delete-row-header"></th>
+          <th class="row-number-header"></th>
+          <th>
+            <div class="header-cell">
+              <input type="text" value="Column 1" />
+              <button class="delete-col-btn" title="Delete column">x</button>
+            </div>
+          </th>
+          <th>
+            <div class="header-cell">
+              <input type="text" value="Column 2" />
+              <button class="delete-col-btn" title="Delete column">x</button>
+            </div>
+          </th>
+          <th>
+            <div class="header-cell">
+              <input type="text" value="Column 3" />
+              <button class="delete-col-btn" title="Delete column">x</button>
+            </div>
+          </th>
+        `;
+
+        tableBody.innerHTML = `
+          <tr>
+            <td class="delete-row-cell"><button class="delete-row-btn" title="Delete row">x</button></td>
+            <td class="row-number">1</td>
+            <td><input type="text" value="" /></td>
+            <td><input type="text" value="" /></td>
+            <td><input type="text" value="" /></td>
+          </tr>
+          <tr>
+            <td class="delete-row-cell"><button class="delete-row-btn" title="Delete row">x</button></td>
+            <td class="row-number">2</td>
+            <td><input type="text" value="" /></td>
+            <td><input type="text" value="" /></td>
+            <td><input type="text" value="" /></td>
+          </tr>
+          <tr>
+            <td class="delete-row-cell"><button class="delete-row-btn" title="Delete row">x</button></td>
+            <td class="row-number">3</td>
+            <td><input type="text" value="" /></td>
+            <td><input type="text" value="" /></td>
+            <td><input type="text" value="" /></td>
+          </tr>
+        `;
+
+        fileInput.value = "";
+        updateStatus();
+        updatePreview();
+      }
+
+      /* =========================
+         Event Handlers
+         ========================= */
+
+      // File input handler
+      fileInput.addEventListener("change", () => {
+        const file = fileInput.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          loadCSV(e.target.result);
+        };
+        reader.onerror = () => {
+          alert("Error reading file");
+        };
+        reader.readAsText(file);
+      });
+
+      addRowBtn.addEventListener("click", addRow);
+      addColBtn.addEventListener("click", addColumn);
+
+      // Clear All with confirmation
+      clearBtn.addEventListener("click", () => {
+        if (confirm("Are you sure you want to clear all data?")) {
+          clearAll();
+        }
+      });
+
+      // Delete row button click with confirmation
+      tableBody.addEventListener("click", (e) => {
+        if (e.target.classList.contains("delete-row-btn")) {
+          const row = e.target.closest("tr");
+          if (row) {
+            if (confirm("Are you sure you want to delete this row?")) {
+              deleteRow(row);
+            }
+          }
+        }
+      });
+
+      // Delete column button click with confirmation
+      headerRow.addEventListener("click", (e) => {
+        if (e.target.classList.contains("delete-col-btn")) {
+          const th = e.target.closest("th");
+          if (th) {
+            const allHeaders = headerRow.querySelectorAll(
+              "th:not(.delete-row-header):not(.row-number-header)",
+            );
+            const colIndex = Array.from(allHeaders).indexOf(th);
+            if (colIndex !== -1) {
+              if (confirm("Are you sure you want to delete this column?")) {
+                deleteColumn(colIndex);
+              }
+            }
+          }
+        }
+      });
+
+      document
+        .getElementById("dataTable")
+        .addEventListener("input", () => updatePreview());
+
+      formatSelect.addEventListener("change", () => updatePreview(true));
+
+      // Refresh preview button
+      refreshPreviewBtn.addEventListener("click", () => updatePreview(true));
+
+      // Live preview toggle
+      livePreviewToggle.addEventListener("change", () => {
+        if (livePreviewToggle.checked) {
+          updatePreview(true);
+        }
+      });
+
+      document.getElementById("dataTable").addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          addRow();
+        }
+      });
+
+      downloadBtn.addEventListener("click", () => {
+        const output = getFormattedOutput();
+        if (!output) return;
+
+        const format = formatSelect.value;
+        let mimeType, extension;
+
+        switch (format) {
+          case "csv":
+            mimeType = "text/csv";
+            extension = "csv";
+            break;
+          case "json":
+            mimeType = "application/json";
+            extension = "json";
+            break;
+          case "jsonlines":
+            mimeType = "application/x-ndjson";
+            extension = "jsonl";
+            break;
+        }
+
+        const blob = new Blob([output], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `table.${extension}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      });
+
+      copyBtn.addEventListener("click", () => {
+        const output = getFormattedOutput();
+        if (!output) return;
+
+        navigator.clipboard
+          .writeText(output)
+          .then(() => {
+            const originalText = copyBtn.textContent;
+            copyBtn.textContent = "Copied!";
+            setTimeout(() => {
+              copyBtn.textContent = originalText;
+            }, 2000);
+          })
+          .catch((err) => {
+            alert("Could not copy: " + err);
+          });
+      });
+
+      /* =========================
+         Initialization
+         ========================= */
+
+      updatePreview();
+    </script>
+  </body>
+</html>
