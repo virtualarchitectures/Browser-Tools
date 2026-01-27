@@ -21,6 +21,7 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 
 - **[CSV to JSON Converter](csv-to-json.html)** — convert CSV files to JSON format with support for dot notation parsing, multiple output formats (JSON Array, JSON Lines), and table preview
 - **[JSON to CSV Converter](json-to-csv.html)** — convert JSON files to CSV format with support for nested objects, array handling, and table preview
+- **[Table Editor](table-editor.html)** — create tables or load existing CSV files for editing, export to CSV, JSON, or JSON Lines format
 
 ### Digital Forensics
 
