@@ -64,6 +64,7 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 
 ### Natural Language Processing (NLP)
 
+- **[AI Writing Detector](ai-writing-detector.html)** — analyze text for patterns commonly associated with LLM-generated content including AI vocabulary, significance claims, promotional language, weasel words, structural patterns, punctuation analysis, and LLM artifacts
 - **[Concept Analysis](concept-analysis.html)** — extract sentences containing specific concepts or phrases from text and automatically categorize results as definitions, distinctions, or explanations using NLP and RegEx
 - **[Named Entity Recognition](named-entity-recognition.html)** — extract and identify named entities from text including people, places and organisations using natural language processing
 - **[Sentiment Analysis](sentiment-analysis.html)** — analyze sentiment in CSV text columns using AFINN lexicon with configurable metrics (score, comparative, classification, word counts, tokens) and summary statistics
