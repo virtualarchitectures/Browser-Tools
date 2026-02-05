@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Writing Detector - Browser Tools</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Arial, sans-serif;
+        line-height: 1.6;
+        color: #24292e;
+        background: #ffffff;
+        padding: 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      h1 {
+        font-size: 32px;
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: #24292e;
+      }
+      .back-link {
+        display: inline-block;
+        margin-bottom: 16px;
+        color: #0366d6;
+        text-decoration: none;
+        font-size: 14px;
+      }
+      .back-link:hover {
+        text-decoration: underline;
+      }
+      .instruction {
+        font-size: 14px;
+        color: #586069;
+        margin-bottom: 24px;
+        padding: 12px;
+        background: #f6f8fa;
+        border-radius: 6px;
+        border-left: 3px solid #0366d6;
+        line-height: 1.5;
+      }
+      .instruction a {
+        color: #0366d6;
+        text-decoration: none;
+      }
+      .instruction a:hover {
+        text-decoration: underline;
+      }
+      .panels-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+      @media (max-width: 768px) {
+        .panels-container {
+          grid-template-columns: 1fr;
+        }
+      }
+      .controls {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      input[type="file"] {
+        display: none;
+      }
+      .btn {
+        background: #fafbfc;
+        color: #24292e;
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+        cursor: pointer;
+        font-size: 14px;
+        line-height: 20px;
+        font-family: inherit;
+        transition: background 0.2s;
+        white-space: nowrap;
+      }
+      .btn:hover {
+        background: #f3f4f6;
+      }
+      .btn.primary {
+        background: #0366d6;
+        color: #fff;
+        border-color: rgba(27, 31, 35, 0.15);
+      }
+      .btn.primary:hover {
+        background: #0256c5;
+      }
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .btn.primary:disabled:hover {
+        background: #0366d6;
+      }
+      label.btn {
+        display: inline-block;
+      }
+      #file-name {
+        font-size: 13px;
+        color: #586069;
+      }
+
+      /* Panel structure */
+      .panel {
+        background: #fff;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        margin-bottom: 16px;
+        overflow: hidden;
+      }
+      .panel h2 {
+        font-size: 16px;
+        font-weight: 600;
+        padding: 12px 16px;
+        background: #f6f8fa;
+        border-bottom: 1px solid #e1e4e8;
+        margin: 0;
+        cursor: pointer;
+        user-select: none;
+      }
+      .panel h2::before {
+        content: "\25BC";
+        display: inline-block;
+        margin-right: 8px;
+        transition: transform 0.2s;
+      }
+      .panel h2.collapsed::before {
+        transform: rotate(-90deg);
+      }
+      .panel-content {
+        padding: 16px;
+      }
+      .panel-content.collapsed {
+        display: none;
+      }
+
+      /* Text input section */
+      .text-input-section {
+        margin-bottom: 16px;
+      }
+      .text-input-section label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 6px;
+        font-size: 14px;
+      }
+      .text-input-section textarea {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        font-size: 14px;
+        font-family: inherit;
+        background: #fff;
+        resize: vertical;
+        min-height: 150px;
+        transition: border-color 0.2s;
+      }
+      .text-input-section textarea:focus {
+        outline: none;
+        border-color: #0366d6;
+        box-shadow: 0 0 0 3px rgba(3, 102, 214, 0.1);
+      }
+      .word-count {
+        font-size: 13px;
+        color: #586069;
+      }
+      .action-buttons {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        margin-top: 16px;
+      }
+
+      /* Results */
+      .no-results-msg {
+        color: #586069;
+        font-style: italic;
+        padding: 40px 20px;
+        text-align: center;
+      }
+      .summary-box {
+        background: #f6f8fa;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        padding: 16px;
+        margin-bottom: 16px;
+      }
+      .summary-title {
+        font-weight: 600;
+        font-size: 16px;
+        margin-bottom: 8px;
+      }
+      .summary-assessment {
+        font-size: 14px;
+        margin-bottom: 12px;
+        padding: 8px 12px;
+        border-radius: 4px;
+        font-weight: 500;
+      }
+      .assessment-low {
+        background: #dcffe4;
+        color: #165c26;
+      }
+      .assessment-moderate {
+        background: #fff5b1;
+        color: #735c0f;
+      }
+      .assessment-high {
+        background: #ffdce0;
+        color: #86181d;
+      }
+      .summary-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 8px;
+        font-size: 13px;
+      }
+      .stat-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 4px 8px;
+        border-radius: 4px;
+        background: #fff;
+        border: 1px solid #e1e4e8;
+      }
+      .stat-label {
+        color: #586069;
+      }
+      .stat-count {
+        font-weight: 600;
+      }
+
+      /* View toggle */
+      .view-toggle {
+        display: flex;
+        gap: 0;
+        margin-bottom: 16px;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        overflow: hidden;
+      }
+      .view-toggle button {
+        flex: 1;
+        padding: 8px 12px;
+        border: none;
+        background: #fafbfc;
+        cursor: pointer;
+        font-size: 13px;
+        font-family: inherit;
+        color: #24292e;
+        border-right: 1px solid #e1e4e8;
+        transition: background 0.2s;
+      }
+      .view-toggle button:last-child {
+        border-right: none;
+      }
+      .view-toggle button.active {
+        background: #0366d6;
+        color: #fff;
+      }
+      .view-toggle button:hover:not(.active) {
+        background: #f3f4f6;
+      }
+
+      /* Category sections */
+      .category-section {
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        margin-bottom: 8px;
+        overflow: hidden;
+      }
+      .category-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 14px;
+        cursor: pointer;
+        user-select: none;
+        font-size: 14px;
+        font-weight: 500;
+        background: #fafbfc;
+        border-bottom: 1px solid transparent;
+        transition: background 0.2s;
+      }
+      .category-header:hover {
+        background: #f3f4f6;
+      }
+      .category-header.open {
+        border-bottom-color: #e1e4e8;
+      }
+      .category-badge {
+        background: #e1e4e8;
+        color: #24292e;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 600;
+        min-width: 24px;
+        text-align: center;
+      }
+      .category-badge.has-matches {
+        background: #0366d6;
+        color: #fff;
+      }
+      .category-body {
+        display: none;
+        padding: 12px 14px;
+        font-size: 13px;
+      }
+      .category-body.open {
+        display: block;
+      }
+      .match-item {
+        padding: 6px 0;
+        border-bottom: 1px solid #f0f0f0;
+        line-height: 1.5;
+      }
+      .match-item:last-child {
+        border-bottom: none;
+      }
+      .match-context {
+        color: #586069;
+        word-break: break-word;
+      }
+      .match-label {
+        font-size: 11px;
+        color: #586069;
+        font-style: italic;
+        margin-top: 2px;
+      }
+
+      /* Highlighted text view */
+      .highlighted-text-view {
+        background: #fff;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        padding: 16px;
+        font-size: 14px;
+        line-height: 1.8;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        max-height: 600px;
+        overflow-y: auto;
+      }
+
+      /* Category highlight colors */
+      .hl-cat1 {
+        background: #fff3cd;
+        border-bottom: 2px solid #e8a100;
+      }
+      .hl-cat2 {
+        background: #fde2e2;
+        border-bottom: 2px solid #d73a49;
+      }
+      .hl-cat3 {
+        background: #ffe0f0;
+        border-bottom: 2px solid #d63384;
+      }
+      .hl-cat4 {
+        background: #e8d5f5;
+        border-bottom: 2px solid #8b5cf6;
+      }
+      .hl-cat5 {
+        background: #dbeafe;
+        border-bottom: 2px solid #3b82f6;
+      }
+      .hl-cat6 {
+        background: #fef9c3;
+        border-bottom: 2px solid #ca8a04;
+      }
+      .hl-cat7 {
+        background: #fee2e2;
+        border-bottom: 2px solid #dc2626;
+        font-weight: 600;
+      }
+
+      /* Legend */
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 12px;
+        font-size: 12px;
+      }
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .legend-swatch {
+        width: 14px;
+        height: 14px;
+        border-radius: 3px;
+        display: inline-block;
+      }
+      .swatch-cat1 {
+        background: #fff3cd;
+        border: 1px solid #e8a100;
+      }
+      .swatch-cat2 {
+        background: #fde2e2;
+        border: 1px solid #d73a49;
+      }
+      .swatch-cat3 {
+        background: #ffe0f0;
+        border: 1px solid #d63384;
+      }
+      .swatch-cat4 {
+        background: #e8d5f5;
+        border: 1px solid #8b5cf6;
+      }
+      .swatch-cat5 {
+        background: #dbeafe;
+        border: 1px solid #3b82f6;
+      }
+      .swatch-cat6 {
+        background: #fef9c3;
+        border: 1px solid #ca8a04;
+      }
+      .swatch-cat7 {
+        background: #fee2e2;
+        border: 1px solid #dc2626;
+      }
+      .arrow {
+        display: inline-block;
+        transition: transform 0.2s;
+        font-size: 12px;
+        margin-right: 6px;
+      }
+      .arrow.open {
+        transform: rotate(90deg);
+      }
+    </style>
+  </head>
+  <body>
+    <a href="index.html" class="back-link">&larr; Back to Browser Tools</a>
+
+    <h1>AI Writing Detector</h1>
+
+    <div class="instruction">
+      <strong>Important caveat:</strong> This is a heuristic pattern-matching
+      tool, not a definitive AI detector. Individual matches may occur in human
+      writing. The tool identifies <em>patterns</em> that, taken together, may
+      suggest AI generation. Based on indicators documented in Wikipedia's
+      <a href="https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing"
+        target="_blank" rel="noopener noreferrer">"Signs of AI writing"</a>
+      guide.
+    </div>
+
+    <div class="panels-container">
+      <!-- Input Section -->
+      <div class="panel">
+        <h2>Input Text</h2>
+        <div class="panel-content">
+          <div class="controls" style="margin-bottom: 12px">
+            <label for="file-input" class="btn primary">Load File</label>
+            <input
+              type="file"
+              id="file-input"
+              accept=".txt,.md,.html,.htm,.xml,.csv,.tsv,.json,.rtf,.log,.tex,.rst,.adoc,.org"
+            />
+            <span id="file-name"></span>
+            <button class="btn" id="clear-btn">Clear</button>
+          </div>
+
+          <div class="text-input-section">
+            <label for="input-text">Enter or paste text:</label>
+            <textarea
+              id="input-text"
+              placeholder="Paste text here to analyze for AI writing patterns..."
+            ></textarea>
+          </div>
+
+          <div class="action-buttons">
+            <button class="btn primary" id="analyze-btn">Analyze</button>
+            <span class="word-count" id="word-count">0 words</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results Summary Section -->
+      <div class="panel">
+        <h2>Results</h2>
+        <div class="panel-content">
+          <div class="no-results-msg" id="no-results-msg">
+            Paste or upload text and click "Analyze" to check for AI writing
+            patterns.
+          </div>
+          <div id="results-content" style="display: none">
+            <div class="summary-box" id="summary-box"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detail View Section (full width, below panels) -->
+    <div class="panel" id="detail-panel" style="display: none">
+      <h2>Detail View</h2>
+      <div class="panel-content">
+        <div class="view-toggle">
+          <button
+            class="active"
+            id="btn-categories"
+            onclick="switchView('categories')"
+          >
+            Category Breakdown
+          </button>
+          <button
+            id="btn-highlighted"
+            onclick="switchView('highlighted')"
+          >
+            Highlighted Text
+          </button>
+        </div>
+
+        <div id="categories-view"></div>
+
+        <div id="highlighted-view-wrapper" style="display: none">
+          <div class="legend" id="legend">
+            <div class="legend-item"><span class="legend-swatch swatch-cat1"></span> AI Vocabulary</div>
+            <div class="legend-item"><span class="legend-swatch swatch-cat2"></span> Significance Claims</div>
+            <div class="legend-item"><span class="legend-swatch swatch-cat3"></span> Promotional/Superficial</div>
+            <div class="legend-item"><span class="legend-swatch swatch-cat4"></span> Weasel Words</div>
+            <div class="legend-item"><span class="legend-swatch swatch-cat5"></span> Structural Patterns</div>
+            <div class="legend-item"><span class="legend-swatch swatch-cat6"></span> Punctuation</div>
+            <div class="legend-item"><span class="legend-swatch swatch-cat7"></span> LLM Artifacts</div>
+          </div>
+          <div class="highlighted-text-view" id="highlighted-view"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // ===== Panel collapse functionality =====
+
+      const panels = document.querySelectorAll(".panel h2");
+      panels.forEach((header) => {
+        header.addEventListener("click", () => {
+          header.classList.toggle("collapsed");
+          header.nextElementSibling.classList.toggle("collapsed");
+        });
+      });
+
+      // ===== Detection Categories =====
+
+      const CATEGORIES = [
+        {
+          id: 1,
+          name: "AI Vocabulary Words",
+          cssClass: "hl-cat1",
+          patterns: [],
+        },
+        {
+          id: 2,
+          name: "Significance & Legacy Claims",
+          cssClass: "hl-cat2",
+          patterns: [],
+        },
+        {
+          id: 3,
+          name: "Superficial Analysis & Promotional Language",
+          cssClass: "hl-cat3",
+          patterns: [],
+        },
+        {
+          id: 4,
+          name: "Vague Attributions & Weasel Words",
+          cssClass: "hl-cat4",
+          patterns: [],
+        },
+        {
+          id: 5,
+          name: "Structural & Formulaic Patterns",
+          cssClass: "hl-cat5",
+          patterns: [],
+        },
+        {
+          id: 6,
+          name: "Em Dash & Punctuation Analysis",
+          cssClass: "hl-cat6",
+          patterns: [],
+        },
+        {
+          id: 7,
+          name: "LLM Artifacts & Metadata",
+          cssClass: "hl-cat7",
+          patterns: [],
+        },
+      ];
+
+      // Helper to create pattern entry
+      function p(regex, label) {
+        return { regex, label };
+      }
+
+      // --- Category 1: AI Vocabulary Words ---
+      CATEGORIES[0].patterns = [
+        p(/\bdelve[sd]?\b/gi, "delve"),
+        p(/\bunderscore[sd]?\b/gi, "underscore (verb)"),
+        p(/\bcrucial(?:ly)?\b/gi, "crucial"),
+        p(/\bpivotal(?:ly)?\b/gi, "pivotal"),
+        p(/\bvibrant(?:ly)?\b/gi, "vibrant"),
+        p(/\btapestr(?:y|ies)\b/gi, "tapestry"),
+        p(/\bintricate(?:ly)?\b|\bintricacies\b/gi, "intricate/intricacies"),
+        p(/\bfoster(?:s|ed|ing)?\b/gi, "foster/fostering"),
+        p(/\bgarner(?:s|ed|ing)?\b/gi, "garner"),
+        p(/\bshowcase[sd]?\b|\bshowcasing\b/gi, "showcase"),
+        p(/\bhighlight(?:s|ed|ing)?\b/gi, "highlight"),
+        p(/\benhance[sd]?\b|\benhancing\b/gi, "enhance"),
+        p(/\benduring(?:ly)?\b/gi, "enduring"),
+        p(/\blandscape[s]?\b/gi, "landscape (abstract)"),
+        p(/\btestament[s]?\b/gi, "testament"),
+        p(/\binterplay\b/gi, "interplay"),
+        p(/\bvaluable\b/gi, "valuable"),
+        p(/(?:^|\.\s+)Additionally\b/gm, "additionally (sentence-start)"),
+        p(/(?:^|\.\s+)Furthermore\b/gm, "furthermore (sentence-start)"),
+        p(/(?:^|\.\s+)Moreover\b/gm, "moreover (sentence-start)"),
+        p(/\balign(?:s|ed|ing)?\s+with\b/gi, "align with"),
+        p(/\bemphasiz(?:e[sd]?|ing)\b/gi, "emphasize/emphasizing"),
+        p(
+          /\bkey\s+(?:role|factor|aspect|element|component|driver|part|feature|point|issue|challenge|moment|player|figure|theme|area)\b/gi,
+          "key (adjective)"
+        ),
+        p(/\bencompass(?:es|ed|ing)?\b/gi, "encompass"),
+        p(/\bcultivat(?:e[sd]?|ing)\b/gi, "cultivate"),
+      ];
+
+      // --- Category 2: Significance & Legacy Claims ---
+      CATEGORIES[1].patterns = [
+        p(/\b(?:stands|serves)\s+as\b/gi, "stands/serves as"),
+        p(/\bis\s+a\s+testament\b/gi, "is a testament"),
+        p(/\bis\s+a\s+reminder\b/gi, "is a reminder"),
+        p(
+          /\ba\s+(?:vital|significant|crucial|pivotal|key)\s+(?:role|moment)\b/gi,
+          "vital/significant/crucial role/moment"
+        ),
+        p(
+          /\b(?:underscores?|highlights?)\s+(?:its|the|their)\s+(?:importance|significance)\b/gi,
+          "underscores/highlights importance"
+        ),
+        p(/\breflects?\s+broader\b/gi, "reflects broader"),
+        p(
+          /\bsymboliz(?:e[sd]?|ing)\s+(?:its|the|their)\s+(?:ongoing|enduring|lasting)\b/gi,
+          "symbolizing ongoing/enduring"
+        ),
+        p(/\bcontributing\s+to\s+the\b/gi, "contributing to the"),
+        p(/\bsetting\s+the\s+stage\s+for\b/gi, "setting the stage for"),
+        p(/\b(?:marking|shaping)\s+the\b/gi, "marking/shaping the"),
+        p(
+          /\b(?:represents?|marks?)\s+a\s+shift\b/gi,
+          "represents/marks a shift"
+        ),
+        p(/\bkey\s+turning\s+point\b/gi, "key turning point"),
+        p(/\bevolving\s+landscape\b/gi, "evolving landscape"),
+        p(/\bfocal\s+point\b/gi, "focal point"),
+        p(/\bindelible\s+mark\b/gi, "indelible mark"),
+        p(/\bdeeply\s+rooted\b/gi, "deeply rooted"),
+        p(/\brich\s+cultural\s+heritage\b/gi, "rich cultural heritage"),
+        p(/\benduring\s+legacy\b/gi, "enduring legacy"),
+        p(
+          /\bplays?\s+a\s+significant\s+role\b/gi,
+          "plays a significant role"
+        ),
+      ];
+
+      // --- Category 3: Superficial Analysis & Promotional Language ---
+      CATEGORIES[2].patterns = [
+        // Trailing present participles (superficial analysis)
+        p(
+          /\bhighlighting\s+(?:its|the|their)\b/gi,
+          "highlighting its/the/their..."
+        ),
+        p(
+          /\bunderscore?ing\s+(?:its|the|their)\b/gi,
+          "underscoring its/the/their..."
+        ),
+        p(
+          /\bemphasizing\s+(?:its|the|their)\b/gi,
+          "emphasizing its/the/their..."
+        ),
+        p(/\bensuring\b/gi, "ensuring..."),
+        p(
+          /\breflecting\s+(?:its|the|their|a)\b/gi,
+          "reflecting its/the/their..."
+        ),
+        p(/\bsymbolizing\b/gi, "symbolizing..."),
+        p(/\bcontributing\s+to\b/gi, "contributing to..."),
+        p(/\bfostering\b/gi, "fostering..."),
+        p(/\bvaluable\s+insights?\b/gi, "valuable insights"),
+        p(/\b(?:align|resonate)[sd]?\s+with\b/gi, "align/resonate with"),
+        // Promotional patterns
+        p(/\bboasts?\s+a\b/gi, "boasts a"),
+        p(
+          /\brich\s+(?:history|heritage|tapestry|tradition|culture)\b/gi,
+          "rich (figurative adj)"
+        ),
+        p(/\bprofound(?:ly)?\b/gi, "profound"),
+        p(
+          /\benhancing\s+(?:its|the|their)\b/gi,
+          "enhancing its/the/their"
+        ),
+        p(/\bshowcasing\b/gi, "showcasing"),
+        p(/\bexemplif(?:y|ies|ied)\b/gi, "exemplifies"),
+        p(/\bcommitment\s+to\b/gi, "commitment to"),
+        p(/\bnatural\s+beauty\b/gi, "natural beauty"),
+        p(/\bnestled\b/gi, "nestled"),
+        p(/\bin\s+the\s+heart\s+of\b/gi, "in the heart of"),
+        p(/\bgroundbreaking\b/gi, "groundbreaking"),
+        p(/\brenowned\b/gi, "renowned"),
+        p(/\bbreathtaking\b/gi, "breathtaking"),
+        p(/\bstate-of-the-art\b/gi, "state-of-the-art"),
+        p(/\bcutting[- ]edge\b/gi, "cutting-edge"),
+      ];
+
+      // --- Category 4: Vague Attributions & Weasel Words ---
+      CATEGORIES[3].patterns = [
+        p(/\bindustry\s+reports?\b/gi, "industry reports"),
+        p(
+          /\bobservers?\s+have\s+(?:cited|noted)\b/gi,
+          "observers have cited/noted"
+        ),
+        p(
+          /\bexperts?\s+(?:argue|suggest|note)[sd]?\b/gi,
+          "experts argue/suggest/note"
+        ),
+        p(/\bsome\s+critics?\s+argue\b/gi, "some critics argue"),
+        p(
+          /\bseveral\s+(?:sources|publications)\b/gi,
+          "several sources/publications"
+        ),
+        p(/\bwidely\s+regarded\b/gi, "widely regarded"),
+        p(
+          /\bit['']?s\s+important\s+to\s+(?:note|remember|consider)\b/gi,
+          "it's important to note/remember/consider"
+        ),
+        p(/\bworth\s+noting\b/gi, "worth noting"),
+        p(/\bit\s+should\s+be\s+noted\b/gi, "it should be noted"),
+      ];
+
+      // --- Category 5: Structural & Formulaic Patterns ---
+      CATEGORIES[4].patterns = [
+        // Copulative avoidance
+        p(
+          /\bserves?\s+as\s+a\b/gi,
+          "serves as a (copulative avoidance)"
+        ),
+        p(
+          /\bstands?\s+as\s+a\b/gi,
+          "stands as a (copulative avoidance)"
+        ),
+        p(/\bmarks?\s+a\b/gi, "marks a (copulative avoidance)"),
+        p(
+          /\brepresents?\s+a\b/gi,
+          "represents a (copulative avoidance)"
+        ),
+        p(
+          /\bfeatures?\s+a\b/gi,
+          "features a (copulative avoidance)"
+        ),
+        p(/\boffers?\s+a\b/gi, "offers a (copulative avoidance)"),
+        p(/\bboasts?\b/gi, "boasts (copulative avoidance)"),
+        // Negative parallelisms
+        p(/\bnot\s+only\b[^.]*\bbut\b/gi, "not only ... but"),
+        p(/\bnot\s+just\b[^.]*\bit['']?s\b/gi, "not just ... it's"),
+        p(
+          /\bit\s+is\s+not\b[^.]*\bbut\s+rather\b/gi,
+          "it is not ... but rather"
+        ),
+        // Despite challenges
+        p(
+          /\bdespite\s+(?:its|their)\b[^.]*\bfaces?\s+challenges?\b/gi,
+          "despite ... faces challenges"
+        ),
+        p(/\bdespite\s+these\s+challenges\b/gi, "despite these challenges"),
+        // Outline conclusions
+        p(/(?:^|\.\s+)In\s+summary\b/gim, "in summary"),
+        p(/(?:^|\.\s+)In\s+conclusion\b/gim, "in conclusion"),
+        p(/(?:^|\n)\s*Overall,/gm, "overall, (sentence-start)"),
+        p(/\bFuture\s+Outlook\b/g, "Future Outlook"),
+        p(/\bChallenges\s+and\s+Legacy\b/g, "Challenges and Legacy"),
+      ];
+
+      // --- Category 6: Em Dash & Punctuation Analysis ---
+      // Handled specially in analysis; patterns for individual em dashes
+      CATEGORIES[5].patterns = [
+        p(/\u2014/g, "em dash (\u2014)"),
+        p(/[\u201C\u201D\u2018\u2019]/g, "curly quotation mark"),
+      ];
+
+      // --- Category 7: LLM Artifacts & Metadata ---
+      CATEGORIES[6].patterns = [
+        // ChatGPT artifacts
+        p(/turn0search/g, "turn0search"),
+        p(/oaicite/g, "oaicite"),
+        p(/contentReference/g, "contentReference"),
+        p(/oai_citation/g, "oai_citation"),
+        p(
+          /attribution[^"]*attributableIndex/g,
+          "attributableIndex"
+        ),
+        // UTM parameters
+        p(/utm_source=chatgpt\.com/g, "utm_source=chatgpt.com"),
+        p(/utm_source=openai/g, "utm_source=openai"),
+        p(/utm_source=copilot\.com/g, "utm_source=copilot.com"),
+        p(/referrer=grok\.com/g, "referrer=grok.com"),
+        // Markdown in non-markdown context
+        p(/\*\*[^*\n]+\*\*/g, "**bold** markdown"),
+        p(
+          /(?<!\*)\*(?!\*)[^*\n]+(?<!\*)\*(?!\*)/g,
+          "*italic* markdown"
+        ),
+        p(/^#{1,6}\s+.+/gm, "## heading markdown"),
+        p(/\[[^\]]+\]\([^)]+\)/g, "[text](url) markdown link"),
+        p(/```[\s\S]*?```/g, "``` code fence"),
+        // Knowledge-cutoff disclaimers
+        p(
+          /\bas\s+of\s+my\s+last\s+(?:knowledge\s+update|training)\b/gi,
+          "knowledge-cutoff disclaimer"
+        ),
+        p(
+          /\bwhile\s+specific\s+details\s+are\s+(?:limited|scarce)\b/gi,
+          "limited details disclaimer"
+        ),
+        p(
+          /\bnot\s+widely\s+(?:available|documented|disclosed)\b/gi,
+          "not widely available disclaimer"
+        ),
+        p(
+          /\bbased\s+on\s+available\s+information\b/gi,
+          "based on available information"
+        ),
+        // Collaborative communication leaks
+        p(/\bI\s+hope\s+this\s+helps\b/gi, "I hope this helps"),
+        p(/(?:^|\.\s+)Certainly!/gm, "Certainly!"),
+        p(/(?:^|\.\s+)Of\s+course!/gm, "Of course!"),
+        p(/\bWould\s+you\s+like\b/gi, "Would you like"),
+        p(
+          /\bIs\s+there\s+anything\s+else\b/gi,
+          "Is there anything else"
+        ),
+        p(/\blet\s+me\s+know\b/gi, "let me know"),
+        p(/(?:^|\.\s+)Here\s+is\s+a\b/gim, "here is a"),
+        // Placeholder text
+        p(/\bXX-XX\b/g, "XX-XX date placeholder"),
+        p(/\[insert\b/gi, "[insert placeholder"),
+        p(/\[add\b/gi, "[add placeholder"),
+        p(/\[your\b/gi, "[your placeholder"),
+      ];
+
+      // ===== Analysis Engine =====
+
+      function analyzeText(text) {
+        const words = text.split(/\s+/).filter((w) => w.length > 0);
+        const wordCount = words.length;
+        if (wordCount === 0) return null;
+
+        const results = [];
+
+        for (const category of CATEGORIES) {
+          const matches = [];
+
+          // Special handling for Category 6 (Punctuation)
+          if (category.id === 6) {
+            const punctResults = analyzePunctuation(text, wordCount);
+            results.push({
+              category,
+              matches: punctResults.matches,
+              notes: punctResults.notes,
+            });
+            continue;
+          }
+
+          for (const pat of category.patterns) {
+            // Reset regex lastIndex
+            pat.regex.lastIndex = 0;
+            let match;
+            while ((match = pat.regex.exec(text)) !== null) {
+              const start = match.index;
+              const end = start + match[0].length;
+              const contextStart = Math.max(0, start - 40);
+              const contextEnd = Math.min(text.length, end + 40);
+
+              let before = text.slice(contextStart, start);
+              let after = text.slice(end, contextEnd);
+              if (contextStart > 0) before = "\u2026" + before;
+              if (contextEnd < text.length) after = after + "\u2026";
+
+              matches.push({
+                text: match[0],
+                label: pat.label,
+                start,
+                end,
+                context: { before, matched: match[0], after },
+              });
+            }
+          }
+
+          results.push({ category, matches });
+        }
+
+        // Calculate density for Category 1 (AI Vocabulary)
+        const cat1 = results[0];
+        const vocabDensity =
+          wordCount > 0 ? (cat1.matches.length / wordCount) * 1000 : 0;
+
+        // Overall assessment
+        const totalMatches = results.reduce(
+          (sum, r) => sum + r.matches.length,
+          0
+        );
+        // Strong signals from cat 7
+        const artifactCount = results[6].matches.length;
+
+        let assessment;
+        if (artifactCount > 0) {
+          assessment = {
+            level: "high",
+            text: `High number of indicators found (${totalMatches} total). ${artifactCount} direct LLM artifact(s) detected \u2014 these are strong signals of AI generation.`,
+          };
+        } else if (totalMatches >= 20 || vocabDensity > 5) {
+          assessment = {
+            level: "high",
+            text: `High number of indicators found (${totalMatches} total). The density and variety of patterns is consistent with AI-generated text.`,
+          };
+        } else if (totalMatches >= 8) {
+          assessment = {
+            level: "moderate",
+            text: `Moderate number of indicators found (${totalMatches} total). Some patterns associated with AI writing are present, but this could also be a human stylistic choice.`,
+          };
+        } else {
+          assessment = {
+            level: "low",
+            text: `Few indicators found (${totalMatches} total). The text does not show strong signs of AI generation based on these heuristics.`,
+          };
+        }
+
+        return {
+          wordCount,
+          results,
+          totalMatches,
+          assessment,
+          vocabDensity,
+        };
+      }
+
+      function analyzePunctuation(text, wordCount) {
+        const matches = [];
+        const notes = [];
+
+        // Em dash count
+        const emDashRegex = /\u2014/g;
+        let emDashCount = 0;
+        let m;
+        while ((m = emDashRegex.exec(text)) !== null) {
+          emDashCount++;
+          const start = m.index;
+          const end = start + 1;
+          const contextStart = Math.max(0, start - 40);
+          const contextEnd = Math.min(text.length, end + 40);
+          let before = text.slice(contextStart, start);
+          let after = text.slice(end, contextEnd);
+          if (contextStart > 0) before = "\u2026" + before;
+          if (contextEnd < text.length) after = after + "\u2026";
+          matches.push({
+            text: m[0],
+            label: "em dash (\u2014)",
+            start,
+            end,
+            context: { before, matched: m[0], after },
+          });
+        }
+        const emDashDensity =
+          wordCount > 0 ? (emDashCount / wordCount) * 1000 : 0;
+        if (emDashDensity > 2) {
+          notes.push(
+            `Em dash density: ${emDashDensity.toFixed(1)} per 1000 words (typical human baseline: 1\u20132). Elevated density may indicate AI generation.`
+          );
+        } else if (emDashCount > 0) {
+          notes.push(
+            `Em dash density: ${emDashDensity.toFixed(1)} per 1000 words (within typical human range of 1\u20132).`
+          );
+        }
+
+        // Curly vs straight quotes
+        const curlyQuotes =
+          text.match(/[\u201C\u201D\u2018\u2019]/g) || [];
+        const straightDouble = text.match(/"/g) || [];
+        const straightSingle =
+          text.match(/(?<!\w)'(?!\w)|(?<!\w)'|'(?!\w)/g) || [];
+
+        if (
+          curlyQuotes.length > 0 &&
+          (straightDouble.length > 0 || straightSingle.length > 0)
+        ) {
+          notes.push(
+            `Mixed quotation marks detected: ${curlyQuotes.length} curly and ${straightDouble.length + straightSingle.length} straight quotes. Mixed usage in the same text can indicate AI-generated content was pasted into a different context.`
+          );
+          // Add curly quote matches
+          const curlyRegex = /[\u201C\u201D\u2018\u2019]/g;
+          while ((m = curlyRegex.exec(text)) !== null) {
+            const start = m.index;
+            const end = start + 1;
+            const contextStart = Math.max(0, start - 40);
+            const contextEnd = Math.min(text.length, end + 40);
+            let before = text.slice(contextStart, start);
+            let after = text.slice(end, contextEnd);
+            if (contextStart > 0) before = "\u2026" + before;
+            if (contextEnd < text.length) after = after + "\u2026";
+            matches.push({
+              text: m[0],
+              label: "curly quotation mark (mixed with straight)",
+              start,
+              end,
+              context: { before, matched: m[0], after },
+            });
+          }
+        } else if (curlyQuotes.length > 0) {
+          notes.push(
+            `${curlyQuotes.length} curly quotation mark(s) found. This alone is not conclusive but is more common in AI output.`
+          );
+        }
+
+        return { matches, notes };
+      }
+
+      // ===== Rendering =====
+
+      function renderResults(analysis) {
+        const resultsContent = document.getElementById("results-content");
+        const noResultsMsg = document.getElementById("no-results-msg");
+        const detailPanel = document.getElementById("detail-panel");
+
+        noResultsMsg.style.display = "none";
+        resultsContent.style.display = "block";
+        detailPanel.style.display = "block";
+
+        // Summary
+        renderSummary(analysis);
+
+        // Categories view
+        renderCategories(analysis);
+
+        // Highlighted text view
+        renderHighlightedText(analysis);
+
+        // Reset to categories view
+        switchView("categories");
+      }
+
+      function renderSummary(analysis) {
+        const box = document.getElementById("summary-box");
+        const a = analysis.assessment;
+
+        let assessmentClass = "assessment-low";
+        if (a.level === "moderate") assessmentClass = "assessment-moderate";
+        if (a.level === "high") assessmentClass = "assessment-high";
+
+        let statsHTML = "";
+        for (const r of analysis.results) {
+          const count = r.matches.length;
+          statsHTML += `
+            <div class="stat-item">
+              <span class="stat-label">${escapeHTML(r.category.name)}</span>
+              <span class="stat-count">${count}</span>
+            </div>`;
+        }
+
+        box.innerHTML = `
+          <div class="summary-title">Analysis Summary</div>
+          <div class="summary-assessment ${assessmentClass}">${escapeHTML(a.text)}</div>
+          <div class="summary-stats">${statsHTML}</div>
+        `;
+      }
+
+      function renderCategories(analysis) {
+        const container = document.getElementById("categories-view");
+        container.innerHTML = "";
+
+        for (const r of analysis.results) {
+          const count = r.matches.length;
+          const hasMatches = count > 0;
+
+          const section = document.createElement("div");
+          section.className = "category-section";
+
+          const header = document.createElement("div");
+          header.className = "category-header";
+          header.innerHTML = `
+            <span><span class="arrow">\u25B6</span>${escapeHTML(r.category.name)}</span>
+            <span class="category-badge ${hasMatches ? "has-matches" : ""}">${count}</span>
+          `;
+
+          const body = document.createElement("div");
+          body.className = "category-body";
+
+          if (r.notes && r.notes.length > 0) {
+            for (const note of r.notes) {
+              const noteEl = document.createElement("div");
+              noteEl.className = "match-item";
+              noteEl.innerHTML = `<em>${escapeHTML(note)}</em>`;
+              body.appendChild(noteEl);
+            }
+          }
+
+          if (hasMatches) {
+            // Deduplicate by grouping matches by label
+            const grouped = {};
+            for (const match of r.matches) {
+              if (!grouped[match.label]) grouped[match.label] = [];
+              grouped[match.label].push(match);
+            }
+
+            for (const [label, matches] of Object.entries(grouped)) {
+              for (const match of matches) {
+                const item = document.createElement("div");
+                item.className = "match-item";
+                item.innerHTML = `
+                  <div class="match-context">${escapeHTML(match.context.before)}<span class="${r.category.cssClass}">${escapeHTML(match.context.matched)}</span>${escapeHTML(match.context.after)}</div>
+                  <div class="match-label">${escapeHTML(match.label)}</div>
+                `;
+                body.appendChild(item);
+              }
+            }
+          } else if (!r.notes || r.notes.length === 0) {
+            body.innerHTML =
+              '<div style="color:#586069;font-style:italic;">No matches found in this category.</div>';
+          }
+
+          header.addEventListener("click", () => {
+            body.classList.toggle("open");
+            header.classList.toggle("open");
+            header.querySelector(".arrow").classList.toggle("open");
+          });
+
+          section.appendChild(header);
+          section.appendChild(body);
+          container.appendChild(section);
+        }
+      }
+
+      function renderHighlightedText(analysis) {
+        const container = document.getElementById("highlighted-view");
+        const text = document.getElementById("input-text").value;
+
+        // Collect all matches with their category info
+        const allMatches = [];
+        for (const r of analysis.results) {
+          for (const match of r.matches) {
+            allMatches.push({
+              start: match.start,
+              end: match.end,
+              cssClass: r.category.cssClass,
+              label: match.label,
+            });
+          }
+        }
+
+        // Sort by start position
+        allMatches.sort((a, b) => a.start - b.start);
+
+        // Remove overlapping matches (keep the earlier one to avoid gaps)
+        const filtered = [];
+        for (const m of allMatches) {
+          if (
+            filtered.length > 0 &&
+            m.start < filtered[filtered.length - 1].end
+          ) {
+            continue;
+          }
+          filtered.push(m);
+        }
+
+        // Build highlighted HTML
+        let html = "";
+        let pos = 0;
+
+        for (const m of filtered) {
+          if (m.start > pos) {
+            html += escapeHTML(text.slice(pos, m.start));
+          }
+          html += `<span class="${m.cssClass}" title="${escapeHTML(m.label)}">${escapeHTML(text.slice(m.start, m.end))}</span>`;
+          pos = m.end;
+        }
+        if (pos < text.length) {
+          html += escapeHTML(text.slice(pos));
+        }
+
+        container.innerHTML = html;
+      }
+
+      function switchView(view) {
+        const catView = document.getElementById("categories-view");
+        const hlWrapper = document.getElementById("highlighted-view-wrapper");
+        const btnCat = document.getElementById("btn-categories");
+        const btnHl = document.getElementById("btn-highlighted");
+
+        if (view === "categories") {
+          catView.style.display = "block";
+          hlWrapper.style.display = "none";
+          btnCat.classList.add("active");
+          btnHl.classList.remove("active");
+        } else {
+          catView.style.display = "none";
+          hlWrapper.style.display = "block";
+          btnCat.classList.remove("active");
+          btnHl.classList.add("active");
+        }
+      }
+
+      function escapeHTML(str) {
+        const div = document.createElement("div");
+        div.textContent = str;
+        return div.innerHTML;
+      }
+
+      // ===== Event Handlers =====
+
+      const inputText = document.getElementById("input-text");
+      const wordCountEl = document.getElementById("word-count");
+      const analyzeBtn = document.getElementById("analyze-btn");
+      const clearBtn = document.getElementById("clear-btn");
+      const fileInput = document.getElementById("file-input");
+      const fileNameEl = document.getElementById("file-name");
+
+      function updateWordCount() {
+        const text = inputText.value.trim();
+        const count = text.length === 0 ? 0 : text.split(/\s+/).length;
+        wordCountEl.textContent = `${count} word${count !== 1 ? "s" : ""}`;
+      }
+
+      inputText.addEventListener("input", updateWordCount);
+
+      analyzeBtn.addEventListener("click", () => {
+        const text = inputText.value;
+        if (!text.trim()) return;
+
+        const analysis = analyzeText(text);
+        if (analysis) {
+          renderResults(analysis);
+        }
+      });
+
+      clearBtn.addEventListener("click", () => {
+        inputText.value = "";
+        fileNameEl.textContent = "";
+        updateWordCount();
+        document.getElementById("results-content").style.display = "none";
+        document.getElementById("no-results-msg").style.display = "block";
+        document.getElementById("detail-panel").style.display = "none";
+      });
+
+      fileInput.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        fileNameEl.textContent = file.name;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          let text = ev.target.result;
+          const ext = file.name.split(".").pop().toLowerCase();
+          // Strip HTML tags for HTML files to get plain text
+          if (ext === "html" || ext === "htm") {
+            const doc = new DOMParser().parseFromString(text, "text/html");
+            text = doc.body.textContent || doc.body.innerText || "";
+          }
+          inputText.value = text;
+          updateWordCount();
+        };
+        reader.readAsText(file);
+        // Reset so same file can be re-uploaded
+        fileInput.value = "";
+      });
+
+      // Allow Ctrl+Enter to analyze
+      inputText.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+          e.preventDefault();
+          analyzeBtn.click();
+        }
+      });
+    </script>
+  </body>
+</html>
