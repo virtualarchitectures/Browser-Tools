@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Image Background Removal</title>
+    <style>
+      /* =========================
+         Reset and base styles
+         ========================= */
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Arial, sans-serif;
+        line-height: 1.6;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        color: #24292e;
+        background: #ffffff;
+      }
+      h1 {
+        border-bottom: 1px solid #eaecef;
+        padding-bottom: 0.3em;
+        margin-top: 0;
+        font-size: 32px;
+        font-weight: 600;
+      }
+      .back-link {
+        color: #0366d6;
+        text-decoration: none;
+        font-size: 14px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        margin-bottom: 16px;
+      }
+      .back-link:hover {
+        text-decoration: underline;
+      }
+
+      /* =========================
+         Buttons
+         ========================= */
+      .btn {
+        background: #0366d6;
+        color: #fff;
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+        cursor: pointer;
+        font-size: 14px;
+        line-height: 20px;
+        font-family: inherit;
+        transition: background 0.15s;
+      }
+      .btn:hover {
+        background: #0256c5;
+      }
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .btn:disabled:hover {
+        background: #0366d6;
+      }
+      .btn.secondary {
+        background: #fafbfc;
+        color: #24292e;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+      }
+      .btn.secondary:hover {
+        background: #f3f4f6;
+      }
+      .btn.secondary:disabled:hover {
+        background: #fafbfc;
+      }
+      .btn.success {
+        background: #238636;
+      }
+      .btn.success:hover {
+        background: #2ea043;
+      }
+      label.btn {
+        display: inline-block;
+        margin: 0;
+      }
+      input[type="file"] {
+        display: none;
+      }
+
+      /* =========================
+         Layout components
+         ========================= */
+      .file-controls {
+        background: #f6f8fa;
+        padding: 16px;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 0;
+      }
+      .small {
+        font-size: 13px;
+        color: #586069;
+      }
+      .panel {
+        background: #f6f8fa;
+        border: 1px solid #d1d5da;
+        border-radius: 6px;
+        padding: 16px;
+        margin-bottom: 16px;
+      }
+      .panel-title {
+        font-size: 16px;
+        font-weight: 600;
+        margin: 0 0 14px 0;
+        color: #24292e;
+      }
+      .controls-row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+      }
+      .controls-row:last-child {
+        margin-bottom: 0;
+      }
+      .input-label {
+        font-size: 13px;
+        font-weight: 500;
+        color: #586069;
+        white-space: nowrap;
+      }
+
+      /* =========================
+         Tool buttons and controls
+         ========================= */
+      .tool-btn {
+        padding: 6px 14px;
+        border-radius: 6px;
+        border: 1px solid #d1d5da;
+        background: #fafbfc;
+        color: #24292e;
+        cursor: pointer;
+        font-size: 13px;
+        font-family: inherit;
+        transition: all 0.15s;
+      }
+      .tool-btn:hover {
+        background: #f3f4f6;
+      }
+      .tool-btn.active-tool {
+        background: #0366d6;
+        border-color: #0366d6;
+        color: #fff;
+      }
+      input[type="range"] {
+        width: 130px;
+        cursor: pointer;
+        accent-color: #0366d6;
+        vertical-align: middle;
+      }
+      .value-display {
+        min-width: 24px;
+        font-family: "Courier New", monospace;
+        font-size: 13px;
+        color: #0366d6;
+        font-weight: 600;
+        text-align: right;
+      }
+      .checkbox-label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        color: #24292e;
+        user-select: none;
+      }
+      .divider {
+        width: 1px;
+        height: 24px;
+        background: #d1d5da;
+        margin: 0 4px;
+      }
+
+      /* =========================
+         Info box
+         ========================= */
+      .info-box {
+        background: #f1f8ff;
+        border: 1px solid #c8e1ff;
+        border-radius: 6px;
+        padding: 12px 16px;
+        margin-bottom: 16px;
+        font-size: 14px;
+        color: #24292e;
+      }
+
+      /* =========================
+         Editor panels
+         ========================= */
+      .editor-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+      .editor-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .editor-label {
+        font-size: 14px;
+        font-weight: 600;
+        color: #24292e;
+      }
+      .editor {
+        border: 2px dashed #d1d5da;
+        border-radius: 6px;
+        min-height: 300px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+        background: #f6f8fa;
+      }
+      .editor.drag-over {
+        border-color: #0366d6;
+        background: #f1f8ff;
+      }
+      .editor-placeholder {
+        color: #586069;
+        text-align: center;
+        padding: 20px;
+        font-size: 14px;
+      }
+
+      /* Checkerboard pattern for transparency */
+      .result-editor {
+        background-image:
+          linear-gradient(45deg, #ccc 25%, transparent 25%),
+          linear-gradient(-45deg, #ccc 25%, transparent 25%),
+          linear-gradient(45deg, transparent 75%, #ccc 75%),
+          linear-gradient(-45deg, transparent 75%, #ccc 75%);
+        background-size: 16px 16px;
+        background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+        background-color: #fff;
+      }
+
+      #originalImg {
+        max-width: 100%;
+        max-height: 500px;
+        display: block;
+      }
+      #resultCanvas {
+        display: block;
+      }
+      .dimension-info {
+        font-size: 13px;
+        color: #586069;
+      }
+      .download-controls {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      @media (max-width: 768px) {
+        .editor-container {
+          grid-template-columns: 1fr;
+        }
+        input[type="range"] {
+          width: 100px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a href="index.html" class="back-link">← Back to Browser Tools</a>
+    <h1>Image Background Removal</h1>
+
+    <!-- File controls -->
+    <div class="file-controls">
+      <label for="fileInput" class="btn">Choose Image</label>
+      <input type="file" id="fileInput" accept="image/*" />
+      <span id="fileStatus" class="small" style="margin-left: 8px">No file selected</span>
+      <button id="clearImageBtn" class="btn secondary" style="margin-left: auto" disabled>
+        Clear Image
+      </button>
+    </div>
+
+    <!-- Settings panel -->
+    <div class="panel">
+      <h3 class="panel-title">Settings</h3>
+
+      <!-- Tool selection -->
+      <div class="controls-row">
+        <span class="input-label">Tool:</span>
+        <button id="wandBtn" class="tool-btn active-tool">Magic Wand</button>
+        <button id="restoreBtn" class="tool-btn">Restore</button>
+        <div class="divider"></div>
+        <span id="toolHint" class="small">Click on background areas in the Result panel to remove them</span>
+      </div>
+
+      <!-- Tolerance -->
+      <div class="controls-row">
+        <label class="input-label" for="toleranceSlider">Tolerance:</label>
+        <input type="range" id="toleranceSlider" min="0" max="80" value="10" />
+        <span id="toleranceValue" class="value-display">10</span>
+        <span class="small">Color match sensitivity — higher removes more</span>
+      </div>
+
+      <!-- Feather edges -->
+      <div class="controls-row">
+        <label class="checkbox-label">
+          <input type="checkbox" id="featherCheckbox" />
+          Feather edges
+        </label>
+      </div>
+      <div id="featherGroup" class="controls-row" style="display: none; padding-left: 20px;">
+        <label class="input-label" for="featherSlider">Radius:</label>
+        <input type="range" id="featherSlider" min="1" max="10" value="2" />
+        <span id="featherValue" class="value-display">2</span>
+        <span class="small">px — softens edges between removed and kept areas</span>
+      </div>
+
+      <!-- Brush size (restore tool only) -->
+      <div id="brushGroup" class="controls-row" style="display: none;">
+        <label class="input-label" for="brushSlider">Brush size:</label>
+        <input type="range" id="brushSlider" min="1" max="50" value="15" />
+        <span id="brushValue" class="value-display">15</span>
+        <span class="small">px</span>
+      </div>
+
+      <!-- Action buttons -->
+      <div class="controls-row">
+        <button id="undoBtn" class="btn secondary" disabled>Undo</button>
+        <button id="resetBtn" class="btn secondary" disabled>Reset to Original</button>
+      </div>
+    </div>
+
+    <!-- Info box -->
+    <div class="info-box" id="infoBox">
+      Load an image to get started. Use the <strong>Magic Wand</strong> tool to click on background areas and make them transparent, then download the result as a PNG.
+    </div>
+
+    <!-- Editor panels -->
+    <div class="editor-container">
+      <div class="editor-wrapper">
+        <div class="editor-label">Original</div>
+        <div id="originalArea" class="editor">
+          <div class="editor-placeholder">Drop an image here or use "Choose Image" above</div>
+        </div>
+        <div id="originalDimInfo" class="dimension-info"></div>
+      </div>
+
+      <div class="editor-wrapper">
+        <div class="editor-label">
+          Result
+          <span class="small" style="font-weight: 400;">(transparent areas shown as checkerboard)</span>
+        </div>
+        <div id="resultArea" class="editor result-editor">
+          <div class="editor-placeholder">Result will appear here</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Download controls -->
+    <div class="download-controls">
+      <button id="downloadBtn" class="btn success" style="display: none">
+        Download PNG
+      </button>
+    </div>
+
+    <script>
+      /* =========================
+         State
+         ========================= */
+      let originalImage = null;
+      let originalImageData = null;
+      let originalFileName = "";
+      let workingCanvas = null;
+      let workingCtx = null;
+      let displayScale = 1;
+      let undoStack = [];
+      const MAX_UNDO = 10;
+      let currentTool = "wand";
+      let tolerance = 10;
+      let featherEnabled = false;
+      let featherRadius = 2;
+      let brushRadius = 15;
+      let isDrawing = false;
+      let strokeUndoPushed = false;
+      let lastDrawPoint = null;
+
+      /* =========================
+         DOM references
+         ========================= */
+      const fileInput = document.getElementById("fileInput");
+      const fileStatus = document.getElementById("fileStatus");
+      const clearImageBtn = document.getElementById("clearImageBtn");
+      const originalArea = document.getElementById("originalArea");
+      const resultArea = document.getElementById("resultArea");
+      const originalDimInfo = document.getElementById("originalDimInfo");
+      const downloadBtn = document.getElementById("downloadBtn");
+      const wandBtn = document.getElementById("wandBtn");
+      const restoreBtn = document.getElementById("restoreBtn");
+      const toleranceSlider = document.getElementById("toleranceSlider");
+      const toleranceValue = document.getElementById("toleranceValue");
+      const featherCheckbox = document.getElementById("featherCheckbox");
+      const featherSlider = document.getElementById("featherSlider");
+      const featherValue = document.getElementById("featherValue");
+      const featherGroup = document.getElementById("featherGroup");
+      const brushSlider = document.getElementById("brushSlider");
+      const brushValue = document.getElementById("brushValue");
+      const brushGroup = document.getElementById("brushGroup");
+      const undoBtn = document.getElementById("undoBtn");
+      const resetBtn = document.getElementById("resetBtn");
+      const infoBox = document.getElementById("infoBox");
+      const toolHint = document.getElementById("toolHint");
+
+      /* =========================
+         Event listeners
+         ========================= */
+      fileInput.addEventListener("change", handleFileSelect);
+      clearImageBtn.addEventListener("click", clearImage);
+
+      // Drag and drop on both panels
+      [originalArea, resultArea].forEach((area) => {
+        area.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          area.classList.add("drag-over");
+        });
+        area.addEventListener("dragleave", () => area.classList.remove("drag-over"));
+        area.addEventListener("drop", (e) => {
+          e.preventDefault();
+          area.classList.remove("drag-over");
+          const file = e.dataTransfer.files[0];
+          if (file && file.type.startsWith("image/")) loadImage(file);
+        });
+      });
+
+      wandBtn.addEventListener("click", () => setTool("wand"));
+      restoreBtn.addEventListener("click", () => setTool("restore"));
+
+      toleranceSlider.addEventListener("input", () => {
+        tolerance = parseInt(toleranceSlider.value);
+        toleranceValue.textContent = tolerance;
+      });
+
+      featherCheckbox.addEventListener("change", () => {
+        featherEnabled = featherCheckbox.checked;
+        featherGroup.style.display = featherEnabled ? "flex" : "none";
+      });
+
+      featherSlider.addEventListener("input", () => {
+        featherRadius = parseInt(featherSlider.value);
+        featherValue.textContent = featherRadius;
+      });
+
+      brushSlider.addEventListener("input", () => {
+        brushRadius = parseInt(brushSlider.value);
+        brushValue.textContent = brushRadius;
+      });
+
+      undoBtn.addEventListener("click", undo);
+      resetBtn.addEventListener("click", resetToOriginal);
+      downloadBtn.addEventListener("click", downloadResult);
+
+      // Global mouseup to end strokes
+      document.addEventListener("mouseup", () => {
+        if (isDrawing) {
+          isDrawing = false;
+          strokeUndoPushed = false;
+          lastDrawPoint = null;
+        }
+      });
+
+      /* =========================
+         Tool management
+         ========================= */
+      function setTool(tool) {
+        currentTool = tool;
+        const resultCanvas = document.getElementById("resultCanvas");
+        if (tool === "wand") {
+          wandBtn.classList.add("active-tool");
+          restoreBtn.classList.remove("active-tool");
+          brushGroup.style.display = "none";
+          toolHint.textContent = "Click on background areas in the Result panel to remove them";
+          if (resultCanvas) resultCanvas.style.cursor = "crosshair";
+        } else {
+          restoreBtn.classList.add("active-tool");
+          wandBtn.classList.remove("active-tool");
+          brushGroup.style.display = "flex";
+          toolHint.textContent = "Paint over transparent areas in the Result panel to restore the original pixels — useful for fixing edges or areas removed by mistake";
+          if (resultCanvas) resultCanvas.style.cursor = "cell";
+        }
+      }
+
+      /* =========================
+         File loading
+         ========================= */
+      function handleFileSelect(e) {
+        const file = e.target.files[0];
+        if (file) loadImage(file);
+      }
+
+      function loadImage(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            originalImage = img;
+            originalFileName = file.name;
+
+            // Show original image
+            const origImg = document.createElement("img");
+            origImg.id = "originalImg";
+            origImg.src = e.target.result;
+            originalArea.innerHTML = "";
+            originalArea.appendChild(origImg);
+
+            // Create working canvas at full image resolution
+            workingCanvas = document.createElement("canvas");
+            workingCanvas.width = img.naturalWidth;
+            workingCanvas.height = img.naturalHeight;
+            workingCtx = workingCanvas.getContext("2d", { willReadFrequently: true });
+            workingCtx.drawImage(img, 0, 0);
+
+            // Cache original pixel data for the Restore tool
+            originalImageData = workingCtx.getImageData(
+              0, 0, img.naturalWidth, img.naturalHeight
+            );
+
+            // Reset state
+            undoStack = [];
+            undoBtn.disabled = true;
+            resetBtn.disabled = false;
+            clearImageBtn.disabled = false;
+            fileStatus.textContent = `${file.name} (${img.naturalWidth} \u00d7 ${img.naturalHeight})`;
+            originalDimInfo.textContent = `${img.naturalWidth} \u00d7 ${img.naturalHeight} px`;
+
+            // Setup and render result canvas
+            setupResultCanvas();
+            renderResult();
+            downloadBtn.style.display = "inline-block";
+
+            // Update guidance text
+            let hint = "Use the <strong>Magic Wand</strong> tool: click on background areas in the Result panel to make them transparent. Switch to <strong>Restore</strong> to paint original pixels back over any transparent areas removed by mistake — ideal for fixing edges or fine details.";
+            if (img.naturalWidth * img.naturalHeight > 4000000) {
+              hint += " <strong>Note:</strong> Large image — processing may take a moment.";
+            }
+            infoBox.innerHTML = hint;
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+
+      function clearImage() {
+        originalImage = null;
+        originalImageData = null;
+        originalFileName = "";
+        workingCanvas = null;
+        workingCtx = null;
+        undoStack = [];
+
+        originalArea.innerHTML = '<div class="editor-placeholder">Drop an image here or use "Choose Image" above</div>';
+        resultArea.innerHTML = '<div class="editor-placeholder">Result will appear here</div>';
+
+        fileInput.value = "";
+        fileStatus.textContent = "No file selected";
+        clearImageBtn.disabled = true;
+        undoBtn.disabled = true;
+        resetBtn.disabled = true;
+        originalDimInfo.textContent = "";
+        downloadBtn.style.display = "none";
+        infoBox.innerHTML = 'Load an image to get started. Use the <strong>Magic Wand</strong> tool to click on background areas and make them transparent, then download the result as a PNG.';
+      }
+
+      /* =========================
+         Canvas setup
+         ========================= */
+      function setupResultCanvas() {
+        const maxWidth = resultArea.clientWidth - 4;
+        const maxHeight = 500;
+        displayScale = Math.min(
+          maxWidth / workingCanvas.width,
+          maxHeight / workingCanvas.height,
+          1
+        );
+
+        const displayCanvas = document.createElement("canvas");
+        displayCanvas.id = "resultCanvas";
+        displayCanvas.width = workingCanvas.width;
+        displayCanvas.height = workingCanvas.height;
+        displayCanvas.style.width = `${Math.round(workingCanvas.width * displayScale)}px`;
+        displayCanvas.style.height = `${Math.round(workingCanvas.height * displayScale)}px`;
+        displayCanvas.style.display = "block";
+        displayCanvas.style.cursor = currentTool === "wand" ? "crosshair" : "cell";
+
+        resultArea.innerHTML = "";
+        resultArea.appendChild(displayCanvas);
+
+        displayCanvas.addEventListener("mousedown", handleCanvasMouseDown);
+        displayCanvas.addEventListener("mousemove", handleCanvasMouseMove);
+        displayCanvas.addEventListener("touchstart", handleTouchStart, { passive: false });
+        displayCanvas.addEventListener("touchmove", handleTouchMove, { passive: false });
+        displayCanvas.addEventListener("touchend", handleTouchEnd);
+      }
+
+      function getCanvasCoords(e, canvas) {
+        const rect = canvas.getBoundingClientRect();
+        let clientX, clientY;
+        if (e.touches && e.touches.length > 0) {
+          clientX = e.touches[0].clientX;
+          clientY = e.touches[0].clientY;
+        } else {
+          clientX = e.clientX;
+          clientY = e.clientY;
+        }
+        return {
+          x: Math.max(0, Math.min(Math.round((clientX - rect.left) / displayScale), workingCanvas.width - 1)),
+          y: Math.max(0, Math.min(Math.round((clientY - rect.top) / displayScale), workingCanvas.height - 1)),
+        };
+      }
+
+      /* =========================
+         Canvas event handlers
+         ========================= */
+      function handleCanvasMouseDown(e) {
+        if (!workingCanvas) return;
+        e.preventDefault();
+        const coords = getCanvasCoords(e, e.currentTarget);
+        if (currentTool === "wand") {
+          applyMagicWand(coords.x, coords.y);
+        } else {
+          if (!strokeUndoPushed) {
+            pushUndoState();
+            strokeUndoPushed = true;
+          }
+          isDrawing = true;
+          applyRestoreBrush(coords.x, coords.y);
+          lastDrawPoint = coords;
+        }
+      }
+
+      function handleCanvasMouseMove(e) {
+        if (!workingCanvas || !isDrawing || currentTool !== "restore") return;
+        const coords = getCanvasCoords(e, e.currentTarget);
+        if (lastDrawPoint) {
+          interpolateBrush(lastDrawPoint, coords);
+        } else {
+          applyRestoreBrush(coords.x, coords.y);
+        }
+        lastDrawPoint = coords;
+      }
+
+      function handleTouchStart(e) {
+        e.preventDefault();
+        if (!workingCanvas) return;
+        const coords = getCanvasCoords(e, e.currentTarget);
+        if (currentTool === "wand") {
+          applyMagicWand(coords.x, coords.y);
+        } else {
+          if (!strokeUndoPushed) {
+            pushUndoState();
+            strokeUndoPushed = true;
+          }
+          isDrawing = true;
+          applyRestoreBrush(coords.x, coords.y);
+          lastDrawPoint = coords;
+        }
+      }
+
+      function handleTouchMove(e) {
+        e.preventDefault();
+        if (!workingCanvas || !isDrawing || currentTool !== "restore") return;
+        const coords = getCanvasCoords(e, e.currentTarget);
+        if (lastDrawPoint) {
+          interpolateBrush(lastDrawPoint, coords);
+        } else {
+          applyRestoreBrush(coords.x, coords.y);
+        }
+        lastDrawPoint = coords;
+      }
+
+      function handleTouchEnd() {
+        isDrawing = false;
+        strokeUndoPushed = false;
+        lastDrawPoint = null;
+      }
+
+      /* =========================
+         Render result
+         ========================= */
+      function renderResult() {
+        const displayCanvas = document.getElementById("resultCanvas");
+        if (!displayCanvas || !workingCanvas) return;
+        const ctx = displayCanvas.getContext("2d");
+        ctx.clearRect(0, 0, displayCanvas.width, displayCanvas.height);
+        ctx.drawImage(workingCanvas, 0, 0);
+      }
+
+      /* =========================
+         Magic Wand — flood fill
+         ========================= */
+      function applyMagicWand(startX, startY) {
+        // Skip if already transparent
+        const check = workingCtx.getImageData(startX, startY, 1, 1);
+        if (check.data[3] === 0) return;
+
+        pushUndoState();
+
+        const width = workingCanvas.width;
+        const height = workingCanvas.height;
+        const imageData = workingCtx.getImageData(0, 0, width, height);
+        const data = imageData.data;
+
+        const startIdx = (startY * width + startX) * 4;
+        const targetR = data[startIdx];
+        const targetG = data[startIdx + 1];
+        const targetB = data[startIdx + 2];
+
+        // Tolerance maps 0-80 to 0% - ~80% of max RGB distance (sqrt(3)*255 ≈ 441.67)
+        const threshold = (tolerance / 100) * 441.67;
+        const thresholdSq = threshold * threshold;
+
+        // BFS flood fill with head-pointer array (avoids O(n) shifts)
+        const visited = new Uint8Array(width * height);
+        const queue = [startX, startY];
+        let head = 0;
+        visited[startY * width + startX] = 1;
+
+        while (head < queue.length) {
+          const cx = queue[head++];
+          const cy = queue[head++];
+          const cidx = (cy * width + cx) * 4;
+
+          // Make this pixel transparent
+          data[cidx + 3] = 0;
+
+          // Check 4-connected neighbours
+          const dxs = [-1, 1, 0, 0];
+          const dys = [0, 0, -1, 1];
+          for (let d = 0; d < 4; d++) {
+            const nx = cx + dxs[d];
+            const ny = cy + dys[d];
+            if (nx < 0 || nx >= width || ny < 0 || ny >= height) continue;
+            const pos = ny * width + nx;
+            if (visited[pos]) continue;
+            visited[pos] = 1;
+            const pidx = pos * 4;
+            if (data[pidx + 3] === 0) continue; // already transparent
+
+            const dr = data[pidx] - targetR;
+            const dg = data[pidx + 1] - targetG;
+            const db = data[pidx + 2] - targetB;
+            if (dr * dr + dg * dg + db * db <= thresholdSq) {
+              queue.push(nx, ny);
+            }
+          }
+        }
+
+        // Optional feathering — softens transparency edges
+        if (featherEnabled && featherRadius > 0) {
+          applyFeathering(data, width, height, featherRadius);
+        }
+
+        workingCtx.putImageData(imageData, 0, 0);
+        renderResult();
+      }
+
+      /* =========================
+         Feathering — alpha channel blur
+         ========================= */
+      function applyFeathering(data, width, height, radius) {
+        const alpha = new Float32Array(width * height);
+        for (let i = 0; i < width * height; i++) {
+          alpha[i] = data[i * 4 + 3];
+        }
+
+        // Two passes of separable box blur to approximate a Gaussian
+        for (let pass = 0; pass < 2; pass++) {
+          const temp = new Float32Array(width * height);
+
+          // Horizontal pass
+          for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+              let sum = 0, count = 0;
+              for (let dx = -radius; dx <= radius; dx++) {
+                const nx = x + dx;
+                if (nx >= 0 && nx < width) {
+                  sum += alpha[y * width + nx];
+                  count++;
+                }
+              }
+              temp[y * width + x] = sum / count;
+            }
+          }
+
+          // Vertical pass
+          for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+              let sum = 0, count = 0;
+              for (let dy = -radius; dy <= radius; dy++) {
+                const ny = y + dy;
+                if (ny >= 0 && ny < height) {
+                  sum += temp[ny * width + x];
+                  count++;
+                }
+              }
+              alpha[y * width + x] = sum / count;
+            }
+          }
+        }
+
+        for (let i = 0; i < width * height; i++) {
+          data[i * 4 + 3] = Math.round(alpha[i]);
+        }
+      }
+
+      /* =========================
+         Restore brush
+         ========================= */
+      function applyRestoreBrush(cx, cy) {
+        if (!originalImageData || !workingCanvas) return;
+
+        const minX = Math.max(0, cx - brushRadius);
+        const minY = Math.max(0, cy - brushRadius);
+        const maxX = Math.min(workingCanvas.width - 1, cx + brushRadius);
+        const maxY = Math.min(workingCanvas.height - 1, cy + brushRadius);
+        const regionW = maxX - minX + 1;
+        const regionH = maxY - minY + 1;
+
+        const workData = workingCtx.getImageData(minX, minY, regionW, regionH);
+        const r2 = brushRadius * brushRadius;
+
+        for (let y = minY; y <= maxY; y++) {
+          for (let x = minX; x <= maxX; x++) {
+            const dx = x - cx, dy = y - cy;
+            if (dx * dx + dy * dy > r2) continue;
+
+            const origIdx = (y * workingCanvas.width + x) * 4;
+            const localIdx = ((y - minY) * regionW + (x - minX)) * 4;
+            workData.data[localIdx]     = originalImageData.data[origIdx];
+            workData.data[localIdx + 1] = originalImageData.data[origIdx + 1];
+            workData.data[localIdx + 2] = originalImageData.data[origIdx + 2];
+            workData.data[localIdx + 3] = originalImageData.data[origIdx + 3];
+          }
+        }
+
+        workingCtx.putImageData(workData, minX, minY);
+        renderResult();
+      }
+
+      // Interpolate brush positions for smooth strokes
+      function interpolateBrush(from, to) {
+        const dx = to.x - from.x;
+        const dy = to.y - from.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const steps = Math.max(1, Math.ceil(dist / Math.max(1, brushRadius * 0.5)));
+        for (let i = 1; i <= steps; i++) {
+          const t = i / steps;
+          applyRestoreBrush(Math.round(from.x + dx * t), Math.round(from.y + dy * t));
+        }
+      }
+
+      /* =========================
+         Undo / Reset
+         ========================= */
+      function pushUndoState() {
+        const imageData = workingCtx.getImageData(0, 0, workingCanvas.width, workingCanvas.height);
+        undoStack.push(imageData);
+        if (undoStack.length > MAX_UNDO) undoStack.shift();
+        undoBtn.disabled = false;
+      }
+
+      function undo() {
+        if (undoStack.length === 0) return;
+        const imageData = undoStack.pop();
+        workingCtx.putImageData(imageData, 0, 0);
+        renderResult();
+        undoBtn.disabled = undoStack.length === 0;
+      }
+
+      function resetToOriginal() {
+        if (!originalImage || !workingCtx) return;
+        undoStack = [];
+        workingCtx.clearRect(0, 0, workingCanvas.width, workingCanvas.height);
+        workingCtx.drawImage(originalImage, 0, 0);
+        renderResult();
+        undoBtn.disabled = true;
+      }
+
+      /* =========================
+         Download
+         ========================= */
+      function downloadResult() {
+        if (!workingCanvas) return;
+        workingCanvas.toBlob((blob) => {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          let baseName = "image";
+          if (originalFileName) {
+            const dot = originalFileName.lastIndexOf(".");
+            baseName = dot > 0 ? originalFileName.substring(0, dot) : originalFileName;
+          }
+          a.href = url;
+          a.download = `${baseName}-bg-removed.png`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, "image/png");
+      }
+    </script>
+  </body>
+</html>
