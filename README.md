@@ -73,6 +73,7 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 
 ### OSINT
 
+- **[Article Access Tool](article-access.html)** — locate accessible versions of paywalled news articles via the Internet Archive (Wayback Machine) or optional proxy extraction with Mozilla Readability; intended for researchers and journalists
 - **[Identifier Extractor](identifier-extractor.html)** — extract and analyse URLs, email addresses, IPv4/IPv6 addresses, phone numbers, and MAC addresses from text with filtering, sorting, and export options
 
 ### Software Development
