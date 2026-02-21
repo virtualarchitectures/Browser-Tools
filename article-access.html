@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Article Access Tool - Browser Tools</title>
+    <style>
+      /* =========================
+         CSS Styles
+         ========================= */
+
+      /* Reset and base */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Arial, sans-serif;
+        line-height: 1.6;
+        color: #24292e;
+        background: #ffffff;
+        padding: 20px;
+        max-width: 900px;
+        margin: 0 auto;
+      }
+      h1 {
+        font-size: 32px;
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: #24292e;
+      }
+
+      /* Back link */
+      .back-link {
+        display: inline-block;
+        margin-bottom: 16px;
+        color: #0366d6;
+        text-decoration: none;
+        font-size: 14px;
+      }
+      .back-link:hover {
+        text-decoration: underline;
+      }
+
+      /* Instruction box */
+      .instruction {
+        font-size: 14px;
+        color: #586069;
+        margin-bottom: 24px;
+        padding: 12px 14px;
+        background: #f6f8fa;
+        border-radius: 6px;
+        border-left: 3px solid #0366d6;
+        line-height: 1.6;
+      }
+      .instruction strong {
+        color: #24292e;
+      }
+      .instruction ul {
+        margin: 8px 0 0 18px;
+        padding: 0;
+      }
+      .instruction li {
+        margin-bottom: 4px;
+      }
+
+      /* URL input section */
+      .input-section {
+        margin-bottom: 24px;
+      }
+      .url-row {
+        display: flex;
+        gap: 8px;
+      }
+      #url-input {
+        flex: 1;
+        padding: 10px 12px;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        font-size: 14px;
+        font-family: inherit;
+        color: #24292e;
+        background: #fff;
+        transition: border-color 0.2s, box-shadow 0.2s;
+      }
+      #url-input:focus {
+        outline: none;
+        border-color: #0366d6;
+        box-shadow: 0 0 0 3px rgba(3, 102, 214, 0.1);
+      }
+      #url-input.invalid {
+        border-color: #cb2431;
+        box-shadow: 0 0 0 3px rgba(203, 36, 49, 0.1);
+      }
+
+      /* Buttons */
+      .btn {
+        background: #fafbfc;
+        color: #24292e;
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+        cursor: pointer;
+        font-size: 14px;
+        line-height: 20px;
+        font-family: inherit;
+        transition: background 0.2s;
+        white-space: nowrap;
+        text-decoration: none;
+        display: inline-block;
+      }
+      .btn:hover {
+        background: #f3f4f6;
+      }
+      .btn.primary {
+        background: #0366d6;
+        color: #fff;
+        border-color: rgba(27, 31, 35, 0.15);
+      }
+      .btn.primary:hover {
+        background: #0256c5;
+      }
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .btn.primary:disabled:hover {
+        background: #0366d6;
+      }
+
+      /* Method cards */
+      .method-card {
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        margin-bottom: 12px;
+        overflow: hidden;
+      }
+      .method-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 16px;
+        background: #f6f8fa;
+        border-bottom: 1px solid #e1e4e8;
+        flex-wrap: wrap;
+      }
+      .method-badge {
+        font-size: 11px;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 10px;
+        background: #0366d6;
+        color: #fff;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+      .method-badge.warn {
+        background: #e36209;
+      }
+      .method-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #24292e;
+        flex: 1;
+      }
+      .method-status {
+        font-size: 13px;
+        color: #586069;
+        flex-shrink: 0;
+      }
+      .method-status.success {
+        color: #22863a;
+        font-weight: 500;
+      }
+      .method-status.failure {
+        color: #cb2431;
+        font-weight: 500;
+      }
+      .method-status.loading {
+        color: #0366d6;
+      }
+      .method-body {
+        padding: 16px;
+      }
+
+      /* Method description and action row */
+      .method-desc {
+        font-size: 13px;
+        color: #586069;
+        margin-bottom: 12px;
+        line-height: 1.5;
+      }
+      .method-action {
+        margin-bottom: 0;
+      }
+
+      /* Spinner */
+      .status-msg {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 14px;
+        color: #586069;
+        padding: 4px 0;
+        margin-top: 12px;
+      }
+      .spinner {
+        width: 14px;
+        height: 14px;
+        border: 2px solid #e1e4e8;
+        border-top-color: #0366d6;
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+        flex-shrink: 0;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Archive / link results */
+      .archive-found {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 12px;
+      }
+      .archive-meta {
+        font-size: 13px;
+        color: #586069;
+      }
+      .archive-url {
+        font-size: 13px;
+        color: #0366d6;
+        text-decoration: none;
+        word-break: break-all;
+        line-height: 1.5;
+      }
+      .archive-url:hover {
+        text-decoration: underline;
+      }
+      .archive-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+
+      /* Soft fail message */
+      .soft-fail-msg {
+        font-size: 13px;
+        color: #586069;
+        background: #f6f8fa;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        padding: 10px 12px;
+        line-height: 1.5;
+        margin-top: 12px;
+      }
+
+      /* Error message */
+      .error-msg {
+        font-size: 13px;
+        color: #86181d;
+        background: #ffdce0;
+        border: 1px solid #f9a0a0;
+        border-radius: 6px;
+        padding: 10px 12px;
+        line-height: 1.5;
+        margin-top: 12px;
+      }
+      .error-msg strong {
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      /* Proxy attempt log */
+      .proxy-attempts {
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        overflow: hidden;
+        margin-top: 12px;
+        margin-bottom: 0;
+      }
+      .proxy-attempt {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        padding: 10px 14px;
+        font-size: 13px;
+        border-bottom: 1px solid #e1e4e8;
+      }
+      .proxy-attempt:last-child {
+        border-bottom: none;
+      }
+      .proxy-attempt-name {
+        font-weight: 600;
+        font-family: monospace;
+        font-size: 13px;
+        color: #24292e;
+        flex-shrink: 0;
+        min-width: 140px;
+      }
+      .proxy-attempt-status {
+        font-size: 13px;
+        color: #586069;
+      }
+      .proxy-attempt-status.loading {
+        color: #0366d6;
+      }
+      .proxy-attempt-status.success {
+        color: #22863a;
+        font-weight: 500;
+      }
+      .proxy-attempt-status.failure {
+        color: #cb2431;
+      }
+      .proxy-attempt-status.pending,
+      .proxy-attempt-status.skipped {
+        color: #586069;
+        font-style: italic;
+      }
+
+      /* Disclaimer box */
+      .disclaimer-box {
+        background: #fff8c5;
+        border: 1px solid #d9a500;
+        border-radius: 6px;
+        padding: 14px;
+        font-size: 13px;
+        color: #24292e;
+        line-height: 1.6;
+      }
+      .disclaimer-box .disclaimer-title {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: #24292e;
+      }
+      .disclaimer-box p {
+        margin-bottom: 8px;
+      }
+      .disclaimer-box p:last-of-type {
+        margin-bottom: 12px;
+      }
+      .disclaimer-box ul {
+        margin: 0 0 12px 18px;
+      }
+      .disclaimer-box li {
+        margin-bottom: 3px;
+      }
+
+      /* Article reader */
+      .article-reader {
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        overflow: hidden;
+        margin-top: 4px;
+      }
+      .reader-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 16px;
+        background: #f6f8fa;
+        border-bottom: 1px solid #e1e4e8;
+        flex-wrap: wrap;
+      }
+      .reader-header-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #24292e;
+      }
+      .reader-actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .reader-body {
+        padding: 28px 32px;
+        max-height: 72vh;
+        overflow-y: auto;
+      }
+      .article-title {
+        font-size: 24px;
+        font-weight: 700;
+        color: #24292e;
+        line-height: 1.35;
+        margin-bottom: 14px;
+      }
+      .article-byline {
+        font-size: 13px;
+        color: #586069;
+        margin-bottom: 20px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid #e1e4e8;
+      }
+      .article-content {
+        font-size: 16px;
+        line-height: 1.8;
+        color: #24292e;
+      }
+      .article-content p {
+        margin-bottom: 16px;
+      }
+      .article-content h1,
+      .article-content h2,
+      .article-content h3,
+      .article-content h4,
+      .article-content h5,
+      .article-content h6 {
+        font-weight: 600;
+        color: #24292e;
+        margin: 24px 0 10px;
+        line-height: 1.3;
+      }
+      .article-content h2 {
+        font-size: 20px;
+        border-bottom: 1px solid #eaecef;
+        padding-bottom: 6px;
+      }
+      .article-content h3 {
+        font-size: 17px;
+      }
+      .article-content a {
+        color: #0366d6;
+        text-decoration: none;
+      }
+      .article-content a:hover {
+        text-decoration: underline;
+      }
+      .article-content img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 4px;
+        margin: 8px 0;
+      }
+      .article-content blockquote {
+        border-left: 3px solid #e1e4e8;
+        padding-left: 16px;
+        color: #586069;
+        margin: 16px 0;
+        font-style: italic;
+      }
+      .article-content figure {
+        margin: 16px 0;
+      }
+      .article-content figcaption {
+        font-size: 13px;
+        color: #586069;
+        margin-top: 6px;
+      }
+      .article-content pre {
+        background: #f6f8fa;
+        border: 1px solid #e1e4e8;
+        border-radius: 4px;
+        padding: 12px;
+        overflow-x: auto;
+        font-size: 13px;
+        margin: 12px 0;
+      }
+      .article-content code {
+        background: #f6f8fa;
+        border-radius: 3px;
+        padding: 2px 5px;
+        font-size: 13px;
+        font-family: monospace;
+      }
+      .article-content ul,
+      .article-content ol {
+        margin: 0 0 16px 24px;
+      }
+      .article-content li {
+        margin-bottom: 4px;
+      }
+      .article-content table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 16px 0;
+        font-size: 14px;
+      }
+      .article-content th,
+      .article-content td {
+        border: 1px solid #e1e4e8;
+        padding: 8px 12px;
+        text-align: left;
+      }
+      .article-content th {
+        background: #f6f8fa;
+        font-weight: 600;
+      }
+
+      /* Responsive */
+      @media (max-width: 600px) {
+        .url-row {
+          flex-direction: column;
+        }
+        #url-input {
+          width: 100%;
+        }
+        #find-btn {
+          width: 100%;
+        }
+        .reader-body {
+          padding: 16px;
+        }
+        .article-title {
+          font-size: 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- =========================
+         HTML Structure
+         ========================= -->
+
+    <a href="index.html" class="back-link">&larr; Back to Browser Tools</a>
+    <h1>Article Access Tool</h1>
+
+    <div class="instruction">
+      <strong>For researchers and journalists.</strong> Enter an article URL,
+      then use the methods below to attempt to locate an accessible version.
+      Methods are ordered from least to most invasive — try Method 1 first.
+      Nothing runs until you explicitly trigger each method.
+      <ul>
+        <li>
+          <strong>Method 1 — Internet Archive:</strong> Queries the Wayback
+          Machine API for a publicly archived copy. Fully legitimate.
+        </li>
+        <li>
+          <strong>Method 2 — Proxy Extraction (opt-in):</strong> Fetches via a
+          public CORS proxy (allorigins.win with corsproxy.io fallback) and
+          extracts text using Mozilla Readability. Works only on <em>soft</em>
+          paywalls. Requires reading and accepting a disclaimer first.
+        </li>
+      </ul>
+    </div>
+
+    <!-- URL Input -->
+    <div class="input-section">
+      <div class="url-row">
+        <input
+          type="text"
+          id="url-input"
+          placeholder="Paste article URL, e.g. https://www.example.com/article/..."
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <button class="btn primary" id="find-btn">Set URL</button>
+        <button class="btn" id="clear-btn">Clear</button>
+      </div>
+    </div>
+
+    <!-- Method cards (revealed after URL is set) -->
+    <div id="results-area" style="display: none">
+
+      <!-- Method 1: Wayback Machine -->
+      <div class="method-card">
+        <div class="method-header">
+          <span class="method-badge">Method 1</span>
+          <span class="method-title">Internet Archive (Wayback Machine)</span>
+          <span class="method-status" id="wayback-status"></span>
+        </div>
+        <div class="method-body">
+          <p class="method-desc">
+            Checks the Internet Archive for a publicly archived copy of this
+            article. Uses the Wayback Machine availability API. Results vary by
+            how recently the page was crawled.
+          </p>
+          <div class="method-action">
+            <button class="btn primary" id="wayback-btn">Check Wayback Machine</button>
+          </div>
+          <div id="wayback-result"></div>
+        </div>
+      </div>
+
+      <!-- Method 2: Proxy Extraction -->
+      <div class="method-card">
+        <div class="method-header">
+          <span class="method-badge warn">Method 2</span>
+          <span class="method-title">Proxy Extraction (Experimental)</span>
+          <span class="method-status" id="proxy-status"></span>
+        </div>
+        <div class="method-body" id="proxy-body">
+          <div class="disclaimer-box" id="proxy-disclaimer">
+            <div class="disclaimer-title">Researcher / Journalist Use &mdash; Please Read Before Proceeding</div>
+            <p>
+              This method routes your request through a public CORS proxy and
+              uses <strong>Mozilla Readability</strong> to extract the article
+              text. It tries <strong>allorigins.win</strong> first, then falls
+              back to <strong>corsproxy.io</strong>. Your IP address will be
+              visible to the proxy and to the target website.
+            </p>
+            <p>Important limitations and caveats:</p>
+            <ul>
+              <li>Only works on <strong>soft paywalls</strong> — where article HTML is transmitted to the browser but hidden by JavaScript.</li>
+              <li>Will <strong>not work</strong> on hard paywalls where content is server-gated and never transmitted.</li>
+              <li>Some sites may block or rate-limit the proxy's IP range.</li>
+              <li>By proceeding, you accept responsibility for compliance with the target site's terms of service. Intended for research and journalism use only.</li>
+            </ul>
+            <button class="btn primary" id="try-proxy-btn">
+              Extract Article via Proxy
+            </button>
+          </div>
+          <div id="proxy-result" style="display: none"></div>
+        </div>
+      </div>
+
+      <!-- Article reader (shown when proxy extraction succeeds) -->
+      <div class="article-reader" id="article-reader" style="display: none">
+        <div class="reader-header">
+          <span class="reader-header-title">Extracted Article</span>
+          <div class="reader-actions">
+            <button class="btn" id="copy-text-btn">Copy Plain Text</button>
+            <button class="btn primary" id="download-txt-btn">Download .txt</button>
+          </div>
+        </div>
+        <div class="reader-body">
+          <div class="article-title" id="article-title"></div>
+          <div class="article-byline" id="article-byline"></div>
+          <div class="article-content" id="article-content"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Readability.js — Mozilla's article extraction library -->
+    <!-- Dependency: @mozilla/readability@0.5.0 via jsDelivr — required for Method 2 only -->
+    <script src="https://cdn.jsdelivr.net/npm/@mozilla/readability@0.5.0/Readability.min.js"></script>
+
+    <script>
+      /* =========================
+         JavaScript
+         ========================= */
+
+      // --- State ---
+      let currentUrl = "";
+
+      // --- DOM refs ---
+      const urlInput        = document.getElementById("url-input");
+      const findBtn         = document.getElementById("find-btn");
+      const clearBtn        = document.getElementById("clear-btn");
+      const resultsArea     = document.getElementById("results-area");
+      const waybackStatus   = document.getElementById("wayback-status");
+      const waybackResult   = document.getElementById("wayback-result");
+      const waybackBtn      = document.getElementById("wayback-btn");
+      const proxyStatus     = document.getElementById("proxy-status");
+      const proxyDisclaimer = document.getElementById("proxy-disclaimer");
+      const proxyResult     = document.getElementById("proxy-result");
+      const tryProxyBtn     = document.getElementById("try-proxy-btn");
+      const articleReader   = document.getElementById("article-reader");
+      const articleTitle    = document.getElementById("article-title");
+      const articleByline   = document.getElementById("article-byline");
+      const articleContent  = document.getElementById("article-content");
+      const copyTextBtn     = document.getElementById("copy-text-btn");
+      const downloadTxtBtn  = document.getElementById("download-txt-btn");
+
+      // --- Utility functions ---
+
+      function setStatus(el, text, state) {
+        el.textContent = text;
+        el.className = "method-status";
+        if (state) el.classList.add(state);
+      }
+
+      function escapeHTML(str) {
+        const div = document.createElement("div");
+        div.textContent = str;
+        return div.innerHTML;
+      }
+
+      function flashCopy(btn, label, text) {
+        navigator.clipboard.writeText(text).then(() => {
+          btn.textContent = "Copied";
+          setTimeout(() => { btn.textContent = label; }, 2000);
+        });
+      }
+
+      // Format Wayback timestamp (YYYYMMDDHHMMSS) to a readable date
+      function formatWaybackTimestamp(ts) {
+        if (!ts || ts.length < 8) return ts;
+        const months = ["Jan","Feb","Mar","Apr","May","Jun",
+                        "Jul","Aug","Sep","Oct","Nov","Dec"];
+        const year  = ts.slice(0, 4);
+        const month = parseInt(ts.slice(4, 6), 10);
+        const day   = ts.slice(6, 8);
+        const hour  = ts.slice(8, 10) || "00";
+        const min   = ts.slice(10, 12) || "00";
+        const mName = months[month - 1] || ts.slice(4, 6);
+        return `${day} ${mName} ${year}, ${hour}:${min} UTC`;
+      }
+
+      // --- Reset helpers (called when a new URL is set) ---
+
+      function resetWayback() {
+        waybackResult.innerHTML = "";
+        setStatus(waybackStatus, "", "");
+        waybackBtn.disabled = false;
+        waybackBtn.textContent = "Check Wayback Machine";
+      }
+
+      function resetProxy() {
+        proxyDisclaimer.style.display = "block";
+        proxyResult.style.display = "none";
+        proxyResult.innerHTML = "";
+        setStatus(proxyStatus, "", "");
+      }
+
+      // --- Method 1: Wayback Machine ---
+
+      async function checkWayback() {
+        waybackBtn.disabled = true;
+        waybackBtn.textContent = "Checking\u2026";
+        setStatus(waybackStatus, "Checking\u2026", "loading");
+        waybackResult.innerHTML = `
+          <div class="status-msg">
+            <div class="spinner"></div>
+            Querying the Internet Archive API&hellip;
+          </div>`;
+
+        try {
+          const apiUrl =
+            `https://archive.org/wayback/available?url=${encodeURIComponent(currentUrl)}`;
+          const response = await fetch(apiUrl);
+
+          if (!response.ok) {
+            throw new Error(`Archive API returned HTTP ${response.status}`);
+          }
+
+          const data = await response.json();
+          const snap = data.archived_snapshots && data.archived_snapshots.closest;
+
+          if (snap && snap.available && snap.url) {
+            const formattedDate = formatWaybackTimestamp(snap.timestamp);
+            const archiveUrl = snap.url;
+
+            setStatus(waybackStatus, "Archive found", "success");
+            waybackResult.innerHTML = `
+              <div class="archive-found">
+                <div class="archive-meta">
+                  Archived on <strong>${escapeHTML(formattedDate)}</strong>
+                </div>
+                <a href="${escapeHTML(archiveUrl)}"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   class="archive-url">${escapeHTML(archiveUrl)}</a>
+                <div class="archive-actions">
+                  <a href="${escapeHTML(archiveUrl)}"
+                     target="_blank"
+                     rel="noopener noreferrer"
+                     class="btn primary">Open Archive</a>
+                  <button class="btn" id="copy-wayback-btn">Copy URL</button>
+                </div>
+              </div>`;
+
+            document.getElementById("copy-wayback-btn").addEventListener("click", (e) => {
+              flashCopy(e.currentTarget, "Copy URL", archiveUrl);
+            });
+
+          } else {
+            setStatus(waybackStatus, "No archive found", "failure");
+            waybackResult.innerHTML = `
+              <div class="soft-fail-msg">
+                No archived version of this URL was found in the Wayback Machine.
+                The article may not have been crawled, or may have been published
+                after the last archive snapshot was taken.
+              </div>`;
+          }
+
+        } catch (err) {
+          setStatus(waybackStatus, "Error", "failure");
+          waybackResult.innerHTML = `
+            <div class="error-msg">
+              <strong>Archive lookup failed</strong>
+              ${escapeHTML(err.message)}
+            </div>`;
+        }
+
+        waybackBtn.disabled = false;
+        waybackBtn.textContent = "Check Again";
+      }
+
+      // --- Method 2: CORS Proxy + Readability ---
+
+      async function fetchViaAllorigins(url) {
+        const r = await fetch(
+          `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`
+        );
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const data = await r.json();
+        if (!data.contents) throw new Error("Empty response");
+        if (data.status && data.status.http_code >= 400) {
+          throw new Error(`Site returned HTTP ${data.status.http_code}`);
+        }
+        return data.contents;
+      }
+
+      async function fetchViaCorsproxy(url) {
+        const r = await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`);
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const html = await r.text();
+        if (!html || html.trim().length < 100) throw new Error("Empty response");
+        return html;
+      }
+
+      async function extractViaProxy() {
+        proxyResult.style.display = "block";
+        setStatus(proxyStatus, "Fetching\u2026", "loading");
+
+        // Per-proxy attempt log so the user can see exactly what each proxy does
+        proxyResult.innerHTML = `
+          <div class="proxy-attempts">
+            <div class="proxy-attempt">
+              <span class="proxy-attempt-name">allorigins.win</span>
+              <span class="proxy-attempt-status loading" id="pstatus-ao">Trying&hellip;</span>
+            </div>
+            <div class="proxy-attempt">
+              <span class="proxy-attempt-name">corsproxy.io</span>
+              <span class="proxy-attempt-status pending" id="pstatus-cp">Waiting&hellip;</span>
+            </div>
+          </div>
+          <div id="proxy-extra"></div>`;
+
+        function setAttemptStatus(id, state, text) {
+          const el = document.getElementById(id);
+          if (el) {
+            el.textContent = text;
+            el.className = "proxy-attempt-status" + (state ? " " + state : "");
+          }
+        }
+
+        function setExtra(html) {
+          const el = document.getElementById("proxy-extra");
+          if (el) el.innerHTML = html;
+        }
+
+        let html = null;
+        let usedProxy = "";
+
+        // Try allorigins.win
+        try {
+          html = await fetchViaAllorigins(currentUrl);
+          usedProxy = "allorigins.win";
+          setAttemptStatus("pstatus-ao", "success", "Success");
+          setAttemptStatus("pstatus-cp", "skipped", "Not needed");
+        } catch (err1) {
+          setAttemptStatus("pstatus-ao", "failure", `Failed: ${err1.message}`);
+
+          // Fall back to corsproxy.io
+          setAttemptStatus("pstatus-cp", "loading", "Trying\u2026");
+          try {
+            html = await fetchViaCorsproxy(currentUrl);
+            usedProxy = "corsproxy.io";
+            setAttemptStatus("pstatus-cp", "success", "Success");
+          } catch (err2) {
+            setAttemptStatus("pstatus-cp", "failure", `Failed: ${err2.message}`);
+            setStatus(proxyStatus, "Failed", "failure");
+            setExtra(`
+              <div class="error-msg" style="margin-top: 12px">
+                <strong>Both proxies failed</strong>
+                Neither allorigins.win nor corsproxy.io could retrieve this article.
+                The site may block proxy IP ranges, or this is a hard paywall where
+                content is never transmitted to the browser.
+              </div>`);
+            return;
+          }
+        }
+
+        // Extraction phase
+        setExtra(`
+          <div class="status-msg">
+            <div class="spinner"></div>
+            Extracting with Mozilla Readability&hellip;
+          </div>`);
+
+        try {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(html, "text/html");
+
+          let baseEl = doc.querySelector("base");
+          if (!baseEl) {
+            baseEl = doc.createElement("base");
+            doc.head.prepend(baseEl);
+          }
+          baseEl.href = currentUrl;
+
+          if (typeof Readability === "undefined") {
+            throw new Error(
+              "The Readability library failed to load from CDN. " +
+              "Check your network connection and try again."
+            );
+          }
+
+          const reader = new Readability(doc);
+          const article = reader.parse();
+
+          const textLen = article && article.textContent
+            ? article.textContent.trim().length
+            : 0;
+
+          if (!article || textLen < 300) {
+            throw new Error(
+              "Unable to extract article content. This is likely a hard paywall — " +
+              "the server never transmitted the article body to the browser, " +
+              "so there is nothing for the proxy to retrieve."
+            );
+          }
+
+          displayArticle(article, currentUrl, usedProxy);
+          setExtra("");
+          setStatus(proxyStatus, `Extracted via ${usedProxy}`, "success");
+
+        } catch (err) {
+          setStatus(proxyStatus, "Extraction failed", "failure");
+          setExtra(`
+            <div class="error-msg" style="margin-top: 12px">
+              <strong>Extraction failed</strong>
+              ${escapeHTML(err.message)}
+            </div>`);
+        }
+      }
+
+      // --- Render extracted article ---
+
+      function displayArticle(article, sourceUrl, proxyName) {
+        articleTitle.textContent = article.title || "Untitled Article";
+
+        const metaParts = [];
+        if (article.byline)   metaParts.push(article.byline);
+        if (article.siteName) metaParts.push(article.siteName);
+        articleByline.textContent = metaParts.join(" \u2014 ");
+        articleByline.style.display = metaParts.length ? "block" : "none";
+
+        articleContent.innerHTML = article.content;
+        articleContent.querySelectorAll("script, style").forEach((el) => el.remove());
+
+
+        articleReader.style.display = "block";
+        setTimeout(() => {
+          articleReader.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 100);
+      }
+
+      // --- Download helpers ---
+
+      function sanitizeFilename(title) {
+        return (title || "article")
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-+|-+$/g, "")
+          .slice(0, 60) || "article";
+      }
+
+      function downloadFile(content, filename, mimeType) {
+        const blob = new Blob([content], { type: mimeType });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement("a");
+        a.href     = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      function buildPlainText() {
+        const parts = [
+          articleTitle.textContent,
+          articleByline.textContent,
+          "",
+          articleContent.innerText,
+        ].filter(Boolean);
+        return parts.join("\n");
+      }
+
+      // --- Copy plain text ---
+
+      copyTextBtn.addEventListener("click", () => {
+        flashCopy(copyTextBtn, "Copy Plain Text", buildPlainText());
+      });
+
+      // --- Download plain text ---
+
+      downloadTxtBtn.addEventListener("click", () => {
+        const filename = sanitizeFilename(articleTitle.textContent) + ".txt";
+        downloadFile(buildPlainText(), filename, "text/plain");
+      });
+
+
+      // --- Set URL (validate and reveal method cards) ---
+
+      function setUrl() {
+        const raw = urlInput.value.trim();
+        if (!raw) return;
+
+        let url;
+        try {
+          url = new URL(raw);
+          if (url.protocol !== "http:" && url.protocol !== "https:") {
+            throw new Error("Only http:// and https:// URLs are supported.");
+          }
+        } catch {
+          urlInput.classList.add("invalid");
+          setTimeout(() => urlInput.classList.remove("invalid"), 2000);
+          return;
+        }
+
+        currentUrl = url.href;
+
+        // Reset all method cards to their initial state
+        resetWayback();
+        resetProxy();
+        articleReader.style.display = "none";
+
+        // Reveal the method cards
+        resultsArea.style.display = "block";
+      }
+
+      // --- Event listeners ---
+
+      findBtn.addEventListener("click", setUrl);
+
+      clearBtn.addEventListener("click", () => {
+        urlInput.value = "";
+        currentUrl = "";
+        resultsArea.style.display = "none";
+        resetWayback();
+        resetProxy();
+        articleReader.style.display = "none";
+        urlInput.focus();
+      });
+
+      urlInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") setUrl();
+      });
+
+      waybackBtn.addEventListener("click", checkWayback);
+      tryProxyBtn.addEventListener("click", extractViaProxy);
+    </script>
+  </body>
+</html>
