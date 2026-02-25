@@ -61,6 +61,7 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 ### Maps and Spatial Data
 
 - **[Feature Service Viewer](feature-service-viewer.html)** — load and visualize ArcGIS Feature Services and MapServer layers on an interactive map
+- **[GeoJSON Editor](geojson-editor.html)** — draw points, polygons, and lines on an interactive map, add custom properties to features, and export as a valid GeoJSON file
 - **[GeoJSON Viewer](geojson-viewer.html)** — visualize and explore GeoJSON files on an interactive map
 
 ### Natural Language Processing (NLP)
