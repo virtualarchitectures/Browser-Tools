@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GeoJSON Editor</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <style>
+      /* =========================
+         Reset and Base Styles
+         ========================= */
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        color: #24292e;
+        background: #f6f8fa;
+      }
+
+      /* =========================
+         Layout
+         ========================= */
+      .back-link {
+        display: inline-block;
+        margin-bottom: 16px;
+        color: #0366d6;
+        text-decoration: none;
+        font-size: 14px;
+      }
+      .back-link:hover {
+        text-decoration: underline;
+      }
+      h1 {
+        margin: 0 0 16px 0;
+        font-size: 28px;
+        font-weight: 600;
+      }
+      .panel {
+        background: #ffffff;
+        padding: 16px;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+        margin-bottom: 16px;
+      }
+      .panel-title {
+        font-size: 16px;
+        font-weight: 600;
+        margin: 0 0 12px 0;
+        color: #24292e;
+      }
+      .map-layout {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 16px;
+        align-items: flex-start;
+      }
+      .map-wrapper {
+        flex: 1;
+        min-width: 0;
+      }
+      .feature-panel {
+        width: 300px;
+        flex-shrink: 0;
+      }
+      @media (max-width: 800px) {
+        .map-layout {
+          flex-direction: column;
+        }
+        .feature-panel {
+          width: 100%;
+        }
+      }
+
+      /* =========================
+         Buttons
+         ========================= */
+      .btn {
+        background: #fafbfc;
+        color: #24292e;
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+        cursor: pointer;
+        font-size: 14px;
+        line-height: 20px;
+        font-family: inherit;
+        white-space: nowrap;
+      }
+      .btn:hover {
+        background: #f3f4f6;
+      }
+      .btn.primary {
+        background: #0366d6;
+        color: #fff;
+      }
+      .btn.primary:hover {
+        background: #0256c5;
+      }
+      .btn.active {
+        background: #0366d6;
+        color: #fff;
+        border-color: #0256c5;
+      }
+      .btn.active:hover {
+        background: #0256c5;
+      }
+      .btn:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      .btn:disabled:hover {
+        background: #fafbfc;
+      }
+      .btn.primary:disabled:hover {
+        background: #0366d6;
+      }
+
+      /* =========================
+         Toolbar
+         ========================= */
+      .toolbar {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .draw-mode-group {
+        display: flex;
+        gap: 4px;
+      }
+      .toolbar-right {
+        display: flex;
+        gap: 6px;
+        margin-left: auto;
+      }
+      .status-bar {
+        margin-top: 10px;
+        font-size: 13px;
+        color: #586069;
+        min-height: 18px;
+      }
+
+      /* =========================
+         Map Container
+         ========================= */
+      .map-container {
+        background: white;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        overflow: hidden;
+        position: relative;
+      }
+      #map {
+        width: 100%;
+        height: 560px;
+        background: #e8e8e8;
+      }
+      .map-btn {
+        position: absolute;
+        top: 10px;
+        z-index: 1000;
+        background: white;
+        border: 2px solid rgba(0, 0, 0, 0.2);
+        border-radius: 4px;
+        padding: 6px 10px;
+        cursor: pointer;
+        font-size: 18px;
+        box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
+        font-family: inherit;
+      }
+      .map-btn:hover {
+        background: #f4f4f4;
+      }
+      .map-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        background: #f4f4f4;
+      }
+      .fullscreen-btn {
+        right: 10px;
+      }
+      .zoom-extents-btn {
+        right: 60px;
+      }
+
+      /* =========================
+         Feature Properties Panel
+         ========================= */
+      .empty-state {
+        text-align: center;
+        color: #586069;
+        padding: 24px 12px;
+        font-size: 13px;
+        line-height: 1.5;
+      }
+      .feature-type-badge {
+        display: inline-block;
+        background: #f6f8fa;
+        border: 1px solid #e1e4e8;
+        border-radius: 4px;
+        padding: 3px 8px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #586069;
+        margin-bottom: 4px;
+      }
+      .geom-info {
+        font-size: 12px;
+        color: #586069;
+        margin-bottom: 12px;
+      }
+      .prop-section-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: #586069;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin: 12px 0 6px 0;
+      }
+      .prop-edit-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+        margin-bottom: 6px;
+      }
+      .prop-edit-table th {
+        background: #f6f8fa;
+        text-align: left;
+        padding: 5px 7px;
+        border: 1px solid #e1e4e8;
+        font-size: 11px;
+        font-weight: 600;
+        color: #586069;
+      }
+      .prop-edit-table td {
+        padding: 3px;
+        border: 1px solid #e1e4e8;
+      }
+      .prop-input {
+        width: 100%;
+        padding: 4px 6px;
+        border: 1px solid transparent;
+        border-radius: 3px;
+        font-size: 13px;
+        font-family: inherit;
+        background: transparent;
+        color: #24292e;
+      }
+      .prop-input:focus {
+        outline: none;
+        border-color: #0366d6;
+        background: #fff;
+      }
+      .btn-icon {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #586069;
+        font-size: 13px;
+        padding: 3px 6px;
+        border-radius: 3px;
+        line-height: 1;
+        font-family: inherit;
+      }
+      .btn-icon:hover {
+        background: #fee2e2;
+        color: #d73a49;
+      }
+      .no-props {
+        font-size: 13px;
+        color: #586069;
+        padding: 6px 0 4px 0;
+      }
+      .add-prop-form {
+        display: flex;
+        gap: 4px;
+        margin: 8px 0;
+        align-items: center;
+      }
+      .add-prop-form .prop-input {
+        flex: 1;
+        border: 1px solid #e1e4e8;
+        background: white;
+        border-radius: 4px;
+        padding: 5px 6px;
+      }
+      .add-prop-form .btn {
+        padding: 5px 10px;
+        font-size: 13px;
+        flex-shrink: 0;
+      }
+      .feature-actions {
+        margin-top: 14px;
+        padding-top: 12px;
+        border-top: 1px solid #e1e4e8;
+      }
+      .btn-danger {
+        background: #fff;
+        color: #d73a49;
+        border: 1px solid #d73a49;
+        padding: 6px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+        font-family: inherit;
+      }
+      .btn-danger:hover {
+        background: #fff5f5;
+      }
+
+      /* =========================
+         Features List
+         ========================= */
+      .list-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+      }
+      .section-header {
+        background: #0366d6;
+        color: white;
+        padding: 10px 14px;
+        cursor: pointer;
+        user-select: none;
+        display: flex;
+        align-items: center;
+        font-size: 14px;
+        font-weight: 600;
+        border-radius: 4px 4px 0 0;
+      }
+      .section-header:hover {
+        background: #0256c5;
+      }
+      .section-header::before {
+        content: "▼";
+        margin-right: 8px;
+        font-size: 11px;
+        transition: transform 0.2s;
+      }
+      .section-header.collapsed::before {
+        transform: rotate(-90deg);
+      }
+      .feature-type-section {
+        margin-bottom: 16px;
+        border: 1px solid #e1e4e8;
+        border-radius: 4px;
+        overflow: hidden;
+      }
+      .table-content {
+        max-height: 400px;
+        overflow: auto;
+        transition: max-height 0.3s ease;
+      }
+      .table-content.collapsed {
+        max-height: 0;
+        overflow: hidden;
+      }
+      .properties-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+      .properties-table th {
+        background: #f6f8fa;
+        font-weight: 600;
+        color: #24292e;
+        text-align: left;
+        padding: 8px 12px;
+        border: 1px solid #e1e4e8;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+      }
+      .properties-table td {
+        padding: 7px 12px;
+        border: 1px solid #e1e4e8;
+        color: #24292e;
+      }
+      .properties-table tr:hover {
+        background: #f6f8fa;
+        cursor: pointer;
+      }
+      .properties-table tr.selected {
+        background: #ddf4ff;
+      }
+
+      /* =========================
+         Fullscreen
+         ========================= */
+      body.fullscreen {
+        padding: 0;
+        overflow: hidden;
+      }
+      body.fullscreen > .back-link,
+      body.fullscreen > h1,
+      body.fullscreen > .panel,
+      body.fullscreen > #featuresSection {
+        display: none;
+      }
+      body.fullscreen .map-layout {
+        margin: 0;
+      }
+      body.fullscreen .feature-panel {
+        display: none;
+      }
+      body.fullscreen .map-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        border: none;
+        border-radius: 0;
+        z-index: 9999;
+      }
+      body.fullscreen #map {
+        height: 100vh;
+      }
+    </style>
+  </head>
+  <body>
+    <a href="index.html" class="back-link">← Back to Browser Tools</a>
+    <h1>GeoJSON Editor</h1>
+
+    <!-- Toolbar -->
+    <div class="panel">
+      <div class="toolbar">
+        <div class="draw-mode-group">
+          <button class="btn active" data-mode="pan">Pan / Select</button>
+          <button class="btn" data-mode="point">Add Point</button>
+          <button class="btn" data-mode="polygon">Add Polygon</button>
+          <button class="btn" data-mode="line">Add Line</button>
+        </div>
+        <div class="toolbar-right">
+          <button class="btn primary" id="exportBtn" disabled>
+            Export GeoJSON
+          </button>
+          <button class="btn" id="clearBtn" disabled>Clear All</button>
+        </div>
+      </div>
+      <div class="status-bar" id="statusBar">
+        Select a draw mode to start adding features to the map.
+      </div>
+    </div>
+
+    <!-- Map + Feature Panel -->
+    <div class="map-layout">
+      <div class="map-wrapper">
+        <div class="map-container">
+          <button
+            class="map-btn zoom-extents-btn"
+            id="zoomExtentsBtn"
+            title="Zoom to all features"
+            disabled
+          >
+            &#x2316;
+          </button>
+          <button
+            class="map-btn fullscreen-btn"
+            id="fullscreenBtn"
+            title="Toggle fullscreen"
+          >
+            &#x26F6;
+          </button>
+          <div id="map"></div>
+        </div>
+      </div>
+
+      <!-- Feature Properties Editor -->
+      <div class="panel feature-panel">
+        <div class="panel-title">Feature Properties</div>
+        <div id="featurePanelContent">
+          <div class="empty-state">
+            Switch to a draw mode and click the map to add features. In Pan
+            mode, click a feature to select and edit its properties.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Features Table -->
+    <div class="panel" id="featuresSection">
+      <div class="list-header">
+        <div class="panel-title" style="margin: 0">
+          Features (<span id="featureCount">0</span>)
+        </div>
+      </div>
+      <div id="featuresList">
+        <div class="empty-state">
+          No features yet. Use the draw tools above to add points, polygons, or
+          lines.
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+      /* =========================
+         State
+         ========================= */
+      const state = {
+        drawMode: "pan",
+        features: [], // { id, feature (GeoJSON Feature), layer (Leaflet layer) }
+        selectedId: null,
+        nextId: 0,
+        drawing: {
+          active: false,
+          vertices: [], // Array of L.LatLng
+          previewPolyline: null, // Dashed polyline showing drawn path
+          previewMarkers: [], // Small vertex dot markers
+          ghostLine: null, // Line from last vertex to cursor
+        },
+      };
+
+      /* =========================
+         Map Initialization
+         ========================= */
+      const map = L.map("map", {
+        doubleClickZoom: false, // We handle dblclick ourselves
+      }).setView([20, 0], 2);
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19,
+      }).addTo(map);
+
+      /* =========================
+         Feature Visual Styles
+         ========================= */
+      const STYLES = {
+        point: {
+          default: {
+            radius: 7,
+            fillColor: "#0366d6",
+            color: "#ffffff",
+            weight: 2,
+            opacity: 1,
+            fillOpacity: 0.85,
+          },
+          selected: {
+            radius: 8,
+            fillColor: "#d73a49",
+            color: "#ffffff",
+            weight: 2,
+            opacity: 1,
+            fillOpacity: 0.9,
+          },
+        },
+        line: {
+          default: {
+            color: "#0366d6",
+            weight: 3,
+            opacity: 0.85,
+          },
+          selected: {
+            color: "#d73a49",
+            weight: 4,
+            opacity: 1,
+          },
+        },
+        polygon: {
+          default: {
+            color: "#0366d6",
+            weight: 2,
+            opacity: 0.8,
+            fillColor: "#0366d6",
+            fillOpacity: 0.2,
+          },
+          selected: {
+            color: "#d73a49",
+            weight: 3,
+            opacity: 1,
+            fillColor: "#d73a49",
+            fillOpacity: 0.35,
+          },
+        },
+      };
+
+      /* =========================
+         Draw Mode
+         ========================= */
+      function setDrawMode(mode) {
+        if (state.drawing.active) cancelDrawing();
+
+        state.drawMode = mode;
+
+        document.querySelectorAll("[data-mode]").forEach((btn) => {
+          btn.classList.toggle("active", btn.dataset.mode === mode);
+        });
+
+        map.getContainer().style.cursor = mode === "pan" ? "" : "crosshair";
+        updateStatusBar();
+      }
+
+      /* =========================
+         Map Events
+         ========================= */
+      let clickTimeout = null;
+      let lastClickTime = 0;
+
+      map.on("click", (e) => {
+        if (state.drawMode === "pan") return;
+
+        const now = Date.now();
+        const dt = now - lastClickTime;
+        lastClickTime = now;
+
+        // Ignore clicks that are part of a double-click
+        if (dt < 350) {
+          clearTimeout(clickTimeout);
+          return;
+        }
+
+        const latlng = e.latlng;
+        clearTimeout(clickTimeout);
+        clickTimeout = setTimeout(() => {
+          handleSingleClick(latlng);
+        }, 230);
+      });
+
+      map.on("dblclick", (e) => {
+        L.DomEvent.stop(e);
+        clearTimeout(clickTimeout);
+        handleDoubleClick(e.latlng);
+      });
+
+      map.on("mousemove", (e) => {
+        if (!state.drawing.active) return;
+        updateGhostLine(e.latlng);
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          if (document.body.classList.contains("fullscreen")) {
+            document.getElementById("fullscreenBtn").click();
+          } else if (state.drawing.active) {
+            cancelDrawing();
+          }
+        }
+      });
+
+      function handleSingleClick(latlng) {
+        if (state.drawMode === "point") {
+          addPoint(latlng);
+        } else if (
+          state.drawMode === "polygon" ||
+          state.drawMode === "line"
+        ) {
+          addVertex(latlng);
+          updateStatusBar();
+        }
+      }
+
+      function handleDoubleClick() {
+        if (state.drawMode === "polygon") {
+          if (state.drawing.vertices.length >= 3) {
+            completePolygon();
+          } else if (state.drawing.active) {
+            cancelDrawing();
+          }
+        } else if (state.drawMode === "line") {
+          if (state.drawing.vertices.length >= 2) {
+            completeLine();
+          } else if (state.drawing.active) {
+            cancelDrawing();
+          }
+        }
+      }
+
+      /* =========================
+         Drawing Functions
+         ========================= */
+      function addPoint(latlng) {
+        const id = state.nextId++;
+        const feature = {
+          type: "Feature",
+          geometry: {
+            type: "Point",
+            coordinates: [latlng.lng, latlng.lat],
+          },
+          properties: {},
+        };
+
+        const layer = L.circleMarker(latlng, STYLES.point.default);
+        layer.addTo(map);
+        layer.on("click", (e) => {
+          if (state.drawMode === "pan") {
+            L.DomEvent.stop(e);
+            selectFeature(id);
+          }
+        });
+
+        state.features.push({ id, feature, layer });
+        selectFeature(id);
+        updateUI();
+      }
+
+      function addVertex(latlng) {
+        state.drawing.active = true;
+        state.drawing.vertices.push(latlng);
+
+        // Small vertex dot marker
+        const marker = L.circleMarker(latlng, {
+          radius: 4,
+          fillColor: "#0366d6",
+          color: "#ffffff",
+          weight: 2,
+          fillOpacity: 1,
+          interactive: false,
+        }).addTo(map);
+        state.drawing.previewMarkers.push(marker);
+
+        // Update dashed preview polyline
+        if (state.drawing.vertices.length >= 2) {
+          if (state.drawing.previewPolyline) {
+            map.removeLayer(state.drawing.previewPolyline);
+          }
+          state.drawing.previewPolyline = L.polyline(
+            state.drawing.vertices,
+            {
+              color: "#0366d6",
+              weight: 2,
+              dashArray: "6, 4",
+              opacity: 0.8,
+              interactive: false,
+            }
+          ).addTo(map);
+        }
+      }
+
+      function updateGhostLine(latlng) {
+        const verts = state.drawing.vertices;
+        if (verts.length === 0) return;
+        const last = verts[verts.length - 1];
+        if (state.drawing.ghostLine) {
+          map.removeLayer(state.drawing.ghostLine);
+        }
+        state.drawing.ghostLine = L.polyline([last, latlng], {
+          color: "#0366d6",
+          weight: 1,
+          dashArray: "3, 6",
+          opacity: 0.5,
+          interactive: false,
+        }).addTo(map);
+      }
+
+      function completePolygon() {
+        const verts = [...state.drawing.vertices];
+        clearDrawing();
+
+        const id = state.nextId++;
+        const coords = verts.map((v) => [v.lng, v.lat]);
+        coords.push(coords[0]); // Close the ring
+
+        const feature = {
+          type: "Feature",
+          geometry: {
+            type: "Polygon",
+            coordinates: [coords],
+          },
+          properties: {},
+        };
+
+        const layer = L.polygon(verts, STYLES.polygon.default);
+        layer.addTo(map);
+        layer.on("click", (e) => {
+          if (state.drawMode === "pan") {
+            L.DomEvent.stop(e);
+            selectFeature(id);
+          }
+        });
+
+        state.features.push({ id, feature, layer });
+        selectFeature(id);
+        updateUI();
+      }
+
+      function completeLine() {
+        const verts = [...state.drawing.vertices];
+        clearDrawing();
+
+        const id = state.nextId++;
+        const coords = verts.map((v) => [v.lng, v.lat]);
+
+        const feature = {
+          type: "Feature",
+          geometry: {
+            type: "LineString",
+            coordinates: coords,
+          },
+          properties: {},
+        };
+
+        const layer = L.polyline(verts, STYLES.line.default);
+        layer.addTo(map);
+        layer.on("click", (e) => {
+          if (state.drawMode === "pan") {
+            L.DomEvent.stop(e);
+            selectFeature(id);
+          }
+        });
+
+        state.features.push({ id, feature, layer });
+        selectFeature(id);
+        updateUI();
+      }
+
+      function clearDrawing() {
+        state.drawing.previewMarkers.forEach((m) => map.removeLayer(m));
+        state.drawing.previewMarkers = [];
+
+        if (state.drawing.previewPolyline) {
+          map.removeLayer(state.drawing.previewPolyline);
+          state.drawing.previewPolyline = null;
+        }
+        if (state.drawing.ghostLine) {
+          map.removeLayer(state.drawing.ghostLine);
+          state.drawing.ghostLine = null;
+        }
+
+        state.drawing.vertices = [];
+        state.drawing.active = false;
+        updateStatusBar();
+      }
+
+      function cancelDrawing() {
+        clearDrawing();
+      }
+
+      /* =========================
+         Feature Selection
+         ========================= */
+      function selectFeature(id) {
+        state.selectedId = id;
+        state.features.forEach((item) =>
+          applyFeatureStyle(item, item.id === id)
+        );
+        renderFeaturePanel();
+        renderFeatureList();
+      }
+
+      function applyFeatureStyle(item, isSelected) {
+        const { feature, layer } = item;
+        const type = feature.geometry.type;
+
+        if (type === "Point") {
+          const s = isSelected ? STYLES.point.selected : STYLES.point.default;
+          layer.setStyle(s);
+          layer.setRadius(s.radius);
+        } else if (type === "LineString") {
+          layer.setStyle(
+            isSelected ? STYLES.line.selected : STYLES.line.default
+          );
+        } else {
+          layer.setStyle(
+            isSelected ? STYLES.polygon.selected : STYLES.polygon.default
+          );
+        }
+      }
+
+      /* =========================
+         Feature Properties Panel
+         ========================= */
+      function renderFeaturePanel() {
+        const content = document.getElementById("featurePanelContent");
+
+        if (state.selectedId === null) {
+          content.innerHTML =
+            '<div class="empty-state">Click a feature on the map (in Pan mode) to select it and edit its properties.</div>';
+          return;
+        }
+
+        const item = state.features.find((f) => f.id === state.selectedId);
+        if (!item) {
+          content.innerHTML =
+            '<div class="empty-state">Feature not found.</div>';
+          return;
+        }
+
+        const { feature } = item;
+        const geomType = feature.geometry.type;
+        const props = feature.properties || {};
+        const keys = Object.keys(props);
+
+        // Geometry info summary
+        let geomInfo = "";
+        if (geomType === "Point") {
+          const [lng, lat] = feature.geometry.coordinates;
+          geomInfo = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+        } else if (geomType === "Polygon") {
+          const count = feature.geometry.coordinates[0].length - 1;
+          geomInfo = `${count} ${count === 1 ? "vertex" : "vertices"}`;
+        } else if (geomType === "LineString") {
+          const count = feature.geometry.coordinates.length;
+          geomInfo = `${count} ${count === 1 ? "vertex" : "vertices"}`;
+        }
+
+        let html = `
+          <div class="feature-type-badge">${escHtml(geomType)}</div>
+          <div class="geom-info">${escHtml(geomInfo)}</div>
+          <div class="prop-section-label">Properties</div>`;
+
+        if (keys.length > 0) {
+          html +=
+            '<table class="prop-edit-table"><thead><tr><th>Key</th><th>Value</th><th></th></tr></thead><tbody>';
+          keys.forEach((key) => {
+            const val = props[key];
+            const safeKey = escHtml(key);
+            const safeVal = escHtml(
+              val !== null && val !== undefined ? String(val) : ""
+            );
+            html += `<tr>
+              <td><input class="prop-input" data-prop-key="${safeKey}" data-field="key" value="${safeKey}" /></td>
+              <td><input class="prop-input" data-prop-key="${safeKey}" data-field="value" value="${safeVal}" /></td>
+              <td style="width:32px;text-align:center">
+                <button class="btn-icon delete-prop-btn" data-prop-key="${safeKey}" title="Remove">x</button>
+              </td>
+            </tr>`;
+          });
+          html += "</tbody></table>";
+        } else {
+          html += '<div class="no-props">No properties. Add one below.</div>';
+        }
+
+        html += `
+          <div class="add-prop-form">
+            <input id="newPropKey" class="prop-input" placeholder="Key" />
+            <input id="newPropValue" class="prop-input" placeholder="Value" />
+            <button class="btn" id="addPropBtn">Add</button>
+          </div>
+          <div class="feature-actions">
+            <button class="btn-danger" id="deleteFeatBtn">Delete Feature</button>
+          </div>`;
+
+        content.innerHTML = html;
+
+        // Property key/value editing
+        content.querySelectorAll(".prop-input[data-field]").forEach((input) => {
+          input.addEventListener("blur", () => {
+            const propKey = input.dataset.propKey;
+            const field = input.dataset.field;
+
+            if (field === "value") {
+              feature.properties[propKey] = input.value;
+              renderFeatureList();
+            } else if (field === "key") {
+              const newKey = input.value.trim();
+              if (
+                newKey &&
+                newKey !== propKey &&
+                !Object.prototype.hasOwnProperty.call(
+                  feature.properties,
+                  newKey
+                )
+              ) {
+                feature.properties[newKey] = feature.properties[propKey];
+                delete feature.properties[propKey];
+                renderFeaturePanel();
+                renderFeatureList();
+              } else {
+                input.value = propKey; // Revert invalid change
+              }
+            }
+          });
+          input.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") input.blur();
+          });
+        });
+
+        // Delete property
+        content.querySelectorAll(".delete-prop-btn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            delete feature.properties[btn.dataset.propKey];
+            renderFeaturePanel();
+            renderFeatureList();
+          });
+        });
+
+        // Add property
+        const addPropBtn = document.getElementById("addPropBtn");
+        const newPropKey = document.getElementById("newPropKey");
+        const newPropValue = document.getElementById("newPropValue");
+
+        function addProp() {
+          const key = newPropKey.value.trim();
+          if (!key) {
+            newPropKey.focus();
+            return;
+          }
+          feature.properties[key] = newPropValue.value;
+          renderFeaturePanel();
+          renderFeatureList();
+          // Re-focus the key field for rapid entry of multiple properties
+          const keyField = document.getElementById("newPropKey");
+          if (keyField) keyField.focus();
+        }
+
+        addPropBtn.addEventListener("click", addProp);
+        newPropKey.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") newPropValue.focus();
+        });
+        newPropValue.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") addProp();
+        });
+
+        // Delete feature
+        document
+          .getElementById("deleteFeatBtn")
+          .addEventListener("click", () => {
+            deleteFeature(state.selectedId);
+          });
+      }
+
+      /* =========================
+         Features List Table
+         ========================= */
+      function renderFeatureList() {
+        const listEl = document.getElementById("featuresList");
+        const countEl = document.getElementById("featureCount");
+
+        countEl.textContent = state.features.length;
+
+        if (state.features.length === 0) {
+          listEl.innerHTML =
+            '<div class="empty-state">No features yet. Use the draw tools above to add points, polygons, or lines.</div>';
+          return;
+        }
+
+        // Group by geometry type
+        const byType = {};
+        state.features.forEach((item) => {
+          const type = item.feature.geometry.type;
+          if (!byType[type]) byType[type] = [];
+          byType[type].push(item);
+        });
+
+        let html = "";
+        Object.keys(byType)
+          .sort()
+          .forEach((type) => {
+            const items = byType[type];
+
+            // Collect all unique property keys for this type
+            const allKeys = new Set();
+            items.forEach(({ feature }) => {
+              Object.keys(feature.properties || {}).forEach((k) =>
+                allKeys.add(k)
+              );
+            });
+            const keys = Array.from(allKeys).sort();
+
+            html += `<div class="feature-type-section">
+              <div class="section-header" data-type="${escHtml(type)}">${escHtml(type)} (${items.length})</div>
+              <div class="table-content">
+                <table class="properties-table">
+                  <thead><tr>
+                    <th>#</th>
+                    ${keys.map((k) => `<th>${escHtml(k)}</th>`).join("")}
+                    ${keys.length === 0 ? '<th style="color:#586069;font-weight:400;font-style:italic">No properties</th>' : ""}
+                  </tr></thead>
+                  <tbody>`;
+
+            items.forEach(({ id, feature }, i) => {
+              const isSelected = id === state.selectedId;
+              html += `<tr data-feature-id="${id}" class="${isSelected ? "selected" : ""}">
+                <td>${i + 1}</td>
+                ${keys
+                  .map((k) => {
+                    const v =
+                      feature.properties && feature.properties[k];
+                    return `<td>${v !== undefined && v !== null ? escHtml(String(v)) : ""}</td>`;
+                  })
+                  .join("")}
+                ${keys.length === 0 ? '<td style="color:#586069">—</td>' : ""}
+              </tr>`;
+            });
+
+            html += `</tbody></table></div></div>`;
+          });
+
+        listEl.innerHTML = html;
+
+        // Section header collapse toggle
+        listEl.querySelectorAll(".section-header").forEach((header) => {
+          header.addEventListener("click", () => {
+            const tableContent = header.nextElementSibling;
+            tableContent.classList.toggle("collapsed");
+            header.classList.toggle("collapsed");
+          });
+        });
+
+        // Feature row click: select + zoom
+        listEl.querySelectorAll("tr[data-feature-id]").forEach((row) => {
+          row.addEventListener("click", () => {
+            const id = parseInt(row.dataset.featureId, 10);
+            const item = state.features.find((f) => f.id === id);
+            if (!item) return;
+            selectFeature(id);
+            const { layer, feature } = item;
+            if (feature.geometry.type === "Point") {
+              map.setView(layer.getLatLng(), Math.max(map.getZoom(), 12));
+            } else if (layer.getBounds) {
+              map.fitBounds(layer.getBounds(), { padding: [40, 40] });
+            }
+          });
+        });
+      }
+
+      /* =========================
+         Feature Deletion
+         ========================= */
+      function deleteFeature(id) {
+        const idx = state.features.findIndex((f) => f.id === id);
+        if (idx === -1) return;
+        map.removeLayer(state.features[idx].layer);
+        state.features.splice(idx, 1);
+        state.selectedId = null;
+        updateUI();
+      }
+
+      /* =========================
+         Export GeoJSON
+         ========================= */
+      function exportGeoJSON() {
+        const geojson = {
+          type: "FeatureCollection",
+          features: state.features.map(({ feature }) => feature),
+        };
+        const json = JSON.stringify(geojson, null, 2);
+        const blob = new Blob([json], { type: "application/geo+json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "features.geojson";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+
+      /* =========================
+         UI Helpers
+         ========================= */
+      function escHtml(str) {
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function updateUI() {
+        renderFeaturePanel();
+        renderFeatureList();
+        updateStatusBar();
+        const hasFeatures = state.features.length > 0;
+        document.getElementById("exportBtn").disabled = !hasFeatures;
+        document.getElementById("clearBtn").disabled = !hasFeatures;
+        document.getElementById("zoomExtentsBtn").disabled = !hasFeatures;
+      }
+
+      function updateStatusBar() {
+        const bar = document.getElementById("statusBar");
+        const d = state.drawing;
+        const n = d.vertices.length;
+        const vWord = n === 1 ? "vertex" : "vertices";
+
+        const messages = {
+          pan: "Click a feature on the map to select it and edit its properties.",
+          point: "Click on the map to place a point.",
+          polygon: d.active
+            ? `Drawing polygon: ${n} ${vWord} placed. Click to add more. Double-click to finish (minimum 3). Escape to cancel.`
+            : "Click on the map to start drawing a polygon. Click to add vertices. Double-click to finish.",
+          line: d.active
+            ? `Drawing line: ${n} ${vWord} placed. Click to add more. Double-click to finish (minimum 2). Escape to cancel.`
+            : "Click on the map to start drawing a line. Click to add vertices. Double-click to finish.",
+        };
+
+        bar.textContent = messages[state.drawMode] || "";
+      }
+
+      /* =========================
+         Event Handlers
+         ========================= */
+      document.querySelectorAll("[data-mode]").forEach((btn) => {
+        btn.addEventListener("click", () => setDrawMode(btn.dataset.mode));
+      });
+
+      document
+        .getElementById("exportBtn")
+        .addEventListener("click", exportGeoJSON);
+
+      document.getElementById("clearBtn").addEventListener("click", () => {
+        if (!confirm("Delete all features? This cannot be undone.")) return;
+        state.features.forEach(({ layer }) => map.removeLayer(layer));
+        state.features = [];
+        state.selectedId = null;
+        cancelDrawing();
+        updateUI();
+        map.setView([20, 0], 2);
+      });
+
+      document.getElementById("zoomExtentsBtn").addEventListener("click", () => {
+        if (state.features.length === 0) return;
+        const group = L.featureGroup(state.features.map((f) => f.layer));
+        if (group.getBounds().isValid()) {
+          map.fitBounds(group.getBounds(), { padding: [30, 30] });
+        }
+      });
+
+      document
+        .getElementById("fullscreenBtn")
+        .addEventListener("click", () => {
+          document.body.classList.toggle("fullscreen");
+          setTimeout(() => map.invalidateSize(), 100);
+        });
+
+      /* =========================
+         Initialize
+         ========================= */
+      setDrawMode("pan");
+      updateUI();
+    </script>
+  </body>
+</html>
