@@ -621,60 +621,102 @@
         }
 
         const batchSize = 1000;
-        let offset = 0;
+        const allFeatureData = [];
         let loadedCount = 0;
-        const geojsonFeatures = [];
-        let firstBatch = true;
 
         try {
-          while (true) {
-            const countText =
-              total !== null ? `${loadedCount} of ${total}` : `${loadedCount}`;
+          if (total !== null && total > 0) {
+            // Parallel: all batch offsets are known upfront, fire them simultaneously
+            const offsets = [];
+            for (let i = 0; i < total; i += batchSize) offsets.push(i);
+
             showStatus(
-              `<span class="loading-spinner"></span>Loading features... (${countText})`,
+              `<span class="loading-spinner"></span>Loading ${total} features in ${offsets.length} request${offsets.length > 1 ? "s" : ""}...`,
               "loading"
             );
 
-            const batch = await fetchBatch(layerUrl, offset, batchSize);
+            let firstBatchDone = false;
 
-            if (!batch.features || batch.features.length === 0) {
-              if (offset === 0) {
-                showStatus("No features found in this layer", "error");
-                return;
+            const featureArrays = await Promise.all(
+              offsets.map(async (offset) => {
+                const batch = await fetchBatch(layerUrl, offset, batchSize);
+                const features = batch.features || [];
+                if (features.length > 0) {
+                  geojsonLayer.addData(batch);
+                  loadedCount += features.length;
+                  showStatus(
+                    `<span class="loading-spinner"></span>Loading... (${loadedCount} of ${total})`,
+                    "loading"
+                  );
+                  if (!firstBatchDone && geojsonLayer.getBounds().isValid()) {
+                    map.fitBounds(geojsonLayer.getBounds());
+                    firstBatchDone = true;
+                  }
+                }
+                return features;
+              })
+            );
+
+            // featureArrays is in offset order (Promise.all preserves order)
+            allFeatureData.push(...featureArrays.flat());
+
+            // allFeatures was populated as batches arrived (non-deterministic order);
+            // sort it back into offset order so table row indices stay consistent
+            const orderMap = new Map(allFeatureData.map((f, i) => [f, i]));
+            allFeatures.sort(
+              (a, b) =>
+                (orderMap.get(a.feature) ?? 0) - (orderMap.get(b.feature) ?? 0)
+            );
+          } else {
+            // Sequential fallback when total count is unavailable
+            let offset = 0;
+            let firstBatch = true;
+
+            while (true) {
+              showStatus(
+                `<span class="loading-spinner"></span>Loading features... (${loadedCount})`,
+                "loading"
+              );
+              const batch = await fetchBatch(layerUrl, offset, batchSize);
+              const features = batch.features || [];
+
+              if (features.length === 0) {
+                if (offset === 0) {
+                  showStatus("No features found in this layer", "error");
+                  return;
+                }
+                break;
               }
-              break;
+
+              allFeatureData.push(...features);
+              geojsonLayer.addData(batch);
+              loadedCount += features.length;
+
+              if (firstBatch && geojsonLayer.getBounds().isValid()) {
+                map.fitBounds(geojsonLayer.getBounds());
+                firstBatch = false;
+              }
+
+              offset += batchSize;
+              if (!batch.exceededTransferLimit) break;
+              if (features.length < batchSize) break;
             }
-
-            geojsonFeatures.push(...batch.features);
-            geojsonLayer.addData(batch);
-            loadedCount += batch.features.length;
-
-            // Fit map to first batch
-            if (firstBatch && geojsonLayer.getBounds().isValid()) {
-              map.fitBounds(geojsonLayer.getBounds());
-              firstBatch = false;
-            }
-
-            offset += batchSize;
-
-            // Stop when the service reports no more records
-            if (!batch.exceededTransferLimit) break;
-            // Fallback: stop if we received fewer records than requested
-            if (batch.features.length < batchSize) break;
-            // Stop if we've loaded everything we know about
-            if (total !== null && loadedCount >= total) break;
           }
 
-          currentGeoJSON = { type: "FeatureCollection", features: geojsonFeatures };
-          displayProperties(currentGeoJSON);
+          if (allFeatureData.length === 0) {
+            showStatus("No features found in this layer", "error");
+            return;
+          }
 
+          currentGeoJSON = { type: "FeatureCollection", features: allFeatureData };
+          displayProperties(currentGeoJSON);
           clearBtn.disabled = false;
           zoomExtentsBtn.disabled = false;
-
-          showStatus(`Successfully loaded ${loadedCount} features`, "success");
-          setTimeout(() => {
-            hideStatus();
-          }, 3000);
+          showStatus(
+            `Successfully loaded ${allFeatureData.length} features`,
+            "success"
+          );
+          setTimeout(() => hideStatus(), 3000);
         } catch (error) {
           showStatus(`Error: ${error.message}`, "error");
           console.error("Error loading layer:", error);
