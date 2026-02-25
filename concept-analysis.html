@@ -1187,12 +1187,10 @@
                       }
                     </div>
                   </div>
-                  <div class="extract-text">${escapeHtml(item.sentence)}</div>
+                  <div class="extract-text">${highlightTerm(item.sentence, item.searchTerm, caseSensitive.checked, item.categories)}</div>
                   ${
                     item.context
-                      ? `<div class="extract-context"><strong>Context:</strong> ${escapeHtml(
-                          item.context
-                        )}</div>`
+                      ? `<div class="extract-context"><strong>Context:</strong> ${highlightTerm(item.context, item.searchTerm, caseSensitive.checked, item.categories)}</div>`
                       : ""
                   }
                   <div class="extract-meta">
@@ -1209,6 +1207,43 @@
         const div = document.createElement("div");
         div.textContent = text;
         return div.innerHTML;
+      }
+
+      // Highlight search term in sentence with category-appropriate colour
+      function highlightTerm(sentence, term, isCaseSensitive, categories) {
+        const categoryColors = {
+          definition: { bg: "#dff6dd", color: "#0e6027" },
+          distinction: { bg: "#fff5b1", color: "#735c0f" },
+          explanation: { bg: "#ffeef0", color: "#86181d" },
+        };
+
+        let style;
+        if (categories && categories.length === 1 && categoryColors[categories[0]]) {
+          const c = categoryColors[categories[0]];
+          style = `background: ${c.bg}; color: ${c.color}; border-radius: 3px; padding: 1px 3px; font-weight: 600;`;
+        } else if (categories && categories.length > 1) {
+          style = "background: rgba(3,102,214,0.12); color: #0366d6; border-radius: 3px; padding: 1px 3px; font-weight: 600;";
+        } else {
+          style = "background: rgba(3,102,214,0.12); color: #0366d6; border-radius: 3px; padding: 1px 3px; font-weight: 600;";
+        }
+
+        const escapedTerm = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const flags = isCaseSensitive ? "g" : "gi";
+        const regex = new RegExp(escapedTerm, flags);
+
+        const parts = [];
+        let lastIndex = 0;
+        let match;
+        regex.lastIndex = 0;
+
+        while ((match = regex.exec(sentence)) !== null) {
+          parts.push(escapeHtml(sentence.substring(lastIndex, match.index)));
+          parts.push(`<span style="${style}">${escapeHtml(match[0])}</span>`);
+          lastIndex = match.index + match[0].length;
+        }
+        parts.push(escapeHtml(sentence.substring(lastIndex)));
+
+        return parts.join("");
       }
 
       // Filter buttons
