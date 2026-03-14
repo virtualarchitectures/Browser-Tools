@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wireshark Packet Visualizer</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <style>
+      /* =========================
+         Reset and Base Styles
+         ========================= */
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+        line-height: 1.6;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        color: #24292e;
+        background: #ffffff;
+      }
+      h1 {
+        border-bottom: 1px solid #eaecef;
+        padding-bottom: 0.3em;
+        margin-top: 0;
+        font-size: 32px;
+        font-weight: 600;
+      }
+      h2 {
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0 0 12px 0;
+      }
+      a {
+        color: #0366d6;
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+
+      /* =========================
+         Navigation
+         ========================= */
+      .back-link {
+        display: inline-block;
+        margin-bottom: 16px;
+        color: #0366d6;
+        text-decoration: none;
+        font-size: 14px;
+      }
+      .back-link:hover {
+        text-decoration: underline;
+      }
+
+      /* =========================
+         Buttons
+         ========================= */
+      .btn {
+        background: #fafbfc;
+        color: #24292e;
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+        cursor: pointer;
+        font-size: 14px;
+        line-height: 20px;
+        font-family: inherit;
+        white-space: nowrap;
+      }
+      .btn:hover {
+        background: #f3f4f6;
+      }
+      .btn.primary {
+        background: #0366d6;
+        color: #fff;
+        border-color: rgba(27, 31, 35, 0.15);
+      }
+      .btn.primary:hover {
+        background: #0256c5;
+      }
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      /* =========================
+         Drop Zone / File Upload
+         ========================= */
+      #dropzone {
+        border: 2px dashed #d1d5da;
+        border-radius: 6px;
+        background: #f6f8fa;
+        min-height: 160px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        cursor: pointer;
+        transition: border-color 0.2s, background 0.2s;
+        margin-bottom: 20px;
+        padding: 24px;
+      }
+      #dropzone:hover,
+      #dropzone.drag-over {
+        border-color: #0366d6;
+        background: #f1f8ff;
+      }
+      #dropzone .drop-icon {
+        font-size: 40px;
+        line-height: 1;
+      }
+      #dropzone p {
+        margin: 0;
+        color: #586069;
+        font-size: 14px;
+      }
+      #dropzone .formats {
+        font-size: 12px;
+        color: #586069;
+        background: #e1e4e8;
+        padding: 2px 10px;
+        border-radius: 20px;
+      }
+      #fileInput {
+        display: none;
+      }
+
+      /* =========================
+         Error / Info boxes
+         ========================= */
+      #error-box {
+        display: none;
+        background: #ffdce0;
+        border: 1px solid #f97583;
+        color: #86181d;
+        padding: 10px 14px;
+        border-radius: 6px;
+        font-size: 14px;
+        margin-bottom: 16px;
+      }
+
+      /* =========================
+         Loading spinner
+         ========================= */
+      #loading {
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        padding: 40px;
+        color: #586069;
+        font-size: 14px;
+      }
+      .spinner {
+        width: 32px;
+        height: 32px;
+        border: 3px solid #e1e4e8;
+        border-top-color: #0366d6;
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+      }
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+
+      /* =========================
+         Main app (hidden until file loaded)
+         ========================= */
+      #main {
+        display: none;
+      }
+
+      /* =========================
+         Stats bar
+         ========================= */
+      #statsbar {
+        display: flex;
+        gap: 0;
+        align-items: stretch;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        overflow: hidden;
+        margin-bottom: 16px;
+        background: #f6f8fa;
+        flex-wrap: wrap;
+      }
+      .stat-item {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        padding: 10px 16px;
+        border-right: 1px solid #e1e4e8;
+        min-width: 0;
+      }
+      .stat-item:last-child {
+        border-right: none;
+        flex: 1;
+      }
+      .stat-label {
+        font-size: 11px;
+        color: #586069;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        font-weight: 600;
+      }
+      .stat-value {
+        font-size: 16px;
+        font-weight: 600;
+        color: #0366d6;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .stat-item.filename .stat-value {
+        font-size: 13px;
+        color: #586069;
+        font-weight: 400;
+      }
+
+      /* =========================
+         Tabs
+         ========================= */
+      .tab-bar {
+        display: flex;
+        border-bottom: 1px solid #e1e4e8;
+        margin-bottom: 16px;
+        gap: 0;
+        overflow-x: auto;
+      }
+      .tab {
+        padding: 8px 16px;
+        cursor: pointer;
+        font-size: 14px;
+        color: #586069;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -1px;
+        white-space: nowrap;
+        user-select: none;
+        transition: color 0.15s;
+      }
+      .tab:hover {
+        color: #24292e;
+      }
+      .tab.active {
+        color: #24292e;
+        border-bottom-color: #f9826c;
+        font-weight: 600;
+      }
+      .panel {
+        display: none;
+      }
+      .panel.active {
+        display: block;
+      }
+
+      /* =========================
+         Filter bar
+         ========================= */
+      .filter-bar {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+      }
+      .filter-bar input[type="text"] {
+        flex: 1;
+        min-width: 200px;
+        padding: 6px 10px;
+        font-size: 13px;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        background: #ffffff;
+        color: #24292e;
+        font-family: "SFMono-Regular", Consolas, monospace;
+        outline: none;
+      }
+      .filter-bar input[type="text"]:focus {
+        border-color: #0366d6;
+        box-shadow: 0 0 0 3px rgba(3, 102, 214, 0.1);
+      }
+      .filter-bar select {
+        padding: 6px 10px;
+        font-size: 13px;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        background: #ffffff;
+        color: #24292e;
+        font-family: inherit;
+        outline: none;
+        cursor: pointer;
+      }
+      .filter-bar select:focus {
+        border-color: #0366d6;
+      }
+      #pkt-count {
+        font-size: 12px;
+        color: #586069;
+        white-space: nowrap;
+      }
+
+      /* =========================
+         Packet split view
+         ========================= */
+      #pkt-split {
+        display: grid;
+        grid-template-columns: 1fr 280px;
+        gap: 12px;
+        align-items: start;
+      }
+      @media (max-width: 900px) {
+        #pkt-split {
+          grid-template-columns: 1fr;
+        }
+        #detail-pane {
+          display: none;
+        }
+      }
+
+      /* =========================
+         Packet table
+         ========================= */
+      #pkt-container {
+        overflow-x: auto;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        max-height: 480px;
+        overflow-y: auto;
+      }
+      #pkt-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+        min-width: 640px;
+        font-family: "SFMono-Regular", Consolas, monospace;
+      }
+      #pkt-table thead th {
+        background: #0366d6;
+        color: #ffffff;
+        padding: 8px 10px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 12px;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        cursor: pointer;
+        user-select: none;
+        white-space: nowrap;
+        border-right: 1px solid rgba(255,255,255,0.2);
+      }
+      #pkt-table thead th:last-child {
+        border-right: none;
+      }
+      #pkt-table thead th:hover {
+        background: #0256c5;
+      }
+      #pkt-table thead th.sorted {
+        background: #0256c5;
+      }
+      #pkt-table thead th.sorted::after {
+        content: " ↕";
+        font-size: 10px;
+        opacity: 0.8;
+      }
+      #pkt-table tbody tr {
+        cursor: pointer;
+        border-bottom: 1px solid #f0f0f0;
+      }
+      #pkt-table tbody tr:nth-child(even) {
+        background: #fafbfc;
+      }
+      #pkt-table tbody tr:hover {
+        background: #f1f8ff;
+      }
+      #pkt-table tbody tr.selected {
+        background: #dbedff !important;
+      }
+      #pkt-table tbody td {
+        padding: 4px 10px;
+        white-space: nowrap;
+        overflow: hidden;
+        max-width: 200px;
+        text-overflow: ellipsis;
+        color: #24292e;
+      }
+      #pkt-table tbody td.no {
+        color: #586069;
+        font-size: 11px;
+      }
+
+      /* =========================
+         Protocol badges
+         ========================= */
+      .proto-badge {
+        display: inline-block;
+        padding: 1px 6px;
+        border-radius: 3px;
+        font-size: 10px;
+        font-weight: 700;
+        color: #ffffff;
+        font-family: "SFMono-Regular", Consolas, monospace;
+        letter-spacing: 0.3px;
+      }
+
+      /* =========================
+         Packet detail pane
+         ========================= */
+      #detail-pane {
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        overflow: hidden;
+        position: sticky;
+        top: 20px;
+        max-height: 480px;
+        overflow-y: auto;
+      }
+      #detail-pane-header {
+        background: #f6f8fa;
+        border-bottom: 1px solid #e1e4e8;
+        padding: 8px 12px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #586069;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+      }
+      #detail-empty {
+        padding: 24px 12px;
+        text-align: center;
+        color: #586069;
+        font-size: 13px;
+        font-style: italic;
+      }
+      #detail-content {
+        display: none;
+        padding: 8px 0;
+      }
+      .detail-section {
+        margin-bottom: 4px;
+      }
+      .detail-section h4 {
+        font-size: 11px;
+        font-weight: 600;
+        color: #0366d6;
+        margin: 0;
+        padding: 4px 12px;
+        background: #f1f8ff;
+        border-top: 1px solid #e1e4e8;
+        border-bottom: 1px solid #e1e4e8;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+      }
+      .detail-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 2px 12px;
+        font-size: 12px;
+        font-family: "SFMono-Regular", Consolas, monospace;
+        border-bottom: 1px solid #f6f8fa;
+      }
+      .detail-key {
+        color: #586069;
+        flex-shrink: 0;
+      }
+      .detail-val {
+        color: #24292e;
+        text-align: right;
+        word-break: break-all;
+        font-weight: 500;
+      }
+
+      /* =========================
+         Chart cards
+         ========================= */
+      .chart-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+      .chart-grid.three-col {
+        grid-template-columns: 1fr 1fr 1fr;
+      }
+      @media (max-width: 768px) {
+        .chart-grid,
+        .chart-grid.three-col {
+          grid-template-columns: 1fr;
+        }
+      }
+      .chart-card {
+        background: #f6f8fa;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        padding: 16px;
+      }
+      .chart-card.wide {
+        grid-column: 1 / -1;
+      }
+      .chart-card h3 {
+        font-size: 14px;
+        font-weight: 600;
+        color: #24292e;
+        margin: 0 0 12px 0;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #e1e4e8;
+      }
+      .chart-card canvas {
+        max-height: 220px;
+      }
+
+      /* =========================
+         Data tables (stats/talkers/conversations)
+         ========================= */
+      .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+      .data-table th {
+        background: #0366d6;
+        color: #ffffff;
+        padding: 8px 10px;
+        text-align: left;
+        font-weight: 600;
+        border-right: 1px solid rgba(255,255,255,0.2);
+        position: sticky;
+        top: 0;
+        z-index: 1;
+      }
+      .data-table th:last-child {
+        border-right: none;
+      }
+      .data-table td {
+        padding: 6px 10px;
+        border-bottom: 1px solid #e1e4e8;
+        color: #24292e;
+      }
+      .data-table tr:hover td {
+        background: #f1f8ff;
+      }
+      .data-table tr:nth-child(even) td {
+        background: #fafbfc;
+      }
+      .data-table tr:nth-child(even):hover td {
+        background: #f1f8ff;
+      }
+
+      /* Bar chart cells */
+      .bar-cell {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .bar-bg {
+        flex: 1;
+        height: 6px;
+        background: #e1e4e8;
+        border-radius: 3px;
+        overflow: hidden;
+        min-width: 60px;
+      }
+      .bar-fill {
+        height: 100%;
+        border-radius: 3px;
+        background: #0366d6;
+      }
+      .bar-label {
+        font-size: 11px;
+        color: #586069;
+        min-width: 32px;
+        text-align: right;
+      }
+
+      /* =========================
+         Scrollbars
+         ========================= */
+      ::-webkit-scrollbar { width: 6px; height: 6px; }
+      ::-webkit-scrollbar-track { background: #f6f8fa; }
+      ::-webkit-scrollbar-thumb { background: #d1d5da; border-radius: 3px; }
+      ::-webkit-scrollbar-thumb:hover { background: #959da5; }
+
+      /* =========================
+         Info note
+         ========================= */
+      .info-note {
+        font-size: 13px;
+        color: #586069;
+        padding: 10px 14px;
+        background: #f6f8fa;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+        margin-bottom: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <a href="index.html" class="back-link">&#8592; Back to Browser Tools</a>
+    <h1>Wireshark Packet Visualizer</h1>
+
+    <p class="info-note">
+      Analyse network capture files entirely in your browser — no data is uploaded to any server.
+      Supports <strong>.pcap</strong> and <strong>.pcapng</strong> formats.
+    </p>
+
+    <div id="error-box"></div>
+
+    <!-- Drop zone -->
+    <div id="dropzone" onclick="document.getElementById('fileInput').click()">
+      <div class="drop-icon">&#128228;</div>
+      <strong>Drop a capture file here</strong>
+      <p>or click to browse</p>
+      <div class="formats">.pcap &nbsp;&middot;&nbsp; .pcapng &nbsp;&middot;&nbsp; .cap</div>
+      <button class="btn primary" onclick="event.stopPropagation(); document.getElementById('fileInput').click()">
+        Choose File
+      </button>
+      <input type="file" id="fileInput" accept=".pcap,.pcapng,.cap" />
+    </div>
+
+    <!-- Loading state -->
+    <div id="loading">
+      <div class="spinner"></div>
+      <span>Parsing capture file&hellip;</span>
+    </div>
+
+    <!-- Main app (revealed after parse) -->
+    <div id="main">
+
+      <!-- Stats bar -->
+      <div id="statsbar">
+        <div class="stat-item">
+          <div class="stat-label">Packets</div>
+          <div class="stat-value" id="stat-packets">0</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Duration</div>
+          <div class="stat-value" id="stat-duration">0s</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Total Bytes</div>
+          <div class="stat-value" id="stat-bytes">0</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Avg Packet</div>
+          <div class="stat-value" id="stat-avgsize">0 B</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Protocols</div>
+          <div class="stat-value" id="stat-protos">0</div>
+        </div>
+        <div class="stat-item filename">
+          <div class="stat-label">File</div>
+          <div class="stat-value" id="stat-filename"></div>
+        </div>
+      </div>
+
+      <!-- Action bar -->
+      <div style="display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;">
+        <button class="btn" onclick="resetApp()">&#8592; Load new file</button>
+      </div>
+
+      <!-- Tab bar -->
+      <div class="tab-bar">
+        <div class="tab active" data-panel="packets">Packets</div>
+        <div class="tab" data-panel="stats">Protocol Stats</div>
+        <div class="tab" data-panel="timeline">Timeline</div>
+        <div class="tab" data-panel="talkers">Top Talkers</div>
+        <div class="tab" data-panel="conversations">Conversations</div>
+      </div>
+
+      <!-- ── Panel: Packets ── -->
+      <div class="panel active" id="panel-packets">
+        <div class="filter-bar">
+          <input
+            type="text"
+            id="filter-input"
+            placeholder='Filter packets: IP address, protocol, port, keyword&hellip;'
+            oninput="applyFilter()"
+          />
+          <select id="proto-filter" onchange="applyFilter()">
+            <option value="">All Protocols</option>
+          </select>
+          <span id="pkt-count"></span>
+        </div>
+        <div id="pkt-split">
+          <div id="pkt-container">
+            <table id="pkt-table">
+              <thead>
+                <tr>
+                  <th data-col="no" style="width:48px">#</th>
+                  <th data-col="time">Time (s)</th>
+                  <th data-col="src">Source</th>
+                  <th data-col="dst">Destination</th>
+                  <th data-col="proto">Protocol</th>
+                  <th data-col="len" style="width:56px">Length</th>
+                  <th data-col="info">Info</th>
+                </tr>
+              </thead>
+              <tbody id="pkt-body"></tbody>
+            </table>
+          </div>
+          <div id="detail-pane">
+            <div id="detail-pane-header">Packet Detail</div>
+            <div id="detail-empty">Select a packet to inspect</div>
+            <div id="detail-content"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Panel: Protocol Stats ── -->
+      <div class="panel" id="panel-stats">
+        <div class="chart-grid">
+          <div class="chart-card">
+            <h3>Distribution by Packet Count</h3>
+            <canvas id="chart-proto-count"></canvas>
+          </div>
+          <div class="chart-card">
+            <h3>Distribution by Bytes</h3>
+            <canvas id="chart-proto-bytes"></canvas>
+          </div>
+          <div class="chart-card wide">
+            <h3>Protocol Breakdown</h3>
+            <table class="data-table" id="proto-table"></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Panel: Timeline ── -->
+      <div class="panel" id="panel-timeline">
+        <div class="chart-grid">
+          <div class="chart-card wide">
+            <h3>Packets per Second</h3>
+            <canvas id="chart-pps" style="max-height:200px"></canvas>
+          </div>
+          <div class="chart-card wide">
+            <h3>Throughput (bytes / second)</h3>
+            <canvas id="chart-bps" style="max-height:200px"></canvas>
+          </div>
+          <div class="chart-card wide">
+            <h3>Packet Size Distribution</h3>
+            <canvas id="chart-pktsize" style="max-height:160px"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Panel: Top Talkers ── -->
+      <div class="panel" id="panel-talkers">
+        <div class="chart-grid">
+          <div class="chart-card">
+            <h3>Top Source IPs</h3>
+            <table class="data-table" id="top-src-table"></table>
+          </div>
+          <div class="chart-card">
+            <h3>Top Destination IPs</h3>
+            <table class="data-table" id="top-dst-table"></table>
+          </div>
+          <div class="chart-card">
+            <h3>Top Source Ports</h3>
+            <table class="data-table" id="top-sport-table"></table>
+          </div>
+          <div class="chart-card">
+            <h3>Top Destination Ports</h3>
+            <table class="data-table" id="top-dport-table"></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Panel: Conversations ── -->
+      <div class="panel" id="panel-conversations">
+        <div class="chart-card">
+          <h3>TCP / UDP Conversations</h3>
+          <div style="overflow-x:auto">
+            <table class="data-table" id="conv-table"></table>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /#main -->
+
+    <script>
+      'use strict';
+
+      // ── State ──
+      let packets = [], filteredPackets = [], charts = {};
+
+      // ── Protocol helpers ──
+      const PROTO_COLORS = {
+        TCP:    '#0366d6',
+        UDP:    '#28a745',
+        ICMP:   '#d73a49',
+        ICMPv6: '#d73a49',
+        ARP:    '#6f42c1',
+        DNS:    '#e36209',
+        HTTP:   '#22863a',
+        HTTPS:  '#5a32a3',
+        TLS:    '#5a32a3',
+        SSH:    '#0a6ebd',
+        FTP:    '#b08800',
+        DHCP:   '#c71585',
+        NTP:    '#795548',
+        MDNS:   '#e36209',
+        IPv6:   '#3f5496',
+        Other:  '#586069',
+      };
+
+      const WELL_KNOWN_PORTS = {
+        20:'FTP-DATA', 21:'FTP', 22:'SSH', 23:'TELNET', 25:'SMTP', 53:'DNS',
+        67:'DHCP', 68:'DHCP', 80:'HTTP', 110:'POP3', 123:'NTP', 143:'IMAP',
+        161:'SNMP', 443:'HTTPS', 445:'SMB', 465:'SMTPS', 514:'SYSLOG',
+        587:'SMTP', 993:'IMAPS', 995:'POP3S', 1194:'OpenVPN', 1433:'MSSQL',
+        1883:'MQTT', 3306:'MySQL', 3389:'RDP', 5060:'SIP', 5222:'XMPP',
+        5353:'MDNS', 5432:'PostgreSQL', 5672:'AMQP', 6379:'Redis',
+        8080:'HTTP-ALT', 8443:'HTTPS-ALT', 27017:'MongoDB', 5900:'VNC',
+      };
+
+      const getProtoColor = p => PROTO_COLORS[p] || PROTO_COLORS.Other;
+      const portLabel     = p => WELL_KNOWN_PORTS[p] || p;
+      const humanBytes    = n => n < 1024 ? n + ' B' : n < 1048576 ? (n/1024).toFixed(1) + ' KB' : (n/1048576).toFixed(2) + ' MB';
+      const ipStr         = (a, o) => `${a[o]}.${a[o+1]}.${a[o+2]}.${a[o+3]}`;
+      const macStr        = (a, o) => Array.from(a.slice(o, o+6)).map(b => b.toString(16).padStart(2,'0')).join(':');
+      const ip6Str        = (v, o) => Array.from({length:8}, (_, i) => v.getUint16(o + i*2).toString(16)).join(':');
+
+      function protoBadge(p) {
+        const c = getProtoColor(p);
+        return `<span class="proto-badge" style="background:${c}">${p}</span>`;
+      }
+
+      // ── pcap parser ──
+      function parsePcap(buf) {
+        const v = new DataView(buf);
+        const magic = v.getUint32(0, false);
+        const le = (magic === 0xd4c3b2a1 || magic === 0x4d3cb2a1);
+        const nano = (magic === 0xa1b23c4d || magic === 0x4d3cb2a1);
+        const linkType = v.getUint32(20, le);
+        let off = 24, res = [];
+        while (off + 16 <= buf.byteLength) {
+          const sec  = v.getUint32(off, le), frac = v.getUint32(off+4, le);
+          const incl = v.getUint32(off+8, le), orig = v.getUint32(off+12, le);
+          off += 16;
+          if (off + incl > buf.byteLength) break;
+          const ts = sec + (nano ? frac/1e9 : frac/1e6);
+          res.push(parsePacket(new Uint8Array(buf, off, incl), ts, orig, res.length+1, linkType));
+          off += incl;
+        }
+        return res;
+      }
+
+      // ── pcapng parser ──
+      function parsePcapng(buf) {
+        const v = new DataView(buf);
+        let le = true, off = 0, res = [], ifaces = [];
+        while (off + 8 <= buf.byteLength) {
+          const type = v.getUint32(off, le);
+          // Detect byte order from SHB BOM *before* reading block length so len is correct
+          if (type === 0x0A0D0D0A && off + 12 <= buf.byteLength) {
+            const bom = v.getUint32(off+8, false); // read BOM as big-endian
+            // 0x1A2B3C4D in big-endian reading = big-endian file; otherwise little-endian
+            le = (bom !== 0x1A2B3C4D);
+          }
+          const len = v.getUint32(off+4, le);
+          if (len < 12 || off+len > buf.byteLength) break;
+          if (type === 0x0A0D0D0A) {
+            // byte order already set above
+          } else if (type === 0x00000001) {
+            ifaces.push({ linkType: v.getUint16(off+8, le), tsResol: 6 });
+          } else if (type === 0x00000006) {
+            const ifId = v.getUint32(off+8,  le);
+            const tsH  = v.getUint32(off+12, le), tsL = v.getUint32(off+16, le);
+            const capL = v.getUint32(off+20, le), oriL = v.getUint32(off+24, le);
+            const iface = ifaces[ifId] || { linkType:1, tsResol:6 };
+            const ts = (tsH * 4294967296 + tsL) / Math.pow(10, iface.tsResol);
+            if (off+28+capL <= buf.byteLength)
+              res.push(parsePacket(new Uint8Array(buf, off+28, capL), ts, oriL, res.length+1, iface.linkType));
+          } else if (type === 0x00000002) {
+            const ifId = v.getUint16(off+8, le);
+            const capL = v.getUint32(off+16, le), oriL = v.getUint32(off+20, le);
+            if (off+24+capL <= buf.byteLength)
+              res.push(parsePacket(new Uint8Array(buf, off+24, capL), 0, oriL, res.length+1, (ifaces[ifId]||{linkType:1}).linkType));
+          } else if (type === 0x00000003) {
+            const oriL = v.getUint32(off+8, le);
+            const capL = Math.min(oriL, len-16);
+            if (off+12+capL <= buf.byteLength)
+              res.push(parsePacket(new Uint8Array(buf, off+12, capL), 0, oriL, res.length+1, (ifaces[0]||{linkType:1}).linkType));
+          }
+          off += len;
+        }
+        return res;
+      }
+
+      // ── Protocol parsers ──
+      function parsePacket(data, ts, origLen, no, linkType) {
+        const pkt = { no, ts, origLen, len: data.length, proto:'Unknown', src:'?', dst:'?', info:'', layers:{} };
+        let off = 0, etherType = 0;
+        if (linkType === 1) {
+          if (data.length < 14) return pkt;
+          pkt.layers.eth = { dstMac:macStr(data,0), srcMac:macStr(data,6), type:(data[12]<<8)|data[13] };
+          etherType = pkt.layers.eth.type;
+          off = 14;
+          if (etherType === 0x8100) { etherType = (data[off+2]<<8)|data[off+3]; off += 4; }
+        } else if (linkType === 0 || linkType === 12 || linkType === 23 || linkType === 24) {
+          const fam = (data[0]<<24|data[1]<<16|data[2]<<8|data[3]);
+          etherType = (fam === 2 || fam === 0x02000000) ? 0x0800 : (fam===30||fam===0x1e000000) ? 0x86DD : 0x0800;
+          off = 4;
+        } else if (linkType === 228) { etherType = 0x0800; }
+          else if (linkType === 229) { etherType = 0x86DD; }
+        if      (etherType === 0x0800) parseIPv4(data, off, pkt);
+        else if (etherType === 0x86DD) parseIPv6(data, off, pkt);
+        else if (etherType === 0x0806) parseARP(data, off, pkt);
+        else { pkt.proto = '0x'+etherType.toString(16).toUpperCase(); pkt.info = `EtherType: 0x${etherType.toString(16)}`; }
+        return pkt;
+      }
+
+      function parseIPv4(data, off, pkt) {
+        if (off+20 > data.length) return;
+        const ihl = (data[off]&0x0F)*4;
+        const src = ipStr(data, off+12), dst = ipStr(data, off+16);
+        pkt.src = src; pkt.dst = dst;
+        pkt.layers.ipv4 = { src, dst, proto:data[off+9], ttl:data[off+8], ihl, totalLen:(data[off+2]<<8)|data[off+3] };
+        const p = data[off+9], nxt = off+ihl;
+        if      (p===6)  parseTCP(data, nxt, pkt);
+        else if (p===17) parseUDP(data, nxt, pkt);
+        else if (p===1)  parseICMP(data, nxt, pkt);
+        else { pkt.proto = `IP(${p})`; pkt.info = `${src} → ${dst}`; }
+      }
+
+      function parseIPv6(data, off, pkt) {
+        if (off+40 > data.length) return;
+        const v = new DataView(data.buffer); // no byteOffset — added explicitly in reads
+        const src = ip6Str(v, data.byteOffset+off+8), dst = ip6Str(v, data.byteOffset+off+24);
+        const nh = data[off+6];
+        pkt.src = src; pkt.dst = dst;
+        pkt.layers.ipv6 = { src, dst, nextHeader:nh, hopLimit:data[off+7] };
+        if      (nh===6)  parseTCP(data, off+40, pkt);
+        else if (nh===17) parseUDP(data, off+40, pkt);
+        else if (nh===58) { pkt.proto='ICMPv6'; pkt.info=`${src} → ${dst}`; }
+        else              { pkt.proto='IPv6';   pkt.info=`${src} → ${dst}`; }
+      }
+
+      function parseTCP(data, off, pkt) {
+        if (off+20 > data.length) return;
+        const v = new DataView(data.buffer); // no byteOffset — added explicitly in reads
+        const bo = data.byteOffset;
+        const sp  = v.getUint16(bo+off),    dp  = v.getUint16(bo+off+2);
+        const seq = v.getUint32(bo+off+4),  ack = v.getUint32(bo+off+8);
+        const fl  = data[off+13],           win = v.getUint16(bo+off+14);
+        const fs  = ['FIN','SYN','RST','PSH','ACK','URG'].filter((_,i) => fl&(1<<i)).join(', ');
+        pkt.layers.tcp = { sport:sp, dport:dp, seq, ack, flags:fl, flagStr:fs, win };
+        pkt.sport = sp; pkt.dport = dp;
+        const app = WELL_KNOWN_PORTS[sp] || WELL_KNOWN_PORTS[dp];
+        pkt.proto = app || 'TCP';
+        pkt.info  = `${portLabel(sp)} → ${portLabel(dp)} [${fs||'—'}] Seq=${seq} Win=${win}`;
+      }
+
+      function parseUDP(data, off, pkt) {
+        if (off+8 > data.length) return;
+        const v = new DataView(data.buffer); // no byteOffset — added explicitly in reads
+        const bo = data.byteOffset;
+        const sp = v.getUint16(bo+off), dp = v.getUint16(bo+off+2);
+        const ln = v.getUint16(bo+off+4);
+        pkt.layers.udp = { sport:sp, dport:dp, len:ln };
+        pkt.sport = sp; pkt.dport = dp;
+        const app = WELL_KNOWN_PORTS[sp] || WELL_KNOWN_PORTS[dp];
+        pkt.proto = app || 'UDP';
+        pkt.info  = `${portLabel(sp)} → ${portLabel(dp)} Len=${ln}`;
+      }
+
+      function parseICMP(data, off, pkt) {
+        if (off+4 > data.length) return;
+        const t = data[off], c = data[off+1];
+        const NAMES = {0:'Echo Reply',3:'Dest Unreachable',5:'Redirect',8:'Echo Request',11:'Time Exceeded'};
+        pkt.proto = 'ICMP';
+        pkt.layers.icmp = { type:t, code:c };
+        pkt.info = `Type: ${NAMES[t]||t} (${t}), Code: ${c}`;
+      }
+
+      function parseARP(data, off, pkt) {
+        if (off+28 > data.length) return;
+        const op   = (data[off+6]<<8)|data[off+7];
+        const sIP  = ipStr(data,off+14), tIP  = ipStr(data,off+24);
+        const sMAC = macStr(data,off+8), tMAC = macStr(data,off+18);
+        pkt.proto = 'ARP'; pkt.src = sIP; pkt.dst = tIP;
+        pkt.layers.arp = { op, senderMac:sMAC, senderIP:sIP, targetMac:tMAC, targetIP:tIP };
+        pkt.info = op===1 ? `Who has ${tIP}? Tell ${sIP}` : `${sIP} is at ${sMAC}`;
+      }
+
+      // ── File detection ──
+      function detectAndParse(buf) {
+        const v = new DataView(buf), m = v.getUint32(0, false);
+        if (m === 0x0A0D0D0A) return parsePcapng(buf);
+        if ([0xD4C3B2A1,0xA1B2C3D4,0xA1B23C4D,0x4D3CB2A1].includes(m)) return parsePcap(buf);
+        throw new Error('Unknown file format — expected pcap or pcapng magic bytes.');
+      }
+
+      // ── File handling ──
+      function handleFile(file) {
+        showError(''); showLoading(true);
+        const reader = new FileReader();
+        reader.onload = e => {
+          try {
+            packets = detectAndParse(e.target.result);
+            if (!packets.length) throw new Error('No packets found in file.');
+            filteredPackets = [...packets];
+            buildUI(file.name);
+            showLoading(false); showMain(true);
+          } catch(err) { showLoading(false); showError('Parse error: ' + err.message); }
+        };
+        reader.onerror = () => { showLoading(false); showError('Failed to read file.'); };
+        reader.readAsArrayBuffer(file);
+      }
+
+      // ── Build UI ──
+      function buildUI(filename) {
+        updateStatsBar(filename);
+        buildProtoFilter();
+        renderPacketTable(filteredPackets);
+        buildProtocolStats();
+        buildTimeline();
+        buildTopTalkers();
+        buildConversations();
+      }
+
+      function updateStatsBar(filename) {
+        const totalBytes = packets.reduce((s,p) => s+p.origLen, 0);
+        const dur = (packets[packets.length-1]?.ts||0) - (packets[0]?.ts||0);
+        document.getElementById('stat-packets').textContent = packets.length.toLocaleString();
+        document.getElementById('stat-duration').textContent = dur.toFixed(3) + 's';
+        document.getElementById('stat-bytes').textContent = humanBytes(totalBytes);
+        document.getElementById('stat-avgsize').textContent = humanBytes(Math.round(totalBytes/packets.length));
+        document.getElementById('stat-protos').textContent = new Set(packets.map(p=>p.proto)).size;
+        document.getElementById('stat-filename').textContent = filename;
+      }
+
+      function buildProtoFilter() {
+        const sel = document.getElementById('proto-filter');
+        sel.innerHTML = '<option value="">All Protocols</option>';
+        [...new Set(packets.map(p=>p.proto))].sort().forEach(p => {
+          const o = document.createElement('option');
+          o.value = o.textContent = p;
+          sel.appendChild(o);
+        });
+      }
+
+      // ── Packet table ──
+      const MAX_RENDER = 2000;
+
+      function renderPacketTable(pkts) {
+        const tbody = document.getElementById('pkt-body');
+        tbody.innerHTML = '';
+        const ts0 = packets[0]?.ts || 0;
+        const frag = document.createDocumentFragment();
+        pkts.slice(0, MAX_RENDER).forEach(pkt => {
+          const tr = document.createElement('tr');
+          tr.innerHTML =
+            `<td class="no">${pkt.no}</td>` +
+            `<td>${(pkt.ts-ts0).toFixed(6)}</td>` +
+            `<td title="${pkt.src}">${pkt.src}</td>` +
+            `<td title="${pkt.dst}">${pkt.dst}</td>` +
+            `<td>${protoBadge(pkt.proto)}</td>` +
+            `<td>${pkt.origLen}</td>` +
+            `<td title="${pkt.info}">${pkt.info}</td>`;
+          tr.addEventListener('click', () => selectPacket(pkt, tr));
+          frag.appendChild(tr);
+        });
+        tbody.appendChild(frag);
+        if (pkts.length > MAX_RENDER) {
+          const tr = tbody.insertRow();
+          tr.innerHTML = `<td colspan="7" style="text-align:center;color:#586069;padding:8px;font-size:12px">
+            Showing first ${MAX_RENDER.toLocaleString()} of ${pkts.length.toLocaleString()} packets &mdash; refine your filter to see more</td>`;
+        }
+        document.getElementById('pkt-count').textContent =
+          filteredPackets.length === packets.length
+            ? `${pkts.length.toLocaleString()} packets`
+            : `${Math.min(pkts.length,MAX_RENDER).toLocaleString()} of ${packets.length.toLocaleString()}`;
+      }
+
+      function applyFilter() {
+        const q = document.getElementById('filter-input').value.toLowerCase().trim();
+        const proto = document.getElementById('proto-filter').value;
+        filteredPackets = packets.filter(p =>
+          (!proto || p.proto === proto) &&
+          (!q || p.src.toLowerCase().includes(q) || p.dst.toLowerCase().includes(q) ||
+                 p.proto.toLowerCase().includes(q) || p.info.toLowerCase().includes(q) ||
+                 String(p.no).includes(q))
+        );
+        renderPacketTable(filteredPackets);
+        clearDetail();
+      }
+
+      // ── Packet detail ──
+      function selectPacket(pkt, tr) {
+        document.querySelectorAll('#pkt-body tr.selected').forEach(r => r.classList.remove('selected'));
+        tr.classList.add('selected');
+        const el = document.getElementById('detail-content');
+        const ts0 = packets[0]?.ts || 0;
+        let html = mkSection('Frame', [
+          ['No.',       pkt.no],
+          ['Rel. Time', (pkt.ts-ts0).toFixed(6)+'s'],
+          ['Captured',  pkt.len+' bytes'],
+          ['Original',  pkt.origLen+' bytes'],
+        ]);
+        if (pkt.layers.eth)
+          html += mkSection('Ethernet', [['Src MAC',pkt.layers.eth.srcMac],['Dst MAC',pkt.layers.eth.dstMac],['Type','0x'+pkt.layers.eth.type.toString(16).toUpperCase()]]);
+        if (pkt.layers.arp) {
+          const a = pkt.layers.arp;
+          html += mkSection('ARP', [['Op',a.op===1?'Request':'Reply'],['Sender',a.senderIP+' ('+a.senderMac+')'],['Target',a.targetIP+' ('+a.targetMac+')']]);
+        }
+        if (pkt.layers.ipv4) {
+          const ip = pkt.layers.ipv4;
+          html += mkSection('IPv4', [['Src',ip.src],['Dst',ip.dst],['Protocol',ip.proto],['TTL',ip.ttl],['Length',ip.totalLen]]);
+        }
+        if (pkt.layers.ipv6) {
+          const ip = pkt.layers.ipv6;
+          html += mkSection('IPv6', [['Src',ip.src],['Dst',ip.dst],['Next Hdr',ip.nextHeader],['Hop Limit',ip.hopLimit]]);
+        }
+        if (pkt.layers.tcp) {
+          const t = pkt.layers.tcp;
+          html += mkSection('TCP', [['Src Port',t.sport],['Dst Port',t.dport],['Flags',t.flagStr||'—'],['Seq',t.seq],['Ack',t.ack],['Window',t.win]]);
+        }
+        if (pkt.layers.udp) {
+          const u = pkt.layers.udp;
+          html += mkSection('UDP', [['Src Port',u.sport],['Dst Port',u.dport],['Length',u.len]]);
+        }
+        if (pkt.layers.icmp) {
+          html += mkSection('ICMP', [['Type',pkt.layers.icmp.type],['Code',pkt.layers.icmp.code]]);
+        }
+        el.innerHTML = html;
+        el.style.display = '';
+        document.getElementById('detail-empty').style.display = 'none';
+      }
+
+      function clearDetail() {
+        document.getElementById('detail-empty').style.display = '';
+        document.getElementById('detail-content').style.display = 'none';
+      }
+
+      function mkSection(title, rows) {
+        return `<div class="detail-section"><h4>${title}</h4>${
+          rows.map(([k,v]) => `<div class="detail-row"><span class="detail-key">${k}</span><span class="detail-val">${v}</span></div>`).join('')
+        }</div>`;
+      }
+
+      // ── Protocol stats ──
+      function buildProtocolStats() {
+        const cnt = {}, byt = {};
+        packets.forEach(p => { cnt[p.proto]=(cnt[p.proto]||0)+1; byt[p.proto]=(byt[p.proto]||0)+p.origLen; });
+        const sorted  = Object.entries(cnt).sort((a,b) => b[1]-a[1]);
+        const labels  = sorted.map(([k]) => k);
+        const counts  = sorted.map(([,v]) => v);
+        const bytes   = labels.map(l => byt[l]||0);
+        const colors  = labels.map(l => getProtoColor(l));
+        const donutOpts = fmt => ({
+          responsive: true,
+          plugins: {
+            legend: { position:'right', labels:{ color:'#24292e', font:{size:11}, boxWidth:12 } },
+            tooltip: { callbacks: fmt ? {label: c => `${c.label}: ${fmt(c.raw)}`} : {} }
+          }
+        });
+        destroyChart('chart-proto-count');
+        destroyChart('chart-proto-bytes');
+        charts['chart-proto-count'] = new Chart(document.getElementById('chart-proto-count'), {
+          type: 'doughnut',
+          data: { labels, datasets: [{data:counts, backgroundColor:colors, borderWidth:2, borderColor:'#ffffff'}] },
+          options: donutOpts()
+        });
+        charts['chart-proto-bytes'] = new Chart(document.getElementById('chart-proto-bytes'), {
+          type: 'doughnut',
+          data: { labels, datasets: [{data:bytes, backgroundColor:colors, borderWidth:2, borderColor:'#ffffff'}] },
+          options: donutOpts(v => humanBytes(v))
+        });
+        const max = counts[0]||1, tbody = document.createElement('tbody');
+        document.getElementById('proto-table').innerHTML =
+          `<thead><tr><th>Protocol</th><th>Packets</th><th>Bytes</th><th>%</th><th style="width:180px">Share</th></tr></thead>`;
+        sorted.forEach(([proto, c]) => {
+          const pct = (c/packets.length*100).toFixed(1);
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${protoBadge(proto)}</td><td>${c.toLocaleString()}</td><td>${humanBytes(byt[proto]||0)}</td><td>${pct}%</td>
+            <td><div class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:${pct}%;background:${getProtoColor(proto)}"></div></div><span class="bar-label">${pct}%</span></div></td>`;
+          tbody.appendChild(tr);
+        });
+        document.getElementById('proto-table').appendChild(tbody);
+      }
+
+      // ── Timeline ──
+      function buildTimeline() {
+        if (packets.length < 2) return;
+        const ts0 = packets[0].ts, dur = packets[packets.length-1].ts - ts0;
+        const B = Math.min(120, Math.max(10, Math.ceil(dur)));
+        const pps = new Array(B).fill(0), bps = new Array(B).fill(0);
+        packets.forEach(p => {
+          const i = Math.min(B-1, Math.floor((p.ts-ts0)/dur*(B-1)));
+          pps[i]++; bps[i] += p.origLen;
+        });
+        const labels = pps.map((_,i) => ((i/B)*dur).toFixed(2)+'s');
+        const lineOpts = (color, fmt) => ({
+          responsive: true, animation: false,
+          plugins: { legend:{display:false}, tooltip:{ callbacks: fmt ? {label: c => fmt(c.raw)} : {} } },
+          scales: {
+            x: { ticks:{color:'#586069', maxTicksLimit:10}, grid:{color:'#f0f0f0'} },
+            y: { ticks:{color:'#586069'}, grid:{color:'#f0f0f0'} }
+          },
+          elements: { point:{radius:0} }
+        });
+        ['chart-pps','chart-bps'].forEach(id => destroyChart(id));
+        charts['chart-pps'] = new Chart(document.getElementById('chart-pps'), {
+          type: 'line',
+          data: { labels, datasets: [{data:pps, borderColor:'#0366d6', backgroundColor:'rgba(3,102,214,0.08)', fill:true, borderWidth:1.5, tension:0.3}] },
+          options: lineOpts('#0366d6')
+        });
+        charts['chart-bps'] = new Chart(document.getElementById('chart-bps'), {
+          type: 'line',
+          data: { labels, datasets: [{data:bps, borderColor:'#28a745', backgroundColor:'rgba(40,167,69,0.08)', fill:true, borderWidth:1.5, tension:0.3}] },
+          options: lineOpts('#28a745', v => humanBytes(v))
+        });
+        const bins = [64,128,256,512,1024,1500,Infinity], bLabels = ['<=64','65-128','129-256','257-512','513-1024','1025-1500','>1500'];
+        const bCounts = new Array(bins.length).fill(0);
+        packets.forEach(p => { for(let i=0;i<bins.length;i++){ if(p.origLen<=bins[i]){ bCounts[i]++; break; } } });
+        destroyChart('chart-pktsize');
+        charts['chart-pktsize'] = new Chart(document.getElementById('chart-pktsize'), {
+          type: 'bar',
+          data: { labels: bLabels, datasets: [{data:bCounts, backgroundColor:'#6f42c1', borderRadius:4}] },
+          options: {
+            responsive: true, animation: false,
+            plugins: { legend:{display:false} },
+            scales: {
+              x: { ticks:{color:'#586069'}, grid:{color:'#f0f0f0'} },
+              y: { ticks:{color:'#586069'}, grid:{color:'#f0f0f0'} }
+            }
+          }
+        });
+      }
+
+      // ── Top Talkers ──
+      function buildTopTalkers() {
+        const maps = [{},{},{},{}];
+        packets.forEach(p => {
+          if(p.src!=='?') maps[0][p.src]=(maps[0][p.src]||0)+1;
+          if(p.dst!=='?') maps[1][p.dst]=(maps[1][p.dst]||0)+1;
+          if(p.sport!=null){ const l=portLabel(p.sport); maps[2][l]=(maps[2][l]||0)+1; }
+          if(p.dport!=null){ const l=portLabel(p.dport); maps[3][l]=(maps[3][l]||0)+1; }
+        });
+        ['top-src-table','top-dst-table','top-sport-table','top-dport-table'].forEach((id,i) => {
+          const entries = Object.entries(maps[i]).sort((a,b)=>b[1]-a[1]).slice(0,15);
+          const max = entries[0]?.[1]||1;
+          document.getElementById(id).innerHTML =
+            `<thead><tr><th>#</th><th>${i<2?'IP Address':'Port / Service'}</th><th>Packets</th><th style="width:140px">Share</th></tr></thead>`;
+          const tbody = document.createElement('tbody');
+          entries.forEach(([k,v],j) => {
+            const pct = (v/max*100).toFixed(0);
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td style="color:#586069">${j+1}</td><td title="${k}">${k}</td><td>${v.toLocaleString()}</td>
+              <td><div class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:${pct}%"></div></div><span class="bar-label">${v}</span></div></td>`;
+            tbody.appendChild(tr);
+          });
+          document.getElementById(id).appendChild(tbody);
+        });
+      }
+
+      // ── Conversations ──
+      function buildConversations() {
+        const convs = {};
+        packets.forEach(p => {
+          if (!p.sport || !p.dport) return;
+          const key = [p.src<p.dst?p.src:p.dst, p.src<p.dst?p.dst:p.src,
+                       p.src<p.dst?p.sport:p.dport, p.src<p.dst?p.dport:p.sport, p.proto].join('|');
+          if (!convs[key]) convs[key] = {srcIP:p.src, srcPort:p.sport, dstIP:p.dst, dstPort:p.dport, proto:p.proto, pkts:0, bytes:0, start:p.ts, end:p.ts};
+          convs[key].pkts++; convs[key].bytes += p.origLen;
+          if (p.ts < convs[key].start) convs[key].start = p.ts;
+          if (p.ts > convs[key].end)   convs[key].end   = p.ts;
+        });
+        const sorted = Object.values(convs).sort((a,b) => b.pkts-a.pkts).slice(0,50);
+        document.getElementById('conv-table').innerHTML =
+          `<thead><tr><th>Protocol</th><th>Source</th><th></th><th>Destination</th><th>Packets</th><th>Bytes</th><th>Duration</th></tr></thead>`;
+        const tbody = document.createElement('tbody');
+        sorted.forEach(c => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${protoBadge(c.proto)}</td><td>${c.srcIP}:${c.srcPort}</td>
+            <td style="color:#586069;text-align:center">&#8644;</td><td>${c.dstIP}:${c.dstPort}</td>
+            <td>${c.pkts.toLocaleString()}</td><td>${humanBytes(c.bytes)}</td><td>${(c.end-c.start).toFixed(3)}s</td>`;
+          tbody.appendChild(tr);
+        });
+        document.getElementById('conv-table').appendChild(tbody);
+      }
+
+      // ── Helpers ──
+      const destroyChart = id => { if(charts[id]){ charts[id].destroy(); delete charts[id]; } };
+
+      function showLoading(s) {
+        document.getElementById('loading').style.display = s ? 'flex' : 'none';
+        document.getElementById('dropzone').style.display = s ? 'none' : 'flex';
+      }
+
+      function showMain(s) {
+        document.getElementById('main').style.display = s ? 'block' : 'none';
+        document.getElementById('dropzone').style.display = s ? 'none' : 'flex';
+      }
+
+      function showError(msg) {
+        const el = document.getElementById('error-box');
+        el.textContent = msg; el.style.display = msg ? 'block' : 'none';
+      }
+
+      function resetApp() {
+        packets = []; filteredPackets = [];
+        Object.keys(charts).forEach(k => { charts[k].destroy(); delete charts[k]; });
+        showMain(false); showError('');
+        document.getElementById('fileInput').value = '';
+        // Reset tabs
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        document.querySelector('.tab[data-panel="packets"]').classList.add('active');
+        document.getElementById('panel-packets').classList.add('active');
+      }
+
+      // ── Event wiring ──
+      document.getElementById('fileInput').addEventListener('change', e => {
+        if (e.target.files[0]) handleFile(e.target.files[0]);
+      });
+
+      const dz = document.getElementById('dropzone');
+      dz.addEventListener('dragover',  e => { e.preventDefault(); dz.classList.add('drag-over'); });
+      dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+      dz.addEventListener('drop', e => {
+        e.preventDefault(); dz.classList.remove('drag-over');
+        if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+      });
+
+      // Tab switching
+      document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
+        t.classList.add('active');
+        document.getElementById('panel-' + t.dataset.panel).classList.add('active');
+      }));
+
+      // Column sorting
+      document.querySelectorAll('#pkt-table thead th[data-col]').forEach(th => th.addEventListener('click', () => {
+        const key = {no:'no',time:'ts',src:'src',dst:'dst',proto:'proto',len:'origLen',info:'info'}[th.dataset.col] || th.dataset.col;
+        const asc = th.dataset.sortDir !== 'asc';
+        document.querySelectorAll('#pkt-table thead th').forEach(t => { t.classList.remove('sorted'); delete t.dataset.sortDir; });
+        th.classList.add('sorted'); th.dataset.sortDir = asc ? 'asc' : 'desc';
+        filteredPackets.sort((a,b) => {
+          const va = a[key]??'', vb = b[key]??'';
+          return typeof va === 'number' ? (asc ? va-vb : vb-va) : (asc ? String(va).localeCompare(String(vb)) : String(vb).localeCompare(String(va)));
+        });
+        renderPacketTable(filteredPackets);
+      }));
+    </script>
+  </body>
+</html>
