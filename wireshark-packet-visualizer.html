@@ -140,10 +140,10 @@
       }
 
       /* =========================
-         Main app (hidden until file loaded)
+         Main app
          ========================= */
       #main {
-        display: none;
+        display: block;
       }
 
       /* =========================
@@ -201,7 +201,6 @@
         border-bottom: 1px solid #e1e4e8;
         margin-bottom: 16px;
         gap: 0;
-        overflow-x: auto;
       }
       .tab {
         padding: 8px 16px;
@@ -595,7 +594,7 @@
     <div id="main">
 
       <!-- Stats bar -->
-      <div id="statsbar">
+      <div id="statsbar" style="display:none">
         <div class="stat-item">
           <div class="stat-label">Packets</div>
           <div class="stat-value" id="stat-packets">0</div>
@@ -1009,6 +1008,12 @@
       function renderPacketTable(pkts) {
         const tbody = document.getElementById('pkt-body');
         tbody.innerHTML = '';
+        document.getElementById('pkt-count').textContent = '';
+        if (!pkts.length) {
+          const tr = tbody.insertRow();
+          tr.innerHTML = `<td colspan="7" style="text-align:center;color:#586069;padding:24px;font-size:13px;font-style:italic">Load a capture file to get started</td>`;
+          return;
+        }
         const ts0 = packets[0]?.ts || 0;
         const frag = document.createDocumentFragment();
         pkts.slice(0, MAX_RENDER).forEach(pkt => {
@@ -1252,7 +1257,7 @@
       }
 
       function showMain(s) {
-        document.getElementById('main').style.display = s ? 'block' : 'none';
+        document.getElementById('statsbar').style.display = s ? 'flex' : 'none';
         document.getElementById('clear-btn').style.display = s ? '' : 'none';
       }
 
@@ -1266,6 +1271,10 @@
         Object.keys(charts).forEach(k => { charts[k].destroy(); delete charts[k]; });
         showMain(false); showError('');
         document.getElementById('fileInput').value = '';
+        document.getElementById('filter-input').value = '';
+        document.getElementById('proto-filter').innerHTML = '<option value="">All Protocols</option>';
+        renderPacketTable([]);
+        clearDetail();
         // Reset tabs
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
@@ -1285,6 +1294,9 @@
         t.classList.add('active');
         document.getElementById('panel-' + t.dataset.panel).classList.add('active');
       }));
+
+      // Initial empty state
+      renderPacketTable([]);
 
       // Column sorting
       document.querySelectorAll('#pkt-table thead th[data-col]').forEach(th => th.addEventListener('click', () => {
