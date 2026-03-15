@@ -824,13 +824,25 @@
           if (type === 0x0A0D0D0A) {
             // byte order already set above
           } else if (type === 0x00000001) {
-            ifaces.push({ linkType: v.getUint16(off+8, le), tsResol: 6 });
+            // Read if_tsresol option (code 9) to get correct timestamp divisor
+            let tsDivisor = 1e6; // default: microseconds (10^-6)
+            let optOff = off + 16, blkEnd = off + len - 4;
+            while (optOff + 4 <= blkEnd) {
+              const optCode = v.getUint16(optOff, le), optLen = v.getUint16(optOff + 2, le);
+              if (optCode === 0) break;
+              if (optCode === 9 && optLen >= 1) {
+                const raw = v.getUint8(optOff + 4);
+                tsDivisor = (raw & 0x80) ? Math.pow(2, raw & 0x7F) : Math.pow(10, raw & 0x7F);
+              }
+              optOff += 4 + Math.ceil(optLen / 4) * 4;
+            }
+            ifaces.push({ linkType: v.getUint16(off+8, le), tsDivisor });
           } else if (type === 0x00000006) {
             const ifId = v.getUint32(off+8,  le);
             const tsH  = v.getUint32(off+12, le), tsL = v.getUint32(off+16, le);
             const capL = v.getUint32(off+20, le), oriL = v.getUint32(off+24, le);
-            const iface = ifaces[ifId] || { linkType:1, tsResol:6 };
-            const ts = (tsH * 4294967296 + tsL) / Math.pow(10, iface.tsResol);
+            const iface = ifaces[ifId] || { linkType:1, tsDivisor:1e6 };
+            const ts = (tsH * 4294967296 + tsL) / iface.tsDivisor;
             if (off+28+capL <= buf.byteLength)
               res.push(parsePacket(new Uint8Array(buf, off+28, capL), ts, oriL, res.length+1, iface.linkType));
           } else if (type === 0x00000002) {
