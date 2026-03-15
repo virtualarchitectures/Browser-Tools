@@ -435,7 +435,6 @@
         font-style: italic;
       }
       #detail-content {
-        display: none;
         padding: 8px 0;
       }
       .detail-section {
@@ -705,7 +704,7 @@
           <div id="detail-pane">
             <div id="detail-pane-header">Packet Detail</div>
             <div id="detail-empty">Select a packet to inspect</div>
-            <div id="detail-content"></div>
+            <div id="detail-content" style="display:none"></div>
           </div>
         </div>
       </div>
@@ -1127,7 +1126,7 @@
           html += mkSection('ICMP', [['Type',pkt.layers.icmp.type],['Code',pkt.layers.icmp.code]]);
         }
         el.innerHTML = html;
-        el.style.display = 'block';
+        el.style.display = '';
         document.getElementById('detail-empty').style.display = 'none';
       }
 
