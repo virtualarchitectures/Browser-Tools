@@ -48,21 +48,17 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 - **[Image Rotate Tool](image-rotate.html)** — rotate images by any angle with fine control, flip horizontally or vertically
 - **[Pixel Coordinates](pixel-coords.html)** — click on images to capture and record pixel coordinates
 
-### Media
-
-- **[Multi-Webcam Viewer](webcam-viewer.html)** — view multiple webcam feeds simultaneously with support for YouTube embeds, direct video streams (MP4, M3U8, HLS), and iframe-compatible sources
-- **[Scene Detection Tool](scene-detection.html)** — automatically detect scene changes in videos using frame analysis with adjustable sensitivity, minimum scene duration, and sample rate controls
-- **[Transcription Tool](transcribe.html)** — transcribe audio and video files with keyboard shortcuts, timestamps, and speed control
-
-### Network Data
-
-- **[Network Diagram Builder](network-diagram.html)** — create network diagrams interactively by drawing nodes and edges with custom properties, export to Neo4j Cypher, NetworkX Python, GEXF, and GraphML formats
-
 ### Maps and Spatial Data
 
 - **[Feature Service Viewer](feature-service-viewer.html)** — load and visualize ArcGIS Feature Services and MapServer layers on an interactive map
 - **[GeoJSON Editor](geojson-editor.html)** — draw points, polygons, and lines on an interactive map, add custom properties, and export as GeoJSON
 - **[GeoJSON Viewer](geojson-viewer.html)** — visualize and explore GeoJSON files on an interactive map
+
+### Media
+
+- **[Multi-Webcam Viewer](webcam-viewer.html)** — view multiple webcam feeds simultaneously with support for YouTube embeds, direct video streams (MP4, M3U8, HLS), and iframe-compatible sources
+- **[Scene Detection Tool](scene-detection.html)** — automatically detect scene changes in videos using frame analysis with adjustable sensitivity, minimum scene duration, and sample rate controls
+- **[Transcription Tool](transcribe.html)** — transcribe audio and video files with keyboard shortcuts, timestamps, and speed control
 
 ### Natural Language Processing (NLP)
 
@@ -71,6 +67,10 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 - **[Named Entity Recognition](named-entity-recognition.html)** — extract and identify named entities from text including people, places and organisations using natural language processing
 - **[Sentiment Analysis](sentiment-analysis.html)** — analyze sentiment in CSV text columns using AFINN lexicon with configurable metrics (score, comparative, classification, word counts, tokens) and summary statistics
 - **[Word Frequency Counter](word-frequency.html)** — analyze word frequency, discover common phrases with n-grams (bigrams, trigrams, 4-grams, 5-grams), and get detailed text statistics with customisable stop word filtering
+
+### Network Data
+
+- **[Network Diagram Builder](network-diagram.html)** — create network diagrams interactively by drawing nodes and edges with custom properties, export to Neo4j Cypher, NetworkX Python, GEXF, and GraphML formats
 
 ### OSINT
 
