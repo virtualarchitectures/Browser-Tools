@@ -615,6 +615,10 @@
           <div class="stat-label">Protocols</div>
           <div class="stat-value" id="stat-protos">0</div>
         </div>
+        <div class="stat-item">
+          <div class="stat-label">Unique IPs</div>
+          <div class="stat-value" id="stat-ips">0</div>
+        </div>
         <div class="stat-item filename">
           <div class="stat-label">File</div>
           <div class="stat-value" id="stat-filename"></div>
@@ -1001,6 +1005,8 @@
         document.getElementById('stat-bytes').textContent = humanBytes(totalBytes);
         document.getElementById('stat-avgsize').textContent = humanBytes(Math.round(totalBytes/packets.length));
         document.getElementById('stat-protos').textContent = new Set(packets.map(p=>p.proto)).size;
+        const uniqueIPs = new Set(packets.flatMap(p => [p.src, p.dst].filter(ip => ip && ip !== '?')));
+        document.getElementById('stat-ips').textContent = uniqueIPs.size.toLocaleString();
         document.getElementById('stat-filename').textContent = filename;
       }
 
