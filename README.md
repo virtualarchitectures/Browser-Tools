@@ -91,7 +91,7 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 
 - **[Browser Fingerprint Viewer](browser-fingerprint.html)** — view browser fingerprint data that websites can collect including canvas fingerprinting, WebGL info, audio context, detected fonts, and device characteristics
 - **[Cookie & Storage Analysis](cookie-storage-analysis.html)** — examine all data websites can store on your device including cookies, localStorage, sessionStorage, IndexedDB, cache storage, and service workers with detailed analysis
-- **[Wireshark Packet Visualizer](wireshark-packet-visualizer.html)** — analyse pcap and pcapng network capture files with protocol breakdown charts, packet timeline, top talkers, and conversation tracking
+- **[Packet Analyzer](packet-analyzer.html)** — analyse pcap and pcapng network capture files with protocol breakdown charts, packet timeline, top talkers, and conversation tracking
 
 ## Acknowledgements
 
