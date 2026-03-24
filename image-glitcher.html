@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Image Glitcher</title>
+    <style>
+      /* =========================
+         Reset and Base
+         ========================= */
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+        background: #fff;
+        color: #24292e;
+        font-size: 14px;
+        height: 100vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* =========================
+         Page Header
+         ========================= */
+      .page-header {
+        padding: 10px 20px 8px;
+        border-bottom: 1px solid #e1e4e8;
+        flex-shrink: 0;
+      }
+
+      .back-link {
+        display: inline-block;
+        margin-bottom: 4px;
+        color: #0366d6;
+        text-decoration: none;
+        font-size: 14px;
+      }
+      .back-link:hover {
+        text-decoration: underline;
+      }
+
+      h1 {
+        font-size: 20px;
+        line-height: 1.3;
+      }
+
+      /* =========================
+         Drop Zone
+         ========================= */
+      #drop-zone {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        border: 2px dashed #e1e4e8;
+        border-radius: 8px;
+        margin: 16px;
+        padding: 40px;
+        text-align: center;
+        color: #586069;
+        cursor: pointer;
+        transition: border-color 0.15s, background 0.15s;
+      }
+      #drop-zone:hover,
+      #drop-zone.drag-over {
+        border-color: #0366d6;
+        background: #f6f8fa;
+      }
+      #drop-zone p {
+        font-size: 16px;
+        margin-bottom: 6px;
+      }
+      #drop-zone small {
+        color: #586069;
+        font-size: 13px;
+      }
+      #drop-zone.hidden {
+        display: none;
+      }
+      #file-input {
+        display: none;
+      }
+
+      /* =========================
+         Editor Layout
+         ========================= */
+      #editor {
+        flex: 1;
+        display: none;
+        overflow: hidden;
+      }
+      #editor.visible {
+        display: flex;
+      }
+
+      /* =========================
+         Controls Panel
+         ========================= */
+      #controls {
+        width: 272px;
+        min-width: 272px;
+        border-right: 1px solid #e1e4e8;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        background: #f6f8fa;
+      }
+
+      .panel-top {
+        padding: 8px;
+        border-bottom: 1px solid #e1e4e8;
+        background: #fff;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        align-items: center;
+      }
+
+      .live-label {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 12px;
+        color: #586069;
+        margin-left: auto;
+        cursor: pointer;
+        user-select: none;
+      }
+
+      #effects-list {
+        flex: 1;
+        overflow-y: auto;
+      }
+
+      /* =========================
+         Presets Bar
+         ========================= */
+      .presets-bar {
+        padding: 8px;
+        background: #fff;
+        border-bottom: 1px solid #e1e4e8;
+        display: flex;
+        gap: 5px;
+        align-items: center;
+      }
+      .presets-label {
+        font-size: 11px;
+        color: #586069;
+        white-space: nowrap;
+      }
+
+      /* =========================
+         Effect Sections
+         ========================= */
+      .effect-section {
+        border-bottom: 1px solid #e1e4e8;
+      }
+
+      .effect-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 10px;
+        cursor: pointer;
+        background: #fff;
+        user-select: none;
+      }
+      .effect-header:hover {
+        background: #f0f3f6;
+      }
+
+      .effect-check {
+        cursor: pointer;
+        flex-shrink: 0;
+        width: 13px;
+        height: 13px;
+      }
+
+      .effect-name {
+        flex: 1;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .effect-caret {
+        font-size: 10px;
+        color: #586069;
+        line-height: 1;
+      }
+
+      .effect-body {
+        padding: 8px 10px;
+        background: #f6f8fa;
+        display: none;
+      }
+      .effect-body.open {
+        display: block;
+      }
+
+      /* =========================
+         Controls
+         ========================= */
+      .ctrl-row {
+        margin-bottom: 8px;
+      }
+      .ctrl-row:last-child {
+        margin-bottom: 0;
+      }
+
+      .ctrl-label {
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+        color: #586069;
+        margin-bottom: 2px;
+      }
+
+      .ctrl-val {
+        font-family: monospace;
+        color: #24292e;
+        font-size: 11px;
+      }
+
+      input[type="range"] {
+        width: 100%;
+        margin: 0;
+        accent-color: #0366d6;
+        cursor: pointer;
+        height: 16px;
+      }
+
+      select {
+        width: 100%;
+        padding: 3px 6px;
+        border: 1px solid #d1d5da;
+        border-radius: 4px;
+        background: #fff;
+        color: #24292e;
+        font-size: 12px;
+        cursor: pointer;
+        font-family: inherit;
+      }
+
+      /* =========================
+         Buttons
+         ========================= */
+      .btn {
+        background: #fafbfc;
+        color: #24292e;
+        padding: 5px 10px;
+        border-radius: 6px;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+        cursor: pointer;
+        font-size: 12px;
+        line-height: 18px;
+        font-family: inherit;
+        white-space: nowrap;
+      }
+      .btn:hover {
+        background: #f3f4f6;
+      }
+      .btn:active {
+        background: #edeff2;
+      }
+      .btn.primary {
+        background: #0366d6;
+        color: #fff;
+        border-color: transparent;
+      }
+      .btn.primary:hover {
+        background: #0256c5;
+      }
+
+      /* =========================
+         Canvas Area
+         ========================= */
+      #canvas-area {
+        flex: 1;
+        overflow: auto;
+        background: #1a1a2e;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 20px;
+        position: relative;
+      }
+
+      #glitch-canvas {
+        display: block;
+        max-width: 100%;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+        image-rendering: pixelated;
+      }
+
+      .canvas-info {
+        position: absolute;
+        bottom: 8px;
+        right: 10px;
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.35);
+        pointer-events: none;
+      }
+
+      #processing-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.55);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 15px;
+        letter-spacing: 0.5px;
+      }
+      #processing-overlay.visible {
+        display: flex;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- =========================
+         Page Header
+         ========================= -->
+    <div class="page-header">
+      <a href="index.html" class="back-link">← Back to Browser Tools</a>
+      <h1>Image Glitcher</h1>
+    </div>
+
+    <!-- Drop Zone -->
+    <div id="drop-zone">
+      <p>Drop an image here</p>
+      <small>Supports JPEG, PNG, GIF, WebP, BMP</small>
+      <button class="btn primary" id="choose-file-btn" style="margin-top: 14px">
+        Choose File
+      </button>
+      <input type="file" id="file-input" accept="image/*" />
+    </div>
+
+    <!-- Editor -->
+    <div id="editor">
+      <!-- Controls Panel -->
+      <div id="controls">
+        <div class="panel-top">
+          <button class="btn primary" id="btn-apply">Apply</button>
+          <button class="btn" id="btn-randomize">Randomize</button>
+          <button class="btn" id="btn-reset">Reset</button>
+          <button class="btn" id="btn-download">Download</button>
+          <button class="btn" id="btn-new-image">New Image</button>
+          <label class="live-label">
+            <input type="checkbox" id="live-preview" />
+            Live
+          </label>
+        </div>
+        <div class="presets-bar">
+          <span class="presets-label">Presets:</span>
+          <button class="btn" id="preset-subtle">Subtle</button>
+          <button class="btn" id="preset-classic">Classic</button>
+          <button class="btn" id="preset-extreme">Extreme</button>
+        </div>
+        <div id="effects-list"></div>
+      </div>
+
+      <!-- Canvas Area -->
+      <div id="canvas-area">
+        <canvas id="glitch-canvas"></canvas>
+        <div class="canvas-info" id="canvas-info"></div>
+        <div id="processing-overlay">Processing...</div>
+      </div>
+    </div>
+
+    <script>
+      /* =========================
+         Effect Definitions
+         ========================= */
+
+      const EFFECT_DEFS = [
+        {
+          id: "rgbShift",
+          name: "RGB Channel Shift",
+          params: [
+            { id: "rShift", label: "Red Shift", type: "range", min: -200, max: 200, default: 25, step: 1, unit: "px" },
+            { id: "gShift", label: "Green Shift", type: "range", min: -200, max: 200, default: 0, step: 1, unit: "px" },
+            { id: "bShift", label: "Blue Shift", type: "range", min: -200, max: 200, default: -25, step: 1, unit: "px" },
+          ],
+        },
+        {
+          id: "scanlineShift",
+          name: "Scanline Shift",
+          params: [
+            { id: "density", label: "Density", type: "range", min: 1, max: 100, default: 20, step: 1, unit: "%" },
+            { id: "amount", label: "Shift Amount", type: "range", min: 1, max: 500, default: 100, step: 1, unit: "px" },
+          ],
+        },
+        {
+          id: "pixelSort",
+          name: "Pixel Sort",
+          params: [
+            { id: "threshold", label: "Brightness Threshold", type: "range", min: 0, max: 254, default: 100, step: 1, unit: "" },
+            { id: "direction", label: "Direction", type: "select", options: [["horizontal", "Horizontal"], ["vertical", "Vertical"]], default: "horizontal" },
+            { id: "order", label: "Sort Order", type: "select", options: [["asc", "Brightest Last"], ["desc", "Brightest First"]], default: "asc" },
+          ],
+        },
+        {
+          id: "noise",
+          name: "Noise",
+          params: [
+            { id: "amount", label: "Amount", type: "range", min: 1, max: 100, default: 30, step: 1, unit: "%" },
+            { id: "type", label: "Type", type: "select", options: [["color", "Color (RGB)"], ["mono", "Luminance"]], default: "color" },
+          ],
+        },
+        {
+          id: "waveWarp",
+          name: "Wave Warp",
+          params: [
+            { id: "amplitude", label: "Amplitude", type: "range", min: 1, max: 150, default: 20, step: 1, unit: "px" },
+            { id: "frequency", label: "Frequency", type: "range", min: 1, max: 30, default: 5, step: 1, unit: "" },
+            { id: "axis", label: "Axis", type: "select", options: [["horizontal", "Horizontal rows"], ["vertical", "Vertical columns"]], default: "horizontal" },
+          ],
+        },
+        {
+          id: "colorBleed",
+          name: "Color Bleed",
+          params: [
+            { id: "decay", label: "Decay", type: "range", min: 1, max: 99, default: 60, step: 1, unit: "%" },
+            { id: "channel", label: "Channel", type: "select", options: [["r", "Red"], ["g", "Green"], ["b", "Blue"], ["all", "All"]], default: "r" },
+          ],
+        },
+        {
+          id: "bitCrush",
+          name: "Bit Crush",
+          params: [
+            { id: "bits", label: "Bits Per Channel", type: "range", min: 1, max: 7, default: 3, step: 1, unit: "" },
+          ],
+        },
+        {
+          id: "blockShift",
+          name: "Block Corruption",
+          params: [
+            { id: "count", label: "Block Count", type: "range", min: 1, max: 100, default: 30, step: 1, unit: "" },
+            { id: "maxWidth", label: "Max Width", type: "range", min: 20, max: 800, default: 200, step: 10, unit: "px" },
+            { id: "maxHeight", label: "Max Height", type: "range", min: 1, max: 100, default: 8, step: 1, unit: "px" },
+            { id: "maxDisplace", label: "Displacement", type: "range", min: 1, max: 500, default: 120, step: 1, unit: "px" },
+          ],
+        },
+      ];
+
+      /* =========================
+         State
+         ========================= */
+
+      let originalImageData = null;
+      let outputFileName = "glitched.png";
+
+      // Build state from definitions
+      const state = {};
+      for (const def of EFFECT_DEFS) {
+        state[def.id] = { enabled: false };
+        for (const p of def.params) {
+          state[def.id][p.id] = p.default;
+        }
+      }
+
+      const canvas = document.getElementById("glitch-canvas");
+      const ctx = canvas.getContext("2d");
+
+      /* =========================
+         Glitch Effect Implementations
+         ========================= */
+
+      // Perceptual brightness of a pixel
+      function luma(r, g, b) {
+        return (r * 299 + g * 587 + b * 114) / 1000;
+      }
+
+      // Shift each RGB channel independently by pixel offset (horizontal)
+      function applyRGBShift(src, dst, w, h, p) {
+        for (let y = 0; y < h; y++) {
+          for (let x = 0; x < w; x++) {
+            const di = (y * w + x) * 4;
+            const rx = ((x - p.rShift) % w + w) % w;
+            const gx = ((x - p.gShift) % w + w) % w;
+            const bx = ((x - p.bShift) % w + w) % w;
+            dst[di]     = src[(y * w + rx) * 4];
+            dst[di + 1] = src[(y * w + gx) * 4 + 1];
+            dst[di + 2] = src[(y * w + bx) * 4 + 2];
+            dst[di + 3] = src[(y * w + x)  * 4 + 3];
+          }
+        }
+      }
+
+      // Randomly displace scanlines (rows) horizontally
+      function applyScanlineShift(data, w, h, p) {
+        const rowBuf = new Uint8ClampedArray(w * 4);
+        for (let y = 0; y < h; y++) {
+          if (Math.random() * 100 > p.density) continue;
+          const shift = Math.round((Math.random() * 2 - 1) * p.amount);
+          if (shift === 0) continue;
+          const rowOffset = y * w * 4;
+          rowBuf.set(data.subarray(rowOffset, rowOffset + w * 4));
+          for (let x = 0; x < w; x++) {
+            const srcX = ((x - shift) % w + w) % w;
+            const di = rowOffset + x * 4;
+            const si = srcX * 4;
+            data[di]     = rowBuf[si];
+            data[di + 1] = rowBuf[si + 1];
+            data[di + 2] = rowBuf[si + 2];
+            data[di + 3] = rowBuf[si + 3];
+          }
+        }
+      }
+
+      // Sort runs of pixels above brightness threshold by luminance
+      function applyPixelSort(data, w, h, p) {
+        const thresh = p.threshold;
+        const cmp = p.order === "asc" ? (a, b) => a.v - b.v : (a, b) => b.v - a.v;
+
+        function sortAxis(outerLen, innerLen, getIdx) {
+          for (let outer = 0; outer < outerLen; outer++) {
+            let segStart = -1;
+            const seg = [];
+
+            const flush = () => {
+              if (seg.length < 2) { segStart = -1; seg.length = 0; return; }
+              seg.sort(cmp);
+              for (let k = 0; k < seg.length; k++) {
+                const i = getIdx(outer, segStart + k) * 4;
+                data[i] = seg[k].r; data[i + 1] = seg[k].g;
+                data[i + 2] = seg[k].b; data[i + 3] = seg[k].a;
+              }
+              segStart = -1; seg.length = 0;
+            };
+
+            for (let inner = 0; inner <= innerLen; inner++) {
+              if (inner < innerLen) {
+                const i = getIdx(outer, inner) * 4;
+                const v = luma(data[i], data[i + 1], data[i + 2]);
+                if (v >= thresh) {
+                  if (segStart === -1) segStart = inner;
+                  seg.push({ r: data[i], g: data[i + 1], b: data[i + 2], a: data[i + 3], v });
+                } else if (segStart !== -1) {
+                  flush();
+                }
+              } else if (segStart !== -1) {
+                flush();
+              }
+            }
+          }
+        }
+
+        if (p.direction === "horizontal") {
+          sortAxis(h, w, (y, x) => y * w + x);
+        } else {
+          sortAxis(w, h, (x, y) => y * w + x);
+        }
+      }
+
+      // Add random noise to pixel values
+      function applyNoise(data, w, h, p) {
+        const scale = (p.amount / 100) * 128;
+        for (let i = 0; i < data.length; i += 4) {
+          if (p.type === "mono") {
+            const n = (Math.random() * 2 - 1) * scale;
+            data[i]     = Math.min(255, Math.max(0, data[i]     + n));
+            data[i + 1] = Math.min(255, Math.max(0, data[i + 1] + n));
+            data[i + 2] = Math.min(255, Math.max(0, data[i + 2] + n));
+          } else {
+            data[i]     = Math.min(255, Math.max(0, data[i]     + (Math.random() * 2 - 1) * scale));
+            data[i + 1] = Math.min(255, Math.max(0, data[i + 1] + (Math.random() * 2 - 1) * scale));
+            data[i + 2] = Math.min(255, Math.max(0, data[i + 2] + (Math.random() * 2 - 1) * scale));
+          }
+        }
+      }
+
+      // Sine wave displacement of rows or columns
+      function applyWaveWarp(src, dst, w, h, p) {
+        if (p.axis === "horizontal") {
+          for (let y = 0; y < h; y++) {
+            const offset = Math.round(p.amplitude * Math.sin((2 * Math.PI * y * p.frequency) / h));
+            for (let x = 0; x < w; x++) {
+              const srcX = ((x - offset) % w + w) % w;
+              const di = (y * w + x) * 4;
+              const si = (y * w + srcX) * 4;
+              dst[di] = src[si]; dst[di + 1] = src[si + 1];
+              dst[di + 2] = src[si + 2]; dst[di + 3] = src[si + 3];
+            }
+          }
+        } else {
+          for (let x = 0; x < w; x++) {
+            const offset = Math.round(p.amplitude * Math.sin((2 * Math.PI * x * p.frequency) / w));
+            for (let y = 0; y < h; y++) {
+              const srcY = ((y - offset) % h + h) % h;
+              const di = (y * w + x) * 4;
+              const si = (srcY * w + x) * 4;
+              dst[di] = src[si]; dst[di + 1] = src[si + 1];
+              dst[di + 2] = src[si + 2]; dst[di + 3] = src[si + 3];
+            }
+          }
+        }
+      }
+
+      // Smear a color channel horizontally — simulates analog signal bleed
+      function applyColorBleed(data, w, h, p) {
+        const decayFactor = 1 - p.decay / 100;
+        const channels = p.channel === "all" ? [0, 1, 2] : [{ r: 0, g: 1, b: 2 }[p.channel]];
+
+        for (let y = 0; y < h; y++) {
+          for (const ch of channels) {
+            let bleed = 0;
+            for (let x = 0; x < w; x++) {
+              const i = (y * w + x) * 4 + ch;
+              bleed = bleed * decayFactor + data[i] * (1 - decayFactor);
+              data[i] = Math.min(255, Math.round(bleed + data[i] * 0.5));
+            }
+          }
+        }
+      }
+
+      // Reduce color depth — creates posterization/banding
+      function applyBitCrush(data, w, h, p) {
+        const levels = Math.pow(2, p.bits);
+        const step = 256 / levels;
+        for (let i = 0; i < data.length; i += 4) {
+          data[i]     = Math.min(255, Math.round(data[i]     / step) * step);
+          data[i + 1] = Math.min(255, Math.round(data[i + 1] / step) * step);
+          data[i + 2] = Math.min(255, Math.round(data[i + 2] / step) * step);
+        }
+      }
+
+      // Randomly displace rectangular blocks horizontally — mimics corrupted sectors
+      function applyBlockShift(data, w, h, p) {
+        const snap = new Uint8ClampedArray(data);
+        for (let n = 0; n < p.count; n++) {
+          const bx = Math.floor(Math.random() * w);
+          const by = Math.floor(Math.random() * h);
+          const bw = Math.floor(Math.random() * p.maxWidth) + 4;
+          const bh = Math.floor(Math.random() * p.maxHeight) + 1;
+          const dx = Math.round((Math.random() * 2 - 1) * p.maxDisplace);
+          for (let y = by; y < Math.min(by + bh, h); y++) {
+            for (let x = bx; x < Math.min(bx + bw, w); x++) {
+              const srcX = ((x - dx) % w + w) % w;
+              const di = (y * w + x) * 4;
+              const si = (y * w + srcX) * 4;
+              data[di]     = snap[si];
+              data[di + 1] = snap[si + 1];
+              data[di + 2] = snap[si + 2];
+              data[di + 3] = snap[si + 3];
+            }
+          }
+        }
+      }
+
+      /* =========================
+         Main Apply Pipeline
+         ========================= */
+
+      function applyAllEffects() {
+        if (!originalImageData) return;
+        const { width: w, height: h } = originalImageData;
+        const overlay = document.getElementById("processing-overlay");
+        overlay.classList.add("visible");
+
+        // Defer so overlay renders before the synchronous work begins
+        setTimeout(() => {
+          try {
+            const buf = new Uint8ClampedArray(originalImageData.data);
+
+            if (state.rgbShift.enabled) {
+              const snap = new Uint8ClampedArray(buf);
+              applyRGBShift(snap, buf, w, h, state.rgbShift);
+            }
+            if (state.scanlineShift.enabled) {
+              applyScanlineShift(buf, w, h, state.scanlineShift);
+            }
+            if (state.pixelSort.enabled) {
+              applyPixelSort(buf, w, h, state.pixelSort);
+            }
+            if (state.noise.enabled) {
+              applyNoise(buf, w, h, state.noise);
+            }
+            if (state.waveWarp.enabled) {
+              const snap = new Uint8ClampedArray(buf);
+              applyWaveWarp(snap, buf, w, h, state.waveWarp);
+            }
+            if (state.colorBleed.enabled) {
+              applyColorBleed(buf, w, h, state.colorBleed);
+            }
+            if (state.bitCrush.enabled) {
+              applyBitCrush(buf, w, h, state.bitCrush);
+            }
+            if (state.blockShift.enabled) {
+              applyBlockShift(buf, w, h, state.blockShift);
+            }
+
+            ctx.putImageData(new ImageData(buf, w, h), 0, 0);
+          } finally {
+            overlay.classList.remove("visible");
+          }
+        }, 10);
+      }
+
+      /* =========================
+         UI Construction
+         ========================= */
+
+      function buildEffectsUI() {
+        const list = document.getElementById("effects-list");
+        list.innerHTML = "";
+
+        for (const def of EFFECT_DEFS) {
+          const section = document.createElement("div");
+          section.className = "effect-section";
+          section.dataset.effectId = def.id;
+
+          // Header
+          const header = document.createElement("div");
+          header.className = "effect-header";
+
+          const check = document.createElement("input");
+          check.type = "checkbox";
+          check.className = "effect-check";
+          check.id = `chk-${def.id}`;
+
+          const nameSpan = document.createElement("span");
+          nameSpan.className = "effect-name";
+          nameSpan.textContent = def.name;
+
+          const caret = document.createElement("span");
+          caret.className = "effect-caret";
+          caret.textContent = "▶";
+
+          header.appendChild(check);
+          header.appendChild(nameSpan);
+          header.appendChild(caret);
+
+          // Body
+          const effectBody = document.createElement("div");
+          effectBody.className = "effect-body";
+
+          for (const p of def.params) {
+            const row = document.createElement("div");
+            row.className = "ctrl-row";
+
+            if (p.type === "range") {
+              row.innerHTML = `
+                <div class="ctrl-label">
+                  <span>${p.label}</span>
+                  <span class="ctrl-val" id="v-${def.id}-${p.id}">${p.default}${p.unit}</span>
+                </div>
+                <input type="range" id="p-${def.id}-${p.id}"
+                  min="${p.min}" max="${p.max}" step="${p.step}" value="${p.default}" />
+              `;
+            } else {
+              const opts = p.options
+                .map(([val, label]) => `<option value="${val}"${val === p.default ? " selected" : ""}>${label}</option>`)
+                .join("");
+              row.innerHTML = `
+                <div class="ctrl-label"><span>${p.label}</span></div>
+                <select id="p-${def.id}-${p.id}">${opts}</select>
+              `;
+            }
+
+            effectBody.appendChild(row);
+          }
+
+          section.appendChild(header);
+          section.appendChild(effectBody);
+          list.appendChild(section);
+
+          // Enable/disable checkbox
+          check.addEventListener("change", () => {
+            state[def.id].enabled = check.checked;
+            if (check.checked) {
+              effectBody.classList.add("open");
+              caret.textContent = "▼";
+            }
+            if (document.getElementById("live-preview").checked) applyAllEffects();
+          });
+
+          // Collapse/expand on header click (not on checkbox)
+          header.addEventListener("click", (e) => {
+            if (e.target === check) return;
+            effectBody.classList.toggle("open");
+            caret.textContent = effectBody.classList.contains("open") ? "▼" : "▶";
+          });
+
+          // Parameter inputs
+          for (const p of def.params) {
+            const input = document.getElementById(`p-${def.id}-${p.id}`);
+            const eventType = p.type === "range" ? "input" : "change";
+            input.addEventListener(eventType, () => {
+              state[def.id][p.id] = p.type === "range" ? parseFloat(input.value) : input.value;
+              if (p.type === "range") {
+                document.getElementById(`v-${def.id}-${p.id}`).textContent = input.value + p.unit;
+              }
+              if (document.getElementById("live-preview").checked && state[def.id].enabled) {
+                applyAllEffects();
+              }
+            });
+          }
+        }
+      }
+
+      /* =========================
+         Set Effect State (used by presets & randomize)
+         ========================= */
+
+      function setEffectState(effectId, params) {
+        const enabled = !!params.enabled;
+        state[effectId].enabled = enabled;
+
+        const chk = document.getElementById(`chk-${effectId}`);
+        chk.checked = enabled;
+        const section = chk.closest(".effect-section");
+        const effectBody = section.querySelector(".effect-body");
+        const caret = section.querySelector(".effect-caret");
+        effectBody.classList.toggle("open", enabled);
+        caret.textContent = enabled ? "▼" : "▶";
+
+        const def = EFFECT_DEFS.find((d) => d.id === effectId);
+        for (const [paramId, value] of Object.entries(params)) {
+          if (paramId === "enabled") continue;
+          state[effectId][paramId] = value;
+          const input = document.getElementById(`p-${effectId}-${paramId}`);
+          if (!input) continue;
+          input.value = value;
+          const paramDef = def.params.find((p) => p.id === paramId);
+          if (paramDef && paramDef.type === "range") {
+            const display = document.getElementById(`v-${effectId}-${paramId}`);
+            if (display) display.textContent = value + paramDef.unit;
+          }
+        }
+      }
+
+      /* =========================
+         Presets
+         ========================= */
+
+      const PRESETS = {
+        subtle: {
+          rgbShift:      { enabled: true,  rShift: 6,   gShift: 0, bShift: -6 },
+          scanlineShift: { enabled: true,  density: 8,  amount: 30 },
+          noise:         { enabled: true,  amount: 12,  type: "color" },
+          waveWarp:      { enabled: false },
+          pixelSort:     { enabled: false },
+          colorBleed:    { enabled: false },
+          bitCrush:      { enabled: false },
+          blockShift:    { enabled: false },
+        },
+        classic: {
+          rgbShift:      { enabled: true,  rShift: 22,  gShift: 0,  bShift: -22 },
+          scanlineShift: { enabled: true,  density: 20, amount: 80 },
+          pixelSort:     { enabled: true,  threshold: 120, direction: "horizontal", order: "asc" },
+          noise:         { enabled: true,  amount: 20,  type: "color" },
+          waveWarp:      { enabled: false },
+          colorBleed:    { enabled: false },
+          bitCrush:      { enabled: false },
+          blockShift:    { enabled: false },
+        },
+        extreme: {
+          rgbShift:      { enabled: true,  rShift: 55,  gShift: -10, bShift: -55 },
+          scanlineShift: { enabled: true,  density: 40, amount: 250 },
+          pixelSort:     { enabled: true,  threshold: 80,  direction: "horizontal", order: "asc" },
+          noise:         { enabled: true,  amount: 45,  type: "color" },
+          waveWarp:      { enabled: true,  amplitude: 35, frequency: 8, axis: "horizontal" },
+          colorBleed:    { enabled: true,  decay: 75,  channel: "r" },
+          bitCrush:      { enabled: false },
+          blockShift:    { enabled: true,  count: 40, maxWidth: 300, maxHeight: 12, maxDisplace: 200 },
+        },
+      };
+
+      function applyPreset(name) {
+        const preset = PRESETS[name];
+        for (const effectId of Object.keys(preset)) {
+          setEffectState(effectId, preset[effectId]);
+        }
+        applyAllEffects();
+      }
+
+      /* =========================
+         Randomize / Reset
+         ========================= */
+
+      function randomizeEffects() {
+        for (const def of EFFECT_DEFS) {
+          const enabled = Math.random() > 0.45;
+          const params = { enabled };
+
+          for (const p of def.params) {
+            if (p.type === "range") {
+              const raw = p.min + Math.random() * (p.max - p.min);
+              params[p.id] = Math.round(raw / p.step) * p.step;
+            } else {
+              params[p.id] = p.options[Math.floor(Math.random() * p.options.length)][0];
+            }
+          }
+
+          setEffectState(def.id, params);
+        }
+        applyAllEffects();
+      }
+
+      function resetEffects() {
+        for (const def of EFFECT_DEFS) {
+          const params = { enabled: false };
+          for (const p of def.params) params[p.id] = p.default;
+          setEffectState(def.id, params);
+        }
+        if (originalImageData) ctx.putImageData(originalImageData, 0, 0);
+      }
+
+      /* =========================
+         Image Loading
+         ========================= */
+
+      const MAX_DIM = 2048;
+
+      function loadImageFile(file) {
+        if (!file || !file.type.startsWith("image/")) {
+          alert("Please select a valid image file.");
+          return;
+        }
+
+        outputFileName = file.name.replace(/\.[^.]+$/, "") + "-glitched.png";
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            let w = img.width;
+            let h = img.height;
+
+            // Downscale very large images to keep processing fast
+            if (w > MAX_DIM || h > MAX_DIM) {
+              const scale = MAX_DIM / Math.max(w, h);
+              w = Math.round(w * scale);
+              h = Math.round(h * scale);
+            }
+
+            canvas.width = w;
+            canvas.height = h;
+            ctx.drawImage(img, 0, 0, w, h);
+            originalImageData = ctx.getImageData(0, 0, w, h);
+
+            document.getElementById("canvas-info").textContent = `${w} × ${h}`;
+            document.getElementById("drop-zone").classList.add("hidden");
+            document.getElementById("editor").classList.add("visible");
+
+            applyAllEffects();
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+
+      /* =========================
+         Event Handlers
+         ========================= */
+
+      document.getElementById("btn-apply").addEventListener("click", applyAllEffects);
+      document.getElementById("btn-randomize").addEventListener("click", randomizeEffects);
+      document.getElementById("btn-reset").addEventListener("click", resetEffects);
+
+      document.getElementById("btn-download").addEventListener("click", () => {
+        const a = document.createElement("a");
+        a.href = canvas.toDataURL("image/png");
+        a.download = outputFileName;
+        a.click();
+      });
+
+      document.getElementById("btn-new-image").addEventListener("click", () => {
+        document.getElementById("editor").classList.remove("visible");
+        document.getElementById("drop-zone").classList.remove("hidden");
+        originalImageData = null;
+        resetEffects();
+        document.getElementById("file-input").value = "";
+      });
+
+      document.getElementById("choose-file-btn").addEventListener("click", () => {
+        document.getElementById("file-input").click();
+      });
+
+      document.getElementById("file-input").addEventListener("change", (e) => {
+        if (e.target.files[0]) loadImageFile(e.target.files[0]);
+      });
+
+      // Preset buttons
+      document.getElementById("preset-subtle").addEventListener("click", () => applyPreset("subtle"));
+      document.getElementById("preset-classic").addEventListener("click", () => applyPreset("classic"));
+      document.getElementById("preset-extreme").addEventListener("click", () => applyPreset("extreme"));
+
+      // Drag and drop — drop zone
+      const dropZone = document.getElementById("drop-zone");
+      dropZone.addEventListener("dragover", (e) => { e.preventDefault(); dropZone.classList.add("drag-over"); });
+      dropZone.addEventListener("dragleave", () => dropZone.classList.remove("drag-over"));
+      dropZone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropZone.classList.remove("drag-over");
+        loadImageFile(e.dataTransfer.files[0]);
+      });
+
+      // Drag and drop — canvas area (replace image while editing)
+      const canvasArea = document.getElementById("canvas-area");
+      canvasArea.addEventListener("dragover", (e) => e.preventDefault());
+      canvasArea.addEventListener("drop", (e) => {
+        e.preventDefault();
+        loadImageFile(e.dataTransfer.files[0]);
+      });
+
+      /* =========================
+         Initialization
+         ========================= */
+
+      buildEffectsUI();
+    </script>
+  </body>
+</html>

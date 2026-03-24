@@ -42,6 +42,7 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 ### Image
 
 - **[EXIF Data Viewer](exif-viewer.html)** — extract and view EXIF metadata from photos including camera settings, GPS location, and timestamps
+- **[Image Glitcher](image-glitcher.html)** — apply glitch art effects to images including RGB channel shift, pixel sorting, scanline displacement, wave warp, bit crush, color bleed, and block corruption
 - **[Image Background Removal](image-bg-removal.html)** — remove image backgrounds using a magic wand flood-fill tool with adjustable tolerance and edge feathering, then download as transparent PNG
 - **[Image Crop Tool](image-crop.html)** — crop images with interactive selection, aspect ratio presets, and precise dimension controls
 - **[Image Resize Tool](image-resize.html)** — resize images by percentage or pixels with precise scale factor control for copying scale factor to other images
