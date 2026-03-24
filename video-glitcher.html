@@ -1,0 +1,1290 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Video Glitcher</title>
+    <style>
+      /* =========================
+         Reset and Base
+         ========================= */
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+        background: #fff;
+        color: #24292e;
+        font-size: 14px;
+        height: 100vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* =========================
+         Page Header
+         ========================= */
+      .page-header {
+        padding: 10px 20px 8px;
+        border-bottom: 1px solid #e1e4e8;
+        flex-shrink: 0;
+      }
+
+      .back-link {
+        display: inline-block;
+        margin-bottom: 4px;
+        color: #0366d6;
+        text-decoration: none;
+        font-size: 14px;
+      }
+      .back-link:hover {
+        text-decoration: underline;
+      }
+
+      h1 {
+        font-size: 20px;
+        line-height: 1.3;
+      }
+
+      /* =========================
+         Drop Zone
+         ========================= */
+      #drop-zone {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        border: 2px dashed #e1e4e8;
+        border-radius: 8px;
+        margin: 16px;
+        padding: 40px;
+        text-align: center;
+        color: #586069;
+        cursor: pointer;
+        transition: border-color 0.15s, background 0.15s;
+      }
+      #drop-zone:hover,
+      #drop-zone.drag-over {
+        border-color: #0366d6;
+        background: #f6f8fa;
+      }
+      #drop-zone p {
+        font-size: 16px;
+        margin-bottom: 6px;
+      }
+      #drop-zone small {
+        font-size: 13px;
+      }
+      #drop-zone.hidden {
+        display: none;
+      }
+      #file-input {
+        display: none;
+      }
+
+      /* =========================
+         Editor Layout
+         ========================= */
+      #editor {
+        flex: 1;
+        display: none;
+        overflow: hidden;
+      }
+      #editor.visible {
+        display: flex;
+      }
+
+      /* =========================
+         Controls Panel
+         ========================= */
+      #controls {
+        width: 272px;
+        min-width: 272px;
+        border-right: 1px solid #e1e4e8;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        background: #f6f8fa;
+      }
+
+      .panel-top {
+        padding: 8px;
+        border-bottom: 1px solid #e1e4e8;
+        background: #fff;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        align-items: center;
+      }
+
+      .presets-bar {
+        padding: 7px 8px;
+        background: #fff;
+        border-bottom: 1px solid #e1e4e8;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        align-items: center;
+      }
+      .presets-label {
+        font-size: 11px;
+        color: #586069;
+        white-space: nowrap;
+      }
+
+      #effects-list {
+        flex: 1;
+        overflow-y: auto;
+      }
+
+      /* =========================
+         Video Info Bar
+         ========================= */
+      .video-info {
+        padding: 5px 8px;
+        font-size: 11px;
+        color: #586069;
+        border-bottom: 1px solid #e1e4e8;
+        background: #f6f8fa;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      /* =========================
+         Effect Sections
+         ========================= */
+      .effect-section {
+        border-bottom: 1px solid #e1e4e8;
+      }
+
+      .effect-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 10px;
+        cursor: pointer;
+        background: #fff;
+        user-select: none;
+      }
+      .effect-header:hover {
+        background: #f0f3f6;
+      }
+
+      .effect-check {
+        cursor: pointer;
+        flex-shrink: 0;
+        width: 13px;
+        height: 13px;
+      }
+
+      .effect-name {
+        flex: 1;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .effect-caret {
+        font-size: 10px;
+        color: #586069;
+        line-height: 1;
+      }
+
+      .effect-body {
+        padding: 8px 10px;
+        background: #f6f8fa;
+        display: none;
+      }
+      .effect-body.open {
+        display: block;
+      }
+
+      /* =========================
+         Controls
+         ========================= */
+      .ctrl-row {
+        margin-bottom: 8px;
+      }
+      .ctrl-row:last-child {
+        margin-bottom: 0;
+      }
+
+      .ctrl-label {
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+        color: #586069;
+        margin-bottom: 2px;
+      }
+
+      .ctrl-val {
+        font-family: monospace;
+        color: #24292e;
+        font-size: 11px;
+      }
+
+      input[type="range"] {
+        width: 100%;
+        margin: 0;
+        accent-color: #0366d6;
+        cursor: pointer;
+        height: 16px;
+      }
+
+      select {
+        width: 100%;
+        padding: 3px 6px;
+        border: 1px solid #d1d5da;
+        border-radius: 4px;
+        background: #fff;
+        color: #24292e;
+        font-size: 12px;
+        cursor: pointer;
+        font-family: inherit;
+      }
+
+      .ctrl-btn-row {
+        display: flex;
+        gap: 5px;
+        margin-top: 4px;
+      }
+
+      /* =========================
+         Buttons
+         ========================= */
+      .btn {
+        background: #fafbfc;
+        color: #24292e;
+        padding: 5px 10px;
+        border-radius: 6px;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+        cursor: pointer;
+        font-size: 12px;
+        line-height: 18px;
+        font-family: inherit;
+        white-space: nowrap;
+      }
+      .btn:hover {
+        background: #f3f4f6;
+      }
+      .btn:active {
+        background: #edeff2;
+      }
+      .btn.primary {
+        background: #0366d6;
+        color: #fff;
+        border-color: transparent;
+      }
+      .btn.primary:hover {
+        background: #0256c5;
+      }
+      .btn.danger {
+        background: #d73a49;
+        color: #fff;
+        border-color: transparent;
+      }
+      .btn.danger:hover {
+        background: #c0313e;
+      }
+
+      /* =========================
+         Canvas + Seekbar Area
+         ========================= */
+      #canvas-wrap {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      #canvas-area {
+        flex: 1;
+        overflow: auto;
+        background: #1a1a2e;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 16px;
+        position: relative;
+      }
+
+      #output-canvas {
+        display: block;
+        max-width: 100%;
+        max-height: 100%;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+        image-rendering: auto;
+      }
+
+      .seekbar-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 12px;
+        background: #1a1a2e;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        flex-shrink: 0;
+      }
+
+      .seekbar-row input[type="range"] {
+        flex: 1;
+        height: 14px;
+        accent-color: #0366d6;
+      }
+
+      .time-label {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.5);
+        font-family: monospace;
+        white-space: nowrap;
+      }
+
+      #processing-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.55);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 15px;
+        pointer-events: none;
+      }
+      #processing-overlay.visible {
+        display: flex;
+      }
+
+      /* Recording indicator */
+      .rec-dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #d73a49;
+        margin-right: 3px;
+        animation: blink 1s infinite;
+      }
+      @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0; }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- =========================
+         Page Header
+         ========================= -->
+    <div class="page-header">
+      <a href="index.html" class="back-link">← Back to Browser Tools</a>
+      <h1>Video Glitcher</h1>
+    </div>
+
+    <!-- Drop Zone -->
+    <div id="drop-zone">
+      <p>Drop a video here</p>
+      <small>Supports MP4, WebM, MOV, OGV and other browser-supported formats</small>
+      <button class="btn primary" id="choose-file-btn" style="margin-top: 14px">
+        Choose File
+      </button>
+      <input type="file" id="file-input" accept="video/*" />
+    </div>
+
+    <!-- Editor -->
+    <div id="editor">
+      <!-- Controls Panel -->
+      <div id="controls">
+        <div class="panel-top">
+          <button class="btn primary" id="btn-play">Play</button>
+          <button class="btn" id="btn-reset-mosh" title="Reset datamosh accumulator">Reset Mosh</button>
+          <button class="btn" id="btn-record">Record</button>
+          <button class="btn" id="btn-download" disabled>Download</button>
+          <button class="btn" id="btn-new-file">New File</button>
+          <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:#586069;margin-left:auto;cursor:pointer">
+            <input type="checkbox" id="chk-loop" /> Loop
+          </label>
+        </div>
+        <div class="presets-bar">
+          <span class="presets-label">Presets:</span>
+          <button class="btn" id="preset-datamosh">Datamosh</button>
+          <button class="btn" id="preset-vhs">VHS</button>
+          <button class="btn" id="preset-extreme">Extreme</button>
+          <button class="btn" id="btn-randomize">Randomize</button>
+          <button class="btn" id="btn-reset-effects">Reset</button>
+        </div>
+        <div class="video-info" id="video-info">No video loaded</div>
+        <div id="effects-list"></div>
+      </div>
+
+      <!-- Canvas + Seekbar -->
+      <div id="canvas-wrap">
+        <div id="canvas-area">
+          <canvas id="output-canvas"></canvas>
+          <div id="processing-overlay">Loading...</div>
+        </div>
+        <div class="seekbar-row">
+          <span class="time-label" id="time-current">0:00</span>
+          <input type="range" id="seekbar" min="0" max="1000" value="0" step="1" />
+          <span class="time-label" id="time-total">0:00</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hidden video source and frame-capture canvas -->
+    <video id="video-source" style="display:none" playsinline></video>
+    <canvas id="input-canvas" style="display:none"></canvas>
+
+    <script>
+      /* =========================
+         Effect Definitions
+         ========================= */
+
+      const EFFECT_DEFS = [
+        {
+          id: "datamosh",
+          name: "Datamosh",
+          params: [
+            { id: "intensity", label: "Intensity", type: "range", min: 0, max: 300, default: 100, step: 1, unit: "%" },
+            { id: "decay", label: "Decay to Clean", type: "range", min: 0, max: 100, default: 8, step: 1, unit: "%" },
+          ],
+        },
+        {
+          id: "ghostEcho",
+          name: "Ghost Echo",
+          params: [
+            { id: "blend", label: "Blend", type: "range", min: 1, max: 100, default: 55, step: 1, unit: "%" },
+            { id: "persistence", label: "Trail Length", type: "range", min: 1, max: 99, default: 82, step: 1, unit: "%" },
+          ],
+        },
+        {
+          id: "rgbShift",
+          name: "RGB Channel Shift",
+          params: [
+            { id: "rShift", label: "Red Shift", type: "range", min: -200, max: 200, default: 20, step: 1, unit: "px" },
+            { id: "gShift", label: "Green Shift", type: "range", min: -200, max: 200, default: 0, step: 1, unit: "px" },
+            { id: "bShift", label: "Blue Shift", type: "range", min: -200, max: 200, default: -20, step: 1, unit: "px" },
+          ],
+        },
+        {
+          id: "scanlineShift",
+          name: "Scanline Shift",
+          params: [
+            { id: "density", label: "Density", type: "range", min: 1, max: 100, default: 20, step: 1, unit: "%" },
+            { id: "amount", label: "Shift Amount", type: "range", min: 1, max: 400, default: 80, step: 1, unit: "px" },
+          ],
+        },
+        {
+          id: "colorBleed",
+          name: "Color Bleed",
+          params: [
+            { id: "decay", label: "Decay", type: "range", min: 1, max: 99, default: 60, step: 1, unit: "%" },
+            { id: "channel", label: "Channel", type: "select", options: [["r", "Red"], ["g", "Green"], ["b", "Blue"], ["all", "All"]], default: "r" },
+          ],
+        },
+        {
+          id: "pixelSort",
+          name: "Pixel Sort",
+          params: [
+            { id: "threshold", label: "Brightness Threshold", type: "range", min: 0, max: 254, default: 100, step: 1, unit: "" },
+            { id: "direction", label: "Direction", type: "select", options: [["horizontal", "Horizontal"], ["vertical", "Vertical"]], default: "horizontal" },
+            { id: "order", label: "Sort Order", type: "select", options: [["asc", "Brightest Last"], ["desc", "Brightest First"]], default: "asc" },
+          ],
+        },
+        {
+          id: "noise",
+          name: "Noise",
+          params: [
+            { id: "amount", label: "Amount", type: "range", min: 1, max: 100, default: 25, step: 1, unit: "%" },
+            { id: "type", label: "Type", type: "select", options: [["color", "Color (RGB)"], ["mono", "Luminance"]], default: "color" },
+          ],
+        },
+        {
+          id: "bitCrush",
+          name: "Bit Crush",
+          params: [
+            { id: "bits", label: "Bits Per Channel", type: "range", min: 1, max: 7, default: 3, step: 1, unit: "" },
+          ],
+        },
+      ];
+
+      /* =========================
+         State
+         ========================= */
+
+      const state = {};
+      for (const def of EFFECT_DEFS) {
+        state[def.id] = { enabled: false };
+        for (const p of def.params) state[def.id][p.id] = p.default;
+      }
+      state.datamosh.frozen = false;
+
+      // DOM refs
+      const videoEl    = document.getElementById("video-source");
+      const inputCanvas  = document.getElementById("input-canvas");
+      const inputCtx   = inputCanvas.getContext("2d", { willReadFrequently: true });
+      const outputCanvas = document.getElementById("output-canvas");
+      const outputCtx  = outputCanvas.getContext("2d");
+
+      // Frame dimensions (set on load)
+      let frameW = 0, frameH = 0;
+
+      // Pre-allocated pixel buffers (set on load)
+      let rawFrameBuf    = null;  // clean frame before effects
+      let prevFrameBuf   = null;  // previous clean frame (for datamosh delta)
+      let datamoshAccBuf = null;  // datamosh accumulator
+      let echoFrameBuf   = null;  // ghost echo accumulator
+      let snapshotBuf    = null;  // scratch buffer for snapshot-requiring effects
+
+      // Playback state
+      let isPlaying    = false;
+      let animFrameId  = null;
+      let lastVideoTime = -1;
+      let firstFrame   = true;
+
+      // Recording state
+      let mediaRecorder  = null;
+      let recordedChunks = [];
+      let isRecording    = false;
+      let recordedBlob   = null;
+
+      let outputFileName = "glitched.webm";
+
+      /* =========================
+         Utility
+         ========================= */
+
+      function clamp(v) {
+        return v < 0 ? 0 : v > 255 ? 255 : v;
+      }
+
+      function luma(r, g, b) {
+        return (r * 299 + g * 587 + b * 114) / 1000;
+      }
+
+      function fmtTime(secs) {
+        if (!isFinite(secs)) return "0:00";
+        const m = Math.floor(secs / 60);
+        const s = Math.floor(secs % 60);
+        return `${m}:${s.toString().padStart(2, "0")}`;
+      }
+
+      /* =========================
+         Glitch Effect Implementations
+         ========================= */
+
+      // Datamosh: accumulate frame deltas against a (optionally frozen) reference frame
+      function applyDatamosh(buf, p) {
+        const intensity = p.intensity / 100;
+        const decay     = p.decay / 100;
+        for (let i = 0; i < buf.length - 3; i += 4) {
+          const dr = (buf[i]   - prevFrameBuf[i])   * intensity;
+          const dg = (buf[i+1] - prevFrameBuf[i+1]) * intensity;
+          const db = (buf[i+2] - prevFrameBuf[i+2]) * intensity;
+          datamoshAccBuf[i]   = clamp(datamoshAccBuf[i]   * (1 - decay) + buf[i]   * decay + dr);
+          datamoshAccBuf[i+1] = clamp(datamoshAccBuf[i+1] * (1 - decay) + buf[i+1] * decay + dg);
+          datamoshAccBuf[i+2] = clamp(datamoshAccBuf[i+2] * (1 - decay) + buf[i+2] * decay + db);
+          buf[i]   = datamoshAccBuf[i];
+          buf[i+1] = datamoshAccBuf[i+1];
+          buf[i+2] = datamoshAccBuf[i+2];
+        }
+      }
+
+      // Ghost Echo: blend a slowly-updating ghost of past frames
+      function applyGhostEcho(buf, p) {
+        const blend       = p.blend / 100;
+        const persistence = p.persistence / 100;
+        for (let i = 0; i < buf.length - 3; i += 4) {
+          // Echo slowly drifts toward the raw (pre-effects) frame
+          echoFrameBuf[i]   = echoFrameBuf[i]   * persistence + rawFrameBuf[i]   * (1 - persistence);
+          echoFrameBuf[i+1] = echoFrameBuf[i+1] * persistence + rawFrameBuf[i+1] * (1 - persistence);
+          echoFrameBuf[i+2] = echoFrameBuf[i+2] * persistence + rawFrameBuf[i+2] * (1 - persistence);
+          buf[i]   = clamp(buf[i]   * (1 - blend) + echoFrameBuf[i]   * blend);
+          buf[i+1] = clamp(buf[i+1] * (1 - blend) + echoFrameBuf[i+1] * blend);
+          buf[i+2] = clamp(buf[i+2] * (1 - blend) + echoFrameBuf[i+2] * blend);
+        }
+      }
+
+      // RGB channel shift (horizontal)
+      function applyRGBShift(src, dst, p) {
+        const w = frameW, h = frameH;
+        for (let y = 0; y < h; y++) {
+          for (let x = 0; x < w; x++) {
+            const di = (y * w + x) * 4;
+            const rx = ((x - p.rShift) % w + w) % w;
+            const gx = ((x - p.gShift) % w + w) % w;
+            const bx = ((x - p.bShift) % w + w) % w;
+            dst[di]     = src[(y * w + rx) * 4];
+            dst[di + 1] = src[(y * w + gx) * 4 + 1];
+            dst[di + 2] = src[(y * w + bx) * 4 + 2];
+            dst[di + 3] = src[(y * w + x)  * 4 + 3];
+          }
+        }
+      }
+
+      // Randomly displace rows horizontally
+      function applyScanlineShift(buf, p) {
+        const w = frameW, h = frameH;
+        const rowBuf = new Uint8ClampedArray(w * 4);
+        for (let y = 0; y < h; y++) {
+          if (Math.random() * 100 > p.density) continue;
+          const shift = Math.round((Math.random() * 2 - 1) * p.amount);
+          if (shift === 0) continue;
+          const rowOffset = y * w * 4;
+          rowBuf.set(buf.subarray(rowOffset, rowOffset + w * 4));
+          for (let x = 0; x < w; x++) {
+            const srcX = ((x - shift) % w + w) % w;
+            const di = rowOffset + x * 4;
+            buf[di]     = rowBuf[srcX * 4];
+            buf[di + 1] = rowBuf[srcX * 4 + 1];
+            buf[di + 2] = rowBuf[srcX * 4 + 2];
+            buf[di + 3] = rowBuf[srcX * 4 + 3];
+          }
+        }
+      }
+
+      // Horizontal color smear (analog bleed)
+      function applyColorBleed(buf, p) {
+        const w = frameW, h = frameH;
+        const decayFactor = 1 - p.decay / 100;
+        const channels = p.channel === "all" ? [0, 1, 2] : [{ r: 0, g: 1, b: 2 }[p.channel]];
+        for (let y = 0; y < h; y++) {
+          for (const ch of channels) {
+            let bleed = 0;
+            for (let x = 0; x < w; x++) {
+              const i = (y * w + x) * 4 + ch;
+              bleed = bleed * decayFactor + buf[i] * (1 - decayFactor);
+              buf[i] = Math.min(255, Math.round(bleed + buf[i] * 0.5));
+            }
+          }
+        }
+      }
+
+      // Sort pixel runs by brightness
+      function applyPixelSort(buf, p) {
+        const w = frameW, h = frameH;
+        const thresh = p.threshold;
+        const cmp = p.order === "asc" ? (a, b) => a.v - b.v : (a, b) => b.v - a.v;
+
+        function sortAxis(outerLen, innerLen, getIdx) {
+          for (let outer = 0; outer < outerLen; outer++) {
+            let segStart = -1;
+            const seg = [];
+            const flush = () => {
+              if (seg.length < 2) { segStart = -1; seg.length = 0; return; }
+              seg.sort(cmp);
+              for (let k = 0; k < seg.length; k++) {
+                const i = getIdx(outer, segStart + k) * 4;
+                buf[i] = seg[k].r; buf[i+1] = seg[k].g;
+                buf[i+2] = seg[k].b; buf[i+3] = seg[k].a;
+              }
+              segStart = -1; seg.length = 0;
+            };
+            for (let inner = 0; inner <= innerLen; inner++) {
+              if (inner < innerLen) {
+                const i = getIdx(outer, inner) * 4;
+                const v = luma(buf[i], buf[i+1], buf[i+2]);
+                if (v >= thresh) {
+                  if (segStart === -1) segStart = inner;
+                  seg.push({ r: buf[i], g: buf[i+1], b: buf[i+2], a: buf[i+3], v });
+                } else if (segStart !== -1) {
+                  flush();
+                }
+              } else if (segStart !== -1) {
+                flush();
+              }
+            }
+          }
+        }
+
+        if (p.direction === "horizontal") {
+          sortAxis(h, w, (y, x) => y * w + x);
+        } else {
+          sortAxis(w, h, (x, y) => y * w + x);
+        }
+      }
+
+      // Random pixel noise
+      function applyNoise(buf, p) {
+        const scale = (p.amount / 100) * 128;
+        for (let i = 0; i < buf.length; i += 4) {
+          if (p.type === "mono") {
+            const n = (Math.random() * 2 - 1) * scale;
+            buf[i]   = clamp(buf[i]   + n);
+            buf[i+1] = clamp(buf[i+1] + n);
+            buf[i+2] = clamp(buf[i+2] + n);
+          } else {
+            buf[i]   = clamp(buf[i]   + (Math.random() * 2 - 1) * scale);
+            buf[i+1] = clamp(buf[i+1] + (Math.random() * 2 - 1) * scale);
+            buf[i+2] = clamp(buf[i+2] + (Math.random() * 2 - 1) * scale);
+          }
+        }
+      }
+
+      // Reduce color bit depth
+      function applyBitCrush(buf, p) {
+        const step = 256 / Math.pow(2, p.bits);
+        for (let i = 0; i < buf.length; i += 4) {
+          buf[i]   = Math.min(255, Math.round(buf[i]   / step) * step);
+          buf[i+1] = Math.min(255, Math.round(buf[i+1] / step) * step);
+          buf[i+2] = Math.min(255, Math.round(buf[i+2] / step) * step);
+        }
+      }
+
+      /* =========================
+         Frame Processing Loop
+         ========================= */
+
+      function processFrame() {
+        if (!isPlaying) return;
+
+        // Only process when video has advanced to a new frame
+        if (videoEl.currentTime !== lastVideoTime) {
+          lastVideoTime = videoEl.currentTime;
+
+          // Capture raw frame from video
+          inputCtx.drawImage(videoEl, 0, 0, frameW, frameH);
+          const imgData = inputCtx.getImageData(0, 0, frameW, frameH);
+          const buf = imgData.data;
+
+          // Save raw frame before effects (used by datamosh & ghost echo)
+          rawFrameBuf.set(buf);
+
+          // On very first frame, seed the buffers
+          if (firstFrame) {
+            prevFrameBuf.set(buf);
+            datamoshAccBuf.set(buf);
+            echoFrameBuf.set(buf);
+            snapshotBuf.set(buf);
+            firstFrame = false;
+          }
+
+          // Apply effects pipeline
+          if (state.datamosh.enabled) {
+            applyDatamosh(buf, state.datamosh);
+          }
+          if (state.ghostEcho.enabled) {
+            applyGhostEcho(buf, state.ghostEcho);
+          }
+          if (state.rgbShift.enabled) {
+            snapshotBuf.set(buf);
+            applyRGBShift(snapshotBuf, buf, state.rgbShift);
+          }
+          if (state.scanlineShift.enabled) {
+            applyScanlineShift(buf, state.scanlineShift);
+          }
+          if (state.colorBleed.enabled) {
+            applyColorBleed(buf, state.colorBleed);
+          }
+          if (state.pixelSort.enabled) {
+            applyPixelSort(buf, state.pixelSort);
+          }
+          if (state.noise.enabled) {
+            applyNoise(buf, state.noise);
+          }
+          if (state.bitCrush.enabled) {
+            applyBitCrush(buf, state.bitCrush);
+          }
+
+          // Push processed frame to output canvas
+          outputCtx.putImageData(imgData, 0, 0);
+
+          // Update datamosh reference (unless frozen)
+          if (!state.datamosh.frozen) {
+            prevFrameBuf.set(rawFrameBuf);
+          }
+
+          // Update seekbar and time
+          if (isFinite(videoEl.duration) && videoEl.duration > 0) {
+            const pct = (videoEl.currentTime / videoEl.duration) * 1000;
+            seekbar.value = pct;
+            document.getElementById("time-current").textContent = fmtTime(videoEl.currentTime);
+          }
+        }
+
+        animFrameId = requestAnimationFrame(processFrame);
+      }
+
+      /* =========================
+         Playback Controls
+         ========================= */
+
+      function play() {
+        videoEl.play();
+        isPlaying = true;
+        document.getElementById("btn-play").textContent = "Pause";
+        if (!animFrameId) animFrameId = requestAnimationFrame(processFrame);
+      }
+
+      function pause() {
+        videoEl.pause();
+        isPlaying = false;
+        document.getElementById("btn-play").textContent = "Play";
+        if (animFrameId) { cancelAnimationFrame(animFrameId); animFrameId = null; }
+      }
+
+      function togglePlay() {
+        if (isPlaying) pause(); else play();
+      }
+
+      function resetMosh() {
+        if (rawFrameBuf) {
+          // Seed buffers to current frame so mosh starts clean
+          inputCtx.drawImage(videoEl, 0, 0, frameW, frameH);
+          const imgData = inputCtx.getImageData(0, 0, frameW, frameH);
+          rawFrameBuf.set(imgData.data);
+          prevFrameBuf.set(imgData.data);
+          datamoshAccBuf.set(imgData.data);
+          echoFrameBuf.set(imgData.data);
+        }
+      }
+
+      /* =========================
+         Recording
+         ========================= */
+
+      function startRecording() {
+        if (isRecording) return;
+        recordedChunks = [];
+        recordedBlob = null;
+        document.getElementById("btn-download").disabled = true;
+
+        const stream = outputCanvas.captureStream(30);
+        const mimeType = MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
+          ? "video/webm;codecs=vp9"
+          : "video/webm";
+
+        mediaRecorder = new MediaRecorder(stream, { mimeType });
+        mediaRecorder.ondataavailable = (e) => {
+          if (e.data.size > 0) recordedChunks.push(e.data);
+        };
+        mediaRecorder.onstop = () => {
+          recordedBlob = new Blob(recordedChunks, { type: mimeType });
+          document.getElementById("btn-download").disabled = false;
+          updateRecordBtn(false);
+        };
+        mediaRecorder.start(100); // collect chunks every 100ms
+        isRecording = true;
+        updateRecordBtn(true);
+        // Auto-play if not already playing
+        if (!isPlaying) play();
+      }
+
+      function stopRecording() {
+        if (!isRecording || !mediaRecorder) return;
+        mediaRecorder.stop();
+        isRecording = false;
+      }
+
+      function updateRecordBtn(recording) {
+        const btn = document.getElementById("btn-record");
+        btn.innerHTML = recording
+          ? '<span class="rec-dot"></span>Stop'
+          : "Record";
+        btn.classList.toggle("danger", recording);
+      }
+
+      /* =========================
+         Video Loading
+         ========================= */
+
+      const MAX_DIM = 1280;
+      const seekbar = document.getElementById("seekbar");
+
+      function loadVideoFile(file) {
+        if (!file || !file.type.startsWith("video/")) {
+          alert("Please select a valid video file.");
+          return;
+        }
+
+        outputFileName = file.name.replace(/\.[^.]+$/, "") + "-glitched.webm";
+
+        const url = URL.createObjectURL(file);
+        videoEl.src = url;
+        videoEl.muted = true;
+        videoEl.loop = document.getElementById("chk-loop").checked;
+
+        document.getElementById("processing-overlay").classList.add("visible");
+
+        videoEl.onloadedmetadata = () => {
+          let w = videoEl.videoWidth;
+          let h = videoEl.videoHeight;
+
+          if (w > MAX_DIM || h > MAX_DIM) {
+            const scale = MAX_DIM / Math.max(w, h);
+            w = Math.round(w * scale);
+            h = Math.round(h * scale);
+          }
+
+          frameW = w;
+          frameH = h;
+
+          inputCanvas.width = w;
+          inputCanvas.height = h;
+          outputCanvas.width = w;
+          outputCanvas.height = h;
+
+          // Allocate pixel buffers
+          const size = w * h * 4;
+          rawFrameBuf    = new Uint8ClampedArray(size);
+          prevFrameBuf   = new Uint8ClampedArray(size);
+          datamoshAccBuf = new Uint8ClampedArray(size);
+          echoFrameBuf   = new Uint8ClampedArray(size);
+          snapshotBuf    = new Uint8ClampedArray(size);
+          firstFrame     = true;
+
+          document.getElementById("video-info").textContent =
+            `${file.name}  •  ${w}×${h}  •  ${fmtTime(videoEl.duration)}`;
+          document.getElementById("time-total").textContent = fmtTime(videoEl.duration);
+          document.getElementById("processing-overlay").classList.remove("visible");
+
+          // Show editor
+          document.getElementById("drop-zone").classList.add("hidden");
+          document.getElementById("editor").classList.add("visible");
+
+          // Draw first frame without playing
+          videoEl.currentTime = 0;
+          videoEl.onseeked = () => {
+            inputCtx.drawImage(videoEl, 0, 0, frameW, frameH);
+            outputCtx.drawImage(videoEl, 0, 0, frameW, frameH);
+            videoEl.onseeked = null;
+          };
+        };
+
+        videoEl.onerror = () => {
+          document.getElementById("processing-overlay").classList.remove("visible");
+          alert("Could not load this video. The format may not be supported by your browser.");
+        };
+
+        videoEl.onended = () => {
+          if (!videoEl.loop) {
+            pause();
+            if (isRecording) stopRecording();
+          } else {
+            // Reset mosh on loop for cleaner effect
+            firstFrame = true;
+          }
+        };
+      }
+
+      /* =========================
+         UI Construction
+         ========================= */
+
+      function buildEffectsUI() {
+        const list = document.getElementById("effects-list");
+        list.innerHTML = "";
+
+        for (const def of EFFECT_DEFS) {
+          const section = document.createElement("div");
+          section.className = "effect-section";
+          section.dataset.effectId = def.id;
+
+          const header = document.createElement("div");
+          header.className = "effect-header";
+
+          const check = document.createElement("input");
+          check.type = "checkbox";
+          check.className = "effect-check";
+          check.id = `chk-${def.id}`;
+
+          const nameSpan = document.createElement("span");
+          nameSpan.className = "effect-name";
+          nameSpan.textContent = def.name;
+
+          const caret = document.createElement("span");
+          caret.className = "effect-caret";
+          caret.textContent = "▶";
+
+          header.appendChild(check);
+          header.appendChild(nameSpan);
+          header.appendChild(caret);
+
+          const effectBody = document.createElement("div");
+          effectBody.className = "effect-body";
+
+          for (const p of def.params) {
+            const row = document.createElement("div");
+            row.className = "ctrl-row";
+
+            if (p.type === "range") {
+              row.innerHTML = `
+                <div class="ctrl-label">
+                  <span>${p.label}</span>
+                  <span class="ctrl-val" id="v-${def.id}-${p.id}">${p.default}${p.unit}</span>
+                </div>
+                <input type="range" id="p-${def.id}-${p.id}"
+                  min="${p.min}" max="${p.max}" step="${p.step}" value="${p.default}" />
+              `;
+            } else {
+              const opts = p.options
+                .map(([val, label]) => `<option value="${val}"${val === p.default ? " selected" : ""}>${label}</option>`)
+                .join("");
+              row.innerHTML = `
+                <div class="ctrl-label"><span>${p.label}</span></div>
+                <select id="p-${def.id}-${p.id}">${opts}</select>
+              `;
+            }
+
+            effectBody.appendChild(row);
+          }
+
+          // Datamosh gets extra freeze/reset buttons
+          if (def.id === "datamosh") {
+            const btnRow = document.createElement("div");
+            btnRow.className = "ctrl-btn-row";
+
+            const freezeBtn = document.createElement("button");
+            freezeBtn.className = "btn";
+            freezeBtn.id = "freeze-btn";
+            freezeBtn.textContent = "Freeze Reference";
+            freezeBtn.title = "Freeze the reference frame so all subsequent motion accumulates into the mosh";
+            freezeBtn.addEventListener("click", () => {
+              state.datamosh.frozen = !state.datamosh.frozen;
+              freezeBtn.textContent = state.datamosh.frozen ? "Unfreeze" : "Freeze Reference";
+              freezeBtn.classList.toggle("primary", state.datamosh.frozen);
+            });
+
+            btnRow.appendChild(freezeBtn);
+            effectBody.appendChild(btnRow);
+          }
+
+          section.appendChild(header);
+          section.appendChild(effectBody);
+          list.appendChild(section);
+
+          check.addEventListener("change", () => {
+            state[def.id].enabled = check.checked;
+            if (check.checked) {
+              effectBody.classList.add("open");
+              caret.textContent = "▼";
+            }
+          });
+
+          header.addEventListener("click", (e) => {
+            if (e.target === check) return;
+            effectBody.classList.toggle("open");
+            caret.textContent = effectBody.classList.contains("open") ? "▼" : "▶";
+          });
+
+          for (const p of def.params) {
+            const input = document.getElementById(`p-${def.id}-${p.id}`);
+            const evType = p.type === "range" ? "input" : "change";
+            input.addEventListener(evType, () => {
+              state[def.id][p.id] = p.type === "range" ? parseFloat(input.value) : input.value;
+              if (p.type === "range") {
+                document.getElementById(`v-${def.id}-${p.id}`).textContent = input.value + p.unit;
+              }
+            });
+          }
+        }
+      }
+
+      /* =========================
+         Set Effect State (presets / reset)
+         ========================= */
+
+      function setEffectState(effectId, params) {
+        const enabled = !!params.enabled;
+        state[effectId].enabled = enabled;
+
+        const chk = document.getElementById(`chk-${effectId}`);
+        if (!chk) return;
+        chk.checked = enabled;
+        const section = chk.closest(".effect-section");
+        const effectBody = section.querySelector(".effect-body");
+        const caret = section.querySelector(".effect-caret");
+        effectBody.classList.toggle("open", enabled);
+        caret.textContent = enabled ? "▼" : "▶";
+
+        const def = EFFECT_DEFS.find((d) => d.id === effectId);
+        for (const [paramId, value] of Object.entries(params)) {
+          if (paramId === "enabled") continue;
+          state[effectId][paramId] = value;
+          const input = document.getElementById(`p-${effectId}-${paramId}`);
+          if (!input) continue;
+          input.value = value;
+          const paramDef = def.params.find((p) => p.id === paramId);
+          if (paramDef && paramDef.type === "range") {
+            const display = document.getElementById(`v-${effectId}-${paramId}`);
+            if (display) display.textContent = value + paramDef.unit;
+          }
+        }
+      }
+
+      function randomizeEffects() {
+        for (const def of EFFECT_DEFS) {
+          const params = { enabled: Math.random() > 0.45 };
+          for (const p of def.params) {
+            if (p.type === "range") {
+              const raw = p.min + Math.random() * (p.max - p.min);
+              params[p.id] = Math.round(raw / p.step) * p.step;
+            } else {
+              params[p.id] = p.options[Math.floor(Math.random() * p.options.length)][0];
+            }
+          }
+          setEffectState(def.id, params);
+        }
+        state.datamosh.frozen = false;
+        const fb = document.getElementById("freeze-btn");
+        if (fb) { fb.textContent = "Freeze Reference"; fb.classList.remove("primary"); }
+        resetMosh();
+      }
+
+      function resetAllEffects() {
+        for (const def of EFFECT_DEFS) {
+          const params = { enabled: false };
+          for (const p of def.params) params[p.id] = p.default;
+          setEffectState(def.id, params);
+        }
+        // Unfreeze datamosh
+        state.datamosh.frozen = false;
+        const fb = document.getElementById("freeze-btn");
+        if (fb) { fb.textContent = "Freeze Reference"; fb.classList.remove("primary"); }
+        resetMosh();
+      }
+
+      /* =========================
+         Presets
+         ========================= */
+
+      const PRESETS = {
+        datamosh: {
+          datamosh:     { enabled: true,  intensity: 120, decay: 5 },
+          ghostEcho:    { enabled: false },
+          rgbShift:     { enabled: true,  rShift: 8, gShift: 0, bShift: -8 },
+          scanlineShift:{ enabled: true,  density: 12, amount: 60 },
+          colorBleed:   { enabled: false },
+          pixelSort:    { enabled: false },
+          noise:        { enabled: false },
+          bitCrush:     { enabled: false },
+        },
+        vhs: {
+          datamosh:     { enabled: false },
+          ghostEcho:    { enabled: true,  blend: 30, persistence: 75 },
+          rgbShift:     { enabled: true,  rShift: 4, gShift: 0, bShift: -4 },
+          scanlineShift:{ enabled: true,  density: 15, amount: 30 },
+          colorBleed:   { enabled: true,  decay: 65, channel: "r" },
+          pixelSort:    { enabled: false },
+          noise:        { enabled: true,  amount: 15, type: "mono" },
+          bitCrush:     { enabled: true,  bits: 5 },
+        },
+        extreme: {
+          datamosh:     { enabled: true,  intensity: 200, decay: 3 },
+          ghostEcho:    { enabled: true,  blend: 45, persistence: 88 },
+          rgbShift:     { enabled: true,  rShift: 40, gShift: -5, bShift: -40 },
+          scanlineShift:{ enabled: true,  density: 35, amount: 200 },
+          colorBleed:   { enabled: true,  decay: 70, channel: "all" },
+          pixelSort:    { enabled: false },
+          noise:        { enabled: true,  amount: 35, type: "color" },
+          bitCrush:     { enabled: false },
+        },
+      };
+
+      function applyPreset(name) {
+        const preset = PRESETS[name];
+        for (const [id, params] of Object.entries(preset)) setEffectState(id, params);
+        // Unfreeze on preset change
+        state.datamosh.frozen = false;
+        const fb = document.getElementById("freeze-btn");
+        if (fb) { fb.textContent = "Freeze Reference"; fb.classList.remove("primary"); }
+        resetMosh();
+      }
+
+      /* =========================
+         Event Handlers
+         ========================= */
+
+      document.getElementById("btn-play").addEventListener("click", togglePlay);
+
+      document.getElementById("btn-reset-mosh").addEventListener("click", resetMosh);
+
+      document.getElementById("btn-randomize").addEventListener("click", randomizeEffects);
+      document.getElementById("btn-reset-effects").addEventListener("click", resetAllEffects);
+
+      document.getElementById("btn-record").addEventListener("click", () => {
+        if (isRecording) stopRecording(); else startRecording();
+      });
+
+      document.getElementById("btn-download").addEventListener("click", () => {
+        if (!recordedBlob) return;
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(recordedBlob);
+        a.download = outputFileName;
+        a.click();
+      });
+
+      document.getElementById("btn-new-file").addEventListener("click", () => {
+        pause();
+        if (isRecording) stopRecording();
+        videoEl.src = "";
+        document.getElementById("editor").classList.remove("visible");
+        document.getElementById("drop-zone").classList.remove("hidden");
+        document.getElementById("file-input").value = "";
+        document.getElementById("btn-play").textContent = "Play";
+        document.getElementById("btn-download").disabled = true;
+        lastVideoTime = -1;
+        firstFrame = true;
+      });
+
+      document.getElementById("chk-loop").addEventListener("change", (e) => {
+        videoEl.loop = e.target.checked;
+      });
+
+      // Seekbar interaction
+      let isSeeking = false;
+      seekbar.addEventListener("mousedown", () => { isSeeking = true; if (isPlaying) pause(); });
+      seekbar.addEventListener("touchstart", () => { isSeeking = true; if (isPlaying) pause(); }, { passive: true });
+      seekbar.addEventListener("input", () => {
+        if (!isFinite(videoEl.duration)) return;
+        videoEl.currentTime = (seekbar.value / 1000) * videoEl.duration;
+        document.getElementById("time-current").textContent = fmtTime(videoEl.currentTime);
+      });
+      seekbar.addEventListener("change", () => {
+        isSeeking = false;
+        // Reset mosh on seek to avoid garbage deltas
+        resetMosh();
+        firstFrame = true;
+      });
+
+      // File selection
+      document.getElementById("choose-file-btn").addEventListener("click", () => {
+        document.getElementById("file-input").click();
+      });
+      document.getElementById("file-input").addEventListener("change", (e) => {
+        if (e.target.files[0]) loadVideoFile(e.target.files[0]);
+      });
+
+      // Preset buttons
+      document.getElementById("preset-datamosh").addEventListener("click", () => applyPreset("datamosh"));
+      document.getElementById("preset-vhs").addEventListener("click", () => applyPreset("vhs"));
+      document.getElementById("preset-extreme").addEventListener("click", () => applyPreset("extreme"));
+
+      // Drag and drop
+      const dropZone = document.getElementById("drop-zone");
+      dropZone.addEventListener("dragover", (e) => { e.preventDefault(); dropZone.classList.add("drag-over"); });
+      dropZone.addEventListener("dragleave", () => dropZone.classList.remove("drag-over"));
+      dropZone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropZone.classList.remove("drag-over");
+        loadVideoFile(e.dataTransfer.files[0]);
+      });
+
+      const canvasArea = document.getElementById("canvas-area");
+      canvasArea.addEventListener("dragover", (e) => e.preventDefault());
+      canvasArea.addEventListener("drop", (e) => {
+        e.preventDefault();
+        loadVideoFile(e.dataTransfer.files[0]);
+      });
+
+      /* =========================
+         Initialization
+         ========================= */
+
+      buildEffectsUI();
+    </script>
+  </body>
+</html>

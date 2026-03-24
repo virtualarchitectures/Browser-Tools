@@ -39,12 +39,16 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 - **[Text Diff](text-diff.html)** — compare two text blocks and highlight added and removed content
 - **[Text Tools](text-tools.html)** — text manipulation toolkit with case transformation, sorting, whitespace cleaning, encoding/decoding (Base64, URL), find & replace, and text tokenization
 
+### Glitch
+
+- **[Image Glitcher](image-glitcher.html)** — apply glitch art effects to images including RGB channel shift, pixel sorting, scanline displacement, wave warp, bit crush, color bleed, and block corruption
+- **[Video Glitcher](video-glitcher.html)** — apply real-time glitch and datamosh effects to video with datamoshing, ghost echo, RGB channel shift, scanline shift, VHS simulation, and more — record output as WebM
+
 ### Image
 
 - **[EXIF Data Viewer](exif-viewer.html)** — extract and view EXIF metadata from photos including camera settings, GPS location, and timestamps
 - **[Image Background Removal](image-bg-removal.html)** — remove image backgrounds using a magic wand flood-fill tool with adjustable tolerance and edge feathering, then download as transparent PNG
 - **[Image Crop Tool](image-crop.html)** — crop images with interactive selection, aspect ratio presets, and precise dimension controls
-- **[Image Glitcher](image-glitcher.html)** — apply glitch art effects to images including RGB channel shift, pixel sorting, scanline displacement, wave warp, bit crush, color bleed, and block corruption
 - **[Image Resize Tool](image-resize.html)** — resize images by percentage or pixels with precise scale factor control for copying scale factor to other images
 - **[Image Rotate Tool](image-rotate.html)** — rotate images by any angle with fine control, flip horizontally or vertically
 - **[Pixel Coordinates](pixel-coords.html)** — click on images to capture and record pixel coordinates
