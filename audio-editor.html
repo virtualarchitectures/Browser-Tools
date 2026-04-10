@@ -427,6 +427,8 @@
       <button class="btn primary" id="btn-play"      disabled title="Play (Space)">Play</button>
       <button class="btn"         id="btn-pause"     disabled title="Pause (Space)">Pause</button>
       <button class="btn"         id="btn-stop"      disabled title="Stop (Escape)">Stop</button>
+      <button class="btn"         id="btn-seg-start" disabled title="Move cursor to start of current segment">|&lt;</button>
+      <button class="btn"         id="btn-seg-end"   disabled title="Move cursor to end of current segment">&gt;|</button>
       <button class="btn"         id="btn-loop"      disabled title="Toggle loop playback (L)">Loop</button>
       <div class="toolbar-sep"></div>
       <button class="btn"         id="btn-cut"       disabled title="Cut selection (Ctrl+X)">Cut</button>
@@ -815,6 +817,24 @@
         }
         const maxT = arrangementDuration() || (audioBuffer ? audioBuffer.duration : 0);
         return Math.min(t, maxT);
+      }
+
+      // Move cursor to the start or end of whichever segment it currently sits in
+      function moveCursorToSegmentBoundary(toEnd) {
+        if (!audioBuffer) return;
+        const arrInfo = getArrangementInfo();
+        // Find the segment the cursor is in; if exactly on a boundary prefer the next segment for start
+        let found = toEnd
+          ? arrInfo.find(({arrStart, arrEnd}) => cursorPos >= arrStart && cursorPos <  arrEnd)
+          : arrInfo.find(({arrStart, arrEnd}) => cursorPos >  arrStart && cursorPos <= arrEnd);
+        // Fallback: nearest segment
+        if (!found) found = arrInfo.find(({arrStart, arrEnd}) => cursorPos >= arrStart && cursorPos <= arrEnd);
+        if (!found) return;
+        cursorPos = toEnd ? found.arrEnd : found.arrStart;
+        // Scroll view to follow cursor if needed
+        const span = viewEnd - viewStart;
+        if (cursorPos < viewStart) { viewStart = Math.max(0, cursorPos - span * 0.1); viewEnd = viewStart + span; }
+        else if (cursorPos > viewEnd) { viewEnd = Math.min(arrangementDuration(), cursorPos + span * 0.1); viewStart = viewEnd - span; }
       }
 
       // -------------------------------------------------------
@@ -1932,6 +1952,8 @@
         document.getElementById('btn-pause').disabled       = !isPlaying;
         document.getElementById('btn-stop').disabled        = !isPlaying;
         document.getElementById('btn-loop').disabled        = !has;
+        document.getElementById('btn-seg-start').disabled   = !has;
+        document.getElementById('btn-seg-end').disabled     = !has;
         document.getElementById('btn-cut').disabled         = !has || !hasSel;
         document.getElementById('btn-copy').disabled        = !has || !hasSel;
         document.getElementById('btn-paste').disabled       = !has || !hasClip;
@@ -1994,6 +2016,8 @@
       document.getElementById('btn-pause').addEventListener('click',       pause);
       document.getElementById('btn-stop').addEventListener('click', () => { stopPlayback(); cursorPos = 0; });
       document.getElementById('btn-loop').addEventListener('click',        toggleLoop);
+      document.getElementById('btn-seg-start').addEventListener('click', () => moveCursorToSegmentBoundary(false));
+      document.getElementById('btn-seg-end').addEventListener('click',   () => moveCursorToSegmentBoundary(true));
       document.getElementById('btn-cut').addEventListener('click',         doCut);
       document.getElementById('btn-copy').addEventListener('click',        doCopy);
       document.getElementById('btn-paste').addEventListener('click',       doPaste);
