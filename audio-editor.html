@@ -472,7 +472,6 @@
         <button class="btn" id="btn-split-equal"  disabled title="Divide audio into N equal regions">Split</button>
         <div class="toolbar-sep"></div>
         <button class="btn" id="btn-shuffle"       disabled title="Randomise region order">Shuffle</button>
-        <button class="btn primary" id="btn-assemble"           disabled title="Render regions in current list order into new audio">Assemble</button>
         <button class="btn"         id="btn-delete-inside"    disabled title="Delete audio inside regions, keeping everything outside">Delete Inside</button>
         <button class="btn"         id="btn-delete-outside"   disabled title="Delete audio outside regions, keeping only region content (sorted by time)">Delete Outside</button>
         <button class="btn"         id="btn-export-regions"   disabled title="Export each region as a separate WAV file (zipped)">Export Regions</button>
@@ -1478,24 +1477,6 @@
         showStatus('Regions shuffled.', 'info');
       }
 
-      function assembleRegions() {
-        if (regions.length < 1) return showStatus('No regions to assemble.', 'error');
-        pushUndo();
-        const sr    = audioBuffer.sampleRate;
-        const parts = regions.map(r =>
-          sliceBuffer(audioBuffer, Math.round(r.start * sr), Math.round(r.end * sr))
-        );
-        audioBuffer = concatBuffers(parts);
-        regions   = [];
-        selStart  = -1; selEnd = -1;
-        cursorPos = 0;
-        viewStart = 0; viewEnd = audioBuffer.duration;
-        syncDuration();
-        renderRegionsList();
-        updateUI();
-        showStatus('Regions assembled into new audio.', 'info');
-      }
-
       // Delete audio inside regions — keeps everything outside, joined together
       function deleteInsideRegions() {
         if (regions.length === 0) return showStatus('No regions defined.', 'error');
@@ -1514,7 +1495,7 @@
         audioBuffer = parts.length > 0
           ? concatBuffers(parts)
           : audioCtx.createBuffer(audioBuffer.numberOfChannels, 1, audioBuffer.sampleRate);
-        regions = []; selStart = -1; selEnd = -1; cursorPos = 0;
+        selStart = -1; selEnd = -1; cursorPos = 0;
         viewStart = 0; viewEnd = audioBuffer.duration;
         syncDuration(); renderRegionsList(); updateUI();
         showStatus('Audio inside regions deleted.', 'info');
@@ -1530,7 +1511,7 @@
           sliceBuffer(audioBuffer, Math.round(r.start * sr), Math.round(r.end * sr))
         );
         audioBuffer = concatBuffers(parts);
-        regions = []; selStart = -1; selEnd = -1; cursorPos = 0;
+        selStart = -1; selEnd = -1; cursorPos = 0;
         viewStart = 0; viewEnd = audioBuffer.duration;
         syncDuration(); renderRegionsList(); updateUI();
         showStatus('Audio outside regions deleted.', 'info');
@@ -1610,42 +1591,53 @@
           btns[0].addEventListener('click', () => selectRegion(idx));
           btns[1].addEventListener('click', () => removeRegion(idx));
 
-          // Drag-and-drop
+          // Drag-and-drop: only dragstart/dragend per row; dragover/drop delegated on list
           row.addEventListener('dragstart', (e) => {
             regionDragSrcIdx = idx;
-            row.classList.add('dragging');
             e.dataTransfer.effectAllowed = 'move';
+            // Defer class add so it doesn't affect the drag ghost image
+            setTimeout(() => row.classList.add('dragging'), 0);
           });
           row.addEventListener('dragend', () => {
             row.classList.remove('dragging');
-            list.querySelectorAll('.region-row').forEach(r => {
-              r.classList.remove('drag-over-top', 'drag-over-bottom');
-            });
-          });
-          row.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            if (regionDragSrcIdx === idx) return;
-            list.querySelectorAll('.region-row').forEach(r => {
-              r.classList.remove('drag-over-top', 'drag-over-bottom');
-            });
-            const rect    = row.getBoundingClientRect();
-            const isUpper = e.clientY < rect.top + rect.height / 2;
-            row.classList.add(isUpper ? 'drag-over-top' : 'drag-over-bottom');
-          });
-          row.addEventListener('drop', (e) => {
-            e.preventDefault();
-            if (regionDragSrcIdx === null || regionDragSrcIdx === idx) return;
-            const rect    = row.getBoundingClientRect();
-            const isUpper = e.clientY < rect.top + rect.height / 2;
-            const target  = isUpper ? idx : idx + 1;
-            const moved   = regions.splice(regionDragSrcIdx, 1)[0];
-            const insert  = target > regionDragSrcIdx ? target - 1 : target;
-            regions.splice(insert, 0, moved);
+            list.querySelectorAll('.region-row').forEach(r =>
+              r.classList.remove('drag-over-top', 'drag-over-bottom'));
             regionDragSrcIdx = null;
-            renderRegionsList();
           });
 
           list.appendChild(row);
+        });
+
+        // Delegated dragover/drop on list container — reliable regardless of child element targets
+        list.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          const targetRow = e.target.closest('.region-row');
+          if (!targetRow) return;
+          const toIdx = parseInt(targetRow.dataset.idx, 10);
+          if (toIdx === regionDragSrcIdx) return;
+          list.querySelectorAll('.region-row').forEach(r =>
+            r.classList.remove('drag-over-top', 'drag-over-bottom'));
+          const rect = targetRow.getBoundingClientRect();
+          const isUpper = e.clientY < rect.top + rect.height / 2;
+          targetRow.classList.add(isUpper ? 'drag-over-top' : 'drag-over-bottom');
+        });
+        list.addEventListener('drop', (e) => {
+          e.preventDefault();
+          list.querySelectorAll('.region-row').forEach(r =>
+            r.classList.remove('drag-over-top', 'drag-over-bottom'));
+          if (regionDragSrcIdx === null) return;
+          const targetRow = e.target.closest('.region-row');
+          if (!targetRow) return;
+          const toIdx = parseInt(targetRow.dataset.idx, 10);
+          if (toIdx === regionDragSrcIdx) return;
+          const rect = targetRow.getBoundingClientRect();
+          const isUpper = e.clientY < rect.top + rect.height / 2;
+          const target = isUpper ? toIdx : toIdx + 1;
+          const moved = regions.splice(regionDragSrcIdx, 1)[0];
+          const insert = target > regionDragSrcIdx ? target - 1 : target;
+          regions.splice(insert, 0, moved);
+          regionDragSrcIdx = null;
+          renderRegionsList();
         });
 
         // Update region-related button states
@@ -1656,7 +1648,6 @@
         document.getElementById('btn-split-selection').disabled  = !has || !hasSel;
         document.getElementById('btn-split-equal').disabled      = !has;
         document.getElementById('btn-shuffle').disabled          = regions.length < 2;
-        document.getElementById('btn-assemble').disabled         = regions.length < 1;
         document.getElementById('btn-delete-inside').disabled    = regions.length < 1;
         document.getElementById('btn-delete-outside').disabled   = regions.length < 1;
         document.getElementById('btn-export-regions').disabled   = regions.length < 1;
@@ -1907,7 +1898,6 @@
         document.getElementById('btn-split-selection').disabled  = !has || !hasSel;
         document.getElementById('btn-split-equal').disabled      = !has;
         document.getElementById('btn-shuffle').disabled          = regions.length < 2;
-        document.getElementById('btn-assemble').disabled         = regions.length < 1;
         document.getElementById('btn-delete-inside').disabled    = regions.length < 1;
         document.getElementById('btn-delete-outside').disabled   = regions.length < 1;
         document.getElementById('btn-export-regions').disabled   = regions.length < 1;
@@ -1964,7 +1954,6 @@
       document.getElementById('btn-split-cursor').addEventListener('click',     splitAtCursor);
       document.getElementById('btn-split-selection').addEventListener('click', splitSelection);
       document.getElementById('btn-shuffle').addEventListener('click',       shuffleRegions);
-      document.getElementById('btn-assemble').addEventListener('click',      assembleRegions);
       document.getElementById('btn-delete-inside').addEventListener('click',  deleteInsideRegions);
       document.getElementById('btn-delete-outside').addEventListener('click', deleteOutsideRegions);
       document.getElementById('btn-export-regions').addEventListener('click', exportRegions);
