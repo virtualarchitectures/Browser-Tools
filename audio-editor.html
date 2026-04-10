@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Audio Editor</title>
-    <!-- JSZip: bundle multiple region WAV files into a single download -->
+    <!-- JSZip: bundle multiple clip WAV files into a single download -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
       /* =========================
@@ -280,16 +280,16 @@
         color: #444d56;
       }
 
-      /* Regions panel */
-      .regions-panel {
+      /* Clips panel */
+      .clips-panel {
         display: none;
         border: 1px solid #e1e4e8;
         border-radius: 6px;
         margin-bottom: 8px;
         overflow: hidden;
       }
-      .regions-panel.visible { display: block; }
-      .regions-toolbar {
+      .clips-panel.visible { display: block; }
+      .clips-toolbar {
         display: flex;
         gap: 6px;
         padding: 8px 12px;
@@ -299,8 +299,8 @@
         flex-wrap: wrap;
         font-size: 13px;
       }
-      .regions-toolbar label { color: #586069; }
-      .regions-toolbar input[type="number"] {
+      .clips-toolbar label { color: #586069; }
+      .clips-toolbar input[type="number"] {
         width: 52px;
         padding: 4px 6px;
         border: 1px solid #e1e4e8;
@@ -308,8 +308,10 @@
         font-size: 13px;
         font-family: inherit;
       }
-      .regions-list { max-height: 220px; overflow-y: auto; }
-      .region-row {
+      .clips-list { max-height: 260px; overflow-y: auto; }
+
+      /* Segment rows */
+      .seg-row {
         display: flex;
         align-items: center;
         gap: 8px;
@@ -319,11 +321,13 @@
         background: #fff;
         cursor: default;
       }
-      .region-row:last-child { border-bottom: none; }
-      .region-row.dragging { opacity: 0.35; }
-      .region-row.drag-over-top    { border-top: 2px solid #0366d6; }
-      .region-row.drag-over-bottom { border-bottom: 2px solid #0366d6; }
-      .region-handle {
+      .seg-row:last-child { border-bottom: none; }
+      .seg-row.untracked { background: #fafbfc; }
+      .seg-row.dragging { opacity: 0.35; }
+      .seg-row.drag-over-top    { border-top: 2px solid #0366d6; }
+      .seg-row.drag-over-bottom { border-bottom: 2px solid #0366d6; }
+
+      .seg-handle {
         cursor: grab;
         color: #c8d1da;
         font-size: 15px;
@@ -331,21 +335,28 @@
         user-select: none;
         flex-shrink: 0;
       }
-      .region-handle:hover { color: #586069; }
-      .region-index {
+      .seg-handle:hover { color: #586069; }
+      .seg-index {
         color: #959da5;
         font-size: 12px;
         min-width: 18px;
         text-align: right;
         flex-shrink: 0;
       }
-      .region-swatch {
+      .seg-swatch {
         width: 10px;
         height: 22px;
         border-radius: 2px;
         flex-shrink: 0;
       }
-      .region-name {
+      .seg-label {
+        color: #586069;
+        font-size: 12px;
+        font-style: italic;
+        flex-shrink: 0;
+        min-width: 70px;
+      }
+      .seg-name {
         width: 90px;
         padding: 2px 5px;
         border: 1px solid transparent;
@@ -355,23 +366,24 @@
         background: transparent;
         flex-shrink: 0;
       }
-      .region-name:focus { border-color: #0366d6; background: #fff; outline: none; }
-      .region-time {
+      .seg-name:focus { border-color: #0366d6; background: #fff; outline: none; }
+      .seg-time {
         font-family: 'Courier New', monospace;
         font-size: 12px;
         color: #586069;
         white-space: nowrap;
       }
-      .region-arrow { color: #c8d1da; font-size: 12px; }
-      .region-dur {
+      .seg-arrow { color: #c8d1da; font-size: 12px; }
+      .seg-dur {
         font-family: 'Courier New', monospace;
         font-size: 12px;
         color: #959da5;
         white-space: nowrap;
         flex: 1;
       }
-      .region-btn { padding: 2px 7px; font-size: 12px; line-height: 18px; }
-      .regions-empty {
+      .seg-btn { padding: 2px 7px; font-size: 12px; line-height: 18px; }
+
+      .clips-empty {
         padding: 16px;
         text-align: center;
         color: #959da5;
@@ -410,7 +422,7 @@
       <button class="open-new" id="btn-open-new">Open different file</button>
     </div>
 
-    <!-- Primary toolbar: Playback + Edit + Effects toggle + Zoom + Undo + Export -->
+    <!-- Primary toolbar -->
     <div class="toolbar" id="toolbar" style="margin-bottom:4px">
       <button class="btn primary" id="btn-play"      disabled title="Play (Space)">Play</button>
       <button class="btn"         id="btn-pause"     disabled title="Pause (Space)">Pause</button>
@@ -429,7 +441,7 @@
       <button class="btn"         id="btn-fade-in"   disabled title="Apply linear fade in to selection">Fade In</button>
       <button class="btn"         id="btn-fade-out"  disabled title="Apply linear fade out to selection">Fade Out</button>
       <button class="btn"         id="btn-effects"   disabled title="Toggle Amplify / Speed panel">Effects</button>
-      <button class="btn"         id="btn-regions"   disabled title="Toggle Regions panel">Regions</button>
+      <button class="btn"         id="btn-clips"     disabled title="Toggle Clips panel">Clips</button>
       <div class="toolbar-sep"></div>
       <button class="btn"         id="btn-zoom-fit"  disabled title="Fit entire audio in view (0)">Fit</button>
       <button class="btn"         id="btn-zoom-in"   disabled title="Zoom in (+)">Zoom +</button>
@@ -447,39 +459,36 @@
         <label>Amplify:</label>
         <input type="number" id="gain-db" value="0" step="0.5" title="Gain in decibels" />
         <span class="unit">dB</span>
-        <button class="btn" id="btn-amplify" disabled title="Apply gain to selection (or all if no selection)">Apply to Selection</button>
+        <button class="btn" id="btn-amplify"     disabled title="Apply gain to selection">Apply to Selection</button>
         <button class="btn" id="btn-amplify-all" disabled title="Apply gain to entire audio">Apply to All</button>
       </div>
       <div class="effects-row">
         <label>Speed / Pitch:</label>
-        <input type="number" id="speed-rate" value="1.0" step="0.05" min="0.1" max="4.0" title="Playback rate (0.5 = half speed, 2.0 = double speed)" />
+        <input type="number" id="speed-rate" value="1.0" step="0.05" min="0.1" max="4.0" title="Playback rate" />
         <span class="unit">x</span>
-        <button class="btn" id="btn-speed-sel" disabled title="Apply speed change to selection only">Apply to Selection</button>
+        <button class="btn" id="btn-speed-sel" disabled title="Apply speed change to selection">Apply to Selection</button>
         <button class="btn" id="btn-speed-all" disabled title="Apply speed change to entire audio">Apply to All</button>
       </div>
     </div>
 
-    <!-- Regions panel -->
-    <div class="regions-panel" id="regions-panel">
-      <div class="regions-toolbar">
-        <button class="btn" id="btn-add-region"   disabled title="Add current selection as a region">Add Region from Selection</button>
-        <div class="toolbar-sep"></div>
-        <button class="btn" id="btn-split-cursor"    disabled title="Split region at cursor position">Split at Cursor</button>
-        <button class="btn" id="btn-split-selection" disabled title="Split at selection start and end boundaries">Split Selection</button>
+    <!-- Clips panel -->
+    <div class="clips-panel" id="clips-panel">
+      <div class="clips-toolbar">
+        <button class="btn" id="btn-split-cursor"    disabled title="Split segment at cursor position">Split at Cursor</button>
+        <button class="btn" id="btn-split-selection" disabled title="Create a clip from the current selection">Split Selection</button>
         <label>Split into</label>
         <input type="number" id="split-n" value="4" min="2" max="128" title="Number of equal parts" />
-        <label>equal parts</label>
-        <button class="btn" id="btn-split-equal"  disabled title="Divide audio into N equal regions">Split</button>
+        <label>equal clips</label>
+        <button class="btn" id="btn-split-equal"  disabled title="Divide audio into N equal clips">Split</button>
         <div class="toolbar-sep"></div>
-        <button class="btn" id="btn-shuffle"       disabled title="Randomise region order">Shuffle</button>
-        <button class="btn"         id="btn-delete-inside"    disabled title="Delete audio inside regions, keeping everything outside">Delete Inside</button>
-        <button class="btn"         id="btn-delete-outside"   disabled title="Delete audio outside regions, keeping only region content (sorted by time)">Delete Outside</button>
-        <button class="btn"         id="btn-export-regions"   disabled title="Export each region as a separate WAV file (zipped)">Export Regions</button>
-        <button class="btn"         id="btn-regions-clear"  disabled title="Remove all regions">Clear All</button>
+        <button class="btn" id="btn-shuffle"         disabled title="Randomise segment order">Shuffle</button>
+        <button class="btn" id="btn-assemble"        disabled title="Build new audio from defined clips in current order">Assemble Clips</button>
+        <button class="btn" id="btn-export-clips"    disabled title="Export each clip as a separate WAV file (zipped)">Export Clips</button>
+        <button class="btn" id="btn-clips-clear"     disabled title="Remove all clip definitions">Clear Clips</button>
       </div>
-      <div class="regions-list" id="regions-list"></div>
-      <div class="regions-empty" id="regions-empty">
-        No regions defined. Add a region from a selection, or split the audio into equal parts.
+      <div class="clips-list" id="clips-list"></div>
+      <div class="clips-empty" id="clips-empty">
+        No clips defined. Use Split at Cursor or Split Selection to create clips.
       </div>
     </div>
 
@@ -529,66 +538,120 @@
          JavaScript
          ========================= */
 
-      // --- State variables ---
+      // --- State ---
       let audioCtx      = null;
-      let audioBuffer   = null;  // current working AudioBuffer
-      let sourceNode    = null;  // active playback node
+      let audioBuffer   = null;   // raw source audio
+      let sourceNode    = null;
       let isPlaying     = false;
-      let loopEnabled   = false; // loop playback toggle
-      let playbackStartTime = 0; // audioCtx.currentTime when play() was called
-      let playbackOffset    = 0; // seconds into buffer where playback started
+      let loopEnabled   = false;
+      let playbackStartTime = 0;
+      let playbackOffset    = 0;
 
-      let selStart = -1;  // selection start in seconds (-1 = no selection)
-      let selEnd   = -1;  // selection end in seconds
-      let cursorPos = 0;  // cursor / playhead position in seconds
+      // Arrangement: segments in playback/display order
+      // Each segment: {type:'clip'|'untracked', start, end, id?, name?}
+      // start/end reference seconds in audioBuffer
+      let segments    = [];
+      let segDragSrcIdx = null;
+      let _sid = 1;
+      function newSid() { return _sid++; }
 
-      let viewStart = 0;  // visible range start (seconds)
-      let viewEnd   = 10; // visible range end (seconds)
+      // Cached arrangement buffer (concat of segments in order)
+      let arrangementBuffer = null;
+      let arrangementDirty  = true;
 
-      let undoStack = []; // array of AudioBuffer snapshots
+      let selStart = -1;
+      let selEnd   = -1;
+      let cursorPos = 0;
+
+      let viewStart = 0;
+      let viewEnd   = 10;
+
+      let undoStack = [];
       let clipboard = null;
-      let regions   = []; // [{id, name, start, end}]
-      let regionDragSrcIdx = null;
-      let _rid = 1;
-      function newRid() { return _rid++; }
-
       let animFrameId = null;
       let filename    = 'audio';
 
-      // Mouse drag state (waveform)
       let isDragging    = false;
       let dragStartTime = 0;
+      let sbDragging      = false;
+      let sbDragStartX    = 0;
+      let sbDragStartView = 0;
 
-      // Scrollbar drag state
-      let sbDragging        = false;
-      let sbDragStartX      = 0;
-      let sbDragStartView   = 0;
-
-      // Canvas elements
       const waveformCanvas = document.getElementById('waveform-canvas');
       const rulerCanvas    = document.getElementById('ruler-canvas');
       const wCtx = waveformCanvas.getContext('2d');
       const rCtx = rulerCanvas.getContext('2d');
 
-      // Channel colours: L=blue, R=green, 3=orange, 4=purple …
-      const CH_COLORS     = ['#0366d6', '#28a745', '#e36209', '#6f42c1', '#d73a49', '#0598bc'];
-      // Region overlay colours (distinct from channel colours)
-      const REGION_COLORS = ['#e36209', '#6f42c1', '#d73a49', '#0598bc', '#28a745', '#b08800', '#005cc5', '#22863a'];
+      // Channel colours
+      const CH_COLORS   = ['#0366d6', '#28a745', '#e36209', '#6f42c1', '#d73a49', '#0598bc'];
+      // Clip overlay colours
+      const CLIP_COLORS = ['#e36209', '#6f42c1', '#d73a49', '#0598bc', '#28a745', '#b08800', '#005cc5', '#22863a'];
 
       function hexToRgba(hex, alpha) {
-        const r = parseInt(hex.slice(1, 3), 16);
-        const g = parseInt(hex.slice(3, 5), 16);
-        const b = parseInt(hex.slice(5, 7), 16);
+        const r = parseInt(hex.slice(1,3),16);
+        const g = parseInt(hex.slice(3,5),16);
+        const b = parseInt(hex.slice(5,7),16);
         return `rgba(${r},${g},${b},${alpha})`;
       }
+
+      // -------------------------------------------------------
+      // Arrangement helpers
+      // -------------------------------------------------------
+
+      // Returns [{seg, idx, arrStart, arrEnd}] — cumulative arrangement times
+      function getArrangementInfo() {
+        let t = 0;
+        return segments.map((seg, idx) => {
+          const dur = seg.end - seg.start;
+          const item = { seg, idx, arrStart: t, arrEnd: t + dur };
+          t += dur;
+          return item;
+        });
+      }
+
+      // Total arrangement duration (always equals audioBuffer.duration when segments cover full file)
+      function arrangementDuration() {
+        return segments.reduce((s, seg) => s + (seg.end - seg.start), 0);
+      }
+
+      // Build / return cached arrangement buffer for playback
+      function getArrangementBuffer() {
+        if (!arrangementDirty && arrangementBuffer) return arrangementBuffer;
+        if (!audioBuffer) return null;
+        const sr    = audioBuffer.sampleRate;
+        const parts = segments.map(seg =>
+          sliceBuffer(audioBuffer, Math.round(seg.start * sr), Math.round(seg.end * sr))
+        );
+        arrangementBuffer = parts.length > 0 ? concatBuffers(parts) : audioBuffer;
+        arrangementDirty  = false;
+        return arrangementBuffer;
+      }
+
+      function markArrangementDirty() {
+        arrangementDirty = true;
+        arrangementBuffer = null;
+      }
+
+      // Initialise segments to one untracked segment covering the full buffer
+      function initSegments() {
+        segments = [{ type: 'untracked', start: 0, end: audioBuffer.duration }];
+        markArrangementDirty();
+      }
+
+      // After length-changing destructive edit: reset to one untracked segment
+      function resetSegments() {
+        initSegments();
+        renderClipsList();
+      }
+
+      // Count defined clips
+      function clipCount() { return segments.filter(s => s.type === 'clip').length; }
 
       // -------------------------------------------------------
       // Audio Context
       // -------------------------------------------------------
       function ensureAudioCtx() {
-        if (!audioCtx) {
-          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        }
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       }
 
       // -------------------------------------------------------
@@ -598,7 +661,7 @@
         if (!isFinite(seconds) || seconds < 0) seconds = 0;
         const m = Math.floor(seconds / 60);
         const s = seconds % 60;
-        return `${m}:${s.toFixed(3).padStart(6, '0')}`;
+        return `${m}:${s.toFixed(3).padStart(6,'0')}`;
       }
 
       // -------------------------------------------------------
@@ -608,10 +671,7 @@
       const fileInput = document.getElementById('file-input');
 
       dropZone.addEventListener('click', () => fileInput.click());
-      dropZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropZone.classList.add('dragover');
-      });
+      dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
       dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
       dropZone.addEventListener('drop', (e) => {
         e.preventDefault();
@@ -628,30 +688,25 @@
       async function loadFile(file) {
         ensureAudioCtx();
         if (audioCtx.state === 'suspended') await audioCtx.resume();
-
         showLoading(true);
         hideStatus();
-
         try {
           const arrayBuf = await file.arrayBuffer();
           const decoded  = await audioCtx.decodeAudioData(arrayBuf);
-
           stopPlayback();
-
           audioBuffer = decoded;
           filename    = file.name.replace(/\.[^.]+$/, '');
           undoStack   = [];
           clipboard   = null;
-          regions     = [];
           selStart = -1; selEnd = -1;
-          cursorPos   = 0;
-          viewStart   = 0;
-          viewEnd     = decoded.duration;
+          cursorPos = 0;
+          viewStart = 0;
+          viewEnd   = decoded.duration;
 
-          // Size waveform canvas: 80px per channel, min 160px
-          const chH = Math.max(160, decoded.numberOfChannels * 80);
-          waveformCanvas.height = chH;
+          // Size canvas: 80px per channel, min 160px
+          waveformCanvas.height = Math.max(160, decoded.numberOfChannels * 80);
 
+          initSegments();
           updateFileInfo(file, decoded);
           updateUI();
           startAnimation();
@@ -660,8 +715,7 @@
           document.getElementById('file-info').style.display    = 'flex';
           document.getElementById('scroll-hint').style.display  = 'block';
           document.getElementById('shortcuts-bar').style.display = 'flex';
-          renderRegionsList();
-
+          renderClipsList();
         } catch (err) {
           showStatus('Failed to decode audio: ' + err.message, 'error');
         } finally {
@@ -670,11 +724,9 @@
       }
 
       function updateFileInfo(file, buf) {
-        document.getElementById('info-name').textContent = file.name;
-        document.getElementById('info-duration').textContent =
-          formatTime(buf.duration);
-        document.getElementById('info-samplerate').textContent =
-          buf.sampleRate.toLocaleString() + ' Hz';
+        document.getElementById('info-name').textContent     = file.name;
+        document.getElementById('info-duration').textContent = formatTime(buf.duration);
+        document.getElementById('info-samplerate').textContent = buf.sampleRate.toLocaleString() + ' Hz';
         document.getElementById('info-channels').textContent =
           buf.numberOfChannels === 1 ? 'Mono'
           : buf.numberOfChannels === 2 ? 'Stereo'
@@ -682,35 +734,36 @@
       }
 
       // -------------------------------------------------------
-      // Playback
+      // Playback — uses arrangement buffer
       // -------------------------------------------------------
       function play() {
         if (!audioBuffer || isPlaying) return;
         ensureAudioCtx();
         if (audioCtx.state === 'suspended') audioCtx.resume();
 
-        sourceNode = audioCtx.createBufferSource();
-        sourceNode.buffer = audioBuffer;
+        const arrBuf = getArrangementBuffer();
+        if (!arrBuf) return;
+
+        sourceNode        = audioCtx.createBufferSource();
+        sourceNode.buffer = arrBuf;
         sourceNode.connect(audioCtx.destination);
 
-        // Determine start point and duration
+        const hasSel  = selStart >= 0 && selEnd > selStart;
         let startFrom = cursorPos;
         let duration;
-        const hasSel = selStart >= 0 && selEnd > selStart;
 
         if (hasSel) {
           startFrom = selStart;
           if (!loopEnabled) duration = selEnd - selStart;
         }
 
-        playbackOffset    = Math.max(0, Math.min(startFrom, audioBuffer.duration));
+        playbackOffset    = Math.max(0, Math.min(startFrom, arrBuf.duration));
         playbackStartTime = audioCtx.currentTime;
 
-        // Loop setup
         sourceNode.loop = loopEnabled;
         if (loopEnabled) {
           sourceNode.loopStart = hasSel ? selStart : 0;
-          sourceNode.loopEnd   = hasSel ? selEnd   : audioBuffer.duration;
+          sourceNode.loopEnd   = hasSel ? selEnd   : arrBuf.duration;
         }
 
         sourceNode.start(0, playbackOffset, duration);
@@ -736,10 +789,7 @@
       }
 
       function stopPlayback() {
-        if (sourceNode) {
-          try { sourceNode.stop(); } catch(e) {}
-          sourceNode = null;
-        }
+        if (sourceNode) { try { sourceNode.stop(); } catch(e) {} sourceNode = null; }
         isPlaying = false;
         updatePlaybackButtons();
       }
@@ -747,40 +797,28 @@
       function toggleLoop() {
         loopEnabled = !loopEnabled;
         document.getElementById('btn-loop').classList.toggle('active', loopEnabled);
-        // If already playing, restart with loop setting applied
-        if (isPlaying) {
-          const t = getCurrentTime();
-          stopPlayback();
-          cursorPos = t;
-          play();
-        }
+        if (isPlaying) { const t = getCurrentTime(); stopPlayback(); cursorPos = t; play(); }
       }
 
-      // Returns current playback position in seconds, accounting for looping
       function getCurrentTime() {
         if (!isPlaying || !audioCtx) return cursorPos;
         const elapsed = audioCtx.currentTime - playbackStartTime;
         let t = playbackOffset + elapsed;
-
         if (loopEnabled && sourceNode) {
-          const loopS = sourceNode.loopStart;
-          const loopE = sourceNode.loopEnd;
-          const loopDur = loopE - loopS;
-          if (loopDur > 0 && t > loopE) {
-            t = loopS + ((t - loopS) % loopDur);
-          }
+          const loopDur = sourceNode.loopEnd - sourceNode.loopStart;
+          if (loopDur > 0 && t > sourceNode.loopEnd)
+            t = sourceNode.loopStart + ((t - sourceNode.loopStart) % loopDur);
         }
-
-        return Math.min(t, audioBuffer ? audioBuffer.duration : 0);
+        const maxT = arrangementDuration() || (audioBuffer ? audioBuffer.duration : 0);
+        return Math.min(t, maxT);
       }
 
       // -------------------------------------------------------
-      // Canvas coordinate conversion
+      // Canvas coordinate conversion (in arrangement time)
       // -------------------------------------------------------
       function canvasXToTime(x) {
         return viewStart + (x / waveformCanvas.width) * (viewEnd - viewStart);
       }
-
       function timeToCanvasX(t) {
         return ((t - viewStart) / (viewEnd - viewStart)) * waveformCanvas.width;
       }
@@ -794,12 +832,11 @@
           waveformCanvas.width = w;
           rulerCanvas.width    = w;
           rulerCanvas.height   = 24;
-          // Keep waveform height as set during load
         }
       }
 
       // -------------------------------------------------------
-      // Drawing — waveform (multichannel lanes)
+      // Drawing — waveform (segment-aware, multichannel)
       // -------------------------------------------------------
       function drawWaveform() {
         const W     = waveformCanvas.width;
@@ -807,26 +844,24 @@
         const numCh = audioBuffer ? audioBuffer.numberOfChannels : 1;
         const laneH = H / numCh;
 
-        // Background
         wCtx.fillStyle = '#f6f8fa';
         wCtx.fillRect(0, 0, W, H);
 
         if (!audioBuffer) return;
 
-        // Lane dividers for multichannel
+        const arrInfo = getArrangementInfo();
+
+        // Lane dividers
         if (numCh > 1) {
           wCtx.strokeStyle = '#e1e4e8';
-          wCtx.lineWidth   = 1;
+          wCtx.lineWidth = 1;
           for (let ch = 1; ch < numCh; ch++) {
             const y = Math.round(ch * laneH);
-            wCtx.beginPath();
-            wCtx.moveTo(0, y);
-            wCtx.lineTo(W, y);
-            wCtx.stroke();
+            wCtx.beginPath(); wCtx.moveTo(0, y); wCtx.lineTo(W, y); wCtx.stroke();
           }
         }
 
-        // Selection highlight — full height
+        // Selection highlight
         if (selStart >= 0 && selEnd > selStart) {
           const x1 = Math.max(0, timeToCanvasX(selStart));
           const x2 = Math.min(W, timeToCanvasX(selEnd));
@@ -834,48 +869,44 @@
             wCtx.fillStyle = 'rgba(3,102,214,0.10)';
             wCtx.fillRect(x1, 0, x2 - x1, H);
             wCtx.strokeStyle = 'rgba(3,102,214,0.45)';
-            wCtx.lineWidth   = 1;
+            wCtx.lineWidth = 1;
             wCtx.beginPath();
-            wCtx.moveTo(x1, 0); wCtx.lineTo(x1, H);
-            wCtx.moveTo(x2, 0); wCtx.lineTo(x2, H);
+            wCtx.moveTo(x1,0); wCtx.lineTo(x1,H);
+            wCtx.moveTo(x2,0); wCtx.lineTo(x2,H);
             wCtx.stroke();
           }
         }
 
-        // Region overlays (drawn before waveform so waveform renders on top)
-        regions.forEach((region, idx) => {
-          const rx1 = Math.max(0, timeToCanvasX(region.start));
-          const rx2 = Math.min(W, timeToCanvasX(region.end));
-          if (rx2 <= rx1) return;
-          const rc = REGION_COLORS[idx % REGION_COLORS.length];
-          // Tinted fill
+        // Draw clip overlays (behind waveform)
+        let clipColorIdx = 0;
+        for (const {seg, arrStart, arrEnd} of arrInfo) {
+          if (seg.type !== 'clip') { continue; }
+          const rx1 = Math.max(0, timeToCanvasX(arrStart));
+          const rx2 = Math.min(W, timeToCanvasX(arrEnd));
+          if (rx2 <= rx1) { clipColorIdx++; continue; }
+          const rc = CLIP_COLORS[clipColorIdx % CLIP_COLORS.length];
           wCtx.fillStyle = hexToRgba(rc, 0.08);
           wCtx.fillRect(rx1, 0, rx2 - rx1, H);
-          // Top colour band
           wCtx.fillStyle = rc;
           wCtx.fillRect(rx1, 0, rx2 - rx1, 4);
-          // Left edge
           wCtx.strokeStyle = hexToRgba(rc, 0.6);
           wCtx.lineWidth = 1;
-          wCtx.beginPath(); wCtx.moveTo(rx1, 0); wCtx.lineTo(rx1, H); wCtx.stroke();
-          // Label in the colour band
+          wCtx.beginPath(); wCtx.moveTo(rx1,0); wCtx.lineTo(rx1,H); wCtx.stroke();
           if (rx2 - rx1 > 24) {
             wCtx.fillStyle = '#fff';
             wCtx.font = 'bold 9px Helvetica, sans-serif';
             wCtx.textAlign = 'left';
-            // Clip label to region width
             wCtx.save();
             wCtx.beginPath(); wCtx.rect(rx1, 0, rx2 - rx1, 4); wCtx.clip();
-            wCtx.fillText(region.name, rx1 + 3, 3.5);
+            wCtx.fillText(seg.name, rx1 + 3, 3.5);
             wCtx.restore();
           }
-        });
+          clipColorIdx++;
+        }
 
-        // Per-channel waveform
-        const sr     = audioBuffer.sampleRate;
-        const s0Base = Math.floor(viewStart * sr);
-        const s1Base = Math.ceil(viewEnd   * sr);
-        const chLabels = ['L', 'R', '3', '4', '5', '6'];
+        // Per-channel waveform — drawn segment by segment
+        const sr        = audioBuffer.sampleRate;
+        const chLabels  = ['L','R','3','4','5','6'];
 
         for (let ch = 0; ch < numCh; ch++) {
           const data       = audioBuffer.getChannelData(ch);
@@ -887,54 +918,77 @@
           wCtx.strokeStyle = '#d1d5da';
           wCtx.lineWidth   = 1;
           wCtx.beginPath();
-          wCtx.moveTo(0, laneCenter);
-          wCtx.lineTo(W, laneCenter);
+          wCtx.moveTo(0, laneCenter); wCtx.lineTo(W, laneCenter);
           wCtx.stroke();
 
-          // Channel label
           if (numCh > 1) {
-            wCtx.fillStyle  = '#959da5';
-            wCtx.font       = '10px Helvetica, sans-serif';
-            wCtx.textAlign  = 'left';
-            wCtx.fillText(chLabels[ch] || String(ch + 1), 4, laneTop + 11);
+            wCtx.fillStyle = '#959da5';
+            wCtx.font      = '10px Helvetica, sans-serif';
+            wCtx.textAlign = 'left';
+            wCtx.fillText(chLabels[ch] || String(ch+1), 4, laneTop + 11);
           }
 
-          // Peaks
-          wCtx.fillStyle = CH_COLORS[ch % CH_COLORS.length];
-          for (let x = 0; x < W; x++) {
-            const sA = Math.max(0, Math.floor(s0Base + (x       / W) * (s1Base - s0Base)));
-            const sB = Math.min(data.length,
-                       Math.floor(s0Base + ((x + 1) / W) * (s1Base - s0Base)));
-            let peak = 0, trough = 0;
-            for (let s = sA; s < sB; s++) {
-              const v = data[s];
-              if (v > peak)   peak   = v;
-              if (v < trough) trough = v;
+          // Draw each segment's waveform in its arrangement-time canvas position
+          for (const {seg, arrStart, arrEnd} of arrInfo) {
+            const viewOverlapStart = Math.max(viewStart, arrStart);
+            const viewOverlapEnd   = Math.min(viewEnd,   arrEnd);
+            if (viewOverlapEnd <= viewOverlapStart) continue;
+
+            const px1 = timeToCanvasX(viewOverlapStart);
+            const px2 = timeToCanvasX(viewOverlapEnd);
+
+            // Raw sample range for this visible portion of the segment
+            const rawStart = Math.round((seg.start + (viewOverlapStart - arrStart)) * sr);
+            const rawEnd   = Math.round((seg.start + (viewOverlapEnd   - arrStart)) * sr);
+            const rawSpan  = Math.max(1, rawEnd - rawStart);
+            const pxSpan   = Math.max(1, px2 - px1);
+
+            wCtx.fillStyle = CH_COLORS[ch % CH_COLORS.length];
+
+            for (let px = Math.floor(px1); px < Math.ceil(px2); px++) {
+              if (px < 0 || px >= W) continue;
+              const f1 = (px     - px1) / pxSpan;
+              const f2 = (px + 1 - px1) / pxSpan;
+              const sA = Math.max(0,           Math.floor(rawStart + f1 * rawSpan));
+              const sB = Math.min(data.length, Math.floor(rawStart + f2 * rawSpan));
+              let peak = 0, trough = 0;
+              for (let s = sA; s < sB; s++) {
+                const v = data[s];
+                if (v > peak)   peak   = v;
+                if (v < trough) trough = v;
+              }
+              if (sA >= sB) { peak = 0; trough = 0; }
+              const yTop = laneCenter - peak   * halfH;
+              const yBot = laneCenter - trough * halfH;
+              wCtx.fillRect(px, yTop, 1, Math.max(1, yBot - yTop));
             }
-            const yTop = laneCenter - peak   * halfH;
-            const yBot = laneCenter - trough * halfH;
-            wCtx.fillRect(x, yTop, 1, Math.max(1, yBot - yTop));
           }
         }
 
-        // Playhead cursor — full height
+        // Segment boundary dividers
+        wCtx.strokeStyle = 'rgba(0,0,0,0.18)';
+        wCtx.lineWidth   = 1;
+        for (const {arrStart, arrEnd} of arrInfo) {
+          // Draw left edge of each segment (skip the very first)
+          if (arrStart > 0) {
+            const dx = Math.round(timeToCanvasX(arrStart));
+            if (dx >= 0 && dx <= W) {
+              wCtx.beginPath(); wCtx.moveTo(dx, 0); wCtx.lineTo(dx, H); wCtx.stroke();
+            }
+          }
+        }
+
+        // Playhead cursor
         const playTime = getCurrentTime();
         if (playTime >= viewStart && playTime <= viewEnd) {
           const cx = timeToCanvasX(playTime);
           wCtx.strokeStyle = '#d73a49';
           wCtx.lineWidth   = 1.5;
-          wCtx.beginPath();
-          wCtx.moveTo(cx, 0);
-          wCtx.lineTo(cx, H);
-          wCtx.stroke();
-          // Triangle handle
+          wCtx.beginPath(); wCtx.moveTo(cx,0); wCtx.lineTo(cx,H); wCtx.stroke();
           wCtx.fillStyle = '#d73a49';
           wCtx.beginPath();
-          wCtx.moveTo(cx - 5, 0);
-          wCtx.lineTo(cx + 5, 0);
-          wCtx.lineTo(cx, 9);
-          wCtx.closePath();
-          wCtx.fill();
+          wCtx.moveTo(cx-5,0); wCtx.lineTo(cx+5,0); wCtx.lineTo(cx,9);
+          wCtx.closePath(); wCtx.fill();
         }
       }
 
@@ -944,23 +998,15 @@
       function drawRuler() {
         const W = rulerCanvas.width;
         const H = rulerCanvas.height;
-
-        rCtx.clearRect(0, 0, W, H);
+        rCtx.clearRect(0,0,W,H);
         rCtx.fillStyle = '#ffffff';
-        rCtx.fillRect(0, 0, W, H);
-
+        rCtx.fillRect(0,0,W,H);
         if (!audioBuffer) return;
 
         const span   = viewEnd - viewStart;
         const rawInt = span / (W / 70);
-
-        const niceInts = [
-          0.001, 0.002, 0.005,
-          0.01, 0.02, 0.05,
-          0.1, 0.2, 0.25, 0.5,
-          1, 2, 5, 10, 15, 30, 60, 120, 300, 600
-        ];
-        let interval = niceInts[niceInts.length - 1];
+        const niceInts = [0.001,0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.25,0.5,1,2,5,10,15,30,60,120,300,600];
+        let interval = niceInts[niceInts.length-1];
         for (const ni of niceInts) { if (ni >= rawInt) { interval = ni; break; } }
 
         rCtx.strokeStyle = '#c8d1da';
@@ -972,20 +1018,17 @@
         const firstTick = Math.ceil(viewStart / interval) * interval;
         for (let t = firstTick; t <= viewEnd + 1e-9; t += interval) {
           const x = Math.round(timeToCanvasX(t));
-          rCtx.beginPath(); rCtx.moveTo(x, H - 5); rCtx.lineTo(x, H); rCtx.stroke();
-          rCtx.fillText(rulerLabel(t, interval), x, H - 7);
+          rCtx.beginPath(); rCtx.moveTo(x, H-5); rCtx.lineTo(x, H); rCtx.stroke();
+          rCtx.fillText(rulerLabel(t, interval), x, H-7);
         }
       }
 
       function rulerLabel(t, interval) {
-        if (interval >= 60) {
-          const m = Math.floor(t / 60);
-          return `${m}:${String(Math.round(t % 60)).padStart(2, '0')}`;
-        }
-        if (interval >= 1)    return t.toFixed(0) + 's';
-        if (interval >= 0.1)  return t.toFixed(1) + 's';
-        if (interval >= 0.01) return t.toFixed(2) + 's';
-        return t.toFixed(3) + 's';
+        if (interval >= 60) { const m = Math.floor(t/60); return `${m}:${String(Math.round(t%60)).padStart(2,'0')}`; }
+        if (interval >= 1)    return t.toFixed(0)+'s';
+        if (interval >= 0.1)  return t.toFixed(1)+'s';
+        if (interval >= 0.01) return t.toFixed(2)+'s';
+        return t.toFixed(3)+'s';
       }
 
       // -------------------------------------------------------
@@ -996,12 +1039,10 @@
         const container = document.getElementById('scrollbar-container');
         const track     = document.getElementById('scrollbar-track');
         const thumb     = document.getElementById('scrollbar-thumb');
-        const total     = audioBuffer.duration;
+        const total     = arrangementDuration() || audioBuffer.duration;
         const span      = viewEnd - viewStart;
         const zoomed    = span < total - 0.0001;
-
         container.classList.toggle('visible', zoomed);
-
         if (zoomed && track.clientWidth > 0) {
           const tw = Math.max(16, (span / total) * track.clientWidth);
           const tl = (viewStart / total) * track.clientWidth;
@@ -1010,44 +1051,34 @@
         }
       }
 
-      // Scrollbar drag
       const sbThumb = document.getElementById('scrollbar-thumb');
       const sbTrack = document.getElementById('scrollbar-track');
 
       sbThumb.addEventListener('mousedown', (e) => {
         e.preventDefault();
-        sbDragging      = true;
-        sbDragStartX    = e.clientX;
-        sbDragStartView = viewStart;
+        sbDragging = true; sbDragStartX = e.clientX; sbDragStartView = viewStart;
         sbThumb.classList.add('dragging');
       });
-
-      // Click on track (not thumb) to jump
       sbTrack.addEventListener('mousedown', (e) => {
         if (e.target === sbThumb || !audioBuffer) return;
         const rect  = sbTrack.getBoundingClientRect();
         const ratio = (e.clientX - rect.left) / rect.width;
+        const total = arrangementDuration() || audioBuffer.duration;
         const span  = viewEnd - viewStart;
-        viewStart   = Math.max(0, Math.min(audioBuffer.duration - span, ratio * audioBuffer.duration - span / 2));
-        viewEnd     = viewStart + span;
+        viewStart = Math.max(0, Math.min(total - span, ratio * total - span / 2));
+        viewEnd   = viewStart + span;
       });
-
       document.addEventListener('mousemove', (e) => {
         if (!sbDragging || !audioBuffer) return;
         const rect  = sbTrack.getBoundingClientRect();
-        const total = audioBuffer.duration;
+        const total = arrangementDuration() || audioBuffer.duration;
         const span  = viewEnd - viewStart;
-        const dx    = e.clientX - sbDragStartX;
-        const dt    = (dx / rect.width) * total;
+        const dt    = ((e.clientX - sbDragStartX) / rect.width) * total;
         viewStart   = Math.max(0, Math.min(total - span, sbDragStartView + dt));
         viewEnd     = viewStart + span;
       });
-
       document.addEventListener('mouseup', () => {
-        if (sbDragging) {
-          sbDragging = false;
-          sbThumb.classList.remove('dragging');
-        }
+        if (sbDragging) { sbDragging = false; sbThumb.classList.remove('dragging'); }
         isDragging = false;
       });
 
@@ -1075,20 +1106,16 @@
         e.preventDefault();
         const rect = waveformCanvas.getBoundingClientRect();
         const x    = (e.clientX - rect.left) * (waveformCanvas.width / rect.width);
-        const t    = Math.max(0, Math.min(canvasXToTime(x), audioBuffer.duration));
-
-        isDragging    = true;
-        dragStartTime = t;
-        selStart = t; selEnd = t;
-        cursorPos = t;
+        const t    = Math.max(0, Math.min(canvasXToTime(x), arrangementDuration()));
+        isDragging = true; dragStartTime = t;
+        selStart = t; selEnd = t; cursorPos = t;
       });
 
       waveformCanvas.addEventListener('mousemove', (e) => {
         if (!isDragging || !audioBuffer) return;
         const rect = waveformCanvas.getBoundingClientRect();
         const x    = (e.clientX - rect.left) * (waveformCanvas.width / rect.width);
-        const t    = Math.max(0, Math.min(canvasXToTime(x), audioBuffer.duration));
-
+        const t    = Math.max(0, Math.min(canvasXToTime(x), arrangementDuration()));
         if (t < dragStartTime) { selStart = t; selEnd = dragStartTime; }
         else                   { selStart = dragStartTime; selEnd = t; }
         cursorPos = t;
@@ -1101,7 +1128,6 @@
         updateUI();
       });
 
-      // Scroll to zoom — keep time-at-cursor fixed
       waveformCanvas.addEventListener('wheel', (e) => {
         if (!audioBuffer) return;
         e.preventDefault();
@@ -1109,25 +1135,21 @@
         const x      = (e.clientX - rect.left) * (waveformCanvas.width / rect.width);
         const tFixed = canvasXToTime(x);
         const ratio  = x / waveformCanvas.width;
-
-        const factor  = e.deltaY > 0 ? 1.35 : 0.74;
-        let newSpan   = Math.max(0.01, Math.min(audioBuffer.duration, (viewEnd - viewStart) * factor));
-
+        const total  = arrangementDuration() || audioBuffer.duration;
+        const factor = e.deltaY > 0 ? 1.35 : 0.74;
+        let newSpan  = Math.max(0.01, Math.min(total, (viewEnd - viewStart) * factor));
         viewStart = tFixed - ratio * newSpan;
         viewEnd   = viewStart + newSpan;
-
-        if (viewStart < 0) { viewEnd -= viewStart; viewStart = 0; }
-        if (viewEnd > audioBuffer.duration) { viewStart -= viewEnd - audioBuffer.duration; viewEnd = audioBuffer.duration; }
+        if (viewStart < 0)     { viewEnd -= viewStart; viewStart = 0; }
+        if (viewEnd > total)   { viewStart -= viewEnd - total; viewEnd = total; }
         viewStart = Math.max(0, viewStart);
       }, { passive: false });
 
       // -------------------------------------------------------
-      // Selection info bar + time display
+      // Selection info bar
       // -------------------------------------------------------
       function updateSelectionBar() {
-        const t = getCurrentTime();
-        document.getElementById('sel-cursor').textContent = formatTime(t);
-
+        document.getElementById('sel-cursor').textContent = formatTime(getCurrentTime());
         if (selStart >= 0 && selEnd > selStart) {
           document.getElementById('sel-start').textContent  = formatTime(selStart);
           document.getElementById('sel-end').textContent    = formatTime(selEnd);
@@ -1144,9 +1166,8 @@
       // -------------------------------------------------------
       function cloneBuffer(src) {
         const dst = audioCtx.createBuffer(src.numberOfChannels, src.length, src.sampleRate);
-        for (let ch = 0; ch < src.numberOfChannels; ch++) {
+        for (let ch = 0; ch < src.numberOfChannels; ch++)
           dst.copyToChannel(new Float32Array(src.getChannelData(ch)), ch);
-        }
         return dst;
       }
 
@@ -1155,24 +1176,22 @@
         endSample   = Math.min(src.length, endSample);
         const len   = Math.max(0, endSample - startSample);
         const dst   = audioCtx.createBuffer(src.numberOfChannels, Math.max(1, len), src.sampleRate);
-        if (len > 0) {
-          for (let ch = 0; ch < src.numberOfChannels; ch++) {
+        if (len > 0)
+          for (let ch = 0; ch < src.numberOfChannels; ch++)
             dst.copyToChannel(src.getChannelData(ch).slice(startSample, endSample), ch);
-          }
-        }
         return dst;
       }
 
       function concatBuffers(bufs) {
+        if (bufs.length === 0) return audioCtx.createBuffer(1, 1, audioBuffer.sampleRate);
         const numCh    = bufs[0].numberOfChannels;
         const sr       = bufs[0].sampleRate;
         const totalLen = bufs.reduce((s, b) => s + b.length, 0);
         const dst      = audioCtx.createBuffer(numCh, Math.max(1, totalLen), sr);
         let offset = 0;
         for (const b of bufs) {
-          for (let ch = 0; ch < numCh; ch++) {
+          for (let ch = 0; ch < numCh; ch++)
             dst.getChannelData(ch).set(b.getChannelData(ch), offset);
-          }
           offset += b.length;
         }
         return dst;
@@ -1183,6 +1202,7 @@
         if (undoStack.length > 20) undoStack.shift();
       }
 
+      // Returns selection in arrangement-time samples (for edits on raw buffer when in natural order)
       function getSelectionSamples() {
         if (selStart < 0 || selEnd <= selStart) return null;
         return {
@@ -1191,13 +1211,12 @@
         };
       }
 
-      // Sync duration in file-info bar after any buffer change
       function syncDuration() {
         document.getElementById('info-duration').textContent = formatTime(audioBuffer.duration);
       }
 
       // -------------------------------------------------------
-      // Edit operations
+      // Edit operations (destructive — reset segments)
       // -------------------------------------------------------
       function doTrim() {
         const sel = getSelectionSamples();
@@ -1206,14 +1225,14 @@
         audioBuffer = sliceBuffer(audioBuffer, sel.start, sel.end);
         cursorPos = 0; selStart = -1; selEnd = -1;
         viewStart = 0; viewEnd = audioBuffer.duration;
-        syncDuration(); updateUI();
+        syncDuration(); resetSegments(); updateUI();
       }
 
       function doDelete() {
         const sel = getSelectionSamples();
         if (!sel) return showStatus('Make a selection first.', 'error');
         pushUndo();
-        const before = sliceBuffer(audioBuffer, 0,       sel.start);
+        const before = sliceBuffer(audioBuffer, 0, sel.start);
         const after  = sliceBuffer(audioBuffer, sel.end, audioBuffer.length);
         const parts  = [];
         if (before.length > 0) parts.push(before);
@@ -1223,7 +1242,7 @@
           : audioCtx.createBuffer(audioBuffer.numberOfChannels, 1, audioBuffer.sampleRate);
         cursorPos = selStart; selStart = -1; selEnd = -1;
         viewEnd = Math.min(viewEnd, audioBuffer.duration);
-        syncDuration(); updateUI();
+        syncDuration(); resetSegments(); updateUI();
       }
 
       function doSilence() {
@@ -1231,10 +1250,10 @@
         if (!sel) return showStatus('Make a selection first.', 'error');
         pushUndo();
         const buf = cloneBuffer(audioBuffer);
-        for (let ch = 0; ch < buf.numberOfChannels; ch++) {
+        for (let ch = 0; ch < buf.numberOfChannels; ch++)
           buf.getChannelData(ch).fill(0, sel.start, sel.end);
-        }
         audioBuffer = buf;
+        markArrangementDirty();
         updateUI();
       }
 
@@ -1259,7 +1278,7 @@
         pushUndo();
         const sr       = audioBuffer.sampleRate;
         const insertAt = Math.max(0, Math.min(Math.round(cursorPos * sr), audioBuffer.length));
-        const before   = sliceBuffer(audioBuffer, 0,        insertAt);
+        const before   = sliceBuffer(audioBuffer, 0, insertAt);
         const after    = sliceBuffer(audioBuffer, insertAt, audioBuffer.length);
         const parts    = [];
         if (before.length > 0) parts.push(before);
@@ -1268,7 +1287,7 @@
         audioBuffer = concatBuffers(parts);
         cursorPos = (insertAt / sr) + clipboard.duration;
         viewEnd   = Math.max(viewEnd, audioBuffer.duration);
-        syncDuration(); updateUI();
+        syncDuration(); resetSegments(); updateUI();
       }
 
       function doNormalize() {
@@ -1276,12 +1295,8 @@
         pushUndo();
         const buf = cloneBuffer(audioBuffer);
         let peak = 0;
-        for (let ch = 0; ch < buf.numberOfChannels; ch++) {
-          for (const s of buf.getChannelData(ch)) {
-            const abs = Math.abs(s);
-            if (abs > peak) peak = abs;
-          }
-        }
+        for (let ch = 0; ch < buf.numberOfChannels; ch++)
+          for (const s of buf.getChannelData(ch)) { const a = Math.abs(s); if (a > peak) peak = a; }
         if (peak > 0 && peak < 0.9999) {
           const gain = 1 / peak;
           for (let ch = 0; ch < buf.numberOfChannels; ch++) {
@@ -1293,6 +1308,7 @@
           showStatus('Audio is already at peak level.', 'info');
         }
         audioBuffer = buf;
+        markArrangementDirty();
         updateUI();
       }
 
@@ -1304,12 +1320,13 @@
         const start = sel ? sel.start : 0;
         const end   = sel ? sel.end   : buf.length;
         for (let ch = 0; ch < buf.numberOfChannels; ch++) {
-          const data  = buf.getChannelData(ch);
+          const data = buf.getChannelData(ch);
           const slice = data.slice(start, end);
           slice.reverse();
           data.set(slice, start);
         }
         audioBuffer = buf;
+        markArrangementDirty();
         showStatus('Reversed ' + (sel ? 'selection.' : 'entire audio.'), 'info');
         updateUI();
       }
@@ -1322,11 +1339,11 @@
         const len = sel.end - sel.start;
         for (let ch = 0; ch < buf.numberOfChannels; ch++) {
           const data = buf.getChannelData(ch);
-          for (let i = sel.start; i < sel.end && i < data.length; i++) {
+          for (let i = sel.start; i < sel.end && i < data.length; i++)
             data[i] *= (i - sel.start) / len;
-          }
         }
         audioBuffer = buf;
+        markArrangementDirty();
         showStatus('Fade in applied.', 'info');
         updateUI();
       }
@@ -1339,11 +1356,11 @@
         const len = sel.end - sel.start;
         for (let ch = 0; ch < buf.numberOfChannels; ch++) {
           const data = buf.getChannelData(ch);
-          for (let i = sel.start; i < sel.end && i < data.length; i++) {
+          for (let i = sel.start; i < sel.end && i < data.length; i++)
             data[i] *= (sel.end - i) / len;
-          }
         }
         audioBuffer = buf;
+        markArrangementDirty();
         showStatus('Fade out applied.', 'info');
         updateUI();
       }
@@ -1355,191 +1372,225 @@
         cursorPos = Math.min(cursorPos, audioBuffer.duration);
         viewEnd   = Math.min(viewEnd,   audioBuffer.duration);
         syncDuration();
+        resetSegments();
         updateUI();
       }
 
       // -------------------------------------------------------
-      // Regions
+      // Clips / Segments
       // -------------------------------------------------------
-      function addRegionFromSelection() {
-        if (selStart < 0 || selEnd <= selStart)
-          return showStatus('Make a selection first.', 'error');
-        regions.push({ id: newRid(), name: 'Region ' + (regions.length + 1), start: selStart, end: selEnd });
-        renderRegionsList();
-        showStatus('Region added.', 'info');
+
+      // Split a segment at a point (arrangement time t).
+      // Both pieces inherit the original segment's type.
+      function splitAtCursor() {
+        if (!audioBuffer) return;
+        const t       = cursorPos;
+        const arrInfo = getArrangementInfo();
+        const found   = arrInfo.find(({arrStart, arrEnd}) => t > arrStart && t < arrEnd);
+        if (!found) return showStatus('Place cursor within the audio to split.', 'error');
+
+        const {seg, idx, arrStart} = found;
+        const splitRaw = seg.start + (t - arrStart);
+
+        const left  = { type: seg.type, start: seg.start, end: splitRaw };
+        const right = { type: seg.type, start: splitRaw,  end: seg.end  };
+        if (seg.type === 'clip') {
+          left.id  = newSid(); left.name  = seg.name + 'a';
+          right.id = newSid(); right.name = seg.name + 'b';
+        }
+
+        segments.splice(idx, 1, left, right);
+        markArrangementDirty();
+        renderClipsList();
       }
 
+      // Create a clip from the current selection.
+      // The containing segment is split: pieces outside become untracked,
+      // the selected portion becomes a clip.
+      function splitSelection() {
+        if (!audioBuffer) return;
+        if (selStart < 0 || selEnd <= selStart)
+          return showStatus('Make a selection first.', 'error');
+
+        const arrInfo  = getArrangementInfo();
+        const startSeg = arrInfo.find(({arrStart, arrEnd}) => selStart >= arrStart && selStart < arrEnd);
+        const endSeg   = arrInfo.find(({arrStart, arrEnd}) => selEnd   >  arrStart && selEnd   <= arrEnd);
+
+        if (!startSeg || !endSeg || startSeg.idx !== endSeg.idx)
+          return showStatus('Selection must fall within a single segment.', 'error');
+
+        const {seg, idx, arrStart} = startSeg;
+        const rawSelStart = seg.start + (selStart - arrStart);
+        const rawSelEnd   = seg.start + (selEnd   - arrStart);
+
+        const clip = {
+          type: 'clip',
+          id:   newSid(),
+          name: 'Clip ' + (clipCount() + 1),
+          start: rawSelStart,
+          end:   rawSelEnd
+        };
+
+        const newSegs = [];
+        if (rawSelStart > seg.start) {
+          const left = { type: 'untracked', start: seg.start, end: rawSelStart };
+          if (seg.type === 'clip') { left.type = 'clip'; left.id = newSid(); left.name = seg.name + 'a'; }
+          newSegs.push(left);
+        }
+        newSegs.push(clip);
+        if (rawSelEnd < seg.end) {
+          const right = { type: 'untracked', start: rawSelEnd, end: seg.end };
+          if (seg.type === 'clip') { right.type = 'clip'; right.id = newSid(); right.name = seg.name + 'b'; }
+          newSegs.push(right);
+        }
+
+        segments.splice(idx, 1, ...newSegs);
+        markArrangementDirty();
+        renderClipsList();
+        showStatus('Clip created from selection.', 'info');
+      }
+
+      // Divide entire audio into N equal clips
       function splitIntoEqualParts() {
         if (!audioBuffer) return;
         const n = parseInt(document.getElementById('split-n').value, 10);
         if (isNaN(n) || n < 2) return showStatus('Enter a number of parts (minimum 2).', 'error');
         const dur     = audioBuffer.duration;
         const partLen = dur / n;
-        regions = [];
+        segments = [];
         for (let i = 0; i < n; i++) {
-          regions.push({
-            id:    newRid(),
-            name:  'Region ' + (i + 1),
+          segments.push({
+            type:  'clip',
+            id:    newSid(),
+            name:  'Clip ' + (i + 1),
             start: i * partLen,
             end:   Math.min((i + 1) * partLen, dur)
           });
         }
-        renderRegionsList();
-        showStatus(`Split into ${n} equal regions.`, 'info');
+        markArrangementDirty();
+        renderClipsList();
+        showStatus(`Split into ${n} equal clips.`, 'info');
       }
 
-      // Split at a single point in time — shared by splitAtCursor and splitSelection
-      function splitAtTime(t) {
-        if (regions.length === 0) {
-          // No regions yet: split the whole file at t
-          regions = [
-            { id: newRid(), name: 'Region 1', start: 0, end: t },
-            { id: newRid(), name: 'Region 2', start: t, end: audioBuffer.duration }
-          ];
-          return true;
+      function removeSegment(idx) {
+        // Converting a clip back to untracked; merging adjacent untracked segments
+        const seg = segments[idx];
+        if (seg.type === 'clip') {
+          segments[idx] = { type: 'untracked', start: seg.start, end: seg.end };
+          mergeAdjacentUntracked();
+        } else {
+          segments.splice(idx, 1);
         }
-
-        // Case 1: t falls inside an existing region — split it
-        const idx = regions.findIndex(r => t > r.start && t < r.end);
-        if (idx >= 0) {
-          const orig  = regions[idx];
-          const left  = { id: newRid(), name: orig.name + 'a', start: orig.start, end: t };
-          const right = { id: newRid(), name: orig.name + 'b', start: t,          end: orig.end };
-          regions.splice(idx, 1, left, right);
-          return true;
-        }
-
-        // Case 2: t is in a gap between (or outside) existing regions — find gap boundaries
-        const gapStart = regions.reduce((max, r) => r.end   <= t ? Math.max(max, r.end)   : max, 0);
-        const gapEnd   = regions.reduce((min, r) => r.start >= t ? Math.min(min, r.start) : min, audioBuffer.duration);
-
-        // t sits exactly on an existing boundary — nothing to split
-        if (gapStart >= gapEnd) return false;
-
-        const n    = regions.length;
-        const newA = { id: newRid(), name: 'Region ' + (n + 1), start: gapStart, end: t };
-        const newB = { id: newRid(), name: 'Region ' + (n + 2), start: t,        end: gapEnd };
-
-        // Insert at the chronological position: before the first region that starts at or after gapEnd
-        let insertIdx = regions.length;
-        for (let i = 0; i < regions.length; i++) {
-          if (regions[i].start >= gapEnd) { insertIdx = i; break; }
-        }
-        regions.splice(insertIdx, 0, newA, newB);
-        return true;
+        markArrangementDirty();
+        renderClipsList();
       }
 
-      function splitAtCursor() {
-        if (!audioBuffer) return;
-        const t = cursorPos;
-        if (t <= 0 || t >= audioBuffer.duration)
-          return showStatus('Place cursor within the audio to split.', 'error');
-        if (!splitAtTime(t))
-          return showStatus('Cursor is on a region boundary — move it slightly to split here.', 'error');
-        renderRegionsList();
+      function defineAsClip(idx) {
+        const seg = segments[idx];
+        if (seg.type === 'clip') return;
+        seg.type = 'clip';
+        seg.id   = newSid();
+        seg.name = 'Clip ' + (clipCount());
+        markArrangementDirty();
+        renderClipsList();
       }
 
-      function splitSelection() {
-        if (!audioBuffer) return;
-        if (selStart < 0 || selEnd <= selStart)
-          return showStatus('Make a selection first.', 'error');
-        const region = { id: newRid(), name: 'Region ' + (regions.length + 1), start: selStart, end: selEnd };
-        // Insert at the chronological position in the list
-        let insertIdx = regions.length;
-        for (let i = 0; i < regions.length; i++) {
-          if (regions[i].start >= selEnd) { insertIdx = i; break; }
-        }
-        regions.splice(insertIdx, 0, region);
-        renderRegionsList();
-        showStatus('Region created from selection.', 'info');
-      }
-
-      function removeRegion(idx) {
-        regions.splice(idx, 1);
-        renderRegionsList();
-      }
-
-      function selectRegion(idx) {
-        const r = regions[idx];
-        selStart  = r.start;
-        selEnd    = r.end;
-        cursorPos = r.start;
+      function selectSegment(idx) {
+        const arrInfo = getArrangementInfo();
+        const item    = arrInfo.find(i => i.idx === idx);
+        if (!item) return;
+        selStart  = item.arrStart;
+        selEnd    = item.arrEnd;
+        cursorPos = item.arrStart;
         updateUI();
       }
 
-      function shuffleRegions() {
-        if (regions.length < 2) return;
-        for (let i = regions.length - 1; i > 0; i--) {
+      function shuffleSegments() {
+        if (segments.length < 2) return;
+        for (let i = segments.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
-          [regions[i], regions[j]] = [regions[j], regions[i]];
+          [segments[i], segments[j]] = [segments[j], segments[i]];
         }
-        renderRegionsList();
-        showStatus('Regions shuffled.', 'info');
+        markArrangementDirty();
+        renderClipsList();
+        showStatus('Segments shuffled.', 'info');
       }
 
-      // Delete audio inside regions — keeps everything outside, joined together
-      function deleteInsideRegions() {
-        if (regions.length === 0) return showStatus('No regions defined.', 'error');
+      // Assemble Clips: build new audioBuffer from clips only (in list order), keep clip definitions
+      function assembleClips() {
+        const clips = segments.filter(s => s.type === 'clip');
+        if (clips.length === 0) return showStatus('No clips defined.', 'error');
         pushUndo();
-        const sr     = audioBuffer.sampleRate;
-        const sorted = [...regions].sort((a, b) => a.start - b.start);
-        const parts  = [];
-        let pos = 0;
-        for (const r of sorted) {
-          const rStart = Math.round(r.start * sr);
-          const rEnd   = Math.round(r.end   * sr);
-          if (rStart > pos) parts.push(sliceBuffer(audioBuffer, pos, rStart));
-          pos = Math.max(pos, rEnd);
-        }
-        if (pos < audioBuffer.length) parts.push(sliceBuffer(audioBuffer, pos, audioBuffer.length));
-        audioBuffer = parts.length > 0
-          ? concatBuffers(parts)
-          : audioCtx.createBuffer(audioBuffer.numberOfChannels, 1, audioBuffer.sampleRate);
-        selStart = -1; selEnd = -1; cursorPos = 0;
-        viewStart = 0; viewEnd = audioBuffer.duration;
-        syncDuration(); renderRegionsList(); updateUI();
-        showStatus('Audio inside regions deleted.', 'info');
-      }
-
-      // Delete audio outside regions — keeps only region content, sorted by time
-      function deleteOutsideRegions() {
-        if (regions.length === 0) return showStatus('No regions defined.', 'error');
-        pushUndo();
-        const sr     = audioBuffer.sampleRate;
-        const sorted = [...regions].sort((a, b) => a.start - b.start);
-        const parts  = sorted.map(r =>
-          sliceBuffer(audioBuffer, Math.round(r.start * sr), Math.round(r.end * sr))
+        const sr    = audioBuffer.sampleRate;
+        const parts = clips.map(c =>
+          sliceBuffer(audioBuffer, Math.round(c.start * sr), Math.round(c.end * sr))
         );
         audioBuffer = concatBuffers(parts);
+
+        // Rebuild segments: clips now occupy sequential positions in new buffer
+        let pos = 0;
+        segments = clips.map(c => {
+          const dur    = c.end - c.start;
+          const newSeg = { type: 'clip', id: newSid(), name: c.name, start: pos, end: pos + dur };
+          pos += dur;
+          return newSeg;
+        });
+
+        markArrangementDirty();
         selStart = -1; selEnd = -1; cursorPos = 0;
         viewStart = 0; viewEnd = audioBuffer.duration;
-        syncDuration(); renderRegionsList(); updateUI();
-        showStatus('Audio outside regions deleted.', 'info');
+        syncDuration();
+        renderClipsList();
+        updateUI();
+        showStatus(`Assembled ${clips.length} clip${clips.length === 1 ? '' : 's'}.`, 'info');
       }
 
-      async function exportRegions() {
-        if (regions.length === 0) return showStatus('No regions to export.', 'error');
-        showStatus('Encoding regions...', 'info');
+      // Clear Clips: convert all clips to untracked, merge adjacent untracked segments
+      function clearClips() {
+        segments = segments.map(s =>
+          s.type === 'untracked' ? s : { type: 'untracked', start: s.start, end: s.end }
+        );
+        mergeAdjacentUntracked();
+        markArrangementDirty();
+        renderClipsList();
+        showStatus('All clips cleared.', 'info');
+      }
+
+      function mergeAdjacentUntracked() {
+        const merged = [];
+        for (const seg of segments) {
+          const prev = merged[merged.length - 1];
+          if (prev && prev.type === 'untracked' && seg.type === 'untracked' &&
+              Math.abs(prev.end - seg.start) < 1e-9) {
+            prev.end = seg.end;
+          } else {
+            merged.push({ ...seg });
+          }
+        }
+        segments = merged;
+      }
+
+      // Export clips as a zip of WAV files
+      async function exportClips() {
+        const clips = segments.filter(s => s.type === 'clip');
+        if (clips.length === 0) return showStatus('No clips to export.', 'error');
+        showStatus('Encoding clips...', 'info');
         showLoading(true);
         try {
           const zip = new JSZip();
           const sr  = audioBuffer.sampleRate;
-          regions.forEach((region, idx) => {
-            const buf      = sliceBuffer(audioBuffer,
-                               Math.round(region.start * sr),
-                               Math.round(region.end   * sr));
+          clips.forEach((clip, idx) => {
+            const buf      = sliceBuffer(audioBuffer, Math.round(clip.start * sr), Math.round(clip.end * sr));
             const wav      = encodeWAV(buf);
-            const safeName = region.name.replace(/[^a-zA-Z0-9_\-]/g, '_');
-            zip.file(`${String(idx + 1).padStart(2, '0')}_${safeName}.wav`, wav);
+            const safeName = clip.name.replace(/[^a-zA-Z0-9_\-]/g, '_');
+            zip.file(`${String(idx + 1).padStart(2,'0')}_${safeName}.wav`, wav);
           });
-          const blob     = await zip.generateAsync({ type: 'blob' });
-          const url      = URL.createObjectURL(blob);
-          const a        = document.createElement('a');
-          a.href         = url;
-          a.download     = filename + '_regions.zip';
-          a.click();
+          const blob = await zip.generateAsync({ type: 'blob' });
+          const url  = URL.createObjectURL(blob);
+          const a    = document.createElement('a');
+          a.href = url; a.download = filename + '_clips.zip'; a.click();
           URL.revokeObjectURL(url);
-          showStatus(`Exported ${regions.length} region${regions.length === 1 ? '' : 's'} as ${a.download}`, 'info');
+          showStatus(`Exported ${clips.length} clip${clips.length === 1 ? '' : 's'}.`, 'info');
         } catch (err) {
           showStatus('Export failed: ' + err.message, 'error');
         } finally {
@@ -1547,111 +1598,134 @@
         }
       }
 
-      function clearRegions() {
-        regions = [];
-        renderRegionsList();
-      }
-
-      // Render the regions list with drag-and-drop reordering
-      function renderRegionsList() {
-        const list  = document.getElementById('regions-list');
-        const empty = document.getElementById('regions-empty');
+      // -------------------------------------------------------
+      // Render clips list
+      // -------------------------------------------------------
+      function renderClipsList() {
+        const list  = document.getElementById('clips-list');
+        const empty = document.getElementById('clips-empty');
         list.innerHTML = '';
-        empty.style.display = regions.length === 0 ? 'block' : 'none';
 
-        regions.forEach((region, idx) => {
-          const color = REGION_COLORS[idx % REGION_COLORS.length];
-          const row   = document.createElement('div');
-          row.className   = 'region-row';
+        const hasClips = clipCount() > 0;
+        empty.style.display = segments.length <= 1 && !hasClips ? 'block' : 'none';
+
+        // Assign clip colours only to clip segments, in list order
+        let clipColorIdx = 0;
+
+        segments.forEach((seg, idx) => {
+          const isClip = seg.type === 'clip';
+          const color  = isClip ? CLIP_COLORS[clipColorIdx++ % CLIP_COLORS.length] : null;
+
+          const row = document.createElement('div');
+          row.className   = 'seg-row' + (isClip ? '' : ' untracked');
           row.draggable   = true;
           row.dataset.idx = idx;
 
-          row.innerHTML = `
-            <span class="region-handle" title="Drag to reorder">&#x2016;</span>
-            <span class="region-index">${idx + 1}</span>
-            <span class="region-swatch" style="background:${color}"></span>
-            <input class="region-name" value="${region.name}" data-id="${region.id}" title="Edit region name" />
-            <span class="region-time">${formatTime(region.start)}</span>
-            <span class="region-arrow">&#x2192;</span>
-            <span class="region-time">${formatTime(region.end)}</span>
-            <span class="region-dur">${formatTime(region.end - region.start)}</span>
-            <button class="btn region-btn" title="Select on waveform">Sel</button>
-            <button class="btn region-btn" title="Remove region">&#x00D7;</button>
-          `;
+          // Compute arrangement start/end for display
+          const arrInfo = getArrangementInfo();
+          const info    = arrInfo.find(i => i.idx === idx);
+          const arrStart = info ? info.arrStart : seg.start;
+          const arrEnd   = info ? info.arrEnd   : seg.end;
 
-          // Name edit
-          row.querySelector('.region-name').addEventListener('change', (e) => {
-            const id = parseInt(e.target.dataset.id, 10);
-            const r  = regions.find(r => r.id === id);
-            if (r) r.name = e.target.value;
-          });
+          if (isClip) {
+            row.innerHTML = `
+              <span class="seg-handle" title="Drag to reorder">&#x2016;</span>
+              <span class="seg-index">${idx + 1}</span>
+              <span class="seg-swatch" style="background:${color}"></span>
+              <input class="seg-name" value="${seg.name}" data-id="${seg.id}" title="Edit clip name" />
+              <span class="seg-time">${formatTime(arrStart)}</span>
+              <span class="seg-arrow">&#x2192;</span>
+              <span class="seg-time">${formatTime(arrEnd)}</span>
+              <span class="seg-dur">${formatTime(seg.end - seg.start)}</span>
+              <button class="btn seg-btn" title="Select on waveform">Sel</button>
+              <button class="btn seg-btn" title="Convert back to untracked">&#x00D7;</button>
+            `;
+            row.querySelector('.seg-name').addEventListener('change', (e) => {
+              const id = parseInt(e.target.dataset.id, 10);
+              const s  = segments.find(s => s.id === id);
+              if (s) s.name = e.target.value;
+            });
+            const btns = row.querySelectorAll('.seg-btn');
+            btns[0].addEventListener('click', () => selectSegment(idx));
+            btns[1].addEventListener('click', () => removeSegment(idx));
+          } else {
+            row.innerHTML = `
+              <span class="seg-handle" title="Drag to reorder">&#x2016;</span>
+              <span class="seg-index">${idx + 1}</span>
+              <span class="seg-swatch" style="background:#e1e4e8"></span>
+              <span class="seg-label">Untracked</span>
+              <span class="seg-time">${formatTime(arrStart)}</span>
+              <span class="seg-arrow">&#x2192;</span>
+              <span class="seg-time">${formatTime(arrEnd)}</span>
+              <span class="seg-dur">${formatTime(seg.end - seg.start)}</span>
+              <button class="btn seg-btn" title="Select on waveform">Sel</button>
+              <button class="btn seg-btn" title="Define as clip">Define</button>
+            `;
+            const btns = row.querySelectorAll('.seg-btn');
+            btns[0].addEventListener('click', () => selectSegment(idx));
+            btns[1].addEventListener('click', () => defineAsClip(idx));
+          }
 
-          // Select / remove buttons
-          const btns = row.querySelectorAll('.region-btn');
-          btns[0].addEventListener('click', () => selectRegion(idx));
-          btns[1].addEventListener('click', () => removeRegion(idx));
-
-          // Drag-and-drop: only dragstart/dragend per row; dragover/drop delegated on list
+          // Drag-and-drop: dragstart/dragend per row; dragover/drop delegated on list
           row.addEventListener('dragstart', (e) => {
-            regionDragSrcIdx = idx;
+            segDragSrcIdx = idx;
             e.dataTransfer.effectAllowed = 'move';
-            // Defer class add so it doesn't affect the drag ghost image
             setTimeout(() => row.classList.add('dragging'), 0);
           });
           row.addEventListener('dragend', () => {
             row.classList.remove('dragging');
-            list.querySelectorAll('.region-row').forEach(r =>
+            list.querySelectorAll('.seg-row').forEach(r =>
               r.classList.remove('drag-over-top', 'drag-over-bottom'));
-            regionDragSrcIdx = null;
+            segDragSrcIdx = null;
           });
 
           list.appendChild(row);
         });
 
-        // Delegated dragover/drop on list container — reliable regardless of child element targets
+        // Delegated dragover/drop on list container
         list.addEventListener('dragover', (e) => {
           e.preventDefault();
-          const targetRow = e.target.closest('.region-row');
+          const targetRow = e.target.closest('.seg-row');
           if (!targetRow) return;
           const toIdx = parseInt(targetRow.dataset.idx, 10);
-          if (toIdx === regionDragSrcIdx) return;
-          list.querySelectorAll('.region-row').forEach(r =>
+          if (toIdx === segDragSrcIdx) return;
+          list.querySelectorAll('.seg-row').forEach(r =>
             r.classList.remove('drag-over-top', 'drag-over-bottom'));
-          const rect = targetRow.getBoundingClientRect();
+          const rect    = targetRow.getBoundingClientRect();
           const isUpper = e.clientY < rect.top + rect.height / 2;
           targetRow.classList.add(isUpper ? 'drag-over-top' : 'drag-over-bottom');
         });
+
         list.addEventListener('drop', (e) => {
           e.preventDefault();
-          list.querySelectorAll('.region-row').forEach(r =>
+          list.querySelectorAll('.seg-row').forEach(r =>
             r.classList.remove('drag-over-top', 'drag-over-bottom'));
-          if (regionDragSrcIdx === null) return;
-          const targetRow = e.target.closest('.region-row');
+          if (segDragSrcIdx === null) return;
+          const targetRow = e.target.closest('.seg-row');
           if (!targetRow) return;
           const toIdx = parseInt(targetRow.dataset.idx, 10);
-          if (toIdx === regionDragSrcIdx) return;
-          const rect = targetRow.getBoundingClientRect();
+          if (toIdx === segDragSrcIdx) return;
+          const rect    = targetRow.getBoundingClientRect();
           const isUpper = e.clientY < rect.top + rect.height / 2;
-          const target = isUpper ? toIdx : toIdx + 1;
-          const moved = regions.splice(regionDragSrcIdx, 1)[0];
-          const insert = target > regionDragSrcIdx ? target - 1 : target;
-          regions.splice(insert, 0, moved);
-          regionDragSrcIdx = null;
-          renderRegionsList();
+          const target  = isUpper ? toIdx : toIdx + 1;
+          const moved   = segments.splice(segDragSrcIdx, 1)[0];
+          const insert  = target > segDragSrcIdx ? target - 1 : target;
+          segments.splice(insert, 0, moved);
+          segDragSrcIdx = null;
+          markArrangementDirty();
+          renderClipsList();
         });
 
-        // Update region-related button states
-        const has   = !!audioBuffer;
+        // Button states
+        const has    = !!audioBuffer;
         const hasSel = selStart >= 0 && selEnd > selStart;
-        document.getElementById('btn-add-region').disabled      = !has || !hasSel;
-        document.getElementById('btn-split-cursor').disabled     = !has;
-        document.getElementById('btn-split-selection').disabled  = !has || !hasSel;
-        document.getElementById('btn-split-equal').disabled      = !has;
-        document.getElementById('btn-shuffle').disabled          = regions.length < 2;
-        document.getElementById('btn-delete-inside').disabled    = regions.length < 1;
-        document.getElementById('btn-delete-outside').disabled   = regions.length < 1;
-        document.getElementById('btn-export-regions').disabled   = regions.length < 1;
-        document.getElementById('btn-regions-clear').disabled    = regions.length === 0;
+        document.getElementById('btn-split-cursor').disabled    = !has;
+        document.getElementById('btn-split-selection').disabled = !has || !hasSel;
+        document.getElementById('btn-split-equal').disabled     = !has;
+        document.getElementById('btn-shuffle').disabled         = segments.length < 2;
+        document.getElementById('btn-assemble').disabled        = clipCount() < 1;
+        document.getElementById('btn-export-clips').disabled    = clipCount() < 1;
+        document.getElementById('btn-clips-clear').disabled     = clipCount() === 0;
       }
 
       // -------------------------------------------------------
@@ -1662,7 +1736,7 @@
         const db = parseFloat(document.getElementById('gain-db').value);
         if (!isFinite(db)) return showStatus('Enter a valid dB value.', 'error');
 
-        const sel = applyToAll ? null : getSelectionSamples();
+        const sel   = applyToAll ? null : getSelectionSamples();
         if (!applyToAll && !sel) return showStatus('Make a selection first, or use "Apply to All".', 'error');
 
         const gain  = Math.pow(10, db / 20);
@@ -1673,56 +1747,48 @@
         const buf = cloneBuffer(audioBuffer);
         for (let ch = 0; ch < buf.numberOfChannels; ch++) {
           const data = buf.getChannelData(ch);
-          for (let i = start; i < end; i++) {
+          for (let i = start; i < end; i++)
             data[i] = Math.max(-1, Math.min(1, data[i] * gain));
-          }
         }
         audioBuffer = buf;
-        const label = applyToAll ? 'entire audio' : 'selection';
-        showStatus(`${db >= 0 ? '+' : ''}${db} dB applied to ${label}.`, 'info');
+        markArrangementDirty();
+        showStatus(`${db >= 0 ? '+' : ''}${db} dB applied to ${applyToAll ? 'entire audio' : 'selection'}.`, 'info');
         updateUI();
       }
 
       // -------------------------------------------------------
-      // Speed / Pitch change (via OfflineAudioContext)
+      // Speed / Pitch change
       // -------------------------------------------------------
       async function doChangeSpeed(applyToAll) {
         if (!audioBuffer) return;
         const rate = parseFloat(document.getElementById('speed-rate').value);
         if (!isFinite(rate) || rate <= 0) return showStatus('Enter a valid speed (> 0).', 'error');
-        if (Math.abs(rate - 1.0) < 0.001) return showStatus('Speed is already 1.0x — no change needed.', 'info');
+        if (Math.abs(rate - 1.0) < 0.001) return showStatus('Speed is already 1.0x.', 'info');
 
         const sel    = applyToAll ? null : getSelectionSamples();
         if (!applyToAll && !sel) return showStatus('Make a selection first, or use "Apply to All".', 'error');
 
         const srcBuf = sel ? sliceBuffer(audioBuffer, sel.start, sel.end) : audioBuffer;
         const outLen = Math.round(srcBuf.length / rate);
-        if (outLen < 1) return showStatus('Speed too high — output would be too short.', 'error');
+        if (outLen < 1) return showStatus('Speed too high — output too short.', 'error');
 
         showStatus('Applying speed change...', 'info');
         showLoading(true);
         setEffectButtonsDisabled(true);
-
         try {
-          const offCtx = new OfflineAudioContext(
-            srcBuf.numberOfChannels,
-            outLen,
-            srcBuf.sampleRate
-          );
-          const src           = offCtx.createBufferSource();
-          src.buffer          = srcBuf;
+          const offCtx = new OfflineAudioContext(srcBuf.numberOfChannels, outLen, srcBuf.sampleRate);
+          const src    = offCtx.createBufferSource();
+          src.buffer   = srcBuf;
           src.playbackRate.value = rate;
           src.connect(offCtx.destination);
           src.start(0);
 
-          const rendered = await offCtx.startRendering();
-          // Copy rendered output into our main audioCtx
-          const renderedInCtx = cloneBuffer(rendered);
-
+          const rendered       = await offCtx.startRendering();
+          const renderedInCtx  = cloneBuffer(rendered);
           pushUndo();
 
           if (sel) {
-            const before = sliceBuffer(audioBuffer, 0,       sel.start);
+            const before = sliceBuffer(audioBuffer, 0, sel.start);
             const after  = sliceBuffer(audioBuffer, sel.end, audioBuffer.length);
             const parts  = [];
             if (before.length > 0) parts.push(before);
@@ -1731,17 +1797,15 @@
             audioBuffer = concatBuffers(parts);
           } else {
             audioBuffer = renderedInCtx;
-            viewStart = 0;
-            viewEnd   = audioBuffer.duration;
+            viewStart = 0; viewEnd = audioBuffer.duration;
           }
 
           selStart = -1; selEnd = -1;
           cursorPos = Math.min(cursorPos, audioBuffer.duration);
           syncDuration();
-          const label = applyToAll ? 'entire audio' : 'selection';
-          showStatus(`Speed changed to ${rate}x on ${label}.`, 'info');
+          resetSegments();
+          showStatus(`Speed changed to ${rate}x on ${applyToAll ? 'entire audio' : 'selection'}.`, 'info');
           updateUI();
-
         } catch (err) {
           showStatus('Speed change failed: ' + err.message, 'error');
         } finally {
@@ -1751,7 +1815,7 @@
       }
 
       function setEffectButtonsDisabled(disabled) {
-        ['btn-speed-sel', 'btn-speed-all', 'btn-amplify', 'btn-amplify-all'].forEach(id => {
+        ['btn-speed-sel','btn-speed-all','btn-amplify','btn-amplify-all'].forEach(id => {
           document.getElementById(id).disabled = disabled;
         });
       }
@@ -1764,21 +1828,20 @@
         const center  = (viewStart + viewEnd) / 2;
         const newSpan = (viewEnd - viewStart) * 0.5;
         viewStart = Math.max(0, center - newSpan / 2);
-        viewEnd   = Math.min(audioBuffer.duration, center + newSpan / 2);
+        viewEnd   = Math.min(arrangementDuration(), center + newSpan / 2);
       }
-
       function zoomOut() {
         if (!audioBuffer) return;
+        const total   = arrangementDuration();
         const center  = (viewStart + viewEnd) / 2;
-        const newSpan = Math.min(audioBuffer.duration, (viewEnd - viewStart) * 2);
+        const newSpan = Math.min(total, (viewEnd - viewStart) * 2);
         viewStart = Math.max(0, center - newSpan / 2);
-        viewEnd   = Math.min(audioBuffer.duration, center + newSpan / 2);
+        viewEnd   = Math.min(total, center + newSpan / 2);
       }
-
       function zoomFit() {
         if (!audioBuffer) return;
         viewStart = 0;
-        viewEnd   = audioBuffer.duration;
+        viewEnd   = arrangementDuration();
       }
 
       // -------------------------------------------------------
@@ -1794,28 +1857,23 @@
         const numSamples = buf.length;
         const blockAlign = numCh * 2;
         const dataSize   = numSamples * blockAlign;
-
-        const ab   = new ArrayBuffer(44 + dataSize);
-        const view = new DataView(ab);
-
+        const ab         = new ArrayBuffer(44 + dataSize);
+        const view       = new DataView(ab);
         writeString(view,  0, 'RIFF');
         view.setUint32( 4, 36 + dataSize, true);
         writeString(view,  8, 'WAVE');
         writeString(view, 12, 'fmt ');
-        view.setUint32(16, 16,            true);
-        view.setUint16(20, 1,             true); // PCM
-        view.setUint16(22, numCh,         true);
-        view.setUint32(24, sr,            true);
+        view.setUint32(16, 16, true);
+        view.setUint16(20, 1,  true);
+        view.setUint16(22, numCh, true);
+        view.setUint32(24, sr, true);
         view.setUint32(28, sr * blockAlign, true);
-        view.setUint16(32, blockAlign,    true);
-        view.setUint16(34, 16,            true); // bits per sample
-
+        view.setUint16(32, blockAlign, true);
+        view.setUint16(34, 16, true);
         writeString(view, 36, 'data');
         view.setUint32(40, dataSize, true);
-
         const channels = [];
         for (let ch = 0; ch < numCh; ch++) channels.push(buf.getChannelData(ch));
-
         let offset = 44;
         for (let i = 0; i < numSamples; i++) {
           for (let ch = 0; ch < numCh; ch++) {
@@ -1835,9 +1893,7 @@
             const blob    = new Blob([wavData], { type: 'audio/wav' });
             const url     = URL.createObjectURL(blob);
             const a       = document.createElement('a');
-            a.href        = url;
-            a.download    = filename + suffix + '.wav';
-            a.click();
+            a.href = url; a.download = filename + suffix + '.wav'; a.click();
             URL.revokeObjectURL(url);
             showStatus('Exported as ' + a.download, 'info');
           } catch (err) {
@@ -1848,21 +1904,22 @@
 
       function doExport() {
         if (!audioBuffer) return;
-        exportBuffer(audioBuffer, '_edited');
+        // Export the arrangement (segments in current order)
+        exportBuffer(getArrangementBuffer(), '_edited');
       }
 
       function doExportSelection() {
         const sel = getSelectionSamples();
         if (!sel) return showStatus('Make a selection first.', 'error');
-        exportBuffer(sliceBuffer(audioBuffer, sel.start, sel.end), '_selection');
+        exportBuffer(sliceBuffer(getArrangementBuffer(), sel.start, sel.end), '_selection');
       }
 
       // -------------------------------------------------------
       // UI state management
       // -------------------------------------------------------
       function updateUI() {
-        const has    = !!audioBuffer;
-        const hasSel = selStart >= 0 && selEnd > selStart;
+        const has     = !!audioBuffer;
+        const hasSel  = selStart >= 0 && selEnd > selStart;
         const hasClip = !!clipboard;
 
         document.getElementById('btn-play').disabled        = !has || isPlaying;
@@ -1880,7 +1937,7 @@
         document.getElementById('btn-fade-in').disabled     = !has || !hasSel;
         document.getElementById('btn-fade-out').disabled    = !has || !hasSel;
         document.getElementById('btn-effects').disabled     = !has;
-        document.getElementById('btn-regions').disabled     = !has;
+        document.getElementById('btn-clips').disabled       = !has;
         document.getElementById('btn-zoom-fit').disabled    = !has;
         document.getElementById('btn-zoom-in').disabled     = !has;
         document.getElementById('btn-zoom-out').disabled    = !has;
@@ -1892,16 +1949,14 @@
         document.getElementById('btn-speed-sel').disabled   = !has || !hasSel;
         document.getElementById('btn-speed-all').disabled   = !has;
 
-        // Keep region panel buttons in sync with current selection state
-        document.getElementById('btn-add-region').disabled      = !has || !hasSel;
-        document.getElementById('btn-split-cursor').disabled     = !has;
-        document.getElementById('btn-split-selection').disabled  = !has || !hasSel;
-        document.getElementById('btn-split-equal').disabled      = !has;
-        document.getElementById('btn-shuffle').disabled          = regions.length < 2;
-        document.getElementById('btn-delete-inside').disabled    = regions.length < 1;
-        document.getElementById('btn-delete-outside').disabled   = regions.length < 1;
-        document.getElementById('btn-export-regions').disabled   = regions.length < 1;
-        document.getElementById('btn-regions-clear').disabled    = regions.length === 0;
+        // Sync clip panel buttons
+        document.getElementById('btn-split-cursor').disabled    = !has;
+        document.getElementById('btn-split-selection').disabled = !has || !hasSel;
+        document.getElementById('btn-split-equal').disabled     = !has;
+        document.getElementById('btn-shuffle').disabled         = segments.length < 2;
+        document.getElementById('btn-assemble').disabled        = clipCount() < 1;
+        document.getElementById('btn-export-clips').disabled    = clipCount() < 1;
+        document.getElementById('btn-clips-clear').disabled     = clipCount() === 0;
       }
 
       function updatePlaybackButtons() {
@@ -1915,7 +1970,7 @@
       // -------------------------------------------------------
       let statusTimer = null;
       function showStatus(msg, type) {
-        const el      = document.getElementById('status-msg');
+        const el = document.getElementById('status-msg');
         el.textContent = msg;
         el.className   = 'status-msg ' + type;
         clearTimeout(statusTimer);
@@ -1946,18 +2001,16 @@
       document.getElementById('btn-effects').addEventListener('click', () => {
         document.getElementById('effects-panel').classList.toggle('visible');
       });
-      document.getElementById('btn-regions').addEventListener('click', () => {
-        document.getElementById('regions-panel').classList.toggle('visible');
+      document.getElementById('btn-clips').addEventListener('click', () => {
+        document.getElementById('clips-panel').classList.toggle('visible');
       });
-      document.getElementById('btn-add-region').addEventListener('click',    addRegionFromSelection);
-      document.getElementById('btn-split-equal').addEventListener('click',   splitIntoEqualParts);
-      document.getElementById('btn-split-cursor').addEventListener('click',     splitAtCursor);
+      document.getElementById('btn-split-cursor').addEventListener('click',    splitAtCursor);
       document.getElementById('btn-split-selection').addEventListener('click', splitSelection);
-      document.getElementById('btn-shuffle').addEventListener('click',       shuffleRegions);
-      document.getElementById('btn-delete-inside').addEventListener('click',  deleteInsideRegions);
-      document.getElementById('btn-delete-outside').addEventListener('click', deleteOutsideRegions);
-      document.getElementById('btn-export-regions').addEventListener('click', exportRegions);
-      document.getElementById('btn-regions-clear').addEventListener('click',  clearRegions);
+      document.getElementById('btn-split-equal').addEventListener('click',     splitIntoEqualParts);
+      document.getElementById('btn-shuffle').addEventListener('click',         shuffleSegments);
+      document.getElementById('btn-assemble').addEventListener('click',        assembleClips);
+      document.getElementById('btn-export-clips').addEventListener('click',    exportClips);
+      document.getElementById('btn-clips-clear').addEventListener('click',     clearClips);
       document.getElementById('btn-zoom-fit').addEventListener('click',   zoomFit);
       document.getElementById('btn-zoom-in').addEventListener('click',    zoomIn);
       document.getElementById('btn-zoom-out').addEventListener('click',   zoomOut);
@@ -1982,8 +2035,7 @@
 
         } else if (e.key === 'Escape') {
           stopPlayback();
-          selStart = -1; selEnd = -1;
-          cursorPos = 0;
+          selStart = -1; selEnd = -1; cursorPos = 0;
           updateUI();
 
         } else if (e.key === 'l' || e.key === 'L') {
@@ -1994,14 +2046,14 @@
           e.preventDefault();
           const dir  = e.key === 'ArrowLeft' ? -1 : 1;
           const step = e.shiftKey ? 0.1 : (e.ctrlKey || e.metaKey) ? 0.001 : 0.01;
-          cursorPos  = Math.max(0, Math.min(audioBuffer.duration, cursorPos + dir * step));
-          // Scroll view to follow cursor if it moves out of range
+          const maxT = arrangementDuration();
+          cursorPos  = Math.max(0, Math.min(maxT, cursorPos + dir * step));
           const span = viewEnd - viewStart;
           if (cursorPos < viewStart) {
             viewStart = Math.max(0, cursorPos - span * 0.1);
             viewEnd   = viewStart + span;
           } else if (cursorPos > viewEnd) {
-            viewEnd   = Math.min(audioBuffer.duration, cursorPos + span * 0.1);
+            viewEnd   = Math.min(maxT, cursorPos + span * 0.1);
             viewStart = viewEnd - span;
           }
 
