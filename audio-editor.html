@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Audio Editor</title>
+    <!-- JSZip: bundle multiple region WAV files into a single download -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
       /* =========================
          CSS Styles
@@ -470,8 +472,9 @@
         <button class="btn" id="btn-split-equal"  disabled title="Divide audio into N equal regions">Split</button>
         <div class="toolbar-sep"></div>
         <button class="btn" id="btn-shuffle"       disabled title="Randomise region order">Shuffle</button>
-        <button class="btn primary" id="btn-assemble" disabled title="Render regions in current order into new audio">Assemble</button>
-        <button class="btn" id="btn-regions-clear" disabled title="Remove all regions">Clear All</button>
+        <button class="btn primary" id="btn-assemble"        disabled title="Render regions in current order into new audio">Assemble</button>
+        <button class="btn"         id="btn-export-regions" disabled title="Export each region as a separate WAV file (zipped)">Export Regions</button>
+        <button class="btn"         id="btn-regions-clear"  disabled title="Remove all regions">Clear All</button>
       </div>
       <div class="regions-list" id="regions-list"></div>
       <div class="regions-empty" id="regions-empty">
@@ -1466,6 +1469,36 @@
         showStatus('Regions assembled into new audio.', 'info');
       }
 
+      async function exportRegions() {
+        if (regions.length === 0) return showStatus('No regions to export.', 'error');
+        showStatus('Encoding regions...', 'info');
+        showLoading(true);
+        try {
+          const zip = new JSZip();
+          const sr  = audioBuffer.sampleRate;
+          regions.forEach((region, idx) => {
+            const buf      = sliceBuffer(audioBuffer,
+                               Math.round(region.start * sr),
+                               Math.round(region.end   * sr));
+            const wav      = encodeWAV(buf);
+            const safeName = region.name.replace(/[^a-zA-Z0-9_\-]/g, '_');
+            zip.file(`${String(idx + 1).padStart(2, '0')}_${safeName}.wav`, wav);
+          });
+          const blob     = await zip.generateAsync({ type: 'blob' });
+          const url      = URL.createObjectURL(blob);
+          const a        = document.createElement('a');
+          a.href         = url;
+          a.download     = filename + '_regions.zip';
+          a.click();
+          URL.revokeObjectURL(url);
+          showStatus(`Exported ${regions.length} region${regions.length === 1 ? '' : 's'} as ${a.download}`, 'info');
+        } catch (err) {
+          showStatus('Export failed: ' + err.message, 'error');
+        } finally {
+          showLoading(false);
+        }
+      }
+
       function clearRegions() {
         regions = [];
         renderRegionsList();
@@ -1557,6 +1590,7 @@
         document.getElementById('btn-split-equal').disabled      = !has;
         document.getElementById('btn-shuffle').disabled          = regions.length < 2;
         document.getElementById('btn-assemble').disabled         = regions.length < 1;
+        document.getElementById('btn-export-regions').disabled   = regions.length < 1;
         document.getElementById('btn-regions-clear').disabled    = regions.length === 0;
       }
 
@@ -1805,6 +1839,7 @@
         document.getElementById('btn-split-equal').disabled      = !has;
         document.getElementById('btn-shuffle').disabled          = regions.length < 2;
         document.getElementById('btn-assemble').disabled         = regions.length < 1;
+        document.getElementById('btn-export-regions').disabled   = regions.length < 1;
         document.getElementById('btn-regions-clear').disabled    = regions.length === 0;
       }
 
@@ -1859,7 +1894,8 @@
       document.getElementById('btn-split-selection').addEventListener('click', splitSelection);
       document.getElementById('btn-shuffle').addEventListener('click',       shuffleRegions);
       document.getElementById('btn-assemble').addEventListener('click',      assembleRegions);
-      document.getElementById('btn-regions-clear').addEventListener('click', clearRegions);
+      document.getElementById('btn-export-regions').addEventListener('click', exportRegions);
+      document.getElementById('btn-regions-clear').addEventListener('click',  clearRegions);
       document.getElementById('btn-zoom-fit').addEventListener('click',   zoomFit);
       document.getElementById('btn-zoom-in').addEventListener('click',    zoomIn);
       document.getElementById('btn-zoom-out').addEventListener('click',   zoomOut);
