@@ -1390,18 +1390,41 @@
       // Split at a single point in time — shared by splitAtCursor and splitSelection
       function splitAtTime(t) {
         if (regions.length === 0) {
+          // No regions yet: split the whole file at t
           regions = [
             { id: newRid(), name: 'Region 1', start: 0, end: t },
             { id: newRid(), name: 'Region 2', start: t, end: audioBuffer.duration }
           ];
-        } else {
-          const idx = regions.findIndex(r => t > r.start && t < r.end);
-          if (idx < 0) return false; // already a boundary or outside all regions
+          return true;
+        }
+
+        // Case 1: t falls inside an existing region — split it
+        const idx = regions.findIndex(r => t > r.start && t < r.end);
+        if (idx >= 0) {
           const orig  = regions[idx];
           const left  = { id: newRid(), name: orig.name + 'a', start: orig.start, end: t };
           const right = { id: newRid(), name: orig.name + 'b', start: t,          end: orig.end };
           regions.splice(idx, 1, left, right);
+          return true;
         }
+
+        // Case 2: t is in a gap between (or outside) existing regions — find gap boundaries
+        const gapStart = regions.reduce((max, r) => r.end   <= t ? Math.max(max, r.end)   : max, 0);
+        const gapEnd   = regions.reduce((min, r) => r.start >= t ? Math.min(min, r.start) : min, audioBuffer.duration);
+
+        // t sits exactly on an existing boundary — nothing to split
+        if (gapStart >= gapEnd) return false;
+
+        const n    = regions.length;
+        const newA = { id: newRid(), name: 'Region ' + (n + 1), start: gapStart, end: t };
+        const newB = { id: newRid(), name: 'Region ' + (n + 2), start: t,        end: gapEnd };
+
+        // Insert at the chronological position: before the first region that starts at or after gapEnd
+        let insertIdx = regions.length;
+        for (let i = 0; i < regions.length; i++) {
+          if (regions[i].start >= gapEnd) { insertIdx = i; break; }
+        }
+        regions.splice(insertIdx, 0, newA, newB);
         return true;
       }
 
@@ -1411,7 +1434,7 @@
         if (t <= 0 || t >= audioBuffer.duration)
           return showStatus('Place cursor within the audio to split.', 'error');
         if (!splitAtTime(t))
-          return showStatus('Cursor is not inside an existing region.', 'error');
+          return showStatus('Cursor is on a region boundary — move it slightly to split here.', 'error');
         renderRegionsList();
       }
 
