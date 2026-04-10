@@ -278,6 +278,105 @@
         color: #444d56;
       }
 
+      /* Regions panel */
+      .regions-panel {
+        display: none;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        margin-bottom: 8px;
+        overflow: hidden;
+      }
+      .regions-panel.visible { display: block; }
+      .regions-toolbar {
+        display: flex;
+        gap: 6px;
+        padding: 8px 12px;
+        background: #f6f8fa;
+        border-bottom: 1px solid #e1e4e8;
+        align-items: center;
+        flex-wrap: wrap;
+        font-size: 13px;
+      }
+      .regions-toolbar label { color: #586069; }
+      .regions-toolbar input[type="number"] {
+        width: 52px;
+        padding: 4px 6px;
+        border: 1px solid #e1e4e8;
+        border-radius: 4px;
+        font-size: 13px;
+        font-family: inherit;
+      }
+      .regions-list { max-height: 220px; overflow-y: auto; }
+      .region-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 5px 10px;
+        border-bottom: 1px solid #f1f3f5;
+        font-size: 13px;
+        background: #fff;
+        cursor: default;
+      }
+      .region-row:last-child { border-bottom: none; }
+      .region-row.dragging { opacity: 0.35; }
+      .region-row.drag-over-top    { border-top: 2px solid #0366d6; }
+      .region-row.drag-over-bottom { border-bottom: 2px solid #0366d6; }
+      .region-handle {
+        cursor: grab;
+        color: #c8d1da;
+        font-size: 15px;
+        line-height: 1;
+        user-select: none;
+        flex-shrink: 0;
+      }
+      .region-handle:hover { color: #586069; }
+      .region-index {
+        color: #959da5;
+        font-size: 12px;
+        min-width: 18px;
+        text-align: right;
+        flex-shrink: 0;
+      }
+      .region-swatch {
+        width: 10px;
+        height: 22px;
+        border-radius: 2px;
+        flex-shrink: 0;
+      }
+      .region-name {
+        width: 90px;
+        padding: 2px 5px;
+        border: 1px solid transparent;
+        border-radius: 3px;
+        font-size: 13px;
+        font-family: inherit;
+        background: transparent;
+        flex-shrink: 0;
+      }
+      .region-name:focus { border-color: #0366d6; background: #fff; outline: none; }
+      .region-time {
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+        color: #586069;
+        white-space: nowrap;
+      }
+      .region-arrow { color: #c8d1da; font-size: 12px; }
+      .region-dur {
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+        color: #959da5;
+        white-space: nowrap;
+        flex: 1;
+      }
+      .region-btn { padding: 2px 7px; font-size: 12px; line-height: 18px; }
+      .regions-empty {
+        padding: 16px;
+        text-align: center;
+        color: #959da5;
+        font-size: 13px;
+        font-style: italic;
+      }
+
       /* Hidden file input */
       #file-input { display: none; }
     </style>
@@ -328,6 +427,7 @@
       <button class="btn"         id="btn-fade-in"   disabled title="Apply linear fade in to selection">Fade In</button>
       <button class="btn"         id="btn-fade-out"  disabled title="Apply linear fade out to selection">Fade Out</button>
       <button class="btn"         id="btn-effects"   disabled title="Toggle Amplify / Speed panel">Effects</button>
+      <button class="btn"         id="btn-regions"   disabled title="Toggle Regions panel">Regions</button>
       <div class="toolbar-sep"></div>
       <button class="btn"         id="btn-zoom-fit"  disabled title="Fit entire audio in view (0)">Fit</button>
       <button class="btn"         id="btn-zoom-in"   disabled title="Zoom in (+)">Zoom +</button>
@@ -354,6 +454,27 @@
         <span class="unit">x</span>
         <button class="btn" id="btn-speed-sel" disabled title="Apply speed change to selection only">Apply to Selection</button>
         <button class="btn" id="btn-speed-all" disabled title="Apply speed change to entire audio">Apply to All</button>
+      </div>
+    </div>
+
+    <!-- Regions panel -->
+    <div class="regions-panel" id="regions-panel">
+      <div class="regions-toolbar">
+        <button class="btn" id="btn-add-region"   disabled title="Add current selection as a region">Add Region from Selection</button>
+        <div class="toolbar-sep"></div>
+        <label>Split into</label>
+        <input type="number" id="split-n" value="4" min="2" max="128" title="Number of equal parts" />
+        <label>equal parts</label>
+        <button class="btn" id="btn-split-equal"  disabled title="Divide audio into N equal regions">Split</button>
+        <button class="btn" id="btn-split-cursor" disabled title="Split region at cursor position">Split at Cursor</button>
+        <div class="toolbar-sep"></div>
+        <button class="btn" id="btn-shuffle"       disabled title="Randomise region order">Shuffle</button>
+        <button class="btn primary" id="btn-assemble" disabled title="Render regions in current order into new audio">Assemble</button>
+        <button class="btn" id="btn-regions-clear" disabled title="Remove all regions">Clear All</button>
+      </div>
+      <div class="regions-list" id="regions-list"></div>
+      <div class="regions-empty" id="regions-empty">
+        No regions defined. Add a region from a selection, or split the audio into equal parts.
       </div>
     </div>
 
@@ -421,6 +542,8 @@
 
       let undoStack = []; // array of AudioBuffer snapshots
       let clipboard = null;
+      let regions   = []; // [{id, name, start, end}]
+      let regionDragSrcIdx = null;
 
       let animFrameId = null;
       let filename    = 'audio';
@@ -441,7 +564,16 @@
       const rCtx = rulerCanvas.getContext('2d');
 
       // Channel colours: L=blue, R=green, 3=orange, 4=purple …
-      const CH_COLORS = ['#0366d6', '#28a745', '#e36209', '#6f42c1', '#d73a49', '#0598bc'];
+      const CH_COLORS     = ['#0366d6', '#28a745', '#e36209', '#6f42c1', '#d73a49', '#0598bc'];
+      // Region overlay colours (distinct from channel colours)
+      const REGION_COLORS = ['#e36209', '#6f42c1', '#d73a49', '#0598bc', '#28a745', '#b08800', '#005cc5', '#22863a'];
+
+      function hexToRgba(hex, alpha) {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return `rgba(${r},${g},${b},${alpha})`;
+      }
 
       // -------------------------------------------------------
       // Audio Context
@@ -503,6 +635,7 @@
           filename    = file.name.replace(/\.[^.]+$/, '');
           undoStack   = [];
           clipboard   = null;
+          regions     = [];
           selStart = -1; selEnd = -1;
           cursorPos   = 0;
           viewStart   = 0;
@@ -520,6 +653,7 @@
           document.getElementById('file-info').style.display    = 'flex';
           document.getElementById('scroll-hint').style.display  = 'block';
           document.getElementById('shortcuts-bar').style.display = 'flex';
+          renderRegionsList();
 
         } catch (err) {
           showStatus('Failed to decode audio: ' + err.message, 'error');
@@ -700,6 +834,35 @@
             wCtx.stroke();
           }
         }
+
+        // Region overlays (drawn before waveform so waveform renders on top)
+        regions.forEach((region, idx) => {
+          const rx1 = Math.max(0, timeToCanvasX(region.start));
+          const rx2 = Math.min(W, timeToCanvasX(region.end));
+          if (rx2 <= rx1) return;
+          const rc = REGION_COLORS[idx % REGION_COLORS.length];
+          // Tinted fill
+          wCtx.fillStyle = hexToRgba(rc, 0.08);
+          wCtx.fillRect(rx1, 0, rx2 - rx1, H);
+          // Top colour band
+          wCtx.fillStyle = rc;
+          wCtx.fillRect(rx1, 0, rx2 - rx1, 4);
+          // Left edge
+          wCtx.strokeStyle = hexToRgba(rc, 0.6);
+          wCtx.lineWidth = 1;
+          wCtx.beginPath(); wCtx.moveTo(rx1, 0); wCtx.lineTo(rx1, H); wCtx.stroke();
+          // Label in the colour band
+          if (rx2 - rx1 > 24) {
+            wCtx.fillStyle = '#fff';
+            wCtx.font = 'bold 9px Helvetica, sans-serif';
+            wCtx.textAlign = 'left';
+            // Clip label to region width
+            wCtx.save();
+            wCtx.beginPath(); wCtx.rect(rx1, 0, rx2 - rx1, 4); wCtx.clip();
+            wCtx.fillText(region.name, rx1 + 3, 3.5);
+            wCtx.restore();
+          }
+        });
 
         // Per-channel waveform
         const sr     = audioBuffer.sampleRate;
@@ -1189,6 +1352,194 @@
       }
 
       // -------------------------------------------------------
+      // Regions
+      // -------------------------------------------------------
+      function addRegionFromSelection() {
+        if (selStart < 0 || selEnd <= selStart)
+          return showStatus('Make a selection first.', 'error');
+        regions.push({ id: Date.now(), name: 'Region ' + (regions.length + 1), start: selStart, end: selEnd });
+        renderRegionsList();
+        showStatus('Region added.', 'info');
+      }
+
+      function splitIntoEqualParts() {
+        if (!audioBuffer) return;
+        const n = parseInt(document.getElementById('split-n').value, 10);
+        if (isNaN(n) || n < 2) return showStatus('Enter a number of parts (minimum 2).', 'error');
+        const dur     = audioBuffer.duration;
+        const partLen = dur / n;
+        regions = [];
+        for (let i = 0; i < n; i++) {
+          regions.push({
+            id:    Date.now() + i,
+            name:  'Region ' + (i + 1),
+            start: i * partLen,
+            end:   Math.min((i + 1) * partLen, dur)
+          });
+        }
+        renderRegionsList();
+        showStatus(`Split into ${n} equal regions.`, 'info');
+      }
+
+      function splitAtCursor() {
+        if (!audioBuffer) return;
+        const t = cursorPos;
+        if (t <= 0 || t >= audioBuffer.duration)
+          return showStatus('Place cursor within the audio to split.', 'error');
+
+        if (regions.length === 0) {
+          // No existing regions — split whole file at cursor
+          regions = [
+            { id: Date.now(),     name: 'Region 1', start: 0, end: t },
+            { id: Date.now() + 1, name: 'Region 2', start: t, end: audioBuffer.duration }
+          ];
+        } else {
+          // Find the region the cursor falls inside and split it
+          const idx = regions.findIndex(r => t > r.start && t < r.end);
+          if (idx < 0) return showStatus('Cursor is not inside an existing region.', 'error');
+          const orig = regions[idx];
+          const left  = { id: Date.now(),     name: orig.name + 'a', start: orig.start, end: t };
+          const right = { id: Date.now() + 1, name: orig.name + 'b', start: t, end: orig.end };
+          regions.splice(idx, 1, left, right);
+        }
+        renderRegionsList();
+      }
+
+      function removeRegion(idx) {
+        regions.splice(idx, 1);
+        renderRegionsList();
+      }
+
+      function selectRegion(idx) {
+        const r = regions[idx];
+        selStart  = r.start;
+        selEnd    = r.end;
+        cursorPos = r.start;
+        updateUI();
+      }
+
+      function shuffleRegions() {
+        if (regions.length < 2) return;
+        for (let i = regions.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [regions[i], regions[j]] = [regions[j], regions[i]];
+        }
+        renderRegionsList();
+        showStatus('Regions shuffled.', 'info');
+      }
+
+      function assembleRegions() {
+        if (regions.length < 1) return showStatus('No regions to assemble.', 'error');
+        pushUndo();
+        const sr    = audioBuffer.sampleRate;
+        const parts = regions.map(r =>
+          sliceBuffer(audioBuffer, Math.round(r.start * sr), Math.round(r.end * sr))
+        );
+        audioBuffer = concatBuffers(parts);
+        regions   = [];
+        selStart  = -1; selEnd = -1;
+        cursorPos = 0;
+        viewStart = 0; viewEnd = audioBuffer.duration;
+        syncDuration();
+        renderRegionsList();
+        updateUI();
+        showStatus('Regions assembled into new audio.', 'info');
+      }
+
+      function clearRegions() {
+        regions = [];
+        renderRegionsList();
+      }
+
+      // Render the regions list with drag-and-drop reordering
+      function renderRegionsList() {
+        const list  = document.getElementById('regions-list');
+        const empty = document.getElementById('regions-empty');
+        list.innerHTML = '';
+        empty.style.display = regions.length === 0 ? 'block' : 'none';
+
+        regions.forEach((region, idx) => {
+          const color = REGION_COLORS[idx % REGION_COLORS.length];
+          const row   = document.createElement('div');
+          row.className   = 'region-row';
+          row.draggable   = true;
+          row.dataset.idx = idx;
+
+          row.innerHTML = `
+            <span class="region-handle" title="Drag to reorder">&#x2016;</span>
+            <span class="region-index">${idx + 1}</span>
+            <span class="region-swatch" style="background:${color}"></span>
+            <input class="region-name" value="${region.name}" data-id="${region.id}" title="Edit region name" />
+            <span class="region-time">${formatTime(region.start)}</span>
+            <span class="region-arrow">&#x2192;</span>
+            <span class="region-time">${formatTime(region.end)}</span>
+            <span class="region-dur">${formatTime(region.end - region.start)}</span>
+            <button class="btn region-btn" title="Select on waveform">Sel</button>
+            <button class="btn region-btn" title="Remove region">&#x00D7;</button>
+          `;
+
+          // Name edit
+          row.querySelector('.region-name').addEventListener('change', (e) => {
+            const id = parseInt(e.target.dataset.id, 10);
+            const r  = regions.find(r => r.id === id);
+            if (r) r.name = e.target.value;
+          });
+
+          // Select / remove buttons
+          const btns = row.querySelectorAll('.region-btn');
+          btns[0].addEventListener('click', () => selectRegion(idx));
+          btns[1].addEventListener('click', () => removeRegion(idx));
+
+          // Drag-and-drop
+          row.addEventListener('dragstart', (e) => {
+            regionDragSrcIdx = idx;
+            row.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+          });
+          row.addEventListener('dragend', () => {
+            row.classList.remove('dragging');
+            list.querySelectorAll('.region-row').forEach(r => {
+              r.classList.remove('drag-over-top', 'drag-over-bottom');
+            });
+          });
+          row.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            if (regionDragSrcIdx === idx) return;
+            list.querySelectorAll('.region-row').forEach(r => {
+              r.classList.remove('drag-over-top', 'drag-over-bottom');
+            });
+            const rect    = row.getBoundingClientRect();
+            const isUpper = e.clientY < rect.top + rect.height / 2;
+            row.classList.add(isUpper ? 'drag-over-top' : 'drag-over-bottom');
+          });
+          row.addEventListener('drop', (e) => {
+            e.preventDefault();
+            if (regionDragSrcIdx === null || regionDragSrcIdx === idx) return;
+            const rect    = row.getBoundingClientRect();
+            const isUpper = e.clientY < rect.top + rect.height / 2;
+            const target  = isUpper ? idx : idx + 1;
+            const moved   = regions.splice(regionDragSrcIdx, 1)[0];
+            const insert  = target > regionDragSrcIdx ? target - 1 : target;
+            regions.splice(insert, 0, moved);
+            regionDragSrcIdx = null;
+            renderRegionsList();
+          });
+
+          list.appendChild(row);
+        });
+
+        // Update region-related button states
+        const has   = !!audioBuffer;
+        const hasSel = selStart >= 0 && selEnd > selStart;
+        document.getElementById('btn-add-region').disabled   = !has || !hasSel;
+        document.getElementById('btn-split-equal').disabled  = !has;
+        document.getElementById('btn-split-cursor').disabled = !has;
+        document.getElementById('btn-shuffle').disabled      = regions.length < 2;
+        document.getElementById('btn-assemble').disabled     = regions.length < 1;
+        document.getElementById('btn-regions-clear').disabled = regions.length === 0;
+      }
+
+      // -------------------------------------------------------
       // Amplify (gain in dB)
       // -------------------------------------------------------
       function doAmplify(applyToAll) {
@@ -1414,6 +1765,7 @@
         document.getElementById('btn-fade-in').disabled     = !has || !hasSel;
         document.getElementById('btn-fade-out').disabled    = !has || !hasSel;
         document.getElementById('btn-effects').disabled     = !has;
+        document.getElementById('btn-regions').disabled     = !has;
         document.getElementById('btn-zoom-fit').disabled    = !has;
         document.getElementById('btn-zoom-in').disabled     = !has;
         document.getElementById('btn-zoom-out').disabled    = !has;
@@ -1424,6 +1776,14 @@
         document.getElementById('btn-amplify-all').disabled = !has;
         document.getElementById('btn-speed-sel').disabled   = !has || !hasSel;
         document.getElementById('btn-speed-all').disabled   = !has;
+
+        // Keep region panel buttons in sync with current selection state
+        document.getElementById('btn-add-region').disabled   = !has || !hasSel;
+        document.getElementById('btn-split-equal').disabled  = !has;
+        document.getElementById('btn-split-cursor').disabled = !has;
+        document.getElementById('btn-shuffle').disabled      = regions.length < 2;
+        document.getElementById('btn-assemble').disabled     = regions.length < 1;
+        document.getElementById('btn-regions-clear').disabled = regions.length === 0;
       }
 
       function updatePlaybackButtons() {
@@ -1468,6 +1828,15 @@
       document.getElementById('btn-effects').addEventListener('click', () => {
         document.getElementById('effects-panel').classList.toggle('visible');
       });
+      document.getElementById('btn-regions').addEventListener('click', () => {
+        document.getElementById('regions-panel').classList.toggle('visible');
+      });
+      document.getElementById('btn-add-region').addEventListener('click',    addRegionFromSelection);
+      document.getElementById('btn-split-equal').addEventListener('click',   splitIntoEqualParts);
+      document.getElementById('btn-split-cursor').addEventListener('click',  splitAtCursor);
+      document.getElementById('btn-shuffle').addEventListener('click',       shuffleRegions);
+      document.getElementById('btn-assemble').addEventListener('click',      assembleRegions);
+      document.getElementById('btn-regions-clear').addEventListener('click', clearRegions);
       document.getElementById('btn-zoom-fit').addEventListener('click',   zoomFit);
       document.getElementById('btn-zoom-in').addEventListener('click',    zoomIn);
       document.getElementById('btn-zoom-out').addEventListener('click',   zoomOut);
