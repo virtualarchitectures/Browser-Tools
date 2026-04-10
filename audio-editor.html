@@ -462,7 +462,8 @@
       <div class="regions-toolbar">
         <button class="btn" id="btn-add-region"   disabled title="Add current selection as a region">Add Region from Selection</button>
         <div class="toolbar-sep"></div>
-        <button class="btn" id="btn-split-cursor" disabled title="Split region at cursor position">Split at Cursor</button>
+        <button class="btn" id="btn-split-cursor"    disabled title="Split region at cursor position">Split at Cursor</button>
+        <button class="btn" id="btn-split-selection" disabled title="Split at selection start and end boundaries">Split Selection</button>
         <label>Split into</label>
         <input type="number" id="split-n" value="4" min="2" max="128" title="Number of equal parts" />
         <label>equal parts</label>
@@ -544,6 +545,8 @@
       let clipboard = null;
       let regions   = []; // [{id, name, start, end}]
       let regionDragSrcIdx = null;
+      let _rid = 1;
+      function newRid() { return _rid++; }
 
       let animFrameId = null;
       let filename    = 'audio';
@@ -1357,7 +1360,7 @@
       function addRegionFromSelection() {
         if (selStart < 0 || selEnd <= selStart)
           return showStatus('Make a selection first.', 'error');
-        regions.push({ id: Date.now(), name: 'Region ' + (regions.length + 1), start: selStart, end: selEnd });
+        regions.push({ id: newRid(), name: 'Region ' + (regions.length + 1), start: selStart, end: selEnd });
         renderRegionsList();
         showStatus('Region added.', 'info');
       }
@@ -1371,7 +1374,7 @@
         regions = [];
         for (let i = 0; i < n; i++) {
           regions.push({
-            id:    Date.now() + i,
+            id:    newRid(),
             name:  'Region ' + (i + 1),
             start: i * partLen,
             end:   Math.min((i + 1) * partLen, dur)
@@ -1381,28 +1384,45 @@
         showStatus(`Split into ${n} equal regions.`, 'info');
       }
 
+      // Split at a single point in time — shared by splitAtCursor and splitSelection
+      function splitAtTime(t) {
+        if (regions.length === 0) {
+          regions = [
+            { id: newRid(), name: 'Region 1', start: 0, end: t },
+            { id: newRid(), name: 'Region 2', start: t, end: audioBuffer.duration }
+          ];
+        } else {
+          const idx = regions.findIndex(r => t > r.start && t < r.end);
+          if (idx < 0) return false; // already a boundary or outside all regions
+          const orig  = regions[idx];
+          const left  = { id: newRid(), name: orig.name + 'a', start: orig.start, end: t };
+          const right = { id: newRid(), name: orig.name + 'b', start: t,          end: orig.end };
+          regions.splice(idx, 1, left, right);
+        }
+        return true;
+      }
+
       function splitAtCursor() {
         if (!audioBuffer) return;
         const t = cursorPos;
         if (t <= 0 || t >= audioBuffer.duration)
           return showStatus('Place cursor within the audio to split.', 'error');
-
-        if (regions.length === 0) {
-          // No existing regions — split whole file at cursor
-          regions = [
-            { id: Date.now(),     name: 'Region 1', start: 0, end: t },
-            { id: Date.now() + 1, name: 'Region 2', start: t, end: audioBuffer.duration }
-          ];
-        } else {
-          // Find the region the cursor falls inside and split it
-          const idx = regions.findIndex(r => t > r.start && t < r.end);
-          if (idx < 0) return showStatus('Cursor is not inside an existing region.', 'error');
-          const orig = regions[idx];
-          const left  = { id: Date.now(),     name: orig.name + 'a', start: orig.start, end: t };
-          const right = { id: Date.now() + 1, name: orig.name + 'b', start: t, end: orig.end };
-          regions.splice(idx, 1, left, right);
-        }
+        if (!splitAtTime(t))
+          return showStatus('Cursor is not inside an existing region.', 'error');
         renderRegionsList();
+      }
+
+      function splitSelection() {
+        if (!audioBuffer) return;
+        if (selStart < 0 || selEnd <= selStart)
+          return showStatus('Make a selection first.', 'error');
+        if (selStart <= 0 && selEnd >= audioBuffer.duration)
+          return showStatus('Selection covers the entire audio — nothing to split.', 'error');
+        // Split at selection start, then end (order preserved because start < end)
+        splitAtTime(selStart);
+        splitAtTime(selEnd);
+        renderRegionsList();
+        showStatus('Audio split at selection boundaries.', 'info');
       }
 
       function removeRegion(idx) {
@@ -1531,12 +1551,13 @@
         // Update region-related button states
         const has   = !!audioBuffer;
         const hasSel = selStart >= 0 && selEnd > selStart;
-        document.getElementById('btn-add-region').disabled   = !has || !hasSel;
-        document.getElementById('btn-split-equal').disabled  = !has;
-        document.getElementById('btn-split-cursor').disabled = !has;
-        document.getElementById('btn-shuffle').disabled      = regions.length < 2;
-        document.getElementById('btn-assemble').disabled     = regions.length < 1;
-        document.getElementById('btn-regions-clear').disabled = regions.length === 0;
+        document.getElementById('btn-add-region').disabled      = !has || !hasSel;
+        document.getElementById('btn-split-cursor').disabled     = !has;
+        document.getElementById('btn-split-selection').disabled  = !has || !hasSel;
+        document.getElementById('btn-split-equal').disabled      = !has;
+        document.getElementById('btn-shuffle').disabled          = regions.length < 2;
+        document.getElementById('btn-assemble').disabled         = regions.length < 1;
+        document.getElementById('btn-regions-clear').disabled    = regions.length === 0;
       }
 
       // -------------------------------------------------------
@@ -1778,12 +1799,13 @@
         document.getElementById('btn-speed-all').disabled   = !has;
 
         // Keep region panel buttons in sync with current selection state
-        document.getElementById('btn-add-region').disabled   = !has || !hasSel;
-        document.getElementById('btn-split-equal').disabled  = !has;
-        document.getElementById('btn-split-cursor').disabled = !has;
-        document.getElementById('btn-shuffle').disabled      = regions.length < 2;
-        document.getElementById('btn-assemble').disabled     = regions.length < 1;
-        document.getElementById('btn-regions-clear').disabled = regions.length === 0;
+        document.getElementById('btn-add-region').disabled      = !has || !hasSel;
+        document.getElementById('btn-split-cursor').disabled     = !has;
+        document.getElementById('btn-split-selection').disabled  = !has || !hasSel;
+        document.getElementById('btn-split-equal').disabled      = !has;
+        document.getElementById('btn-shuffle').disabled          = regions.length < 2;
+        document.getElementById('btn-assemble').disabled         = regions.length < 1;
+        document.getElementById('btn-regions-clear').disabled    = regions.length === 0;
       }
 
       function updatePlaybackButtons() {
@@ -1833,7 +1855,8 @@
       });
       document.getElementById('btn-add-region').addEventListener('click',    addRegionFromSelection);
       document.getElementById('btn-split-equal').addEventListener('click',   splitIntoEqualParts);
-      document.getElementById('btn-split-cursor').addEventListener('click',  splitAtCursor);
+      document.getElementById('btn-split-cursor').addEventListener('click',     splitAtCursor);
+      document.getElementById('btn-split-selection').addEventListener('click', splitSelection);
       document.getElementById('btn-shuffle').addEventListener('click',       shuffleRegions);
       document.getElementById('btn-assemble').addEventListener('click',      assembleRegions);
       document.getElementById('btn-regions-clear').addEventListener('click', clearRegions);
