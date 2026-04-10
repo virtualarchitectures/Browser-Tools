@@ -1442,13 +1442,15 @@
         if (!audioBuffer) return;
         if (selStart < 0 || selEnd <= selStart)
           return showStatus('Make a selection first.', 'error');
-        if (selStart <= 0 && selEnd >= audioBuffer.duration)
-          return showStatus('Selection covers the entire audio — nothing to split.', 'error');
-        // Split at selection start, then end (order preserved because start < end)
-        splitAtTime(selStart);
-        splitAtTime(selEnd);
+        const region = { id: newRid(), name: 'Region ' + (regions.length + 1), start: selStart, end: selEnd };
+        // Insert at the chronological position in the list
+        let insertIdx = regions.length;
+        for (let i = 0; i < regions.length; i++) {
+          if (regions[i].start >= selEnd) { insertIdx = i; break; }
+        }
+        regions.splice(insertIdx, 0, region);
         renderRegionsList();
-        showStatus('Audio split at selection boundaries.', 'info');
+        showStatus('Region created from selection.', 'info');
       }
 
       function removeRegion(idx) {
