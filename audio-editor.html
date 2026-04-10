@@ -472,8 +472,10 @@
         <button class="btn" id="btn-split-equal"  disabled title="Divide audio into N equal regions">Split</button>
         <div class="toolbar-sep"></div>
         <button class="btn" id="btn-shuffle"       disabled title="Randomise region order">Shuffle</button>
-        <button class="btn primary" id="btn-assemble"        disabled title="Render regions in current order into new audio">Assemble</button>
-        <button class="btn"         id="btn-export-regions" disabled title="Export each region as a separate WAV file (zipped)">Export Regions</button>
+        <button class="btn primary" id="btn-assemble"           disabled title="Render regions in current list order into new audio">Assemble</button>
+        <button class="btn"         id="btn-delete-inside"    disabled title="Delete audio inside regions, keeping everything outside">Delete Inside</button>
+        <button class="btn"         id="btn-delete-outside"   disabled title="Delete audio outside regions, keeping only region content (sorted by time)">Delete Outside</button>
+        <button class="btn"         id="btn-export-regions"   disabled title="Export each region as a separate WAV file (zipped)">Export Regions</button>
         <button class="btn"         id="btn-regions-clear"  disabled title="Remove all regions">Clear All</button>
       </div>
       <div class="regions-list" id="regions-list"></div>
@@ -1494,6 +1496,46 @@
         showStatus('Regions assembled into new audio.', 'info');
       }
 
+      // Delete audio inside regions — keeps everything outside, joined together
+      function deleteInsideRegions() {
+        if (regions.length === 0) return showStatus('No regions defined.', 'error');
+        pushUndo();
+        const sr     = audioBuffer.sampleRate;
+        const sorted = [...regions].sort((a, b) => a.start - b.start);
+        const parts  = [];
+        let pos = 0;
+        for (const r of sorted) {
+          const rStart = Math.round(r.start * sr);
+          const rEnd   = Math.round(r.end   * sr);
+          if (rStart > pos) parts.push(sliceBuffer(audioBuffer, pos, rStart));
+          pos = Math.max(pos, rEnd);
+        }
+        if (pos < audioBuffer.length) parts.push(sliceBuffer(audioBuffer, pos, audioBuffer.length));
+        audioBuffer = parts.length > 0
+          ? concatBuffers(parts)
+          : audioCtx.createBuffer(audioBuffer.numberOfChannels, 1, audioBuffer.sampleRate);
+        regions = []; selStart = -1; selEnd = -1; cursorPos = 0;
+        viewStart = 0; viewEnd = audioBuffer.duration;
+        syncDuration(); renderRegionsList(); updateUI();
+        showStatus('Audio inside regions deleted.', 'info');
+      }
+
+      // Delete audio outside regions — keeps only region content, sorted by time
+      function deleteOutsideRegions() {
+        if (regions.length === 0) return showStatus('No regions defined.', 'error');
+        pushUndo();
+        const sr     = audioBuffer.sampleRate;
+        const sorted = [...regions].sort((a, b) => a.start - b.start);
+        const parts  = sorted.map(r =>
+          sliceBuffer(audioBuffer, Math.round(r.start * sr), Math.round(r.end * sr))
+        );
+        audioBuffer = concatBuffers(parts);
+        regions = []; selStart = -1; selEnd = -1; cursorPos = 0;
+        viewStart = 0; viewEnd = audioBuffer.duration;
+        syncDuration(); renderRegionsList(); updateUI();
+        showStatus('Audio outside regions deleted.', 'info');
+      }
+
       async function exportRegions() {
         if (regions.length === 0) return showStatus('No regions to export.', 'error');
         showStatus('Encoding regions...', 'info');
@@ -1615,6 +1657,8 @@
         document.getElementById('btn-split-equal').disabled      = !has;
         document.getElementById('btn-shuffle').disabled          = regions.length < 2;
         document.getElementById('btn-assemble').disabled         = regions.length < 1;
+        document.getElementById('btn-delete-inside').disabled    = regions.length < 1;
+        document.getElementById('btn-delete-outside').disabled   = regions.length < 1;
         document.getElementById('btn-export-regions').disabled   = regions.length < 1;
         document.getElementById('btn-regions-clear').disabled    = regions.length === 0;
       }
@@ -1864,6 +1908,8 @@
         document.getElementById('btn-split-equal').disabled      = !has;
         document.getElementById('btn-shuffle').disabled          = regions.length < 2;
         document.getElementById('btn-assemble').disabled         = regions.length < 1;
+        document.getElementById('btn-delete-inside').disabled    = regions.length < 1;
+        document.getElementById('btn-delete-outside').disabled   = regions.length < 1;
         document.getElementById('btn-export-regions').disabled   = regions.length < 1;
         document.getElementById('btn-regions-clear').disabled    = regions.length === 0;
       }
@@ -1919,6 +1965,8 @@
       document.getElementById('btn-split-selection').addEventListener('click', splitSelection);
       document.getElementById('btn-shuffle').addEventListener('click',       shuffleRegions);
       document.getElementById('btn-assemble').addEventListener('click',      assembleRegions);
+      document.getElementById('btn-delete-inside').addEventListener('click',  deleteInsideRegions);
+      document.getElementById('btn-delete-outside').addEventListener('click', deleteOutsideRegions);
       document.getElementById('btn-export-regions').addEventListener('click', exportRegions);
       document.getElementById('btn-regions-clear').addEventListener('click',  clearRegions);
       document.getElementById('btn-zoom-fit').addEventListener('click',   zoomFit);
