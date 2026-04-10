@@ -116,21 +116,6 @@
         margin: 0 4px;
       }
 
-      /* Time display in toolbar */
-      .time-display {
-        font-family: 'Courier New', Courier, monospace;
-        font-size: 14px;
-        font-weight: 600;
-        color: #24292e;
-        background: #f6f8fa;
-        border: 1px solid #e1e4e8;
-        border-radius: 6px;
-        padding: 4px 10px;
-        min-width: 88px;
-        text-align: center;
-        letter-spacing: 0.3px;
-      }
-
       /* Buttons */
       .btn {
         background: #fafbfc;
@@ -330,7 +315,6 @@
       <button class="btn"         id="btn-pause"     disabled title="Pause (Space)">Pause</button>
       <button class="btn"         id="btn-stop"      disabled title="Stop (Escape)">Stop</button>
       <button class="btn"         id="btn-loop"      disabled title="Toggle loop playback (L)">Loop</button>
-      <span class="time-display"  id="time-display">0:00.000</span>
       <div class="toolbar-sep"></div>
       <button class="btn"         id="btn-cut"       disabled title="Cut selection (Ctrl+X)">Cut</button>
       <button class="btn"         id="btn-copy"      disabled title="Copy selection (Ctrl+C)">Copy</button>
@@ -972,8 +956,7 @@
       // -------------------------------------------------------
       function updateSelectionBar() {
         const t = getCurrentTime();
-        document.getElementById('time-display').textContent = formatTime(t);
-        document.getElementById('sel-cursor').textContent   = formatTime(t);
+        document.getElementById('sel-cursor').textContent = formatTime(t);
 
         if (selStart >= 0 && selEnd > selStart) {
           document.getElementById('sel-start').textContent  = formatTime(selStart);
