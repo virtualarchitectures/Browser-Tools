@@ -1380,8 +1380,9 @@
       // Clips / Segments
       // -------------------------------------------------------
 
-      // Split a segment at a point (arrangement time t).
-      // Both pieces inherit the original segment's type.
+      // Split a segment at cursor position.
+      // Untracked segment → two new clips.
+      // Clip segment → two clips (suffixed names).
       function splitAtCursor() {
         if (!audioBuffer) return;
         const t       = cursorPos;
@@ -1392,11 +1393,14 @@
         const {seg, idx, arrStart} = found;
         const splitRaw = seg.start + (t - arrStart);
 
-        const left  = { type: seg.type, start: seg.start, end: splitRaw };
-        const right = { type: seg.type, start: splitRaw,  end: seg.end  };
+        let left, right;
         if (seg.type === 'clip') {
-          left.id  = newSid(); left.name  = seg.name + 'a';
-          right.id = newSid(); right.name = seg.name + 'b';
+          left  = { type: 'clip', id: newSid(), name: seg.name + 'a', start: seg.start, end: splitRaw };
+          right = { type: 'clip', id: newSid(), name: seg.name + 'b', start: splitRaw,  end: seg.end  };
+        } else {
+          const n = clipCount();
+          left  = { type: 'clip', id: newSid(), name: 'Clip ' + (n + 1), start: seg.start, end: splitRaw };
+          right = { type: 'clip', id: newSid(), name: 'Clip ' + (n + 2), start: splitRaw,  end: seg.end  };
         }
 
         segments.splice(idx, 1, left, right);
