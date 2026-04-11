@@ -265,6 +265,7 @@
         color: #959da5;
         border-top: 1px solid #e1e4e8;
         padding-top: 10px;
+        margin-bottom: 16px;
         flex-wrap: wrap;
         display: flex;
         gap: 12px;
@@ -575,6 +576,47 @@
       </div>
     </div>
 
+    <!-- Waveform and ruler -->
+    <div class="waveform-container" id="waveform-container">
+      <canvas id="ruler-canvas" height="24"></canvas>
+      <canvas id="waveform-canvas" height="160"></canvas>
+      <div class="loading-overlay" id="loading-overlay">Decoding audio...</div>
+    </div>
+
+    <!-- Scrollbar (shown when zoomed in) -->
+    <div class="scrollbar-container" id="scrollbar-container">
+      <div class="scrollbar-track" id="scrollbar-track">
+        <div class="scrollbar-thumb" id="scrollbar-thumb"></div>
+      </div>
+    </div>
+
+    <div class="scroll-hint" id="scroll-hint" style="display:none">
+      Scroll to zoom &nbsp;|&nbsp; Drag to select &nbsp;|&nbsp; Click to place cursor &nbsp;|&nbsp; Arrow keys to nudge
+    </div>
+
+    <!-- Selection info -->
+    <div class="selection-bar" id="selection-bar">
+      <span>Cursor: <strong id="sel-cursor">0:00.000</strong></span>
+      <span>Selection Start: <strong id="sel-start">—</strong></span>
+      <span>Selection End: <strong id="sel-end">—</strong></span>
+      <span>Selection Length: <strong id="sel-length">—</strong></span>
+    </div>
+
+    <!-- Keyboard shortcuts reference -->
+    <div class="shortcuts" id="shortcuts-bar" style="display:none">
+      <span><kbd>Space</kbd> Play / Pause</span>
+      <span><kbd>Esc</kbd> Stop &amp; clear</span>
+      <span><kbd>L</kbd> Toggle loop</span>
+      <span><kbd>←</kbd> <kbd>→</kbd> Nudge cursor (10 ms)</span>
+      <span><kbd>Shift+←/→</kbd> Nudge 100 ms</span>
+      <span><kbd>Ctrl+←/→</kbd> Nudge 1 ms</span>
+      <span><kbd>Ctrl+Z</kbd> Undo</span>
+      <span><kbd>Ctrl+X/C/V</kbd> Cut / Copy / Paste</span>
+      <span><kbd>Del</kbd> Delete selection</span>
+      <span><kbd>+</kbd> / <kbd>-</kbd> Zoom</span>
+      <span><kbd>0</kbd> Fit view</span>
+    </div>
+
     <!-- Clips panel -->
     <div class="clips-panel" id="clips-panel">
       <div class="clips-toolbar">
@@ -635,47 +677,6 @@
         <button class="btn" id="btn-export-all-variations" title="Export all variations as a ZIP of WAV files">Export All</button>
         <span id="variations-count-label" style="font-size:13px;color:#586069;"></span>
       </div>
-    </div>
-
-    <!-- Waveform and ruler -->
-    <div class="waveform-container" id="waveform-container">
-      <canvas id="ruler-canvas" height="24"></canvas>
-      <canvas id="waveform-canvas" height="160"></canvas>
-      <div class="loading-overlay" id="loading-overlay">Decoding audio...</div>
-    </div>
-
-    <!-- Scrollbar (shown when zoomed in) -->
-    <div class="scrollbar-container" id="scrollbar-container">
-      <div class="scrollbar-track" id="scrollbar-track">
-        <div class="scrollbar-thumb" id="scrollbar-thumb"></div>
-      </div>
-    </div>
-
-    <div class="scroll-hint" id="scroll-hint" style="display:none">
-      Scroll to zoom &nbsp;|&nbsp; Drag to select &nbsp;|&nbsp; Click to place cursor &nbsp;|&nbsp; Arrow keys to nudge
-    </div>
-
-    <!-- Selection info -->
-    <div class="selection-bar" id="selection-bar">
-      <span>Cursor: <strong id="sel-cursor">0:00.000</strong></span>
-      <span>Selection Start: <strong id="sel-start">—</strong></span>
-      <span>Selection End: <strong id="sel-end">—</strong></span>
-      <span>Selection Length: <strong id="sel-length">—</strong></span>
-    </div>
-
-    <!-- Keyboard shortcuts reference -->
-    <div class="shortcuts" id="shortcuts-bar" style="display:none">
-      <span><kbd>Space</kbd> Play / Pause</span>
-      <span><kbd>Esc</kbd> Stop &amp; clear</span>
-      <span><kbd>L</kbd> Toggle loop</span>
-      <span><kbd>←</kbd> <kbd>→</kbd> Nudge cursor (10 ms)</span>
-      <span><kbd>Shift+←/→</kbd> Nudge 100 ms</span>
-      <span><kbd>Ctrl+←/→</kbd> Nudge 1 ms</span>
-      <span><kbd>Ctrl+Z</kbd> Undo</span>
-      <span><kbd>Ctrl+X/C/V</kbd> Cut / Copy / Paste</span>
-      <span><kbd>Del</kbd> Delete selection</span>
-      <span><kbd>+</kbd> / <kbd>-</kbd> Zoom</span>
-      <span><kbd>0</kbd> Fit view</span>
     </div>
 
     <script>
