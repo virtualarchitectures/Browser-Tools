@@ -391,6 +391,108 @@
         font-style: italic;
       }
 
+      /* Variations panel */
+      .variations-panel {
+        display: none;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        margin-bottom: 8px;
+        overflow: hidden;
+      }
+      .variations-panel.visible { display: block; }
+      .var-params {
+        display: flex;
+        gap: 8px;
+        padding: 8px 12px;
+        background: #f6f8fa;
+        border-bottom: 1px solid #e1e4e8;
+        align-items: center;
+        flex-wrap: wrap;
+        font-size: 13px;
+      }
+      .var-params label { color: #586069; white-space: nowrap; }
+      .var-params select {
+        padding: 4px 6px;
+        border: 1px solid #e1e4e8;
+        border-radius: 4px;
+        font-size: 13px;
+        font-family: inherit;
+        background: #fff;
+        cursor: pointer;
+      }
+      .var-params input[type="number"] {
+        width: 60px;
+        padding: 4px 6px;
+        border: 1px solid #e1e4e8;
+        border-radius: 4px;
+        font-size: 13px;
+        font-family: inherit;
+      }
+      .var-params input[type="range"] {
+        width: 80px;
+        cursor: pointer;
+      }
+      .var-params .unit { color: #586069; min-width: 30px; }
+      .var-list { max-height: 340px; overflow-y: auto; }
+      .var-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 10px;
+        border-bottom: 1px solid #f1f3f5;
+        font-size: 13px;
+        background: #fff;
+      }
+      .var-row:last-child { border-bottom: none; }
+      .var-index {
+        color: #959da5;
+        font-size: 12px;
+        min-width: 22px;
+        text-align: right;
+        flex-shrink: 0;
+      }
+      .var-name {
+        font-weight: 500;
+        color: #24292e;
+        min-width: 88px;
+        flex-shrink: 0;
+      }
+      .var-meta {
+        color: #586069;
+        font-size: 12px;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+      .var-clips {
+        color: #959da5;
+        font-size: 11px;
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        min-width: 0;
+      }
+      .var-audio {
+        height: 28px;
+        flex-shrink: 0;
+        width: 180px;
+      }
+      .var-footer {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 12px;
+        background: #f6f8fa;
+        border-top: 1px solid #e1e4e8;
+      }
+      .var-empty {
+        padding: 16px;
+        text-align: center;
+        color: #959da5;
+        font-size: 13px;
+        font-style: italic;
+      }
+
       /* Hidden file input */
       #file-input { display: none; }
     </style>
@@ -476,8 +578,8 @@
     <!-- Clips panel -->
     <div class="clips-panel" id="clips-panel">
       <div class="clips-toolbar">
+        <button class="btn" id="btn-split-selection" disabled title="Create a clip from the current selection">Select Clip</button>
         <button class="btn" id="btn-split-cursor"    disabled title="Split segment at cursor position">Split at Cursor</button>
-        <button class="btn" id="btn-split-selection" disabled title="Create a clip from the current selection">Split Selection</button>
         <label>Split into</label>
         <input type="number" id="split-n" value="4" min="2" max="128" title="Number of equal parts" />
         <label>equal clips</label>
@@ -487,10 +589,51 @@
         <button class="btn" id="btn-assemble"        disabled title="Build new audio from defined clips in current order">Assemble Clips</button>
         <button class="btn" id="btn-export-clips"    disabled title="Export each clip as a separate WAV file (zipped)">Export Clips</button>
         <button class="btn" id="btn-clips-clear"     disabled title="Remove all clip definitions">Clear Clips</button>
+        <div class="toolbar-sep"></div>
+        <button class="btn" id="btn-variations"      disabled title="Generate arrangement variations">Variations...</button>
       </div>
       <div class="clips-list" id="clips-list"></div>
       <div class="clips-empty" id="clips-empty">
-        No clips defined. Use Split at Cursor or Split Selection to create clips.
+        No clips defined. Use Select Clip or Split at Cursor to create clips.
+      </div>
+    </div>
+
+    <!-- Variations panel -->
+    <div class="variations-panel" id="variations-panel">
+      <div class="var-params">
+        <label>Variations:</label>
+        <select id="var-count" title="Number of variations to generate">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+          <option value="6">6</option>
+          <option value="7">7</option>
+          <option value="8" selected>8</option>
+          <option value="9">9</option>
+          <option value="10">10</option>
+        </select>
+        <div class="toolbar-sep"></div>
+        <label><input type="checkbox" id="var-shuffle" checked /> Shuffle order</label>
+        <div class="toolbar-sep"></div>
+        <label>Clip probability:</label>
+        <input type="range" id="var-probability" min="10" max="100" value="75" title="Per-clip inclusion chance. High = all clips tend to appear in every variation. Low = each variation is built from a smaller, random subset of clips, creating more contrast between variations." />
+        <span class="unit" id="var-probability-display">75%</span>
+        <div class="toolbar-sep"></div>
+        <label>Min clips:</label>
+        <input type="number" id="var-min-clips" value="2" min="1" max="64" title="Minimum clips per variation" />
+        <label>Max clips:</label>
+        <input type="number" id="var-max-clips" value="8" min="1" max="64" title="Maximum clips per variation" />
+        <div class="toolbar-sep"></div>
+        <button class="btn primary" id="btn-generate-variations" disabled title="Generate variations from current clips">Generate</button>
+        <button class="btn" id="btn-clear-variations" title="Remove all generated variations">Clear</button>
+      </div>
+      <div class="var-list" id="variations-list"></div>
+      <div class="var-empty" id="variations-empty">No variations generated yet. Set parameters above and click Generate.</div>
+      <div class="var-footer" id="variations-footer" style="display:none">
+        <button class="btn" id="btn-export-all-variations" title="Export all variations as a ZIP of WAV files">Export All</button>
+        <span id="variations-count-label" style="font-size:13px;color:#586069;"></span>
       </div>
     </div>
 
@@ -572,6 +715,8 @@
       let clipboard = null;
       let animFrameId = null;
       let filename    = 'audio';
+
+      let variations    = [];   // generated arrangement variations
 
       let isDragging    = false;
       let dragStartTime = 0;
@@ -1745,13 +1890,186 @@
         // Button states
         const has    = !!audioBuffer;
         const hasSel = selStart >= 0 && selEnd > selStart;
-        document.getElementById('btn-split-cursor').disabled    = !has;
-        document.getElementById('btn-split-selection').disabled = !has || !hasSel;
-        document.getElementById('btn-split-equal').disabled     = !has;
-        document.getElementById('btn-shuffle').disabled         = segments.length < 2;
-        document.getElementById('btn-assemble').disabled        = clipCount() < 1;
-        document.getElementById('btn-export-clips').disabled    = clipCount() < 1;
-        document.getElementById('btn-clips-clear').disabled     = clipCount() === 0;
+        document.getElementById('btn-split-cursor').disabled         = !has;
+        document.getElementById('btn-split-selection').disabled      = !has || !hasSel;
+        document.getElementById('btn-split-equal').disabled          = !has;
+        document.getElementById('btn-shuffle').disabled              = segments.length < 2;
+        document.getElementById('btn-assemble').disabled             = clipCount() < 1;
+        document.getElementById('btn-export-clips').disabled         = clipCount() < 1;
+        document.getElementById('btn-clips-clear').disabled          = clipCount() === 0;
+        document.getElementById('btn-variations').disabled           = !has;
+        document.getElementById('btn-generate-variations').disabled  = clipCount() < 1;
+      }
+
+      // -------------------------------------------------------
+      // Variations — generate, play, export
+      // -------------------------------------------------------
+
+      function shuffleArray(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+      }
+
+      function generateVariations() {
+        const clips = segments.filter(s => s.type === 'clip');
+        if (clips.length === 0) return showStatus('No clips defined. Create clips first.', 'error');
+
+        const count       = parseInt(document.getElementById('var-count').value, 10);
+        const doShuffle   = document.getElementById('var-shuffle').checked;
+        const probability = parseFloat(document.getElementById('var-probability').value) / 100;
+        let   minClips    = Math.max(1, parseInt(document.getElementById('var-min-clips').value, 10));
+        let   maxClips    = Math.max(minClips, parseInt(document.getElementById('var-max-clips').value, 10));
+
+        // Revoke old blob URLs
+        variations.forEach(v => { if (v.url) URL.revokeObjectURL(v.url); });
+        variations = [];
+
+        const sr       = audioBuffer.sampleRate;
+        const seenKeys = new Set();
+        // Cap retries to avoid hanging when unique combinations are exhausted
+        const MAX_TRIES = count * 40;
+        let   tries     = 0;
+
+        while (variations.length < count && tries < MAX_TRIES) {
+          tries++;
+
+          // 1. Build eligible pool: each clip independently included at given probability.
+          //    Clips NOT in the pool cannot appear in this variation.
+          let pool = clips.filter(() => Math.random() < probability);
+          // Guarantee at least one clip is available
+          if (pool.length === 0) pool = [clips[Math.floor(Math.random() * clips.length)]];
+
+          // 2. Pick a length N between min and max (clips may repeat, so N can exceed pool.length)
+          const N = minClips + Math.floor(Math.random() * (maxClips - minClips + 1));
+
+          // 3. Fill N slots by sampling FROM THE POOL WITH REPLACEMENT → allows repeats
+          const selected = [];
+          for (let i = 0; i < N; i++) {
+            selected.push(pool[Math.floor(Math.random() * pool.length)]);
+          }
+
+          // 4. If not shuffling, sort the sequence by original clip order
+          if (!doShuffle) {
+            const origOrder = clips.map(c => c.id);
+            selected.sort((a, b) => origOrder.indexOf(a.id) - origOrder.indexOf(b.id));
+          }
+
+          // 5. Reject duplicates (same sequence of clip IDs)
+          const key = selected.map(c => c.id).join(',');
+          if (seenKeys.has(key)) continue;
+          seenKeys.add(key);
+
+          // 6. Build audio buffer and blob URL
+          const parts = selected.map(c =>
+            sliceBuffer(audioBuffer, Math.round(c.start * sr), Math.round(c.end * sr))
+          );
+          const buf  = concatBuffers(parts);
+          const wav  = encodeWAV(buf);
+          const blob = new Blob([wav], { type: 'audio/wav' });
+          const url  = URL.createObjectURL(blob);
+          const dur  = selected.reduce((s, c) => s + (c.end - c.start), 0);
+
+          variations.push({
+            id:        variations.length + 1,
+            name:      `Variation ${variations.length + 1}`,
+            clipNames: selected.map(c => c.name),
+            clipCount: selected.length,
+            duration:  dur,
+            buf,
+            url
+          });
+        }
+
+        if (variations.length === 0) {
+          return showStatus('Could not generate any unique variations with the current settings.', 'error');
+        }
+
+        renderVariationsList();
+        const got = variations.length;
+        const msg = got < count
+          ? `Generated ${got} unique variation${got === 1 ? '' : 's'} — all unique combinations with these settings exhausted.`
+          : `Generated ${got} variation${got === 1 ? '' : 's'}.`;
+        showStatus(msg, 'info');
+      }
+
+      function exportVariation(idx) {
+        const v = variations[idx];
+        if (!v) return;
+        const a = document.createElement('a');
+        a.href     = v.url;
+        a.download = filename + '_' + v.name.replace(/\s+/g, '_') + '.wav';
+        a.click();
+      }
+
+      function clearVariations() {
+        variations.forEach(v => { if (v.url) URL.revokeObjectURL(v.url); });
+        variations = [];
+        renderVariationsList();
+        showStatus('Variations cleared.', 'info');
+      }
+
+      async function exportAllVariations() {
+        if (variations.length === 0) return showStatus('No variations to export.', 'error');
+        showStatus('Zipping variations...', 'info');
+        showLoading(true);
+        try {
+          const zip = new JSZip();
+          variations.forEach((v, i) => {
+            const wav      = encodeWAV(v.buf);
+            const safeName = v.name.replace(/[^a-zA-Z0-9_\-]/g, '_');
+            zip.file(`${String(i + 1).padStart(2, '0')}_${safeName}.wav`, wav);
+          });
+          const blob = await zip.generateAsync({ type: 'blob' });
+          const url  = URL.createObjectURL(blob);
+          const a    = document.createElement('a');
+          a.href     = url;
+          a.download = filename + '_variations.zip';
+          a.click();
+          URL.revokeObjectURL(url);
+          showStatus(`Exported ${variations.length} variation${variations.length === 1 ? '' : 's'}.`, 'info');
+        } catch (err) {
+          showStatus('Export failed: ' + err.message, 'error');
+        } finally {
+          showLoading(false);
+        }
+      }
+
+      function renderVariationsList() {
+        const list        = document.getElementById('variations-list');
+        const empty       = document.getElementById('variations-empty');
+        const footer      = document.getElementById('variations-footer');
+        const countLabel  = document.getElementById('variations-count-label');
+
+        list.innerHTML = '';
+
+        if (variations.length === 0) {
+          empty.style.display  = 'block';
+          footer.style.display = 'none';
+          return;
+        }
+
+        empty.style.display  = 'none';
+        footer.style.display = 'flex';
+        countLabel.textContent = `${variations.length} variation${variations.length === 1 ? '' : 's'} · click a row's player to preview`;
+
+        variations.forEach((v, idx) => {
+          const row = document.createElement('div');
+          row.className = 'var-row';
+
+          const clipList = v.clipNames.join(' › ');
+          row.innerHTML = `
+            <span class="var-index">${v.id}</span>
+            <span class="var-name">${v.name}</span>
+            <span class="var-meta">${v.clipCount} clip${v.clipCount !== 1 ? 's' : ''} · ${formatTime(v.duration)}</span>
+            <span class="var-clips" title="${clipList}">${clipList}</span>
+            <audio controls src="${v.url}" class="var-audio" preload="none"></audio>
+            <button class="btn seg-btn" title="Download as WAV">Export</button>
+          `;
+          row.querySelector('.btn').addEventListener('click', () => exportVariation(idx));
+          list.appendChild(row);
+        });
       }
 
       // -------------------------------------------------------
@@ -1978,13 +2296,15 @@
         document.getElementById('btn-speed-all').disabled   = !has;
 
         // Sync clip panel buttons
-        document.getElementById('btn-split-cursor').disabled    = !has;
-        document.getElementById('btn-split-selection').disabled = !has || !hasSel;
-        document.getElementById('btn-split-equal').disabled     = !has;
-        document.getElementById('btn-shuffle').disabled         = segments.length < 2;
-        document.getElementById('btn-assemble').disabled        = clipCount() < 1;
-        document.getElementById('btn-export-clips').disabled    = clipCount() < 1;
-        document.getElementById('btn-clips-clear').disabled     = clipCount() === 0;
+        document.getElementById('btn-split-cursor').disabled         = !has;
+        document.getElementById('btn-split-selection').disabled      = !has || !hasSel;
+        document.getElementById('btn-split-equal').disabled          = !has;
+        document.getElementById('btn-shuffle').disabled              = segments.length < 2;
+        document.getElementById('btn-assemble').disabled             = clipCount() < 1;
+        document.getElementById('btn-export-clips').disabled         = clipCount() < 1;
+        document.getElementById('btn-clips-clear').disabled          = clipCount() === 0;
+        document.getElementById('btn-variations').disabled           = !has;
+        document.getElementById('btn-generate-variations').disabled  = clipCount() < 1;
       }
 
       function updatePlaybackButtons() {
@@ -2041,6 +2361,15 @@
       document.getElementById('btn-assemble').addEventListener('click',        assembleClips);
       document.getElementById('btn-export-clips').addEventListener('click',    exportClips);
       document.getElementById('btn-clips-clear').addEventListener('click',     clearClips);
+      document.getElementById('btn-variations').addEventListener('click', () => {
+        document.getElementById('variations-panel').classList.toggle('visible');
+      });
+      document.getElementById('btn-generate-variations').addEventListener('click',  generateVariations);
+      document.getElementById('btn-export-all-variations').addEventListener('click', exportAllVariations);
+      document.getElementById('btn-clear-variations').addEventListener('click',     clearVariations);
+      document.getElementById('var-probability').addEventListener('input', (e) => {
+        document.getElementById('var-probability-display').textContent = e.target.value + '%';
+      });
       document.getElementById('btn-zoom-fit').addEventListener('click',   zoomFit);
       document.getElementById('btn-zoom-in').addEventListener('click',    zoomIn);
       document.getElementById('btn-zoom-out').addEventListener('click',   zoomOut);
