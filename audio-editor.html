@@ -496,6 +496,29 @@
 
       /* Hidden file input */
       #file-input { display: none; }
+
+      /* Waveform resize handle */
+      .waveform-resize-handle {
+        height: 5px;
+        background: #e1e4e8;
+        cursor: ns-resize;
+        transition: background 0.15s;
+      }
+      .waveform-resize-handle:hover,
+      .waveform-resize-handle.dragging { background: #0366d6; }
+
+      /* Export bit-depth selector */
+      .export-select {
+        padding: 5px 6px;
+        border: 1px solid rgba(27,31,35,0.15);
+        border-radius: 6px;
+        font-size: 13px;
+        font-family: inherit;
+        background: #fafbfc;
+        cursor: pointer;
+        line-height: 20px;
+        height: 34px;
+      }
     </style>
   </head>
   <body>
@@ -541,19 +564,27 @@
       <button class="btn"         id="btn-silence"   disabled title="Replace selection with silence">Silence</button>
       <button class="btn"         id="btn-trim"      disabled title="Trim to selection">Trim</button>
       <div class="toolbar-sep"></div>
-      <button class="btn"         id="btn-normalize" disabled title="Normalize peak level to 0 dBFS">Normalize</button>
-      <button class="btn"         id="btn-reverse"   disabled title="Reverse selection or entire audio">Reverse</button>
-      <button class="btn"         id="btn-fade-in"   disabled title="Apply linear fade in to selection">Fade In</button>
-      <button class="btn"         id="btn-fade-out"  disabled title="Apply linear fade out to selection">Fade Out</button>
-      <button class="btn"         id="btn-effects"   disabled title="Toggle Amplify / Speed panel">Effects</button>
+      <button class="btn"         id="btn-normalize"    disabled title="Normalize peak level to 0 dBFS">Normalize</button>
+      <button class="btn"         id="btn-reverse"      disabled title="Reverse selection or entire audio">Reverse</button>
+      <button class="btn"         id="btn-fade-in"      disabled title="Apply linear fade in to selection">Fade In</button>
+      <button class="btn"         id="btn-fade-out"     disabled title="Apply linear fade out to selection">Fade Out</button>
+      <button class="btn"         id="btn-trim-silence" disabled title="Remove leading and trailing silence (~−60 dBFS threshold)">Trim Silence</button>
+      <button class="btn"         id="btn-effects"      disabled title="Toggle Amplify / Speed panel">Effects</button>
       <button class="btn"         id="btn-clips"     disabled title="Toggle Clips panel">Clips</button>
       <div class="toolbar-sep"></div>
       <button class="btn"         id="btn-zoom-fit"  disabled title="Fit entire audio in view (0)">Fit</button>
       <button class="btn"         id="btn-zoom-in"   disabled title="Zoom in (+)">Zoom +</button>
       <button class="btn"         id="btn-zoom-out"  disabled title="Zoom out (-)">Zoom -</button>
+      <button class="btn"         id="btn-zoom-sel"  disabled title="Zoom to selection (Z)">Zoom Sel</button>
       <div class="toolbar-sep"></div>
       <button class="btn"         id="btn-undo"      disabled title="Undo (Ctrl+Z)">Undo</button>
+      <button class="btn"         id="btn-redo"      disabled title="Redo (Ctrl+Y)">Redo</button>
       <div class="toolbar-sep"></div>
+      <select class="export-select" id="export-bit-depth" title="WAV bit depth for export">
+        <option value="16">16-bit</option>
+        <option value="24">24-bit</option>
+        <option value="32f">32-bit float</option>
+      </select>
       <button class="btn primary" id="btn-export"    disabled title="Export full audio as WAV">Export WAV</button>
       <button class="btn"         id="btn-export-sel" disabled title="Export selection as WAV">Export Selection</button>
     </div>
@@ -582,6 +613,9 @@
       <canvas id="waveform-canvas" height="160"></canvas>
       <div class="loading-overlay" id="loading-overlay">Decoding audio...</div>
     </div>
+
+    <!-- Waveform resize handle -->
+    <div class="waveform-resize-handle" id="waveform-resize-handle"></div>
 
     <!-- Scrollbar (shown when zoomed in) -->
     <div class="scrollbar-container" id="scrollbar-container">
@@ -615,6 +649,9 @@
       <span><kbd>Del</kbd> Delete selection</span>
       <span><kbd>+</kbd> / <kbd>-</kbd> Zoom</span>
       <span><kbd>0</kbd> Fit view</span>
+      <span><kbd>Z</kbd> Zoom to selection</span>
+      <span><kbd>Ctrl+A</kbd> Select all</span>
+      <span><kbd>Ctrl+Y</kbd> Redo</span>
     </div>
 
     <!-- Clips panel -->
@@ -628,6 +665,9 @@
         <button class="btn" id="btn-split-equal"  disabled title="Divide audio into N equal clips">Split</button>
         <div class="toolbar-sep"></div>
         <button class="btn" id="btn-shuffle"         disabled title="Randomise segment order">Shuffle</button>
+        <label>Crossfade</label>
+        <input type="number" id="crossfade-ms" value="0" min="0" max="500" title="Crossfade duration applied at each clip boundary when assembling (ms)" />
+        <span class="unit">ms</span>
         <button class="btn" id="btn-assemble"        disabled title="Build new audio from defined clips in current order">Assemble Clips</button>
         <button class="btn" id="btn-export-clips"    disabled title="Export each clip as a separate WAV file (zipped)">Export Clips</button>
         <button class="btn" id="btn-clips-clear"     disabled title="Remove all clip definitions">Clear Clips</button>
@@ -718,6 +758,12 @@
       let filename    = 'audio';
 
       let variations    = [];   // generated arrangement variations
+      let redoStack     = [];
+      let waveformHeight = 160;
+      let clipPreviewSource  = null;
+      let isResizingWaveform = false;
+      let resizeStartY = 0;
+      let resizeStartH = 0;
 
       let isDragging    = false;
       let dragStartTime = 0;
@@ -856,7 +902,8 @@
           viewEnd   = decoded.duration;
 
           // Size canvas: 80px per channel, min 160px
-          waveformCanvas.height = Math.max(160, decoded.numberOfChannels * 80);
+          waveformHeight = Math.max(160, decoded.numberOfChannels * 80);
+          waveformCanvas.height = waveformHeight;
 
           initSegments();
           updateFileInfo(file, decoded);
@@ -998,10 +1045,11 @@
       // -------------------------------------------------------
       function resizeCanvases() {
         const w = document.getElementById('waveform-container').clientWidth;
-        if (waveformCanvas.width !== w) {
-          waveformCanvas.width = w;
-          rulerCanvas.width    = w;
-          rulerCanvas.height   = 24;
+        if (waveformCanvas.width !== w || waveformCanvas.height !== waveformHeight) {
+          waveformCanvas.width  = w;
+          waveformCanvas.height = waveformHeight;
+          rulerCanvas.width     = w;
+          rulerCanvas.height    = 24;
         }
       }
 
@@ -1193,10 +1241,10 @@
 
       function rulerLabel(t, interval) {
         if (interval >= 60) { const m = Math.floor(t/60); return `${m}:${String(Math.round(t%60)).padStart(2,'0')}`; }
-        if (interval >= 1)    return t.toFixed(0)+'s';
-        if (interval >= 0.1)  return t.toFixed(1)+'s';
-        if (interval >= 0.01) return t.toFixed(2)+'s';
-        return t.toFixed(3)+'s';
+        if (interval >= 1)    return t.toFixed(0) + 's';
+        if (interval >= 0.1)  return (t * 1000).toFixed(0) + 'ms';
+        if (interval >= 0.01) return (t * 1000).toFixed(1) + 'ms';
+        return (t * 1000).toFixed(2) + 'ms';
       }
 
       // -------------------------------------------------------
@@ -1237,6 +1285,10 @@
         viewEnd   = viewStart + span;
       });
       document.addEventListener('mousemove', (e) => {
+        if (isResizingWaveform) {
+          const delta = e.clientY - resizeStartY;
+          waveformHeight = Math.max(80, Math.min(600, resizeStartH + delta));
+        }
         if (!sbDragging || !audioBuffer) return;
         const rect  = sbTrack.getBoundingClientRect();
         const total = arrangementDuration() || audioBuffer.duration;
@@ -1246,8 +1298,21 @@
         viewEnd     = viewStart + span;
       });
       document.addEventListener('mouseup', () => {
+        if (isResizingWaveform) {
+          isResizingWaveform = false;
+          document.getElementById('waveform-resize-handle').classList.remove('dragging');
+        }
         if (sbDragging) { sbDragging = false; sbThumb.classList.remove('dragging'); }
         isDragging = false;
+      });
+
+      // Waveform height resize handle
+      document.getElementById('waveform-resize-handle').addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        isResizingWaveform = true;
+        resizeStartY = e.clientY;
+        resizeStartH = waveformHeight;
+        document.getElementById('waveform-resize-handle').classList.add('dragging');
       });
 
       // -------------------------------------------------------
@@ -1257,6 +1322,16 @@
         if (animFrameId) return;
         function loop() {
           resizeCanvases();
+          // Auto-scroll: keep playhead in view during playback
+          if (isPlaying && !isDragging && !sbDragging) {
+            const t    = getCurrentTime();
+            const span = viewEnd - viewStart;
+            const tot  = arrangementDuration();
+            if (t > viewEnd || t < viewStart) {
+              viewStart = Math.max(0, Math.min(t - span * 0.1, tot - span));
+              viewEnd   = viewStart + span;
+            }
+          }
           drawRuler();
           drawWaveform();
           updateSelectionBar();
@@ -1275,6 +1350,15 @@
         const rect = waveformCanvas.getBoundingClientRect();
         const x    = (e.clientX - rect.left) * (waveformCanvas.width / rect.width);
         const t    = Math.max(0, Math.min(canvasXToTime(x), arrangementDuration()));
+        if (e.shiftKey) {
+          // Shift+click: extend/create selection from current cursor
+          const anchor = selStart >= 0 ? selStart : cursorPos;
+          selStart  = Math.min(anchor, t);
+          selEnd    = Math.max(anchor, t);
+          cursorPos = t;
+          updateUI();
+          return;
+        }
         isDragging = true; dragStartTime = t;
         selStart = t; selEnd = t; cursorPos = t;
       });
@@ -1294,6 +1378,19 @@
         isDragging = false;
         if (selEnd - selStart < 0.001) { selStart = -1; selEnd = -1; }
         updateUI();
+      });
+
+      // Ruler click: seek cursor (clears selection; if playing, continues from new position)
+      rulerCanvas.addEventListener('mousedown', (e) => {
+        if (!audioBuffer) return;
+        e.preventDefault();
+        const rect = rulerCanvas.getBoundingClientRect();
+        const x    = (e.clientX - rect.left) * (rulerCanvas.width / rect.width);
+        cursorPos  = Math.max(0, Math.min(canvasXToTime(x), arrangementDuration()));
+        selStart   = -1; selEnd = -1;
+        const wasPlaying = isPlaying;
+        if (wasPlaying) { stopPlayback(); play(); }
+        else updateUI();
       });
 
       waveformCanvas.addEventListener('wheel', (e) => {
@@ -1368,6 +1465,7 @@
       function pushUndo() {
         undoStack.push(cloneBuffer(audioBuffer));
         if (undoStack.length > 20) undoStack.shift();
+        redoStack = [];
       }
 
       // Returns selection in arrangement-time samples (for edits on raw buffer when in natural order)
@@ -1533,8 +1631,41 @@
         updateUI();
       }
 
+      function doTrimSilence() {
+        if (!audioBuffer) return;
+        const threshold = 0.001; // ~−60 dBFS
+        const len = audioBuffer.length;
+        let startSample = 0;
+        let endSample   = len;
+
+        outer1: for (let i = 0; i < len; i++) {
+          for (let ch = 0; ch < audioBuffer.numberOfChannels; ch++) {
+            if (Math.abs(audioBuffer.getChannelData(ch)[i]) >= threshold) { startSample = i; break outer1; }
+          }
+        }
+        outer2: for (let i = len - 1; i >= startSample; i--) {
+          for (let ch = 0; ch < audioBuffer.numberOfChannels; ch++) {
+            if (Math.abs(audioBuffer.getChannelData(ch)[i]) >= threshold) { endSample = i + 1; break outer2; }
+          }
+        }
+
+        if (startSample === 0 && endSample === len)
+          return showStatus('No leading or trailing silence found.', 'info');
+
+        const sr         = audioBuffer.sampleRate;
+        const trimStart  = startSample / sr;
+        const trimEnd    = (len - endSample) / sr;
+        pushUndo();
+        audioBuffer = sliceBuffer(audioBuffer, startSample, endSample);
+        cursorPos = 0; selStart = -1; selEnd = -1;
+        viewStart = 0; viewEnd = audioBuffer.duration;
+        syncDuration(); resetSegments(); updateUI();
+        showStatus(`Silence trimmed: ${formatTime(trimStart)} from start, ${formatTime(trimEnd)} from end.`, 'info');
+      }
+
       function doUndo() {
         if (undoStack.length === 0) return;
+        redoStack.push(cloneBuffer(audioBuffer));
         audioBuffer = undoStack.pop();
         selStart = -1; selEnd = -1;
         cursorPos = Math.min(cursorPos, audioBuffer.duration);
@@ -1542,6 +1673,22 @@
         syncDuration();
         resetSegments();
         updateUI();
+        const n = undoStack.length;
+        showStatus(`Undone. ${n} undo step${n !== 1 ? 's' : ''} remaining.`, 'info');
+      }
+
+      function doRedo() {
+        if (redoStack.length === 0) return;
+        undoStack.push(cloneBuffer(audioBuffer));
+        if (undoStack.length > 20) undoStack.shift();
+        audioBuffer = redoStack.pop();
+        selStart = -1; selEnd = -1;
+        cursorPos = Math.min(cursorPos, audioBuffer.duration);
+        viewEnd   = Math.min(viewEnd,   audioBuffer.duration);
+        syncDuration();
+        resetSegments();
+        updateUI();
+        showStatus('Redone.', 'info');
       }
 
       // -------------------------------------------------------
@@ -1695,29 +1842,88 @@
       function assembleClips() {
         const clips = segments.filter(s => s.type === 'clip');
         if (clips.length === 0) return showStatus('No clips defined.', 'error');
+
+        const cfMs  = Math.max(0, parseFloat(document.getElementById('crossfade-ms').value) || 0);
+        const cfSec = cfMs / 1000;
+
         pushUndo();
         const sr    = audioBuffer.sampleRate;
         const parts = clips.map(c =>
           sliceBuffer(audioBuffer, Math.round(c.start * sr), Math.round(c.end * sr))
         );
-        audioBuffer = concatBuffers(parts);
 
-        // Rebuild segments: clips now occupy sequential positions in new buffer
-        let pos = 0;
-        segments = clips.map(c => {
-          const dur    = c.end - c.start;
-          const newSeg = { type: 'clip', id: newSid(), color: c.color, name: c.name, start: pos, end: pos + dur };
-          pos += dur;
-          return newSeg;
-        });
+        if (cfSec > 0 && parts.length > 1) {
+          // Overlap-add crossfade: each boundary overlaps by cfSamples
+          const cfSamples = Math.min(
+            Math.round(cfSec * sr),
+            ...parts.map(p => Math.floor(p.length / 2))
+          );
+          const numCh    = parts[0].numberOfChannels;
+          const totalLen = parts.reduce((s, p) => s + p.length, 0) - cfSamples * (parts.length - 1);
+          const out      = audioCtx.createBuffer(numCh, Math.max(1, totalLen), sr);
 
-        markArrangementDirty();
-        selStart = -1; selEnd = -1; cursorPos = 0;
-        viewStart = 0; viewEnd = audioBuffer.duration;
-        syncDuration();
-        renderClipsList();
-        updateUI();
-        showStatus(`Assembled ${clips.length} clip${clips.length === 1 ? '' : 's'}.`, 'info');
+          for (let ch = 0; ch < numCh; ch++) {
+            const outData = out.getChannelData(ch);
+            let pos = 0;
+            for (let p = 0; p < parts.length; p++) {
+              const src = parts[p].getChannelData(ch < parts[p].numberOfChannels ? ch : 0);
+              for (let i = 0; i < parts[p].length; i++) {
+                let gain = 1;
+                if (p > 0 && i < cfSamples) gain *= i / cfSamples;
+                if (p < parts.length - 1 && i >= parts[p].length - cfSamples)
+                  gain *= (parts[p].length - i) / cfSamples;
+                const oi = pos + i;
+                if (oi < totalLen) outData[oi] += src[i] * gain;
+              }
+              pos += parts[p].length - cfSamples;
+            }
+          }
+
+          audioBuffer = out;
+
+          // Rebuild segments: use non-overlapping write positions so the arrangement
+          // is consistent with the output buffer and clips remain visible on the timeline.
+          // Each clip "owns" from its write-start up to the next clip's write-start.
+          const writeStartS = [0];
+          for (let p = 1; p < clips.length; p++)
+            writeStartS.push(writeStartS[p - 1] + parts[p - 1].length - cfSamples);
+
+          segments = clips.map((c, p) => ({
+            type:  'clip',
+            id:    newSid(),
+            color: c.color,
+            name:  c.name,
+            start: writeStartS[p] / sr,
+            end:   p < clips.length - 1 ? writeStartS[p + 1] / sr : audioBuffer.duration
+          }));
+
+          markArrangementDirty();
+          selStart = -1; selEnd = -1; cursorPos = 0;
+          viewStart = 0; viewEnd = audioBuffer.duration;
+          syncDuration();
+          renderClipsList();
+          updateUI();
+          showStatus(`Assembled ${clips.length} clip${clips.length === 1 ? '' : 's'} with ${cfMs}ms crossfade.`, 'info');
+        } else {
+          audioBuffer = concatBuffers(parts);
+
+          // Rebuild segments: clips now occupy sequential positions in new buffer
+          let pos = 0;
+          segments = clips.map(c => {
+            const dur    = c.end - c.start;
+            const newSeg = { type: 'clip', id: newSid(), color: c.color, name: c.name, start: pos, end: pos + dur };
+            pos += dur;
+            return newSeg;
+          });
+
+          markArrangementDirty();
+          selStart = -1; selEnd = -1; cursorPos = 0;
+          viewStart = 0; viewEnd = audioBuffer.duration;
+          syncDuration();
+          renderClipsList();
+          updateUI();
+          showStatus(`Assembled ${clips.length} clip${clips.length === 1 ? '' : 's'}.`, 'info');
+        }
       }
 
       // Clear Clips: convert all clips to untracked, merge adjacent untracked segments
@@ -1756,7 +1962,7 @@
           const sr  = audioBuffer.sampleRate;
           clips.forEach((clip, idx) => {
             const buf      = sliceBuffer(audioBuffer, Math.round(clip.start * sr), Math.round(clip.end * sr));
-            const wav      = encodeWAV(buf);
+            const wav      = encodeWAV(buf, getExportBitDepth());
             const safeName = clip.name.replace(/[^a-zA-Z0-9_\-]/g, '_');
             zip.file(`${String(idx + 1).padStart(2,'0')}_${safeName}.wav`, wav);
           });
@@ -1809,6 +2015,7 @@
               <span class="seg-arrow">&#x2192;</span>
               <span class="seg-time">${formatTime(arrEnd)}</span>
               <span class="seg-dur">${formatTime(seg.end - seg.start)}</span>
+              <button class="btn seg-btn" title="Preview clip">&#x25B6;</button>
               <button class="btn seg-btn" title="Select on waveform">Sel</button>
               <button class="btn seg-btn" title="Convert back to untracked">&#x00D7;</button>
             `;
@@ -1818,8 +2025,9 @@
               if (s) s.name = e.target.value;
             });
             const btns = row.querySelectorAll('.seg-btn');
-            btns[0].addEventListener('click', () => selectSegment(idx));
-            btns[1].addEventListener('click', () => removeSegment(idx));
+            btns[0].addEventListener('click', () => previewClip(seg));
+            btns[1].addEventListener('click', () => selectSegment(idx));
+            btns[2].addEventListener('click', () => removeSegment(idx));
           } else {
             row.innerHTML = `
               <span class="seg-handle" title="Drag to reorder">&#x2016;</span>
@@ -1854,7 +2062,23 @@
           list.appendChild(row);
         });
 
-        // Delegated dragover/drop on list container
+        // Button states
+        const has    = !!audioBuffer;
+        const hasSel = selStart >= 0 && selEnd > selStart;
+        document.getElementById('btn-split-cursor').disabled         = !has;
+        document.getElementById('btn-split-selection').disabled      = !has || !hasSel;
+        document.getElementById('btn-split-equal').disabled          = !has;
+        document.getElementById('btn-shuffle').disabled              = segments.length < 2;
+        document.getElementById('btn-assemble').disabled             = clipCount() < 1;
+        document.getElementById('btn-export-clips').disabled         = clipCount() < 1;
+        document.getElementById('btn-clips-clear').disabled          = clipCount() === 0;
+        document.getElementById('btn-variations').disabled           = !has;
+        document.getElementById('btn-generate-variations').disabled  = clipCount() < 1;
+      }
+
+      // One-time drag delegation for clips list (avoids accumulating listeners on each renderClipsList call)
+      (function setupClipDragDelegation() {
+        const list = document.getElementById('clips-list');
         list.addEventListener('dragover', (e) => {
           e.preventDefault();
           const targetRow = e.target.closest('.seg-row');
@@ -1867,7 +2091,6 @@
           const isUpper = e.clientY < rect.top + rect.height / 2;
           targetRow.classList.add(isUpper ? 'drag-over-top' : 'drag-over-bottom');
         });
-
         list.addEventListener('drop', (e) => {
           e.preventDefault();
           list.querySelectorAll('.seg-row').forEach(r =>
@@ -1887,19 +2110,20 @@
           markArrangementDirty();
           renderClipsList();
         });
+      })();
 
-        // Button states
-        const has    = !!audioBuffer;
-        const hasSel = selStart >= 0 && selEnd > selStart;
-        document.getElementById('btn-split-cursor').disabled         = !has;
-        document.getElementById('btn-split-selection').disabled      = !has || !hasSel;
-        document.getElementById('btn-split-equal').disabled          = !has;
-        document.getElementById('btn-shuffle').disabled              = segments.length < 2;
-        document.getElementById('btn-assemble').disabled             = clipCount() < 1;
-        document.getElementById('btn-export-clips').disabled         = clipCount() < 1;
-        document.getElementById('btn-clips-clear').disabled          = clipCount() === 0;
-        document.getElementById('btn-variations').disabled           = !has;
-        document.getElementById('btn-generate-variations').disabled  = clipCount() < 1;
+      // Play a single clip in isolation (stops any in-progress preview first)
+      function previewClip(seg) {
+        if (clipPreviewSource) { try { clipPreviewSource.stop(); } catch(e) {} clipPreviewSource = null; }
+        ensureAudioCtx();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const sr  = audioBuffer.sampleRate;
+        const buf = sliceBuffer(audioBuffer, Math.round(seg.start * sr), Math.round(seg.end * sr));
+        clipPreviewSource = audioCtx.createBufferSource();
+        clipPreviewSource.buffer = buf;
+        clipPreviewSource.connect(audioCtx.destination);
+        clipPreviewSource.start(0);
+        clipPreviewSource.onended = () => { clipPreviewSource = null; };
       }
 
       // -------------------------------------------------------
@@ -1967,7 +2191,7 @@
             sliceBuffer(audioBuffer, Math.round(c.start * sr), Math.round(c.end * sr))
           );
           const buf  = concatBuffers(parts);
-          const wav  = encodeWAV(buf);
+          const wav  = encodeWAV(buf, getExportBitDepth());
           const blob = new Blob([wav], { type: 'audio/wav' });
           const url  = URL.createObjectURL(blob);
           const dur  = selected.reduce((s, c) => s + (c.end - c.start), 0);
@@ -2018,7 +2242,7 @@
         try {
           const zip = new JSZip();
           variations.forEach((v, i) => {
-            const wav      = encodeWAV(v.buf);
+            const wav      = encodeWAV(v.buf, getExportBitDepth());
             const safeName = v.name.replace(/[^a-zA-Z0-9_\-]/g, '_');
             zip.file(`${String(i + 1).padStart(2, '0')}_${safeName}.wav`, wav);
           });
@@ -2188,6 +2412,13 @@
         viewStart = 0;
         viewEnd   = arrangementDuration();
       }
+      function zoomToSelection() {
+        if (!audioBuffer) return;
+        if (selStart < 0 || selEnd <= selStart) return showStatus('Make a selection first.', 'error');
+        const pad = (selEnd - selStart) * 0.05;
+        viewStart = Math.max(0, selStart - pad);
+        viewEnd   = Math.min(arrangementDuration(), selEnd + pad);
+      }
 
       // -------------------------------------------------------
       // WAV export (16-bit PCM)
@@ -2196,11 +2427,32 @@
         for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
       }
 
-      function encodeWAV(buf) {
+      function getExportBitDepth() {
+        const v = document.getElementById('export-bit-depth').value;
+        if (v === '24') return 24;
+        if (v === '32f') return '32f';
+        return 16;
+      }
+
+      function encodeWAV(buf, bitDepth) {
+        bitDepth = bitDepth !== undefined ? bitDepth : 16;
         const numCh      = buf.numberOfChannels;
         const sr         = buf.sampleRate;
         const numSamples = buf.length;
-        const blockAlign = numCh * 2;
+        const channels   = [];
+        for (let ch = 0; ch < numCh; ch++) channels.push(buf.getChannelData(ch));
+
+        // Determine format (1=PCM, 3=IEEE float) and bytes per sample
+        let format, bytesPerSample, bitsPerSample;
+        if (bitDepth === '32f') {
+          format = 3; bytesPerSample = 4; bitsPerSample = 32;
+        } else if (bitDepth === 24) {
+          format = 1; bytesPerSample = 3; bitsPerSample = 24;
+        } else {
+          format = 1; bytesPerSample = 2; bitsPerSample = 16;
+        }
+
+        const blockAlign = numCh * bytesPerSample;
         const dataSize   = numSamples * blockAlign;
         const ab         = new ArrayBuffer(44 + dataSize);
         const view       = new DataView(ab);
@@ -2209,22 +2461,39 @@
         writeString(view,  8, 'WAVE');
         writeString(view, 12, 'fmt ');
         view.setUint32(16, 16, true);
-        view.setUint16(20, 1,  true);
+        view.setUint16(20, format, true);
         view.setUint16(22, numCh, true);
         view.setUint32(24, sr, true);
         view.setUint32(28, sr * blockAlign, true);
         view.setUint16(32, blockAlign, true);
-        view.setUint16(34, 16, true);
+        view.setUint16(34, bitsPerSample, true);
         writeString(view, 36, 'data');
         view.setUint32(40, dataSize, true);
-        const channels = [];
-        for (let ch = 0; ch < numCh; ch++) channels.push(buf.getChannelData(ch));
         let offset = 44;
-        for (let i = 0; i < numSamples; i++) {
-          for (let ch = 0; ch < numCh; ch++) {
-            const s = Math.max(-1, Math.min(1, channels[ch][i]));
-            view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
-            offset += 2;
+        if (format === 3) {
+          // 32-bit IEEE float
+          for (let i = 0; i < numSamples; i++)
+            for (let ch = 0; ch < numCh; ch++) { view.setFloat32(offset, channels[ch][i], true); offset += 4; }
+        } else if (bytesPerSample === 3) {
+          // 24-bit PCM
+          for (let i = 0; i < numSamples; i++) {
+            for (let ch = 0; ch < numCh; ch++) {
+              const s = Math.max(-1, Math.min(1, channels[ch][i]));
+              const v = s < 0 ? Math.round(s * 0x800000) : Math.round(s * 0x7FFFFF);
+              view.setUint8(offset,     v & 0xFF);
+              view.setUint8(offset + 1, (v >> 8)  & 0xFF);
+              view.setUint8(offset + 2, (v >> 16) & 0xFF);
+              offset += 3;
+            }
+          }
+        } else {
+          // 16-bit PCM
+          for (let i = 0; i < numSamples; i++) {
+            for (let ch = 0; ch < numCh; ch++) {
+              const s = Math.max(-1, Math.min(1, channels[ch][i]));
+              view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+              offset += 2;
+            }
           }
         }
         return ab;
@@ -2234,7 +2503,7 @@
         showStatus('Encoding WAV...', 'info');
         setTimeout(() => {
           try {
-            const wavData = encodeWAV(buf);
+            const wavData = encodeWAV(buf, getExportBitDepth());
             const blob    = new Blob([wavData], { type: 'audio/wav' });
             const url     = URL.createObjectURL(blob);
             const a       = document.createElement('a');
@@ -2279,16 +2548,19 @@
         document.getElementById('btn-delete').disabled      = !has || !hasSel;
         document.getElementById('btn-silence').disabled     = !has || !hasSel;
         document.getElementById('btn-trim').disabled        = !has || !hasSel;
-        document.getElementById('btn-normalize').disabled   = !has;
-        document.getElementById('btn-reverse').disabled     = !has;
-        document.getElementById('btn-fade-in').disabled     = !has || !hasSel;
-        document.getElementById('btn-fade-out').disabled    = !has || !hasSel;
-        document.getElementById('btn-effects').disabled     = !has;
+        document.getElementById('btn-normalize').disabled    = !has;
+        document.getElementById('btn-reverse').disabled      = !has;
+        document.getElementById('btn-fade-in').disabled      = !has || !hasSel;
+        document.getElementById('btn-fade-out').disabled     = !has || !hasSel;
+        document.getElementById('btn-trim-silence').disabled = !has;
+        document.getElementById('btn-effects').disabled      = !has;
         document.getElementById('btn-clips').disabled       = !has;
         document.getElementById('btn-zoom-fit').disabled    = !has;
         document.getElementById('btn-zoom-in').disabled     = !has;
         document.getElementById('btn-zoom-out').disabled    = !has;
+        document.getElementById('btn-zoom-sel').disabled    = !has || !hasSel;
         document.getElementById('btn-undo').disabled        = undoStack.length === 0;
+        document.getElementById('btn-redo').disabled        = redoStack.length === 0;
         document.getElementById('btn-export').disabled      = !has;
         document.getElementById('btn-export-sel').disabled  = !has || !hasSel;
         document.getElementById('btn-amplify').disabled     = !has || !hasSel;
@@ -2345,10 +2617,11 @@
       document.getElementById('btn-delete').addEventListener('click',      doDelete);
       document.getElementById('btn-silence').addEventListener('click',     doSilence);
       document.getElementById('btn-trim').addEventListener('click',        doTrim);
-      document.getElementById('btn-normalize').addEventListener('click',   doNormalize);
-      document.getElementById('btn-reverse').addEventListener('click',     doReverse);
-      document.getElementById('btn-fade-in').addEventListener('click',     doFadeIn);
-      document.getElementById('btn-fade-out').addEventListener('click',    doFadeOut);
+      document.getElementById('btn-normalize').addEventListener('click',    doNormalize);
+      document.getElementById('btn-reverse').addEventListener('click',      doReverse);
+      document.getElementById('btn-fade-in').addEventListener('click',      doFadeIn);
+      document.getElementById('btn-fade-out').addEventListener('click',     doFadeOut);
+      document.getElementById('btn-trim-silence').addEventListener('click', doTrimSilence);
       document.getElementById('btn-effects').addEventListener('click', () => {
         document.getElementById('effects-panel').classList.toggle('visible');
       });
@@ -2374,7 +2647,9 @@
       document.getElementById('btn-zoom-fit').addEventListener('click',   zoomFit);
       document.getElementById('btn-zoom-in').addEventListener('click',    zoomIn);
       document.getElementById('btn-zoom-out').addEventListener('click',   zoomOut);
+      document.getElementById('btn-zoom-sel').addEventListener('click',   zoomToSelection);
       document.getElementById('btn-undo').addEventListener('click',       doUndo);
+      document.getElementById('btn-redo').addEventListener('click',       doRedo);
       document.getElementById('btn-export').addEventListener('click',     doExport);
       document.getElementById('btn-export-sel').addEventListener('click', doExportSelection);
       document.getElementById('btn-amplify').addEventListener('click',    () => doAmplify(false));
@@ -2419,6 +2694,13 @@
 
         } else if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
           e.preventDefault(); doUndo();
+        } else if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || e.key === 'Z')) {
+          e.preventDefault(); doRedo();
+        } else if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+          e.preventDefault();
+          selStart = 0; selEnd = arrangementDuration(); cursorPos = 0; updateUI();
+        } else if ((e.key === 'z') && !e.ctrlKey && !e.metaKey) {
+          e.preventDefault(); zoomToSelection();
         } else if ((e.ctrlKey || e.metaKey) && e.key === 'x') {
           e.preventDefault(); doCut();
         } else if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
