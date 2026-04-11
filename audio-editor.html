@@ -497,6 +497,10 @@
       /* Hidden file input */
       #file-input { display: none; }
 
+      /* Silence detection panel — reuses .effects-panel layout;
+         override range width for the wider threshold slider */
+      #silence-panel input[type="range"] { width: 160px; }
+
       /* Waveform resize handle */
       .waveform-resize-handle {
         height: 5px;
@@ -569,8 +573,9 @@
       <button class="btn"         id="btn-fade-in"      disabled title="Apply linear fade in to selection">Fade In</button>
       <button class="btn"         id="btn-fade-out"     disabled title="Apply linear fade out to selection">Fade Out</button>
       <button class="btn"         id="btn-trim-silence" disabled title="Remove leading and trailing silence (~−60 dBFS threshold)">Trim Silence</button>
-      <button class="btn"         id="btn-effects"      disabled title="Toggle Amplify / Speed panel">Effects</button>
-      <button class="btn"         id="btn-clips"     disabled title="Toggle Clips panel">Clips</button>
+      <button class="btn"         id="btn-effects"         disabled title="Toggle Amplify / Speed panel">Effects</button>
+      <button class="btn"         id="btn-clips"          disabled title="Toggle Clips panel">Clips</button>
+      <button class="btn"         id="btn-silence-detect" disabled title="Detect silence and create clips for non-silent regions">Detect Silence</button>
       <div class="toolbar-sep"></div>
       <button class="btn"         id="btn-zoom-fit"  disabled title="Fit entire audio in view (0)">Fit</button>
       <button class="btn"         id="btn-zoom-in"   disabled title="Zoom in (+)">Zoom +</button>
@@ -604,6 +609,29 @@
         <span class="unit">x</span>
         <button class="btn" id="btn-speed-sel" disabled title="Apply speed change to selection">Apply to Selection</button>
         <button class="btn" id="btn-speed-all" disabled title="Apply speed change to entire audio">Apply to All</button>
+      </div>
+    </div>
+
+    <!-- Silence detection panel -->
+    <div class="effects-panel" id="silence-panel">
+      <div class="effects-row">
+        <label>Threshold:</label>
+        <input type="range" id="silence-threshold" min="-80" max="-20" value="-50"
+          title="Silence threshold — regions whose RMS is below this level are treated as silence" />
+        <span class="unit" id="silence-threshold-display">−50 dBFS</span>
+        <div class="toolbar-sep"></div>
+        <label>Min silence:</label>
+        <input type="number" id="silence-min-dur" value="500" min="50" max="10000"
+          title="Gaps shorter than this are bridged (not split)" />
+        <span class="unit">ms</span>
+        <div class="toolbar-sep"></div>
+        <label>Padding:</label>
+        <input type="number" id="silence-padding" value="50" min="0" max="500"
+          title="Extra audio kept before and after each detected region" />
+        <span class="unit">ms</span>
+        <div class="toolbar-sep"></div>
+        <button class="btn primary" id="btn-do-detect-silence" disabled
+          title="Scan audio and replace all segments with detected regions">Detect</button>
       </div>
     </div>
 
@@ -1663,6 +1691,113 @@
         showStatus(`Silence trimmed: ${formatTime(trimStart)} from start, ${formatTime(trimEnd)} from end.`, 'info');
       }
 
+      // -------------------------------------------------------
+      // Silence detection — replaces all segments with detected
+      // non-silent clips (silences become untracked)
+      // -------------------------------------------------------
+      function doDetectSilence() {
+        if (!audioBuffer) return;
+
+        const thresholdDb  = parseFloat(document.getElementById('silence-threshold').value);
+        const minSilenceMs = Math.max(0, parseFloat(document.getElementById('silence-min-dur').value)  || 500);
+        const paddingMs    = Math.max(0, parseFloat(document.getElementById('silence-padding').value)   || 0);
+
+        const threshold    = Math.pow(10, thresholdDb / 20);   // dBFS → linear amplitude
+        const sr           = audioBuffer.sampleRate;
+        const winSamples   = Math.round(sr * 0.02);            // 20 ms RMS windows
+        const minSilWin    = Math.ceil((minSilenceMs / 1000) * sr / winSamples);
+        const padSamples   = Math.round((paddingMs / 1000) * sr);
+        const len          = audioBuffer.length;
+        const numCh        = audioBuffer.numberOfChannels;
+
+        // Load channel data once
+        const channels = [];
+        for (let ch = 0; ch < numCh; ch++) channels.push(audioBuffer.getChannelData(ch));
+
+        // Classify each 20 ms window: 1 = active, 0 = silent
+        const numWin   = Math.ceil(len / winSamples);
+        const isActive = new Uint8Array(numWin);
+        for (let w = 0; w < numWin; w++) {
+          const s0 = w * winSamples;
+          const s1 = Math.min(s0 + winSamples, len);
+          const n  = (s1 - s0) * numCh;
+          let sumSq = 0;
+          for (let ch = 0; ch < numCh; ch++) {
+            const d = channels[ch];
+            for (let i = s0; i < s1; i++) sumSq += d[i] * d[i];
+          }
+          isActive[w] = Math.sqrt(sumSq / n) >= threshold ? 1 : 0;
+        }
+
+        // Bridge silent gaps shorter than minSilWin (treat them as active)
+        let gapStart = -1;
+        for (let w = 0; w <= numWin; w++) {
+          if (w < numWin && isActive[w] === 0) {
+            if (gapStart === -1) gapStart = w;
+          } else {
+            if (gapStart !== -1) {
+              if (w - gapStart < minSilWin)
+                for (let j = gapStart; j < w; j++) isActive[j] = 1;
+              gapStart = -1;
+            }
+          }
+        }
+
+        // Collect contiguous active runs as sample ranges {s, e}
+        const regions = [];
+        let inRun = false, runStart = 0;
+        for (let w = 0; w <= numWin; w++) {
+          const a = w < numWin && isActive[w] === 1;
+          if (a && !inRun)      { runStart = w * winSamples; inRun = true; }
+          else if (!a && inRun) { regions.push({ s: runStart, e: Math.min(w * winSamples, len) }); inRun = false; }
+        }
+
+        if (regions.length === 0)
+          return showStatus('No active regions found. Try lowering the threshold.', 'error');
+
+        // Expand each region by padding, then merge any overlaps
+        for (const r of regions) { r.s = Math.max(0, r.s - padSamples); r.e = Math.min(len, r.e + padSamples); }
+        const merged = [{ ...regions[0] }];
+        for (let i = 1; i < regions.length; i++) {
+          const last = merged[merged.length - 1];
+          if (regions[i].s <= last.e) last.e = Math.max(last.e, regions[i].e);
+          else merged.push({ ...regions[i] });
+        }
+
+        // Build new segments: untracked gaps interleaved with clips
+        const newSegs = [];
+        let clipIdx = 0, pos = 0;
+        for (const r of merged) {
+          if (r.s > pos)
+            newSegs.push({ type: 'untracked', start: pos / sr, end: r.s / sr });
+          newSegs.push({
+            type:  'clip',
+            id:    newSid(),
+            color: nextClipColor(),
+            name:  'Clip ' + (++clipIdx),
+            start: r.s / sr,
+            end:   r.e / sr
+          });
+          pos = r.e;
+        }
+        if (pos < len)
+          newSegs.push({ type: 'untracked', start: pos / sr, end: len / sr });
+
+        segments = newSegs;
+        markArrangementDirty();
+        renderClipsList();
+        updateUI();
+
+        // Open clips panel so the result is immediately visible
+        document.getElementById('clips-panel').classList.add('visible');
+
+        showStatus(
+          `Detected ${clipIdx} active region${clipIdx !== 1 ? 's' : ''} — ` +
+          `silences set to untracked.`,
+          'info'
+        );
+      }
+
       function doUndo() {
         if (undoStack.length === 0) return;
         redoStack.push(cloneBuffer(audioBuffer));
@@ -2552,9 +2687,11 @@
         document.getElementById('btn-reverse').disabled      = !has;
         document.getElementById('btn-fade-in').disabled      = !has || !hasSel;
         document.getElementById('btn-fade-out').disabled     = !has || !hasSel;
-        document.getElementById('btn-trim-silence').disabled = !has;
-        document.getElementById('btn-effects').disabled      = !has;
-        document.getElementById('btn-clips').disabled       = !has;
+        document.getElementById('btn-trim-silence').disabled    = !has;
+        document.getElementById('btn-effects').disabled         = !has;
+        document.getElementById('btn-clips').disabled           = !has;
+        document.getElementById('btn-silence-detect').disabled  = !has;
+        document.getElementById('btn-do-detect-silence').disabled = !has;
         document.getElementById('btn-zoom-fit').disabled    = !has;
         document.getElementById('btn-zoom-in').disabled     = !has;
         document.getElementById('btn-zoom-out').disabled    = !has;
@@ -2627,6 +2764,13 @@
       });
       document.getElementById('btn-clips').addEventListener('click', () => {
         document.getElementById('clips-panel').classList.toggle('visible');
+      });
+      document.getElementById('btn-silence-detect').addEventListener('click', () => {
+        document.getElementById('silence-panel').classList.toggle('visible');
+      });
+      document.getElementById('btn-do-detect-silence').addEventListener('click', doDetectSilence);
+      document.getElementById('silence-threshold').addEventListener('input', (e) => {
+        document.getElementById('silence-threshold-display').textContent = e.target.value + ' dBFS';
       });
       document.getElementById('btn-split-cursor').addEventListener('click',    splitAtCursor);
       document.getElementById('btn-split-selection').addEventListener('click', splitSelection);
