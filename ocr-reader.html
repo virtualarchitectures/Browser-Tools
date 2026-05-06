@@ -512,17 +512,16 @@
 
     <!-- External Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
 
-    <script type="module">
-      // Import PDF.js
-      import * as pdfjsLib from "https://cdn.jsdelivr.net/npm/pdfjs-dist@5.4.449/+esm";
+    <script>
       /* =========================
          JavaScript
          ========================= */
 
       // Configure PDF.js worker
       pdfjsLib.GlobalWorkerOptions.workerSrc =
-        "https://cdn.jsdelivr.net/npm/pdfjs-dist@5.4.449/build/pdf.worker.mjs";
+        "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
 
       // State variables
       let currentFile = null;
@@ -786,7 +785,7 @@
           const canvas = await renderPDFPage(pageNum);
 
           // Check if we already have text for this page
-          if (allPagesText[pageNum - 1]) {
+          if (allPagesText[pageNum - 1] !== undefined) {
             textOutput.textContent = allPagesText[pageNum - 1];
 
             // Display stored confidence for this page
@@ -894,7 +893,12 @@
           try {
             const arrayBuffer = e.target.result;
             pdfDocument = await pdfjsLib.getDocument({
-              data: arrayBuffer,
+              data: new Uint8Array(arrayBuffer),
+              cMapUrl:
+                "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/",
+              cMapPacked: true,
+              standardFontDataUrl:
+                "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/standard_fonts/",
             }).promise;
             totalPages = pdfDocument.numPages;
 
