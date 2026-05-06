@@ -450,6 +450,10 @@
         <option value="auto">Auto-detect Columns</option>
         <option value="two">Two Columns</option>
       </select>
+      <label for="headerFooterCheckbox" style="display:flex;align-items:center;gap:6px;font-size:14px;font-weight:600;color:#24292e;cursor:pointer;white-space:nowrap;margin-left:4px;">
+        <input type="checkbox" id="headerFooterCheckbox" style="cursor:pointer;width:14px;height:14px;">
+        Remove headers &amp; footers
+      </label>
     </div>
 
     <div class="upload-section">
@@ -543,6 +547,7 @@
       const fileInput = document.getElementById("fileInput");
       const languageSelect = document.getElementById("languageSelect");
       const layoutSelect = document.getElementById("layoutSelect");
+      const headerFooterCheckbox = document.getElementById("headerFooterCheckbox");
       const fileName = document.getElementById("fileName");
       const status = document.getElementById("status");
       const qualityInfo = document.getElementById("qualityInfo");
@@ -626,13 +631,11 @@
             },
           });
 
-          const {
-            data: { text, confidence },
-          } = await worker.recognize(imageSource);
+          const { data } = await worker.recognize(imageSource);
           await worker.terminate();
 
           hideProgress();
-          return { text, confidence };
+          return { text: data.text, confidence: data.confidence, lines: data.lines };
         } catch (error) {
           hideProgress();
           throw error;
@@ -710,7 +713,11 @@
         }
 
         if (splitX === null) {
-          return performOCR(canvas);
+          const result = await performOCR(canvas);
+          return {
+            text: applyHeaderFooterFilter(result.lines, result.text, canvas.height),
+            confidence: result.confidence,
+          };
         }
 
         const leftCanvas = extractColumnCanvas(canvas, 0, splitX);
@@ -719,10 +726,44 @@
         const leftResult = await performOCR(leftCanvas, "Processing left column...");
         const rightResult = await performOCR(rightCanvas, "Processing right column...");
 
+        const leftText = applyHeaderFooterFilter(leftResult.lines, leftResult.text, canvas.height);
+        const rightText = applyHeaderFooterFilter(rightResult.lines, rightResult.text, canvas.height);
+
         return {
-          text: leftResult.text.trimEnd() + "\n\n" + rightResult.text.trimStart(),
+          text: leftText.trimEnd() + "\n\n" + rightText.trimStart(),
           confidence: (leftResult.confidence + rightResult.confidence) / 2,
         };
+      }
+
+      function shouldFilterLine(line, imageHeight) {
+        const { y0, y1 } = line.bbox;
+        const topThreshold = imageHeight * 0.08;
+        const bottomThreshold = imageHeight * 0.92;
+
+        if (y1 > topThreshold && y0 < bottomThreshold) return false;
+
+        const text = line.text.trim();
+        if (!text) return true;
+
+        // Bare page number: "42", "- 42 -", "42.", "1 of 10"
+        if (/^[-–—]?\s*\d+\s*[-–—]?\.?$/.test(text)) return true;
+        if (/^page\s+\d+(\s+of\s+\d+)?$/i.test(text)) return true;
+        if (/^\d+\s+of\s+\d+$/i.test(text)) return true;
+
+        // Short isolated text — running header or footer label
+        const wordCount = text.split(/\s+/).filter((w) => w).length;
+        if (wordCount <= 6 && text.length <= 60) return true;
+
+        return false;
+      }
+
+      function applyHeaderFooterFilter(lines, text, imageHeight) {
+        if (!headerFooterCheckbox.checked || !lines || !lines.length) return text;
+        const filtered = lines
+          .filter((line) => !shouldFilterLine(line, imageHeight))
+          .map((line) => line.text)
+          .join("");
+        return filtered.trim() ? filtered : text;
       }
 
       function checkImageQuality(img) {
@@ -1194,6 +1235,7 @@
 
       languageSelect.addEventListener("change", reprocessCurrentContent);
       layoutSelect.addEventListener("change", reprocessCurrentContent);
+      headerFooterCheckbox.addEventListener("change", reprocessCurrentContent);
 
       // Prevent default drag and drop on the whole page
       window.addEventListener("dragover", (e) => e.preventDefault());
