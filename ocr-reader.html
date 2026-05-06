@@ -990,6 +990,43 @@
         nextPageBtn.disabled = currentPage === totalPages;
       }
 
+      async function reprocessCurrentContent() {
+        if (!currentFile) return;
+
+        allPagesText = [];
+        allPagesConfidence = [];
+        textOutput.textContent = "";
+        qualityInfo.classList.add("hidden");
+        copyBtn.disabled = true;
+        downloadBtn.disabled = true;
+        downloadDocBtn.disabled = true;
+
+        if (currentFileType === "image") {
+          const img = imageContainer.querySelector("img");
+          if (!img) return;
+          const canvas = document.createElement("canvas");
+          canvas.width = img.naturalWidth || img.width;
+          canvas.height = img.naturalHeight || img.height;
+          canvas.getContext("2d").drawImage(img, 0, 0);
+          try {
+            const result = await performOCRWithLayout(canvas);
+            textOutput.textContent = result.text;
+            displayQualityInfo(result.confidence);
+            if (result.text.trim()) {
+              showStatus("OCR completed successfully!", "success");
+              copyBtn.disabled = false;
+              downloadBtn.disabled = false;
+            } else {
+              showStatus("No text found in image.", "info");
+            }
+          } catch (error) {
+            showStatus(`Error processing image: ${error.message}`, "error");
+          }
+        } else if (currentFileType === "pdf") {
+          processPDFPage(currentPage);
+        }
+      }
+
       async function handlePDF(file) {
         const reader = new FileReader();
         reader.onload = async (e) => {
@@ -1155,10 +1192,8 @@
 
       processAllBtn.addEventListener("click", processAllPDFPages);
 
-      layoutSelect.addEventListener("change", () => {
-        allPagesText = [];
-        allPagesConfidence = [];
-      });
+      languageSelect.addEventListener("change", reprocessCurrentContent);
+      layoutSelect.addEventListener("change", reprocessCurrentContent);
 
       // Prevent default drag and drop on the whole page
       window.addEventListener("dragover", (e) => e.preventDefault());
