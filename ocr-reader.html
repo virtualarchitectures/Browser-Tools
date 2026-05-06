@@ -444,6 +444,12 @@
         <option value="tur">Turkish</option>
         <option value="vie">Vietnamese</option>
       </select>
+      <label for="layoutSelect">Page Layout:</label>
+      <select id="layoutSelect">
+        <option value="single">Single Column</option>
+        <option value="auto">Auto-detect Columns</option>
+        <option value="two">Two Columns</option>
+      </select>
     </div>
 
     <div class="upload-section">
@@ -536,6 +542,7 @@
       const dropZone = document.getElementById("dropZone");
       const fileInput = document.getElementById("fileInput");
       const languageSelect = document.getElementById("languageSelect");
+      const layoutSelect = document.getElementById("layoutSelect");
       const fileName = document.getElementById("fileName");
       const status = document.getElementById("status");
       const qualityInfo = document.getElementById("qualityInfo");
@@ -605,10 +612,10 @@
         hideProgress();
       }
 
-      async function performOCR(imageSource) {
+      async function performOCR(imageSource, label = "Performing OCR... This may take a moment.") {
         try {
           const selectedLanguage = languageSelect.value;
-          showStatus("Performing OCR... This may take a moment.", "info");
+          showStatus(label, "info");
           showProgress(0);
 
           const worker = await Tesseract.createWorker(selectedLanguage, 1, {
@@ -630,6 +637,92 @@
           hideProgress();
           throw error;
         }
+      }
+
+      function detectColumnSplit(canvas) {
+        const ctx = canvas.getContext("2d");
+        const { width, height } = canvas;
+
+        // Sample the middle 50% of height to skip full-width headers/footers
+        const yStart = Math.floor(height * 0.25);
+        const yEnd = Math.floor(height * 0.75);
+        const sampleHeight = yEnd - yStart;
+
+        const imageData = ctx.getImageData(0, yStart, width, sampleHeight);
+        const pixels = imageData.data;
+
+        // Build vertical density histogram: fraction of dark pixels per column strip
+        const histogram = new Float32Array(width);
+        for (let x = 0; x < width; x++) {
+          let dark = 0;
+          for (let y = 0; y < sampleHeight; y++) {
+            const i = (y * width + x) * 4;
+            if ((pixels[i] + pixels[i + 1] + pixels[i + 2]) / 3 < 180) dark++;
+          }
+          histogram[x] = dark / sampleHeight;
+        }
+
+        // Smooth with a moving average to reduce noise from thin vertical lines
+        const smoothed = new Float32Array(width);
+        const halfKernel = Math.max(4, Math.floor(width * 0.01));
+        for (let x = 0; x < width; x++) {
+          let sum = 0, count = 0;
+          for (let k = -halfKernel; k <= halfKernel; k++) {
+            const xi = x + k;
+            if (xi >= 0 && xi < width) { sum += histogram[xi]; count++; }
+          }
+          smoothed[x] = sum / count;
+        }
+
+        // Search the central 30-70% of page width for the lowest-density valley
+        const searchStart = Math.floor(width * 0.30);
+        const searchEnd = Math.floor(width * 0.70);
+
+        let minVal = Infinity, splitX = -1;
+        for (let x = searchStart; x < searchEnd; x++) {
+          if (smoothed[x] < minVal) { minVal = smoothed[x]; splitX = x; }
+        }
+
+        // Require the valley to be nearly empty AND both sides to have real text
+        let leftPeak = 0, rightPeak = 0;
+        for (let x = searchStart; x < splitX; x++) leftPeak = Math.max(leftPeak, smoothed[x]);
+        for (let x = splitX; x < searchEnd; x++) rightPeak = Math.max(rightPeak, smoothed[x]);
+
+        return (minVal < 0.02 && leftPeak > 0.03 && rightPeak > 0.03) ? splitX : null;
+      }
+
+      function extractColumnCanvas(source, x, w) {
+        const col = document.createElement("canvas");
+        col.width = w;
+        col.height = source.height;
+        col.getContext("2d").drawImage(source, x, 0, w, source.height, 0, 0, w, source.height);
+        return col;
+      }
+
+      async function performOCRWithLayout(canvas) {
+        const layout = layoutSelect.value;
+
+        let splitX = null;
+        if (layout === "two") {
+          splitX = Math.floor(canvas.width / 2);
+        } else if (layout === "auto") {
+          splitX = detectColumnSplit(canvas);
+        }
+
+        if (splitX === null) {
+          return performOCR(canvas);
+        }
+
+        const leftCanvas = extractColumnCanvas(canvas, 0, splitX);
+        const rightCanvas = extractColumnCanvas(canvas, splitX, canvas.width - splitX);
+
+        const leftResult = await performOCR(leftCanvas, "Processing left column...");
+        const rightResult = await performOCR(rightCanvas, "Processing right column...");
+
+        return {
+          text: leftResult.text.trimEnd() + "\n\n" + rightResult.text.trimStart(),
+          confidence: (leftResult.confidence + rightResult.confidence) / 2,
+        };
       }
 
       function checkImageQuality(img) {
@@ -720,8 +813,13 @@
                 displayQualityInfo(null, warnings);
               }
 
-              // Perform OCR
-              const result = await performOCR(e.target.result);
+              // Draw to an offscreen canvas so column splitting can read pixel data
+              const canvas = document.createElement("canvas");
+              canvas.width = img.naturalWidth || img.width;
+              canvas.height = img.naturalHeight || img.height;
+              canvas.getContext("2d").drawImage(img, 0, 0);
+
+              const result = await performOCRWithLayout(canvas);
               textOutput.textContent = result.text;
 
               // Display quality info with confidence
@@ -801,7 +899,7 @@
           }
 
           // Perform OCR on the canvas
-          const result = await performOCR(canvas);
+          const result = await performOCRWithLayout(canvas);
           allPagesText[pageNum - 1] = result.text;
           allPagesConfidence[pageNum - 1] = result.confidence;
           textOutput.textContent = result.text;
@@ -849,7 +947,7 @@
             const canvas = imageContainer.querySelector("canvas");
 
             // Perform OCR
-            const result = await performOCR(canvas);
+            const result = await performOCRWithLayout(canvas);
             allPagesText[i - 1] = result.text;
             allPagesConfidence[i - 1] = result.confidence;
 
@@ -1056,6 +1154,11 @@
       });
 
       processAllBtn.addEventListener("click", processAllPDFPages);
+
+      layoutSelect.addEventListener("change", () => {
+        allPagesText = [];
+        allPagesConfidence = [];
+      });
 
       // Prevent default drag and drop on the whole page
       window.addEventListener("dragover", (e) => e.preventDefault());
