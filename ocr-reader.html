@@ -852,6 +852,11 @@
             const result = await performOCR(canvas);
             allPagesText[i - 1] = result.text;
             allPagesConfidence[i - 1] = result.confidence;
+
+            currentPage = i;
+            updatePageControls();
+            textOutput.textContent = result.text;
+            displayQualityInfo(result.confidence);
           }
 
           // Return to first page display and show its text
