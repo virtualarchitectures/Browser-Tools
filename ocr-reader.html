@@ -541,6 +541,8 @@
       let totalPages = 1;
       let allPagesText = [];
       let allPagesConfidence = [];
+      let currentImageDataUrl = null;
+      let allPagesHeaderFooterLines = [];
 
       // DOM elements
       const dropZone = document.getElementById("dropZone");
@@ -596,6 +598,8 @@
         totalPages = 1;
         allPagesText = [];
         allPagesConfidence = [];
+        currentImageDataUrl = null;
+        allPagesHeaderFooterLines = [];
         imageContainer.innerHTML = "";
         textOutput.textContent = "";
         fileInput.value = "";
@@ -714,9 +718,13 @@
 
         if (splitX === null) {
           const result = await performOCR(canvas);
+          const { text: filteredText, filteredLines } = applyHeaderFooterFilter(
+            result.lines, result.text, canvas.height
+          );
           return {
-            text: applyHeaderFooterFilter(result.lines, result.text, canvas.height),
+            text: filteredText,
             confidence: result.confidence,
+            headerFooterLines: [{ lines: filteredLines, xOffset: 0 }],
           };
         }
 
@@ -726,12 +734,16 @@
         const leftResult = await performOCR(leftCanvas, "Processing left column...");
         const rightResult = await performOCR(rightCanvas, "Processing right column...");
 
-        const leftText = applyHeaderFooterFilter(leftResult.lines, leftResult.text, canvas.height);
-        const rightText = applyHeaderFooterFilter(rightResult.lines, rightResult.text, canvas.height);
+        const leftFilter = applyHeaderFooterFilter(leftResult.lines, leftResult.text, canvas.height);
+        const rightFilter = applyHeaderFooterFilter(rightResult.lines, rightResult.text, canvas.height);
 
         return {
-          text: leftText.trimEnd() + "\n\n" + rightText.trimStart(),
+          text: leftFilter.text.trimEnd() + "\n\n" + rightFilter.text.trimStart(),
           confidence: (leftResult.confidence + rightResult.confidence) / 2,
+          headerFooterLines: [
+            { lines: leftFilter.filteredLines, xOffset: 0 },
+            { lines: rightFilter.filteredLines, xOffset: splitX },
+          ],
         };
       }
 
@@ -752,18 +764,50 @@
 
         // Short isolated text — running header or footer label
         const wordCount = text.split(/\s+/).filter((w) => w).length;
-        if (wordCount <= 6 && text.length <= 60) return true;
+        if (wordCount <= 10 && text.length <= 80) return true;
 
         return false;
       }
 
       function applyHeaderFooterFilter(lines, text, imageHeight) {
-        if (!headerFooterCheckbox.checked || !lines || !lines.length) return text;
-        const filtered = lines
-          .filter((line) => !shouldFilterLine(line, imageHeight))
-          .map((line) => line.text)
-          .join("");
-        return filtered.trim() ? filtered : text;
+        if (!lines || !lines.length) return { text, filteredLines: [] };
+
+        const kept = [], removed = [];
+        for (const line of lines) {
+          if (headerFooterCheckbox.checked && shouldFilterLine(line, imageHeight)) {
+            removed.push(line);
+          } else {
+            kept.push(line);
+          }
+        }
+
+        if (!removed.length) return { text, filteredLines: [] };
+
+        const filteredText = kept.map((l) => l.text).join("");
+        return {
+          text: filteredText.trim() ? filteredText : text,
+          filteredLines: removed,
+        };
+      }
+
+      function visualizeHeadersFooters(canvas, lineGroups) {
+        if (!lineGroups || !lineGroups.length) return;
+        const ctx = canvas.getContext("2d");
+        ctx.save();
+        for (const { lines, xOffset } of lineGroups) {
+          for (const line of lines) {
+            const x = line.bbox.x0 + xOffset;
+            const y = line.bbox.y0;
+            const w = line.bbox.x1 - line.bbox.x0;
+            const h = line.bbox.y1 - line.bbox.y0;
+            ctx.fillStyle = "rgba(220, 53, 69, 0.18)";
+            ctx.fillRect(x, y, w, h);
+            ctx.strokeStyle = "rgba(220, 53, 69, 0.85)";
+            ctx.lineWidth = 2;
+            ctx.strokeRect(x, y, w, h);
+          }
+        }
+        ctx.restore();
       }
 
       function checkImageQuality(img) {
@@ -842,19 +886,17 @@
       async function handleImage(file) {
         const reader = new FileReader();
         reader.onload = async (e) => {
+          currentImageDataUrl = e.target.result;
           try {
-            // Display image
             const img = document.createElement("img");
-            img.src = e.target.result;
+            img.src = currentImageDataUrl;
 
-            // Wait for image to load to check quality
             img.onload = async () => {
               const warnings = checkImageQuality(img);
               if (warnings.length > 0) {
                 displayQualityInfo(null, warnings);
               }
 
-              // Draw to an offscreen canvas so column splitting can read pixel data
               const canvas = document.createElement("canvas");
               canvas.width = img.naturalWidth || img.width;
               canvas.height = img.naturalHeight || img.height;
@@ -862,9 +904,11 @@
 
               const result = await performOCRWithLayout(canvas);
               textOutput.textContent = result.text;
-
-              // Display quality info with confidence
               displayQualityInfo(result.confidence, warnings);
+
+              imageContainer.innerHTML = "";
+              visualizeHeadersFooters(canvas, result.headerFooterLines);
+              imageContainer.appendChild(canvas);
 
               if (result.text.trim()) {
                 showStatus("OCR completed successfully!", "success");
@@ -927,9 +971,12 @@
           if (allPagesText[pageNum - 1] !== undefined) {
             textOutput.textContent = allPagesText[pageNum - 1];
 
-            // Display stored confidence for this page
             if (allPagesConfidence[pageNum - 1] !== undefined) {
               displayQualityInfo(allPagesConfidence[pageNum - 1]);
+            }
+
+            if (allPagesHeaderFooterLines[pageNum - 1]) {
+              visualizeHeadersFooters(canvas, allPagesHeaderFooterLines[pageNum - 1]);
             }
 
             showStatus(`Showing page ${pageNum} of ${totalPages}`, "success");
@@ -943,10 +990,11 @@
           const result = await performOCRWithLayout(canvas);
           allPagesText[pageNum - 1] = result.text;
           allPagesConfidence[pageNum - 1] = result.confidence;
+          allPagesHeaderFooterLines[pageNum - 1] = result.headerFooterLines;
           textOutput.textContent = result.text;
 
-          // Display confidence for this page
           displayQualityInfo(result.confidence);
+          visualizeHeadersFooters(canvas, result.headerFooterLines);
 
           if (result.text.trim()) {
             showStatus(`Page ${pageNum} processed successfully!`, "success");
@@ -991,11 +1039,13 @@
             const result = await performOCRWithLayout(canvas);
             allPagesText[i - 1] = result.text;
             allPagesConfidence[i - 1] = result.confidence;
+            allPagesHeaderFooterLines[i - 1] = result.headerFooterLines;
 
             currentPage = i;
             updatePageControls();
             textOutput.textContent = result.text;
             displayQualityInfo(result.confidence);
+            visualizeHeadersFooters(canvas, result.headerFooterLines);
           }
 
           // Return to first page display and show its text
@@ -1003,9 +1053,13 @@
           currentPage = 1;
           textOutput.textContent = allPagesText[0];
 
-          // Display confidence for first page
           if (allPagesConfidence[0] !== undefined) {
             displayQualityInfo(allPagesConfidence[0]);
+          }
+
+          const finalCanvas = imageContainer.querySelector("canvas");
+          if (finalCanvas && allPagesHeaderFooterLines[0]) {
+            visualizeHeadersFooters(finalCanvas, allPagesHeaderFooterLines[0]);
           }
 
           updatePageControls();
@@ -1036,6 +1090,7 @@
 
         allPagesText = [];
         allPagesConfidence = [];
+        allPagesHeaderFooterLines = [];
         textOutput.textContent = "";
         qualityInfo.classList.add("hidden");
         copyBtn.disabled = true;
@@ -1043,26 +1098,32 @@
         downloadDocBtn.disabled = true;
 
         if (currentFileType === "image") {
-          const img = imageContainer.querySelector("img");
-          if (!img) return;
-          const canvas = document.createElement("canvas");
-          canvas.width = img.naturalWidth || img.width;
-          canvas.height = img.naturalHeight || img.height;
-          canvas.getContext("2d").drawImage(img, 0, 0);
-          try {
-            const result = await performOCRWithLayout(canvas);
-            textOutput.textContent = result.text;
-            displayQualityInfo(result.confidence);
-            if (result.text.trim()) {
-              showStatus("OCR completed successfully!", "success");
-              copyBtn.disabled = false;
-              downloadBtn.disabled = false;
-            } else {
-              showStatus("No text found in image.", "info");
+          if (!currentImageDataUrl) return;
+          const img = new Image();
+          img.onload = async () => {
+            const canvas = document.createElement("canvas");
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            canvas.getContext("2d").drawImage(img, 0, 0);
+            imageContainer.innerHTML = "";
+            imageContainer.appendChild(canvas);
+            try {
+              const result = await performOCRWithLayout(canvas);
+              textOutput.textContent = result.text;
+              displayQualityInfo(result.confidence);
+              visualizeHeadersFooters(canvas, result.headerFooterLines);
+              if (result.text.trim()) {
+                showStatus("OCR completed successfully!", "success");
+                copyBtn.disabled = false;
+                downloadBtn.disabled = false;
+              } else {
+                showStatus("No text found in image.", "info");
+              }
+            } catch (error) {
+              showStatus(`Error processing image: ${error.message}`, "error");
             }
-          } catch (error) {
-            showStatus(`Error processing image: ${error.message}`, "error");
-          }
+          };
+          img.src = currentImageDataUrl;
         } else if (currentFileType === "pdf") {
           processPDFPage(currentPage);
         }
