@@ -116,12 +116,43 @@
         font-weight: 600;
         color: #24292e;
       }
+      .table-container {
+        margin-bottom: 12px;
+      }
       .table-wrapper {
         background: #ffffff;
         overflow-x: auto;
-        border-radius: 6px;
+        overflow-y: auto;
+        max-height: 824px;
+        border-radius: 6px 6px 0 0;
         border: 1px solid #e1e4e8;
-        margin-bottom: 12px;
+        border-bottom: none;
+      }
+      thead {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+      }
+      .table-resize-handle {
+        height: 12px;
+        background: #f6f8fa;
+        border: 1px solid #e1e4e8;
+        border-radius: 0 0 6px 6px;
+        cursor: ns-resize;
+        user-select: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .table-resize-handle:hover {
+        background: #eaecef;
+      }
+      .table-resize-handle::after {
+        content: '';
+        width: 36px;
+        height: 5px;
+        border-top: 1.5px solid #959da5;
+        border-bottom: 1.5px solid #959da5;
       }
       .data-table {
         width: 100%;
@@ -437,7 +468,8 @@
         <button class="btn danger" id="clearBtn">Clear All</button>
       </div>
       <div class="status" id="status">3 columns, 3 rows</div>
-      <div class="table-wrapper">
+      <div class="table-container">
+        <div class="table-wrapper" id="tableWrapper">
         <table class="data-table" id="dataTable">
           <thead>
             <tr id="headerRow">
@@ -502,6 +534,8 @@
             </tr>
           </tbody>
         </table>
+      </div>
+        <div class="table-resize-handle" id="tableResizeHandle"></div>
       </div>
       <div class="keyboard-hint">
         <kbd>Tab</kbd> to move forward, <kbd>Shift</kbd>+<kbd>Tab</kbd> to move
@@ -1159,6 +1193,39 @@
       }
 
       headerRow.addEventListener("mousedown", initResize);
+
+      /* =========================
+         Table Height Resizing
+         ========================= */
+
+      const tableWrapper = document.getElementById("tableWrapper");
+      const tableResizeHandle = document.getElementById("tableResizeHandle");
+      let tableResizing = false;
+      let tableResizeStartY, tableResizeStartHeight;
+
+      tableResizeHandle.addEventListener("mousedown", (e) => {
+        e.preventDefault();
+        tableResizing = true;
+        tableResizeStartY = e.pageY;
+        tableWrapper.style.height = tableWrapper.offsetHeight + "px";
+        tableWrapper.style.maxHeight = "none";
+        tableResizeStartHeight = tableWrapper.offsetHeight;
+        document.addEventListener("mousemove", doTableResize);
+        document.addEventListener("mouseup", stopTableResize);
+      });
+
+      function doTableResize(e) {
+        if (!tableResizing) return;
+        const diff = e.pageY - tableResizeStartY;
+        const newHeight = Math.max(80, tableResizeStartHeight + diff);
+        tableWrapper.style.height = newHeight + "px";
+      }
+
+      function stopTableResize() {
+        tableResizing = false;
+        document.removeEventListener("mousemove", doTableResize);
+        document.removeEventListener("mouseup", stopTableResize);
+      }
 
       /* =========================
          Initialization
