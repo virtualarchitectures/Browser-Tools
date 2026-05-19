@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CSV Map Viewer</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        color: #24292e;
+        background: #f6f8fa;
+      }
+      body.fullscreen {
+        padding: 0;
+        overflow: hidden;
+      }
+      h1 {
+        margin: 0 0 20px 0;
+        font-size: 28px;
+        font-weight: 600;
+      }
+      .controls {
+        display: flex;
+        gap: 0;
+        align-items: center;
+      }
+      body.fullscreen .controls {
+        display: none;
+      }
+      input[type="file"] {
+        display: none;
+      }
+      .btn {
+        background: #0366d6;
+        color: #fff;
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+        cursor: pointer;
+        font-size: 14px;
+        line-height: 20px;
+        text-decoration: none;
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Arial, sans-serif;
+      }
+      .btn:hover {
+        background: #0256c5;
+      }
+      .btn.secondary {
+        background: #fafbfc;
+        color: #24292e;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+      }
+      .btn.secondary:hover {
+        background: #f3f4f6;
+      }
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .panel {
+        background: #f6f8fa;
+        padding: 16px;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+        margin-bottom: 16px;
+      }
+      body.fullscreen .panel {
+        display: none;
+      }
+      .map-container {
+        background: white;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        overflow: hidden;
+        position: relative;
+        margin-bottom: 16px;
+      }
+      body.fullscreen .map-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        border: none;
+        border-radius: 0;
+        z-index: 9999;
+      }
+      #map {
+        width: 100%;
+        height: 600px;
+        background: #e8e8e8;
+      }
+      body.fullscreen #map {
+        height: 100vh;
+      }
+      .map-btn {
+        position: absolute;
+        top: 10px;
+        z-index: 1000;
+        background: white;
+        border: 2px solid rgba(0, 0, 0, 0.2);
+        border-radius: 4px;
+        padding: 6px 10px;
+        cursor: pointer;
+        font-size: 18px;
+        box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Arial, sans-serif;
+      }
+      .map-btn:hover {
+        background: #f4f4f4;
+      }
+      .map-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        background: #f4f4f4;
+      }
+      .fullscreen-btn {
+        right: 10px;
+      }
+      .zoom-extents-btn {
+        right: 60px;
+      }
+      .info {
+        font-size: 14px;
+        color: #24292e;
+        font-weight: 500;
+      }
+      .back-link {
+        display: inline-block;
+        color: #0366d6;
+        text-decoration: none;
+        margin-bottom: 20px;
+        font-size: 14px;
+      }
+      .back-link:hover {
+        text-decoration: underline;
+      }
+      h2 {
+        font-size: 18px;
+        font-weight: 600;
+        margin-top: 0;
+        margin-bottom: 15px;
+      }
+      h3 {
+        background: #0366d6;
+        color: white;
+        padding: 12px 15px;
+        cursor: pointer;
+        user-select: none;
+        display: flex;
+        align-items: center;
+        font-size: 16px;
+        font-weight: 600;
+        margin-top: 0;
+        margin-bottom: 0;
+        border-radius: 4px 4px 0 0;
+      }
+      h3:hover {
+        background: #0256c5;
+      }
+      h3::before {
+        content: "▼";
+        margin-right: 8px;
+        font-size: 12px;
+        transition: transform 0.2s;
+      }
+      h3.collapsed::before {
+        transform: rotate(-90deg);
+      }
+      .empty-state {
+        text-align: center;
+        color: #586069;
+        padding: 40px 20px;
+        font-size: 14px;
+      }
+      .feature-type-section {
+        margin-bottom: 30px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        overflow: hidden;
+      }
+      .table-content {
+        max-height: 500px;
+        transition: max-height 0.3s ease;
+        overflow: auto;
+      }
+      .table-content.collapsed {
+        max-height: 0;
+        overflow: hidden;
+      }
+      .properties-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 0;
+        font-size: 14px;
+      }
+      .properties-table th {
+        background: #f6f8fa;
+        font-weight: 600;
+        color: #24292e;
+        text-align: left;
+        padding: 10px 12px;
+        border: 1px solid #e1e4e8;
+      }
+      .properties-table td {
+        padding: 8px 12px;
+        border: 1px solid #e1e4e8;
+        color: #24292e;
+      }
+      .properties-table tr:hover {
+        background: #f6f8fa;
+        cursor: pointer;
+      }
+      .properties-table tr.selected {
+        background: #ddf4ff;
+      }
+      /* Coordinate configuration panel */
+      .coord-config {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .coord-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .coord-row label {
+        font-size: 14px;
+        font-weight: 500;
+        min-width: 100px;
+        white-space: nowrap;
+      }
+      .coord-row select {
+        padding: 6px 8px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 14px;
+        font-family: inherit;
+        background: white;
+      }
+      #separateConfig select {
+        max-width: 180px;
+        min-width: 0;
+      }
+      .coord-row select:focus {
+        outline: none;
+        border-color: #0366d6;
+        box-shadow: 0 0 0 3px rgba(3, 102, 214, 0.1);
+      }
+      .radio-group {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        font-size: 14px;
+      }
+      .radio-group label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        min-width: auto;
+        font-weight: normal;
+        cursor: pointer;
+      }
+      .msg-success {
+        color: #065f46;
+      }
+      .msg-error {
+        color: #d73a49;
+      }
+    </style>
+  </head>
+  <body>
+    <a href="index.html" class="back-link">← Back to Browser Tools</a>
+
+    <h1>CSV Map Viewer</h1>
+
+    <!-- Panel 1: File loading -->
+    <div class="panel">
+      <div class="controls">
+        <input
+          type="file"
+          id="fileInput"
+          accept=".csv,.txt"
+          style="display: none"
+        />
+        <label for="fileInput" class="btn">Browse</label>
+        <span id="fileStatus" class="info" style="margin-left: 8px"
+          >No file selected</span
+        >
+        <button
+          class="btn secondary"
+          id="clearBtn"
+          disabled
+          style="margin-left: auto"
+        >
+          Clear Map
+        </button>
+      </div>
+      <div id="detectionMsg" style="margin-top: 8px; display: none; font-size: 13px"></div>
+    </div>
+
+    <!-- Panel 2: Coordinate configuration (shown only when auto-detection fails) -->
+    <div class="panel" id="coordPanel" style="display: none">
+      <h2>Configure Coordinates</h2>
+      <div class="coord-config">
+        <div class="coord-row">
+          <label for="coordMode">Coordinate Format</label>
+          <select id="coordMode">
+            <option value="separate">Separate columns (Latitude + Longitude)</option>
+            <option value="combined">Single combined column (WKT or comma-separated)</option>
+          </select>
+        </div>
+        <div id="separateConfig" class="coord-row">
+          <label for="latCol">Latitude column</label>
+          <select id="latCol"></select>
+          <button type="button" id="swapColsBtn" title="Swap latitude and longitude columns" style="padding: 4px 8px; font-size: 16px; background: white; border: 1px solid #d1d5db; border-radius: 6px; cursor: pointer; line-height: 1;">⇄</button>
+          <label for="lonCol">Longitude column</label>
+          <select id="lonCol"></select>
+        </div>
+        <div id="combinedConfig" class="coord-row" style="display: none">
+          <label for="combinedCol">Coordinate column</label>
+          <select id="combinedCol"></select>
+          <div class="radio-group" style="margin-left: 8px">
+            <label><input type="radio" name="combinedFmt" value="wkt" checked /> WKT — POINT(lon lat)</label>
+            <label><input type="radio" name="combinedFmt" value="latlon" /> Comma — lat,lon</label>
+            <label><input type="radio" name="combinedFmt" value="lonlat" /> Comma — lon,lat</label>
+          </div>
+        </div>
+        <div>
+          <button class="btn" id="applyCoordBtn">Apply</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="map-container">
+      <button
+        class="map-btn zoom-extents-btn"
+        id="zoomExtentsBtn"
+        title="Zoom to Extents"
+        disabled
+      >
+        ⌖
+      </button>
+      <button
+        class="map-btn fullscreen-btn"
+        id="fullscreenBtn"
+        title="Toggle fullscreen"
+      >
+        ⛶
+      </button>
+      <div id="map"></div>
+    </div>
+
+    <div class="panel" id="propertiesPanel">
+      <h2>CSV Properties</h2>
+      <div id="propertiesDisplay" class="empty-state">
+        No file selected. Upload a CSV file to view properties.
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script type="module">
+      const fileInput = document.getElementById("fileInput");
+      const fileStatus = document.getElementById("fileStatus");
+      const clearBtn = document.getElementById("clearBtn");
+      const zoomExtentsBtn = document.getElementById("zoomExtentsBtn");
+      const fullscreenBtn = document.getElementById("fullscreenBtn");
+      const propertiesDisplay = document.getElementById("propertiesDisplay");
+      const detectionMsg = document.getElementById("detectionMsg");
+      const coordPanel = document.getElementById("coordPanel");
+      const coordMode = document.getElementById("coordMode");
+      const separateConfig = document.getElementById("separateConfig");
+      const combinedConfig = document.getElementById("combinedConfig");
+      const latColSelect = document.getElementById("latCol");
+      const lonColSelect = document.getElementById("lonCol");
+      const combinedColSelect = document.getElementById("combinedCol");
+      const applyCoordBtn = document.getElementById("applyCoordBtn");
+
+      const LAT_PATTERNS = [
+        "lat", "latitude", "y", "lat_dd", "latitude_dd",
+        "ycoord", "y_coord", "northing", "ylat",
+      ];
+      const LON_PATTERNS = [
+        "lon", "lng", "long", "longitude", "x", "lon_dd", "longitude_dd",
+        "xcoord", "x_coord", "easting", "xlon", "xlong",
+      ];
+      const COMBINED_PATTERNS = [
+        "wkt", "geometry", "geom", "coordinates", "coords",
+        "location", "point", "latlon", "lonlat", "latlng",
+      ];
+
+      const map = L.map("map").setView([0, 0], 2);
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution:
+          '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19,
+      }).addTo(map);
+
+      let markers = null;
+      let allRows = [];
+      let csvHeaders = [];
+      let parsedData = null;
+      let coordConfig = null;
+
+      fileInput.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (file) loadCSV(file);
+      });
+
+      const mapContainer = document.querySelector(".map-container");
+      mapContainer.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      });
+
+      mapContainer.addEventListener("drop", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const file = e.dataTransfer.files[0];
+        if (
+          file &&
+          (file.name.endsWith(".csv") || file.name.endsWith(".txt"))
+        ) {
+          loadCSV(file);
+        }
+      });
+
+      function loadCSV(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const result = Papa.parse(e.target.result, {
+            header: true,
+            skipEmptyLines: true,
+            dynamicTyping: false,
+          });
+
+          parsedData = result.data;
+          csvHeaders = result.meta.fields || [];
+          fileStatus.textContent = `Selected: ${file.name} (${parsedData.length} rows)`;
+          clearBtn.disabled = false;
+
+          const detected = detectCoordinates(csvHeaders, parsedData);
+          if (detected) {
+            coordConfig = detected;
+            showDetectionMsg(detected, "success");
+            coordPanel.style.display = "none";
+            renderMap();
+          } else {
+            showDetectionMsg(null, "error");
+            populateCoordPanel(csvHeaders);
+            coordPanel.style.display = "";
+          }
+        };
+        reader.readAsText(file);
+      }
+
+      function detectCoordinates(headers, data) {
+        const lower = headers.map((h) => h.toLowerCase().trim());
+
+        const latIdx = lower.findIndex((h) => LAT_PATTERNS.includes(h));
+        const lonIdx = lower.findIndex((h) => LON_PATTERNS.includes(h));
+
+        if (latIdx !== -1 && lonIdx !== -1) {
+          const latCol = headers[latIdx];
+          const lonCol = headers[lonIdx];
+          if (validateSeparateCoords(data, latCol, lonCol)) {
+            return { mode: "separate", latCol, lonCol };
+          }
+        }
+
+        const combinedIdx = lower.findIndex((h) => COMBINED_PATTERNS.includes(h));
+        if (combinedIdx !== -1) {
+          const combinedCol = headers[combinedIdx];
+          const fmt = detectCombinedFormat(data, combinedCol);
+          if (fmt) {
+            return { mode: "combined", combinedCol, combinedFmt: fmt };
+          }
+        }
+
+        return null;
+      }
+
+      function validateSeparateCoords(data, latCol, lonCol) {
+        const sample = data.slice(0, 20);
+        let valid = 0;
+        for (const row of sample) {
+          const lat = parseFloat(row[latCol]);
+          const lon = parseFloat(row[lonCol]);
+          if (
+            !isNaN(lat) && !isNaN(lon) &&
+            lat >= -90 && lat <= 90 &&
+            lon >= -180 && lon <= 180
+          ) {
+            valid++;
+          }
+        }
+        return valid >= Math.min(1, sample.length);
+      }
+
+      function detectCombinedFormat(data, col) {
+        const sample = data
+          .slice(0, 10)
+          .map((r) => (r[col] || "").trim());
+
+        if (sample.some((v) => /^POINT\s*\(/i.test(v))) return "wkt";
+
+        let latLonCount = 0;
+        let lonLatCount = 0;
+        for (const v of sample) {
+          const parts = v.split(",");
+          if (parts.length !== 2) continue;
+          const a = parseFloat(parts[0]);
+          const b = parseFloat(parts[1]);
+          if (isNaN(a) || isNaN(b)) continue;
+          if (a >= -90 && a <= 90 && b >= -180 && b <= 180) latLonCount++;
+          if (b >= -90 && b <= 90 && a >= -180 && a <= 180) lonLatCount++;
+        }
+        if (latLonCount > 0 && latLonCount >= lonLatCount) return "latlon";
+        if (lonLatCount > 0) return "lonlat";
+
+        return null;
+      }
+
+      function parseCoord(row, cfg) {
+        if (cfg.mode === "separate") {
+          const lat = parseFloat(row[cfg.latCol]);
+          const lon = parseFloat(row[cfg.lonCol]);
+          if (
+            !isNaN(lat) && !isNaN(lon) &&
+            lat >= -90 && lat <= 90 &&
+            lon >= -180 && lon <= 180
+          ) {
+            return { lat, lon };
+          }
+          return null;
+        }
+
+        const raw = (row[cfg.combinedCol] || "").trim();
+        if (!raw) return null;
+
+        if (cfg.combinedFmt === "wkt") {
+          const m = raw.match(
+            /^POINT\s*\(\s*([-\d.]+)\s+([-\d.]+)\s*\)/i
+          );
+          if (!m) return null;
+          const lon = parseFloat(m[1]);
+          const lat = parseFloat(m[2]);
+          if (isNaN(lat) || isNaN(lon)) return null;
+          return { lat, lon };
+        }
+
+        const parts = raw.split(",");
+        if (parts.length !== 2) return null;
+        const a = parseFloat(parts[0]);
+        const b = parseFloat(parts[1]);
+        if (isNaN(a) || isNaN(b)) return null;
+        return cfg.combinedFmt === "latlon"
+          ? { lat: a, lon: b }
+          : { lat: b, lon: a };
+      }
+
+      function getRowColor(row) {
+        for (const key of Object.keys(row)) {
+          const k = key.toLowerCase();
+          if (k === "color" || k === "colour") {
+            const v = row[key];
+            if (v && typeof v === "string" && v.trim()) return v.trim();
+          }
+        }
+        return "#0366d6";
+      }
+
+      function renderMap() {
+        if (markers) map.removeLayer(markers);
+        markers = L.featureGroup().addTo(map);
+        allRows = [];
+        let skippedCount = 0;
+
+        for (let i = 0; i < parsedData.length; i++) {
+          const row = parsedData[i];
+          const coord = parseCoord(row, coordConfig);
+          if (!coord) {
+            skippedCount++;
+            continue;
+          }
+
+          const color = getRowColor(row);
+          const baseStyle = {
+            radius: 6,
+            fillColor: color,
+            color: "#fff",
+            weight: 2,
+            opacity: 1,
+            fillOpacity: 0.8,
+          };
+          const marker = L.circleMarker([coord.lat, coord.lon], baseStyle);
+
+          let popup = "<strong>Properties:</strong><br>";
+          for (const [k, v] of Object.entries(row)) {
+            popup += `<strong>${k}:</strong> ${v}<br>`;
+          }
+          marker.bindPopup(popup);
+
+          const rowIndex = allRows.length;
+          marker.on("click", () => highlightRow(rowIndex, marker));
+          allRows.push({ row, marker, color });
+          markers.addLayer(marker);
+        }
+
+        if (allRows.length > 0 && markers.getBounds().isValid()) {
+          map.fitBounds(markers.getBounds());
+          zoomExtentsBtn.disabled = false;
+        }
+
+        if (skippedCount > 0) {
+          detectionMsg.textContent +=
+            ` — ${skippedCount} row${skippedCount > 1 ? "s" : ""} skipped (missing/invalid coordinates)`;
+        }
+
+        renderTable();
+      }
+
+      function highlightRow(index, clickedMarker) {
+        allRows.forEach(({ marker, color }) => {
+          marker.setStyle({
+            fillColor: color,
+            color: "#fff",
+            weight: 2,
+            fillOpacity: 0.8,
+          });
+        });
+
+        document.querySelectorAll(".properties-table tr").forEach((row) => {
+          row.classList.remove("selected");
+        });
+
+        clickedMarker.setStyle({
+          fillColor: "#d73a49",
+          color: "#d73a49",
+          weight: 3,
+          fillOpacity: 0.5,
+        });
+
+        const row = document.querySelector(`tr[data-row-index="${index}"]`);
+        if (row) {
+          row.classList.add("selected");
+          row.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }
+      }
+
+      function renderTable() {
+        propertiesDisplay.innerHTML = "";
+
+        if (allRows.length === 0) {
+          propertiesDisplay.innerHTML =
+            '<div class="empty-state">No valid coordinate rows found.</div>';
+          return;
+        }
+
+        let sortedKeys = [...csvHeaders];
+        const idIndex = sortedKeys.findIndex(
+          (key) => key.toLowerCase() === "id"
+        );
+        if (idIndex > -1) {
+          const idKey = sortedKeys[idIndex];
+          sortedKeys.splice(idIndex, 1);
+          sortedKeys.unshift(idKey);
+        }
+
+        const section = document.createElement("div");
+        section.className = "feature-type-section";
+
+        const heading = document.createElement("h3");
+        heading.textContent = `Points (${allRows.length})`;
+        section.appendChild(heading);
+
+        const tableContent = document.createElement("div");
+        tableContent.className = "table-content";
+
+        heading.addEventListener("click", () => {
+          tableContent.classList.toggle("collapsed");
+          heading.classList.toggle("collapsed");
+        });
+
+        const table = document.createElement("table");
+        table.className = "properties-table";
+
+        const thead = document.createElement("thead");
+        const headerRow = document.createElement("tr");
+        sortedKeys.forEach((key) => {
+          const th = document.createElement("th");
+          th.textContent = key;
+          headerRow.appendChild(th);
+        });
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+
+        const tbody = document.createElement("tbody");
+        allRows.forEach(({ row, marker }, index) => {
+          const tr = document.createElement("tr");
+          tr.dataset.rowIndex = index;
+
+          sortedKeys.forEach((key) => {
+            const td = document.createElement("td");
+            const value = row[key];
+            if (value !== undefined && value !== null && value !== "") {
+              td.textContent = value;
+            } else {
+              td.textContent = "";
+              td.style.background = "#fafbfc";
+            }
+            tr.appendChild(td);
+          });
+
+          tr.addEventListener("click", () => {
+            map.setView(marker.getLatLng(), 15);
+            highlightRow(index, marker);
+            marker.openPopup();
+          });
+
+          tbody.appendChild(tr);
+        });
+
+        table.appendChild(tbody);
+        tableContent.appendChild(table);
+        section.appendChild(tableContent);
+        propertiesDisplay.appendChild(section);
+      }
+
+      function populateCoordPanel(headers) {
+        [latColSelect, lonColSelect, combinedColSelect].forEach((sel) => {
+          sel.innerHTML = "";
+          headers.forEach((h) => {
+            const opt = document.createElement("option");
+            opt.value = h;
+            opt.textContent = h;
+            sel.appendChild(opt);
+          });
+        });
+
+        const lower = headers.map((h) => h.toLowerCase().trim());
+
+        const latIdx = lower.findIndex((h) => LAT_PATTERNS.includes(h));
+        if (latIdx !== -1) latColSelect.value = headers[latIdx];
+
+        const lonIdx = lower.findIndex((h) => LON_PATTERNS.includes(h));
+        if (lonIdx !== -1) lonColSelect.value = headers[lonIdx];
+
+        const combinedIdx = lower.findIndex((h) => COMBINED_PATTERNS.includes(h));
+        if (combinedIdx !== -1) combinedColSelect.value = headers[combinedIdx];
+      }
+
+      function showDetectionMsg(cfg, level) {
+        detectionMsg.style.display = "";
+        detectionMsg.className = level === "success" ? "msg-success" : "msg-error";
+        if (cfg && cfg.mode === "separate") {
+          detectionMsg.textContent = `Coordinates detected: '${cfg.latCol}' (lat) + '${cfg.lonCol}' (lon)`;
+        } else if (cfg && cfg.mode === "combined") {
+          detectionMsg.textContent = `Coordinates detected: '${cfg.combinedCol}' column (${cfg.combinedFmt.toUpperCase()})`;
+        } else {
+          detectionMsg.textContent =
+            "Could not auto-detect coordinates — please configure below";
+        }
+      }
+
+      function clearAll() {
+        if (markers) {
+          map.removeLayer(markers);
+          markers = null;
+        }
+        parsedData = null;
+        csvHeaders = [];
+        allRows = [];
+        coordConfig = null;
+        fileStatus.textContent = "No file selected";
+        fileInput.value = "";
+        clearBtn.disabled = true;
+        zoomExtentsBtn.disabled = true;
+        detectionMsg.style.display = "none";
+        detectionMsg.textContent = "";
+        coordPanel.style.display = "none";
+        propertiesDisplay.innerHTML =
+          '<div class="empty-state">No file selected. Upload a CSV file to view properties.</div>';
+        map.setView([0, 0], 2);
+      }
+
+      document.getElementById("swapColsBtn").addEventListener("click", () => {
+        const tmp = latColSelect.value;
+        latColSelect.value = lonColSelect.value;
+        lonColSelect.value = tmp;
+      });
+
+      coordMode.addEventListener("change", () => {
+        if (coordMode.value === "separate") {
+          separateConfig.style.display = "";
+          combinedConfig.style.display = "none";
+        } else {
+          separateConfig.style.display = "none";
+          combinedConfig.style.display = "";
+        }
+      });
+
+      applyCoordBtn.addEventListener("click", () => {
+        if (coordMode.value === "separate") {
+          coordConfig = {
+            mode: "separate",
+            latCol: latColSelect.value,
+            lonCol: lonColSelect.value,
+          };
+        } else {
+          const fmt = document.querySelector(
+            'input[name="combinedFmt"]:checked'
+          ).value;
+          coordConfig = {
+            mode: "combined",
+            combinedCol: combinedColSelect.value,
+            combinedFmt: fmt,
+          };
+        }
+        showDetectionMsg(coordConfig, "success");
+        renderMap();
+      });
+
+      zoomExtentsBtn.addEventListener("click", () => {
+        if (markers && markers.getBounds().isValid()) {
+          map.fitBounds(markers.getBounds());
+        }
+      });
+
+      clearBtn.addEventListener("click", clearAll);
+
+      fullscreenBtn.addEventListener("click", () => {
+        document.body.classList.toggle("fullscreen");
+        fullscreenBtn.title = document.body.classList.contains("fullscreen")
+          ? "Exit fullscreen"
+          : "Toggle fullscreen";
+        setTimeout(() => map.invalidateSize(), 100);
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (
+          e.key === "Escape" &&
+          document.body.classList.contains("fullscreen")
+        ) {
+          fullscreenBtn.click();
+        }
+      });
+    </script>
+  </body>
+</html>
