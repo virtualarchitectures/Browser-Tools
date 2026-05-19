@@ -574,11 +574,27 @@
             </select>
           </div>
           <div class="option-item">
-            <label class="option-label">&nbsp;</label>
-            <label class="checkbox-label">
-              <input type="checkbox" id="showLegend" checked />
-              Show legend
-            </label>
+            <label class="option-label">Legend</label>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+              <label class="checkbox-label">
+                <input type="checkbox" id="showLegend" checked />
+                Show legend
+              </label>
+              <select class="option-input" id="legendPosition" style="width:auto;">
+                <option value="top">Top</option>
+                <option value="bottom">Bottom</option>
+                <option value="left">Left</option>
+                <option value="right">Right</option>
+              </select>
+            </div>
+          </div>
+          <div class="option-item">
+            <label class="option-label" for="xAxisLabel">X-axis label</label>
+            <input type="text" class="option-input" id="xAxisLabel" placeholder="Auto" style="width:160px;" />
+          </div>
+          <div class="option-item">
+            <label class="option-label" for="yAxisLabel">Y-axis label</label>
+            <input type="text" class="option-input" id="yAxisLabel" placeholder="Auto" style="width:160px;" />
           </div>
         </div>
       </div>
@@ -1222,10 +1238,13 @@
       function buildConfig() {
         const title = document.getElementById("chartTitle").value.trim();
         const legend = document.getElementById("showLegend").checked;
+        const legendPos = document.getElementById("legendPosition").value;
+        const xLabel = document.getElementById("xAxisLabel").value.trim();
+        const yLabel = document.getElementById("yAxisLabel").value.trim();
         const t = selectedChartType;
 
         const pluginsBase = {
-          legend: { display: legend },
+          legend: { display: legend, position: legendPos },
           title: title
             ? {
                 display: true,
@@ -1263,10 +1282,10 @@
               maintainAspectRatio: false,
               plugins: { ...pluginsBase, legend: { display: false } },
               scales: {
-                x: { title: { display: true, text: xCol } },
+                x: { title: { display: true, text: xLabel || xCol } },
                 y: {
                   beginAtZero: true,
-                  title: { display: true, text: "Count" },
+                  title: { display: true, text: yLabel || "Count" },
                 },
               },
               barPercentage: 1,
@@ -1345,8 +1364,8 @@
               maintainAspectRatio: false,
               plugins: { ...pluginsBase },
               scales: {
-                x: { title: { display: true, text: xCol } },
-                y: { title: { display: true, text: yCol } },
+                x: { title: { display: true, text: xLabel || xCol } },
+                y: { title: { display: true, text: yLabel || yCol } },
               },
             },
           };
@@ -1403,13 +1422,16 @@
                 ? {
                     x: {
                       beginAtZero: true,
-                      title: { display: true, text: agg },
+                      title: { display: true, text: yLabel || agg },
                     },
-                    y: { title: { display: true, text: xCol } },
+                    y: { title: { display: true, text: xLabel || xCol } },
                   }
                 : {
-                    x: { title: { display: true, text: xCol } },
-                    y: { beginAtZero: true },
+                    x: { title: { display: true, text: xLabel || xCol } },
+                    y: {
+                      beginAtZero: true,
+                      ...(yLabel ? { title: { display: true, text: yLabel } } : {}),
+                    },
                   },
             },
           };
