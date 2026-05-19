@@ -596,6 +596,13 @@
             <label class="option-label" for="yAxisLabel">Y-axis label</label>
             <input type="text" class="option-input" id="yAxisLabel" placeholder="Auto" style="width:160px;" />
           </div>
+          <div class="option-item" id="fitLabelsOption" style="display:none;">
+            <label class="option-label">&nbsp;</label>
+            <label class="checkbox-label">
+              <input type="checkbox" id="fitAllLabels" checked />
+              Fit all labels
+            </label>
+          </div>
         </div>
       </div>
 
@@ -930,6 +937,8 @@
           numYSeries = 1;
         buildChartTypeUI();
         buildAxisConfigUI();
+        document.getElementById("fitLabelsOption").style.display =
+          type === "hbar" ? "" : "none";
       }
 
       /* ========================= Axis Config UI ========================= */
@@ -1424,7 +1433,10 @@
                       beginAtZero: true,
                       title: { display: true, text: yLabel || agg },
                     },
-                    y: { title: { display: true, text: xLabel || xCol } },
+                    y: {
+                      title: { display: true, text: xLabel || xCol },
+                      ticks: { autoSkip: !document.getElementById("fitAllLabels").checked },
+                    },
                   }
                 : {
                     x: { title: { display: true, text: xLabel || xCol } },
@@ -1457,11 +1469,22 @@
           return;
         }
         const canvas = document.getElementById("chartCanvas");
+        const container = document.getElementById("chartContainer");
         const empty = document.getElementById("chartEmptyState");
         if (chartInstance) {
           chartInstance.destroy();
           chartInstance = null;
         }
+
+        // For hbar with fit-all-labels, size the container to fit every label row
+        if (selectedChartType === "hbar" && document.getElementById("fitAllLabels").checked) {
+          const n = config.data.labels.length;
+          const minH = Math.max(460, n * 28 + 80);
+          container.style.height = minH + "px";
+        } else {
+          container.style.height = "460px";
+        }
+
         canvas.style.display = "block";
         empty.style.display = "none";
         chartInstance = new Chart(canvas.getContext("2d"), config);
