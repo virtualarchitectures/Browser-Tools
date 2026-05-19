@@ -24,6 +24,10 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 - **[JSON to CSV Converter](json-to-csv.html)** — convert JSON, JSONL, and NDJSON files to CSV format with support for nested objects, array handling, and table preview
 - **[Table Editor](table-editor.html)** — create tables or load existing CSV files for editing, export to CSV, JSON, or JSON Lines format
 
+### Data Visualisation
+
+- **[Data Visualiser](data-visualiser.html)** — load a CSV and create bar, line, area, scatter, histogram, pie, and doughnut charts with automatic column type inference and per-axis type overrides
+
 ### Digital Forensics
 
 - **[Email Header Analysis](email-header-analysis.html)** — analyse and highlight email headers with syntax highlighting for IPs, emails, and URLs
