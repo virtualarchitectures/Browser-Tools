@@ -1,0 +1,871 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Data Summary</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family:
+          Helvetica,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Arial,
+          sans-serif;
+        line-height: 1.6;
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 20px;
+        color: #24292e;
+        background: #ffffff;
+      }
+      h1 {
+        border-bottom: 1px solid #eaecef;
+        padding-bottom: 0.3em;
+        margin-top: 0;
+        font-size: 32px;
+        font-weight: 600;
+      }
+      h3 {
+        margin: 0 0 10px;
+        font-size: 15px;
+        font-weight: 600;
+        color: #24292e;
+      }
+      .back-link {
+        display: inline-block;
+        margin-bottom: 16px;
+        color: #0366d6;
+        text-decoration: none;
+        font-size: 14px;
+      }
+      .back-link:hover {
+        text-decoration: underline;
+      }
+      .panel {
+        background: #f6f8fa;
+        padding: 16px;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+        margin-bottom: 16px;
+      }
+      .panel h2 {
+        margin-top: 0;
+        margin-bottom: 12px;
+        font-size: 20px;
+        font-weight: 600;
+      }
+      .section {
+        margin-bottom: 16px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid #e1e4e8;
+      }
+      .section:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+      }
+      .btn {
+        background: #fafbfc;
+        color: #24292e;
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+        cursor: pointer;
+        font-size: 14px;
+        line-height: 20px;
+        text-decoration: none;
+        font-family:
+          Helvetica,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Arial,
+          sans-serif;
+        display: inline-block;
+      }
+      .btn.primary {
+        background: #0366d6;
+        color: #fff;
+      }
+      .btn.primary:hover {
+        background: #0256c5;
+      }
+      input[type="file"] {
+        display: none;
+      }
+      .controls {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-bottom: 8px;
+      }
+      .status {
+        font-size: 13px;
+        color: #586069;
+        margin-bottom: 8px;
+      }
+      .info {
+        font-size: 13px;
+        color: #586069;
+        margin-bottom: 12px;
+      }
+
+      /* Preview table */
+      .preview-wrapper {
+        overflow-x: auto;
+        margin-top: 10px;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+        background: #fff;
+        max-height: 200px;
+        overflow-y: auto;
+      }
+      .preview-table {
+        border-collapse: collapse;
+        font-size: 13px;
+        width: 100%;
+      }
+      .preview-table th {
+        background: #0366d6;
+        color: #fff;
+        padding: 6px 10px;
+        text-align: left;
+        white-space: nowrap;
+        font-weight: 600;
+        position: sticky;
+        top: 0;
+      }
+      .preview-table td {
+        padding: 5px 10px;
+        border-bottom: 1px solid #e1e4e8;
+        white-space: nowrap;
+        max-width: 160px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .preview-table tr:hover td {
+        background: #f6f8fa;
+      }
+      details summary {
+        cursor: pointer;
+        font-size: 13px;
+        color: #0366d6;
+        user-select: none;
+        margin-top: 8px;
+      }
+      details summary:hover {
+        text-decoration: underline;
+      }
+
+      /* Type badge */
+      .type-badge {
+        font-size: 11px;
+        padding: 1px 6px;
+        border-radius: 10px;
+        font-weight: 600;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+      .type-badge.numeric     { background: #dbeafe; color: #1d4ed8; }
+      .type-badge.date        { background: #d1fae5; color: #065f46; }
+      .type-badge.categorical { background: #fef3c7; color: #92400e; }
+      .type-badge.text        { background: #f3f4f6; color: #6b7280; }
+
+      /* Overview stats strip */
+      .overview-strip {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 12px;
+      }
+      .overview-stat {
+        background: #ffffff;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        padding: 12px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .overview-stat .val {
+        font-size: 30px;
+        font-weight: 700;
+        line-height: 1.1;
+        color: #0366d6;
+      }
+      .overview-stat .lbl {
+        font-size: 12px;
+        color: #586069;
+      }
+
+      /* Collapsible panel (details/summary) */
+      details.panel > summary {
+        cursor: pointer;
+        list-style: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0;
+        font-size: 20px;
+        font-weight: 600;
+        user-select: none;
+        text-decoration: none;
+        color: #24292e;
+      }
+      details.panel > summary::-webkit-details-marker { display: none; }
+      details.panel > summary::marker { display: none; }
+      details.panel[open] > summary {
+        margin-bottom: 12px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #e1e4e8;
+      }
+      details.panel > summary::before {
+        content: "▼";
+        display: inline-block;
+        font-size: 12px;
+        color: #586069;
+        font-weight: 400;
+        transform: rotate(-90deg);
+        transition: transform 0.2s;
+        flex-shrink: 0;
+      }
+      details.panel[open] > summary::before {
+        transform: rotate(0deg);
+      }
+
+      /* Completeness legend */
+      .completeness-legend {
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+        font-size: 12px;
+        color: #586069;
+      }
+      .completeness-legend-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .legend-swatch {
+        width: 12px;
+        height: 12px;
+        border-radius: 2px;
+        flex-shrink: 0;
+      }
+
+      /* Completeness chart */
+      #completenessChartContainer {
+        background: #ffffff;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        padding: 12px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      /* Column detail */
+      .option-group {
+        margin-bottom: 12px;
+      }
+      .option-group:last-child {
+        margin-bottom: 0;
+      }
+      .option-group > label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #24292e;
+      }
+      .col-select {
+        width: 100%;
+        padding: 6px 12px;
+        font-size: 16px;
+        font-family:
+          Helvetica,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Arial,
+          sans-serif;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        background: #ffffff;
+        color: #24292e;
+      }
+      .col-select:focus {
+        outline: none;
+        border-color: #0366d6;
+      }
+
+      /* Detail card */
+      .detail-card {
+        background: #ffffff;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        overflow: hidden;
+        margin-top: 14px;
+      }
+      .detail-header {
+        padding: 10px 14px;
+        background: #f6f8fa;
+        border-bottom: 1px solid #e1e4e8;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .detail-col-name {
+        font-size: 15px;
+        font-weight: 700;
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .detail-body {
+        padding: 14px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+      @media (max-width: 600px) {
+        .detail-body { grid-template-columns: 1fr; }
+      }
+
+      /* Completeness bar */
+      .completeness-bar-wrap {
+        background: #e1e4e8;
+        border-radius: 4px;
+        height: 10px;
+        overflow: hidden;
+        margin: 6px 0 2px;
+      }
+      .completeness-bar-fill {
+        height: 100%;
+        border-radius: 4px;
+        background: #4a94d6;
+        transition: width 0.3s ease;
+      }
+      .completeness-bar-fill.full {
+        background: #3db85a;
+      }
+      .completeness-sub {
+        font-size: 11px;
+        color: #586069;
+        margin-bottom: 10px;
+      }
+
+      /* Stat rows */
+      .stat-group-label {
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #586069;
+        margin: 12px 0 4px;
+      }
+      .stat-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        font-size: 13px;
+        padding: 3px 0;
+        border-bottom: 1px solid #f0f2f4;
+      }
+      .stat-row:last-child {
+        border-bottom: none;
+      }
+      .stat-label {
+        color: #586069;
+        flex-shrink: 0;
+        margin-right: 8px;
+      }
+      .stat-value {
+        font-weight: 600;
+        text-align: right;
+        word-break: break-all;
+      }
+
+      /* Top values */
+      .top-values-section h3 {
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #586069;
+        margin: 0 0 8px;
+      }
+      .top-value-row {
+        display: grid;
+        grid-template-columns: 1fr auto auto;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        margin-bottom: 5px;
+      }
+      .top-value-text {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        min-width: 0;
+      }
+      .top-value-bar-wrap {
+        width: 80px;
+        background: #e1e4e8;
+        border-radius: 3px;
+        height: 7px;
+        overflow: hidden;
+        flex-shrink: 0;
+      }
+      .top-value-bar {
+        height: 100%;
+        background: #4a94d6;
+        border-radius: 3px;
+      }
+      .top-value-count {
+        color: #586069;
+        font-size: 11px;
+        text-align: right;
+        white-space: nowrap;
+      }
+    </style>
+  </head>
+  <body>
+    <a href="index.html" class="back-link">← Back to Browser Tools</a>
+    <h1>Data Summary</h1>
+
+    <!-- Panel 1: Load Data -->
+    <div class="panel">
+      <h2>Load Data</h2>
+      <div class="info">
+        Load a CSV file to profile your dataset. All processing happens in your
+        browser — no data is uploaded.
+      </div>
+      <div class="controls">
+        <label for="fileInput" class="btn primary">Load CSV</label>
+        <input type="file" id="fileInput" accept=".csv,text/csv" />
+      </div>
+      <div class="status" id="loadStatus">No file loaded</div>
+      <details id="previewDetails" style="display: none">
+        <summary>Show data preview</summary>
+        <div class="preview-wrapper">
+          <table class="preview-table" id="previewTable"></table>
+        </div>
+      </details>
+    </div>
+
+    <!-- Panel 2: Dataset Overview -->
+    <div class="panel" id="overviewPanel" style="display: none">
+      <h2>Dataset Overview</h2>
+      <div class="overview-strip" id="overviewStrip"></div>
+    </div>
+
+    <!-- Panel: Column Summary Table (collapsible) -->
+    <details class="panel" id="summaryTablePanel" style="display: none" open>
+      <summary>Column Summary</summary>
+      <div class="preview-wrapper" style="max-height: 420px; margin-top: 10px;">
+        <table class="preview-table" id="summaryTable"></table>
+      </div>
+    </details>
+
+    <!-- Panel 3: Data Completeness (collapsible) -->
+    <details class="panel" id="completenessPanel" style="display: none" open>
+      <summary>Data Completeness by Column</summary>
+      <div id="completenessChartContainer">
+        <canvas id="completenessCanvas"></canvas>
+      </div>
+    </details>
+
+    <!-- Panel 3: Column Detail -->
+    <div class="panel" id="detailPanel" style="display: none">
+      <h2>Column Detail</h2>
+      <div class="option-group">
+        <label for="colSelect">Select Column</label>
+        <select class="col-select" id="colSelect"></select>
+      </div>
+      <div id="colDetail"></div>
+    </div>
+
+    <script>
+      /* ========================= State ========================= */
+      let columnSummaries = [];
+      let completenessChart = null;
+
+      /* ========================= Completeness colours ========================= */
+      const COMPLETENESS_COLOR = {
+        full:    { bg: "#3db85a", border: "#3db85a" },
+        partial: { bg: "#4a94d6", border: "#4a94d6" },
+      };
+      function completenessColor(pct) {
+        return pct === 100 ? COMPLETENESS_COLOR.full : COMPLETENESS_COLOR.partial;
+      }
+
+      /* ========================= CSV Parsing ========================= */
+      function parseCSV(text) {
+        const lines = [];
+        let currentLine = [], currentField = "", insideQuotes = false;
+        for (let i = 0; i < text.length; i++) {
+          const char = text[i], nextChar = text[i + 1];
+          if (char === '"') {
+            if (insideQuotes && nextChar === '"') { currentField += '"'; i++; }
+            else insideQuotes = !insideQuotes;
+          } else if (char === "," && !insideQuotes) {
+            currentLine.push(currentField); currentField = "";
+          } else if ((char === "\n" || char === "\r") && !insideQuotes) {
+            if (char === "\r" && nextChar === "\n") i++;
+            if (currentField || currentLine.length > 0) {
+              currentLine.push(currentField);
+              if (currentLine.some((f) => f.trim() !== "")) lines.push(currentLine);
+              currentLine = []; currentField = "";
+            }
+          } else {
+            currentField += char;
+          }
+        }
+        if (currentField || currentLine.length > 0) {
+          currentLine.push(currentField);
+          if (currentLine.some((f) => f.trim() !== "")) lines.push(currentLine);
+        }
+        return lines;
+      }
+
+      /* ========================= Type Inference ========================= */
+      function isNumericValue(v) {
+        const s = String(v).trim().replace(/,/g, "");
+        return s !== "" && !isNaN(parseFloat(s)) && isFinite(s);
+      }
+      function isDateValue(v) {
+        const s = String(v).trim();
+        if (s === "" || isNumericValue(v)) return false;
+        const d = new Date(s);
+        return !isNaN(d.getTime()) && s.length >= 6;
+      }
+      function inferType(values) {
+        const sample = values.slice(0, 200).filter((v) => String(v).trim() !== "");
+        if (sample.length === 0) return "text";
+        if (sample.filter(isNumericValue).length / sample.length >= 0.8) return "numeric";
+        if (sample.filter(isDateValue).length / sample.length >= 0.8) return "date";
+        const unique = new Set(values.map((v) => String(v).trim()));
+        return unique.size <= 50 || unique.size / Math.max(sample.length, 1) <= 0.5
+          ? "categorical" : "text";
+      }
+
+      /* ========================= Utilities ========================= */
+      function esc(s) {
+        return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+      }
+      function fmtNum(n) {
+        if (n === null || n === undefined || isNaN(n)) return "—";
+        if (Math.abs(n) >= 1e9) return (n / 1e9).toPrecision(4) + "B";
+        if (Math.abs(n) >= 1e6) return (n / 1e6).toPrecision(4) + "M";
+        return parseFloat(n.toPrecision(6)).toString();
+      }
+      function fmtPct(a, b) {
+        return b === 0 ? "0%" : ((a / b) * 100).toFixed(1) + "%";
+      }
+
+      /* ========================= Statistics ========================= */
+      function numericStats(nums) {
+        if (nums.length === 0) return null;
+        const sorted = [...nums].sort((a, b) => a - b);
+        const n = sorted.length;
+        const sum = sorted.reduce((a, b) => a + b, 0);
+        const mean = sum / n;
+        const mid = Math.floor(n / 2);
+        const median = n % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
+        const variance = sorted.reduce((acc, v) => acc + (v - mean) ** 2, 0) / n;
+        return {
+          min: sorted[0], max: sorted[n - 1], sum, mean, median,
+          stddev: Math.sqrt(variance),
+          q1: sorted[Math.floor(n * 0.25)],
+          q3: sorted[Math.floor(n * 0.75)],
+        };
+      }
+      function topValues(values, k = 10) {
+        const counts = new Map();
+        values.forEach((v) => {
+          const s = String(v).trim();
+          if (s !== "") counts.set(s, (counts.get(s) || 0) + 1);
+        });
+        return [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, k);
+      }
+
+      /* ========================= Summarise column ========================= */
+      function summariseColumn(header, values, type) {
+        const total = values.length;
+        const nonBlank = values.filter((v) => String(v).trim() !== "").length;
+        const blank = total - nonBlank;
+        const unique = new Set(values.map((v) => String(v).trim()).filter((v) => v !== "")).size;
+        const col = { header, type, total, nonBlank, blank, unique };
+
+        if (type === "numeric") {
+          const nums = values.map((v) => parseFloat(String(v).replace(/,/g, ""))).filter((n) => !isNaN(n));
+          col.stats = numericStats(nums);
+        }
+        if (type === "date") {
+          const dates = values.map((v) => new Date(String(v).trim())).filter((d) => !isNaN(d.getTime())).sort((a, b) => a - b);
+          if (dates.length) { col.dateMin = dates[0]; col.dateMax = dates[dates.length - 1]; }
+        }
+        col.topValues = topValues(values, 10);
+        return col;
+      }
+
+      /* ========================= Summary table ========================= */
+      function renderSummaryTable(cols) {
+        const colHeaders = ["Column", "Type", "Non-blank", "Blank (%)", "Complete", "Unique", "Summary"];
+        let html = "<thead><tr>" + colHeaders.map((h) => `<th>${esc(h)}</th>`).join("") + "</tr></thead><tbody>";
+
+        cols.forEach((col) => {
+          const blankStr = col.blank === 0
+            ? "0"
+            : `${col.blank.toLocaleString()} (${fmtPct(col.blank, col.total)})`;
+          const uniqueStr = `${col.unique.toLocaleString()} (${fmtPct(col.unique, col.nonBlank)})`;
+
+          let summary = "—";
+          if (col.type === "numeric" && col.stats) {
+            const s = col.stats;
+            summary = `min ${fmtNum(s.min)}, max ${fmtNum(s.max)}, mean ${fmtNum(s.mean)}`;
+          } else if (col.type === "date" && col.dateMin) {
+            summary = `${col.dateMin.toISOString().slice(0, 10)} → ${col.dateMax.toISOString().slice(0, 10)}`;
+          } else if (col.topValues.length > 0) {
+            const [val, cnt] = col.topValues[0];
+            summary = `Top: ${val} (${cnt.toLocaleString()})`;
+          }
+
+          html += `<tr>
+            <td style="font-weight:600">${esc(col.header)}</td>
+            <td><span class="type-badge ${col.type}">${col.type}</span></td>
+            <td>${col.nonBlank.toLocaleString()}</td>
+            <td>${esc(blankStr)}</td>
+            <td>${fmtPct(col.nonBlank, col.total)}</td>
+            <td>${esc(uniqueStr)}</td>
+            <td style="color:#586069;font-size:12px">${esc(summary)}</td>
+          </tr>`;
+        });
+
+        html += "</tbody>";
+        document.getElementById("summaryTable").innerHTML = html;
+      }
+
+      /* ========================= Completeness chart ========================= */
+      function drawCompletenessChart(cols) {
+        const container = document.getElementById("completenessChartContainer");
+        const canvas = document.getElementById("completenessCanvas");
+        const n = cols.length;
+        container.style.height = Math.max(260, n * 26 + 72) + "px";
+
+        if (completenessChart) { completenessChart.destroy(); completenessChart = null; }
+
+        const pcts = cols.map((c) => parseFloat(((c.nonBlank / c.total) * 100).toFixed(1)));
+
+        completenessChart = new Chart(canvas.getContext("2d"), {
+          type: "bar",
+          data: {
+            labels: cols.map((c) => c.header),
+            datasets: [{
+              data: pcts,
+              backgroundColor: pcts.map((p) => completenessColor(p).bg),
+              borderColor:     pcts.map((p) => completenessColor(p).border),
+              borderWidth: 1,
+              borderRadius: 3,
+            }],
+          },
+          options: {
+            indexAxis: "y",
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  title: (items) => items[0].label,
+                  label: (ctx) => {
+                    const c = cols[ctx.dataIndex];
+                    return [
+                      `${ctx.parsed.x}% complete (${c.type})`,
+                      `Non-blank: ${c.nonBlank.toLocaleString()}  |  Blank: ${c.blank.toLocaleString()}`,
+                      `Unique values: ${c.unique.toLocaleString()}`,
+                    ];
+                  },
+                },
+              },
+            },
+            scales: {
+              x: {
+                min: 0, max: 100,
+                title: { display: true, text: "Completeness (%)" },
+                ticks: { callback: (v) => v + "%" },
+                grid: { color: "#e1e4e8" },
+              },
+              y: { ticks: { autoSkip: false, font: { size: 12 } } },
+            },
+          },
+        });
+      }
+
+      /* ========================= Column detail ========================= */
+      function renderColDetail(col) {
+        const pct = col.total === 0 ? 0 : (col.nonBlank / col.total) * 100;
+        const isFull = col.blank === 0;
+
+        // Left panel: completeness + stats
+        let statsHTML = `
+          <div>
+            <div class="stat-group-label">Completeness</div>
+            <div class="completeness-bar-wrap">
+              <div class="completeness-bar-fill${isFull ? " full" : ""}" style="width:${pct.toFixed(1)}%"></div>
+            </div>
+            <div class="completeness-sub">${pct.toFixed(1)}% — ${col.nonBlank.toLocaleString()} non-blank, ${col.blank.toLocaleString()} blank of ${col.total.toLocaleString()} rows</div>
+            <div class="stat-row">
+              <span class="stat-label">Non-blank</span>
+              <span class="stat-value">${col.nonBlank.toLocaleString()}</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Blank</span>
+              <span class="stat-value">${col.blank.toLocaleString()} (${fmtPct(col.blank, col.total)})</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Unique values</span>
+              <span class="stat-value">${col.unique.toLocaleString()} (${fmtPct(col.unique, col.nonBlank)} of non-blank)</span>
+            </div>`;
+
+        if (col.type === "numeric" && col.stats) {
+          const s = col.stats;
+          statsHTML += `
+            <div class="stat-group-label" style="margin-top:12px">Statistics</div>
+            <div class="stat-row"><span class="stat-label">Min</span><span class="stat-value">${fmtNum(s.min)}</span></div>
+            <div class="stat-row"><span class="stat-label">Max</span><span class="stat-value">${fmtNum(s.max)}</span></div>
+            <div class="stat-row"><span class="stat-label">Mean</span><span class="stat-value">${fmtNum(s.mean)}</span></div>
+            <div class="stat-row"><span class="stat-label">Median</span><span class="stat-value">${fmtNum(s.median)}</span></div>
+            <div class="stat-row"><span class="stat-label">Std dev</span><span class="stat-value">${fmtNum(s.stddev)}</span></div>
+            <div class="stat-row"><span class="stat-label">Sum</span><span class="stat-value">${fmtNum(s.sum)}</span></div>
+            <div class="stat-row"><span class="stat-label">Q1</span><span class="stat-value">${fmtNum(s.q1)}</span></div>
+            <div class="stat-row"><span class="stat-label">Q3</span><span class="stat-value">${fmtNum(s.q3)}</span></div>`;
+        }
+        if (col.type === "date" && col.dateMin) {
+          statsHTML += `
+            <div class="stat-group-label" style="margin-top:12px">Date Range</div>
+            <div class="stat-row"><span class="stat-label">Earliest</span><span class="stat-value">${esc(col.dateMin.toISOString().slice(0, 10))}</span></div>
+            <div class="stat-row"><span class="stat-label">Latest</span><span class="stat-value">${esc(col.dateMax.toISOString().slice(0, 10))}</span></div>`;
+        }
+        statsHTML += `</div>`;
+
+        // Right panel: top values
+        let topHTML = `<div class="top-values-section"><h3>Top values</h3>`;
+        if (col.topValues.length === 0) {
+          topHTML += `<p style="font-size:13px;color:#586069;">No values</p>`;
+        } else {
+          const maxCount = col.topValues[0][1];
+          topHTML += col.topValues.map(([val, cnt]) => {
+            const pctBar = Math.round((cnt / maxCount) * 100);
+            const pctOfTotal = fmtPct(cnt, col.total);
+            return `<div class="top-value-row">
+              <span class="top-value-text" title="${esc(val)}">${esc(val)}</span>
+              <div class="top-value-bar-wrap"><div class="top-value-bar" style="width:${pctBar}%"></div></div>
+              <span class="top-value-count">${cnt.toLocaleString()} (${pctOfTotal})</span>
+            </div>`;
+          }).join("");
+        }
+        topHTML += `</div>`;
+
+        document.getElementById("colDetail").innerHTML = `
+          <div class="detail-card">
+            <div class="detail-header">
+              <span class="detail-col-name" title="${esc(col.header)}">${esc(col.header)}</span>
+              <span class="type-badge ${col.type}">${col.type}</span>
+            </div>
+            <div class="detail-body">
+              ${statsHTML}
+              ${topHTML}
+            </div>
+          </div>`;
+      }
+
+      /* ========================= Build preview table ========================= */
+      function buildPreview(headers, rows) {
+        const head = "<thead><tr>" + headers.map((h) => `<th>${esc(h)}</th>`).join("") + "</tr></thead>";
+        const body = "<tbody>" + rows.slice(0, 5).map((r) =>
+          "<tr>" + headers.map((_, i) => `<td title="${esc(r[i]||"")}">${esc(r[i]||"")}</td>`).join("") + "</tr>"
+        ).join("") + "</tbody>";
+        return head + body;
+      }
+
+      /* ========================= Render all ========================= */
+      function renderAll(headers, rows) {
+        const types = {};
+        headers.forEach((h, i) => { types[h] = inferType(rows.map((r) => r[i] || "")); });
+
+        columnSummaries = headers.map((h, i) =>
+          summariseColumn(h, rows.map((r) => r[i] || ""), types[h])
+        );
+
+        // Overview stats
+        const totalCells = rows.length * headers.length;
+        const blankCells = columnSummaries.reduce((a, c) => a + c.blank, 0);
+        const overallPct = fmtPct(totalCells - blankCells, totalCells);
+        const typeCounts = { numeric: 0, date: 0, categorical: 0, text: 0 };
+        columnSummaries.forEach((c) => { if (typeCounts[c.type] !== undefined) typeCounts[c.type]++; });
+
+        document.getElementById("overviewStrip").innerHTML = [
+          [rows.length.toLocaleString(), "Rows"],
+          [headers.length.toLocaleString(), "Columns"],
+          [overallPct, "Overall completeness"],
+          [blankCells.toLocaleString(), "Blank cells"],
+          [typeCounts.numeric, "Numeric columns"],
+          [typeCounts.date, "Date columns"],
+          [typeCounts.categorical, "Categorical columns"],
+        ].map(([v, l]) => `<div class="overview-stat"><span class="val">${v}</span><span class="lbl">${l}</span></div>`).join("");
+
+
+        renderSummaryTable(columnSummaries);
+        drawCompletenessChart(columnSummaries);
+
+        // Column dropdown
+        const sel = document.getElementById("colSelect");
+        sel.innerHTML = columnSummaries.map((c, i) =>
+          `<option value="${i}">${esc(c.header)} (${c.type})</option>`
+        ).join("");
+        renderColDetail(columnSummaries[0]);
+
+        document.getElementById("overviewPanel").style.display = "";
+        document.getElementById("summaryTablePanel").style.display = "";
+        document.getElementById("completenessPanel").style.display = "";
+        document.getElementById("detailPanel").style.display = "";
+      }
+
+      /* ========================= Load file ========================= */
+      function loadFile(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const lines = parseCSV(e.target.result);
+          if (lines.length < 2) { alert("CSV must have at least a header row and one data row."); return; }
+          const headers = lines[0];
+          const rows = lines.slice(1);
+          document.getElementById("loadStatus").textContent =
+            `${esc(file.name)} — ${headers.length} column${headers.length !== 1 ? "s" : ""}, ${rows.length} row${rows.length !== 1 ? "s" : ""}`;
+          document.getElementById("previewTable").innerHTML = buildPreview(headers, rows);
+          document.getElementById("previewDetails").style.display = "";
+          renderAll(headers, rows);
+        };
+        reader.onerror = () => alert("Error reading file.");
+        reader.readAsText(file);
+      }
+
+      /* ========================= Events ========================= */
+      document.getElementById("fileInput").addEventListener("change", (e) => {
+        if (e.target.files[0]) loadFile(e.target.files[0]);
+      });
+      document.getElementById("colSelect").addEventListener("change", (e) => {
+        const idx = parseInt(e.target.value, 10);
+        if (columnSummaries[idx]) renderColDetail(columnSummaries[idx]);
+      });
+    </script>
+  </body>
+</html>
