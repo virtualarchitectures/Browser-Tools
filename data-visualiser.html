@@ -236,6 +236,16 @@
       .chart-type-btn.dimmed {
         opacity: 0.45;
       }
+      .chart-type-desc {
+        margin: 10px 0 0;
+        font-size: 13px;
+        color: #444d56;
+        line-height: 1.5;
+        padding: 10px 12px;
+        background: #ffffff;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+      }
 
       /* Axis config */
       .axis-config {
@@ -530,6 +540,7 @@
       <div class="section">
         <h3>Chart Type</h3>
         <div class="chart-type-grid" id="chartTypeGrid"></div>
+        <p class="chart-type-desc" id="chartTypeDesc"></p>
       </div>
 
       <div class="section">
@@ -669,41 +680,49 @@
           id: "bar",
           label: "Bar",
           svg: '<svg width="20" height="16" viewBox="0 0 20 16"><rect x="1" y="8" width="3" height="7" fill="currentColor" opacity=".6"/><rect x="6" y="4" width="3" height="11" fill="currentColor" opacity=".8"/><rect x="11" y="1" width="3" height="14" fill="currentColor"/><rect x="16" y="6" width="3" height="9" fill="currentColor" opacity=".7"/></svg>',
+          desc: "Bar Chart - Compares a numeric value across discrete categories or dates. Set X to a categorical or date column and Y to one or more numeric columns. Rows with the same X label are aggregated. Works best with a small-to-medium number of distinct categories.",
         },
         {
           id: "hbar",
           label: "H-Bar",
           svg: '<svg width="20" height="16" viewBox="0 0 20 16"><rect x="0" y="1" width="6" height="3" fill="currentColor" opacity=".6"/><rect x="0" y="6" width="14" height="3" fill="currentColor"/><rect x="0" y="11" width="10" height="3" fill="currentColor" opacity=".8"/></svg>',
+          desc: "Horizontal Bar Chart - A bar chart displayed horizontally, useful when category labels are long or many categories would make a vertical chart cramped. Set X to a categorical or date column and Y to a numeric column. Easier to read than a vertical bar chart when labels would otherwise overlap.",
         },
         {
           id: "line",
           label: "Line",
           svg: '<svg width="20" height="16" viewBox="0 0 20 16"><polyline points="0,13 4,8 9,10 13,4 20,6" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="4" cy="8" r="1.5" fill="currentColor"/><circle cx="9" cy="10" r="1.5" fill="currentColor"/><circle cx="13" cy="4" r="1.5" fill="currentColor"/></svg>',
+          desc: "Line Chart - Shows how numeric values change across an ordered sequence or over time. X should be a date or numeric column; Y should be numeric. Add multiple Y series to compare trends side by side.",
         },
         {
           id: "area",
           label: "Area",
           svg: '<svg width="20" height="16" viewBox="0 0 20 16"><path d="M0,13 4,8 9,10 13,4 20,6 20,15 0,15Z" fill="currentColor" opacity=".4"/><polyline points="0,13 4,8 9,10 13,4 20,6" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>',
+          desc: "Area Chart - Like a line chart but with the region below the line filled in, emphasising volume or cumulative magnitude. X should be a date or numeric column; Y should be numeric. Best used with one or two series, as many overlapping fills can obscure data.",
         },
         {
           id: "scatter",
           label: "Scatter",
           svg: '<svg width="20" height="16" viewBox="0 0 20 16"><circle cx="3" cy="13" r="1.8" fill="currentColor"/><circle cx="7" cy="8" r="1.8" fill="currentColor"/><circle cx="11" cy="11" r="1.8" fill="currentColor"/><circle cx="15" cy="4" r="1.8" fill="currentColor"/><circle cx="9" cy="5" r="1.8" fill="currentColor"/><circle cx="17" cy="9" r="1.8" fill="currentColor"/><circle cx="5" cy="14" r="1.8" fill="currentColor" opacity=".6"/></svg>',
+          desc: "Scatter Plot - Plots each row as a point using two numeric columns as coordinates, making correlations and clusters visible. No aggregation is applied; every row becomes a dot, up to a maximum of 2,000 points. Both X and Y must be numeric columns.",
         },
         {
           id: "histogram",
           label: "Histogram",
           svg: '<svg width="20" height="16" viewBox="0 0 20 16"><rect x="0" y="11" width="3" height="4" fill="currentColor" opacity=".5"/><rect x="3" y="7" width="3" height="8" fill="currentColor" opacity=".7"/><rect x="6" y="2" width="3" height="13" fill="currentColor"/><rect x="9" y="5" width="3" height="10" fill="currentColor" opacity=".85"/><rect x="12" y="9" width="3" height="6" fill="currentColor" opacity=".65"/><rect x="15" y="12" width="3" height="3" fill="currentColor" opacity=".5"/></svg>',
+          desc: "Histogram - Shows the frequency distribution of a single numeric column by grouping values into equal-width bins. Adjust the bin count to control granularity: fewer bins reveal overall shape, more bins expose fine detail. Useful for spotting skew, spread, or multiple peaks.",
         },
         {
           id: "pie",
           label: "Pie",
           svg: '<svg width="16" height="16" viewBox="0 0 16 16"><path d="M8,8 L8,1 A7,7 0 0,1 15,8 Z" fill="currentColor"/><path d="M8,8 L15,8 A7,7 0 0,1 4.5,14.3 Z" fill="currentColor" opacity=".6"/><path d="M8,8 L4.5,14.3 A7,7 0 1,1 8,1 Z" fill="currentColor" opacity=".35"/></svg>',
+          desc: "Pie Chart - Displays the proportional share of each category as a slice of a circle. Use a categorical column for the segments, sized by count or by aggregating a numeric column. Works best with fewer than 8–10 distinct categories. Consider a bar chart for larger sets.",
         },
         {
           id: "doughnut",
           label: "Doughnut",
           svg: '<svg width="16" height="16" viewBox="0 0 16 16"><path d="M8,8 L8,1 A7,7 0 0,1 15,8 Z" fill="currentColor"/><path d="M8,8 L15,8 A7,7 0 0,1 4.5,14.3 Z" fill="currentColor" opacity=".6"/><path d="M8,8 L4.5,14.3 A7,7 0 1,1 8,1 Z" fill="currentColor" opacity=".35"/><circle cx="8" cy="8" r="3.2" fill="#f6f8fa"/></svg>',
+          desc: "Doughnut Chart - A variant of the pie chart with a hollow centre that can make arc lengths easier to compare visually. Use a categorical column for segments, optionally weighted by a numeric column. As with pie, best kept to fewer than 8–10 categories.",
         },
       ];
 
@@ -884,6 +903,9 @@
           </button>`;
           },
         ).join("");
+        const active = CHART_TYPES.find((ct) => ct.id === selectedChartType);
+        const descEl = document.getElementById("chartTypeDesc");
+        if (descEl && active) descEl.textContent = active.desc;
       }
 
       function selectChartType(type) {
