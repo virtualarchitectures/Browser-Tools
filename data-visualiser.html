@@ -6,9 +6,17 @@
     <title>Data Visualiser</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     <style>
-      * { box-sizing: border-box; }
+      * {
+        box-sizing: border-box;
+      }
       body {
-        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+        font-family:
+          Helvetica,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Arial,
+          sans-serif;
         line-height: 1.6;
         max-width: 980px;
         margin: 0 auto;
@@ -23,7 +31,12 @@
         font-size: 32px;
         font-weight: 600;
       }
-      h3 { margin: 0 0 10px; font-size: 15px; font-weight: 600; color: #24292e; }
+      h3 {
+        margin: 0 0 10px;
+        font-size: 15px;
+        font-weight: 600;
+        color: #24292e;
+      }
       .back-link {
         display: inline-block;
         margin-bottom: 16px;
@@ -31,7 +44,9 @@
         text-decoration: none;
         font-size: 14px;
       }
-      .back-link:hover { text-decoration: underline; }
+      .back-link:hover {
+        text-decoration: underline;
+      }
       .panel {
         background: #f6f8fa;
         padding: 16px;
@@ -39,35 +54,77 @@
         border: 1px solid #e1e4e8;
         margin-bottom: 16px;
       }
-      .panel h2 { margin-top: 0; margin-bottom: 12px; font-size: 20px; font-weight: 600; }
+      .panel h2 {
+        margin-top: 0;
+        margin-bottom: 12px;
+        font-size: 20px;
+        font-weight: 600;
+      }
       .section {
         margin-bottom: 16px;
         padding-bottom: 16px;
         border-bottom: 1px solid #e1e4e8;
       }
-      .section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+      .section:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+      }
       .btn {
         background: #fafbfc;
         color: #24292e;
         padding: 8px 12px;
         border-radius: 6px;
-        border: 1px solid rgba(27,31,35,.15);
+        border: 1px solid rgba(27, 31, 35, 0.15);
         cursor: pointer;
         font-size: 14px;
         line-height: 20px;
         text-decoration: none;
-        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+        font-family:
+          Helvetica,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Arial,
+          sans-serif;
         display: inline-block;
       }
-      .btn:hover { background: #f3f4f6; }
-      .btn.primary { background: #0366d6; color: #fff; }
-      .btn.primary:hover { background: #0256c5; }
-      .btn.secondary:hover { background: #f3f4f6; }
-      input[type="file"] { display: none; }
-      label.btn { margin: 0; }
-      .controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
-      .status { font-size: 13px; color: #586069; margin-bottom: 8px; }
-      .info { font-size: 13px; color: #586069; margin-bottom: 12px; }
+      .btn:hover {
+        background: #f3f4f6;
+      }
+      .btn.primary {
+        background: #0366d6;
+        color: #fff;
+      }
+      .btn.primary:hover {
+        background: #0256c5;
+      }
+      .btn.secondary:hover {
+        background: #f3f4f6;
+      }
+      input[type="file"] {
+        display: none;
+      }
+      label.btn {
+        margin: 0;
+      }
+      .controls {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-bottom: 8px;
+      }
+      .status {
+        font-size: 13px;
+        color: #586069;
+        margin-bottom: 8px;
+      }
+      .info {
+        font-size: 13px;
+        color: #586069;
+        margin-bottom: 12px;
+      }
 
       /* Column types */
       .col-types-grid {
@@ -91,7 +148,11 @@
         text-overflow: ellipsis;
         white-space: nowrap;
       }
-      .col-type-row { display: flex; gap: 6px; align-items: center; }
+      .col-type-row {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
       .type-badge {
         font-size: 11px;
         padding: 1px 6px;
@@ -100,10 +161,22 @@
         flex-shrink: 0;
         white-space: nowrap;
       }
-      .type-badge.numeric    { background: #dbeafe; color: #1d4ed8; }
-      .type-badge.date       { background: #d1fae5; color: #065f46; }
-      .type-badge.categorical{ background: #fef3c7; color: #92400e; }
-      .type-badge.text       { background: #f3f4f6; color: #6b7280; }
+      .type-badge.numeric {
+        background: #dbeafe;
+        color: #1d4ed8;
+      }
+      .type-badge.date {
+        background: #d1fae5;
+        color: #065f46;
+      }
+      .type-badge.categorical {
+        background: #fef3c7;
+        color: #92400e;
+      }
+      .type-badge.text {
+        background: #f3f4f6;
+        color: #6b7280;
+      }
       .type-select {
         font-size: 12px;
         padding: 2px 4px;
@@ -116,7 +189,11 @@
       }
 
       /* Chart type buttons */
-      .chart-type-grid { display: flex; gap: 6px; flex-wrap: wrap; }
+      .chart-type-grid {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
       .chart-type-btn {
         background: #ffffff;
         border: 2px solid #e1e4e8;
@@ -125,27 +202,88 @@
         cursor: pointer;
         font-size: 12px;
         color: #24292e;
-        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+        font-family:
+          Helvetica,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Arial,
+          sans-serif;
         display: flex;
         flex-direction: column;
         align-items: center;
         gap: 3px;
         min-width: 72px;
       }
-      .chart-type-btn:hover { border-color: #0366d6; background: #f0f7ff; }
-      .chart-type-btn.selected { border-color: #0366d6; background: #f0f7ff; color: #0366d6; font-weight: 600; }
-      .chart-type-btn .chart-icon { line-height: 1; }
-      .chart-type-btn .rec-star { font-size: 10px; color: #e6a817; line-height: 1; }
-      .chart-type-btn.dimmed { opacity: 0.45; }
+      .chart-type-btn:hover {
+        border-color: #0366d6;
+        background: #f0f7ff;
+      }
+      .chart-type-btn.selected {
+        border-color: #0366d6;
+        background: #f0f7ff;
+        color: #0366d6;
+        font-weight: 600;
+      }
+      .chart-type-btn .chart-icon {
+        line-height: 1;
+      }
+      .chart-type-btn .rec-star {
+        font-size: 10px;
+        color: #e6a817;
+        line-height: 1;
+      }
+      .chart-type-btn.dimmed {
+        opacity: 0.45;
+      }
 
       /* Axis config */
-      .axis-config { display: flex; flex-direction: column; gap: 10px; }
-      .axis-row { display: flex; align-items: flex-start; gap: 8px; flex-wrap: wrap; }
-      .axis-label { font-size: 13px; font-weight: 600; width: 80px; flex-shrink: 0; padding-top: 7px; }
+      .axis-config {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .axis-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .axis-label {
+        font-size: 13px;
+        font-weight: 600;
+        width: 80px;
+        flex-shrink: 0;
+      }
+      .type-widget {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        flex-shrink: 0;
+      }
+      .type-select-inline {
+        font-size: 12px;
+        padding: 3px 6px;
+        border: 1px solid #e1e4e8;
+        border-radius: 4px;
+        background: #fff;
+        color: #24292e;
+        cursor: pointer;
+      }
+      .type-select-inline:focus {
+        outline: none;
+        border-color: #0366d6;
+      }
       .axis-select {
         padding: 6px 10px;
         font-size: 14px;
-        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+        font-family:
+          Helvetica,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Arial,
+          sans-serif;
         border: 1px solid #e1e4e8;
         border-radius: 6px;
         background: #ffffff;
@@ -153,12 +291,24 @@
         flex: 1;
         min-width: 150px;
       }
-      .axis-select:focus { outline: none; border-color: #0366d6; }
-      .y-series-list { display: flex; flex-direction: column; gap: 6px; flex: 1; }
-      .y-series-row { display: flex; gap: 6px; align-items: center; }
+      .axis-select:focus {
+        outline: none;
+        border-color: #0366d6;
+      }
+      .y-series-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        flex: 1;
+      }
+      .y-series-row {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
       .remove-series-btn {
         background: #fafbfc;
-        border: 1px solid rgba(27,31,35,.15);
+        border: 1px solid rgba(27, 31, 35, 0.15);
         border-radius: 4px;
         color: #586069;
         cursor: pointer;
@@ -172,28 +322,60 @@
         flex-shrink: 0;
         line-height: 1;
       }
-      .remove-series-btn:hover { background: #ffeef0; color: #cb2431; }
+      .remove-series-btn:hover {
+        background: #ffeef0;
+        color: #cb2431;
+      }
 
       /* Options */
-      .options-grid { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-end; }
-      .option-item { display: flex; flex-direction: column; gap: 4px; }
-      .option-label { font-size: 13px; font-weight: 600; }
+      .options-grid {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        align-items: flex-end;
+      }
+      .option-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .option-label {
+        font-size: 13px;
+        font-weight: 600;
+      }
       .option-input {
         padding: 6px 10px;
         font-size: 14px;
-        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+        font-family:
+          Helvetica,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Arial,
+          sans-serif;
         border: 1px solid #e1e4e8;
         border-radius: 6px;
         background: #ffffff;
         color: #24292e;
       }
-      .option-input:focus { outline: none; border-color: #0366d6; }
+      .option-input:focus {
+        outline: none;
+        border-color: #0366d6;
+      }
       .checkbox-label {
-        display: flex; align-items: center; gap: 6px;
-        font-size: 14px; cursor: pointer; user-select: none;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 14px;
+        cursor: pointer;
+        user-select: none;
         padding-top: 6px;
       }
-      .checkbox-label input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; }
+      .checkbox-label input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+      }
 
       /* Chart area */
       #chartContainer {
@@ -207,7 +389,8 @@
       }
       .empty-state-msg {
         position: absolute;
-        top: 50%; left: 50%;
+        top: 50%;
+        left: 50%;
         transform: translate(-50%, -50%);
         color: #586069;
         font-style: italic;
@@ -249,7 +432,9 @@
         overflow: hidden;
         text-overflow: ellipsis;
       }
-      .preview-table tr:hover td { background: #f6f8fa; }
+      .preview-table tr:hover td {
+        background: #f6f8fa;
+      }
       details summary {
         cursor: pointer;
         font-size: 13px;
@@ -257,7 +442,9 @@
         user-select: none;
         margin-top: 8px;
       }
-      details summary:hover { text-decoration: underline; }
+      details summary:hover {
+        text-decoration: underline;
+      }
 
       /* Warning */
       .warning {
@@ -270,10 +457,46 @@
         margin-top: 8px;
       }
 
+      /* Edit column types collapsible */
+      #editTypesDetails > summary {
+        display: inline;
+        cursor: pointer;
+        color: #0366d6;
+        font-size: 13px;
+        list-style: none;
+        user-select: none;
+      }
+      #editTypesDetails > summary::-webkit-details-marker {
+        display: none;
+      }
+      #editTypesDetails > summary::marker {
+        display: none;
+      }
+      #editTypesDetails > summary:hover {
+        text-decoration: underline;
+      }
+      #editTypesDetails .col-types-grid {
+        max-height: 220px;
+        overflow-y: auto;
+        padding-right: 4px;
+      }
+
       /* Bins slider */
-      .bins-row { display: flex; align-items: center; gap: 8px; }
-      input[type="range"] { flex: 1; max-width: 160px; cursor: pointer; }
-      .bins-val { font-size: 13px; color: #24292e; min-width: 24px; }
+      .bins-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      input[type="range"] {
+        flex: 1;
+        max-width: 160px;
+        cursor: pointer;
+      }
+      .bins-val {
+        font-size: 13px;
+        color: #24292e;
+        min-width: 24px;
+      }
     </style>
   </head>
   <body>
@@ -283,13 +506,16 @@
     <!-- Panel 1: Load Data -->
     <div class="panel">
       <h2>Load Data</h2>
-      <div class="info">Load a CSV file to visualise. Column types are inferred automatically and can be overridden.</div>
+      <div class="info">
+        Load a CSV file to visualise. Column types are inferred automatically
+        but can be overridden.
+      </div>
       <div class="controls">
         <label for="fileInput" class="btn primary">Load CSV</label>
         <input type="file" id="fileInput" accept=".csv,text/csv" />
       </div>
       <div class="status" id="loadStatus">No file loaded</div>
-      <details id="previewDetails" style="display:none">
+      <details id="previewDetails" style="display: none">
         <summary>Show data preview</summary>
         <div class="preview-wrapper">
           <table class="preview-table" id="previewTable"></table>
@@ -298,14 +524,8 @@
     </div>
 
     <!-- Panel 2: Configure Chart -->
-    <div class="panel" id="configPanel" style="display:none">
+    <div class="panel" id="configPanel" style="display: none">
       <h2>Configure Chart</h2>
-
-      <div class="section">
-        <h3>Column Types</h3>
-        <div class="info">Inferred types shown below — override if incorrect.</div>
-        <div class="col-types-grid" id="columnTypesGrid"></div>
-      </div>
 
       <div class="section">
         <h3>Chart Type</h3>
@@ -322,10 +542,18 @@
         <div class="options-grid">
           <div class="option-item">
             <label class="option-label" for="chartTitle">Title</label>
-            <input type="text" class="option-input" id="chartTitle" placeholder="Optional chart title" style="width:220px">
+            <input
+              type="text"
+              class="option-input"
+              id="chartTitle"
+              placeholder="Optional chart title"
+              style="width: 220px"
+            />
           </div>
           <div class="option-item">
-            <label class="option-label" for="paletteSelect">Colour Scheme</label>
+            <label class="option-label" for="paletteSelect"
+              >Colour Scheme</label
+            >
             <select class="option-input" id="paletteSelect">
               <option value="default">Default</option>
               <option value="warm">Warm</option>
@@ -344,8 +572,8 @@
         </div>
       </div>
 
-      <div id="configWarning" class="warning" style="display:none"></div>
-      <div style="margin-top:16px">
+      <div id="configWarning" class="warning" style="display: none"></div>
+      <div style="margin-top: 16px">
         <button class="btn primary" id="drawChartBtn">Draw Chart</button>
       </div>
     </div>
@@ -354,11 +582,15 @@
     <div class="panel">
       <h2>Visualisation</h2>
       <div id="chartContainer">
-        <div class="empty-state-msg" id="chartEmptyState">Load a CSV and configure a chart above to get started</div>
-        <canvas id="chartCanvas" style="display:none"></canvas>
+        <div class="empty-state-msg" id="chartEmptyState">
+          Load a CSV and configure a chart above to get started
+        </div>
+        <canvas id="chartCanvas" style="display: none"></canvas>
       </div>
       <div class="controls">
-        <button class="btn secondary" id="downloadBtn" disabled>Download PNG</button>
+        <button class="btn secondary" id="downloadBtn" disabled>
+          Download PNG
+        </button>
       </div>
     </div>
 
@@ -367,50 +599,110 @@
       let csvData = null;
       let columnTypes = {};
       let chartInstance = null;
-      let selectedChartType = 'bar';
+      let selectedChartType = "bar";
       let numYSeries = 1;
 
       /* ========================= Constants ========================= */
 
       const PALETTES = {
-        default:    ['#4e79a7','#f28e2b','#e15759','#76b7b2','#59a14f','#edc948','#b07aa1','#ff9da7','#9c755f','#bab0ac'],
-        warm:       ['#d62728','#ff7f0e','#ffbb78','#e377c2','#f7b6d2','#bcbd22','#dbdb8d','#8c564b','#c49c94','#ff9896'],
-        cool:       ['#1f77b4','#aec7e8','#17becf','#9edae5','#2ca02c','#98df8a','#9467bd','#c5b0d5','#7f7f7f','#c7c7c7'],
-        monochrome: ['#222222','#444444','#666666','#888888','#aaaaaa','#bbbbbb','#cccccc','#dddddd'],
-        accessible: ['#E69F00','#56B4E9','#009E73','#F0E442','#0072B2','#D55E00','#CC79A7','#000000','#999999'],
+        default: [
+          "#4e79a7",
+          "#f28e2b",
+          "#e15759",
+          "#76b7b2",
+          "#59a14f",
+          "#edc948",
+          "#b07aa1",
+          "#ff9da7",
+          "#9c755f",
+          "#bab0ac",
+        ],
+        warm: [
+          "#d62728",
+          "#ff7f0e",
+          "#ffbb78",
+          "#e377c2",
+          "#f7b6d2",
+          "#bcbd22",
+          "#dbdb8d",
+          "#8c564b",
+          "#c49c94",
+          "#ff9896",
+        ],
+        cool: [
+          "#1f77b4",
+          "#aec7e8",
+          "#17becf",
+          "#9edae5",
+          "#2ca02c",
+          "#98df8a",
+          "#9467bd",
+          "#c5b0d5",
+          "#7f7f7f",
+          "#c7c7c7",
+        ],
+        monochrome: [
+          "#222222",
+          "#444444",
+          "#666666",
+          "#888888",
+          "#aaaaaa",
+          "#bbbbbb",
+          "#cccccc",
+          "#dddddd",
+        ],
+        accessible: [
+          "#E69F00",
+          "#56B4E9",
+          "#009E73",
+          "#F0E442",
+          "#0072B2",
+          "#D55E00",
+          "#CC79A7",
+          "#000000",
+          "#999999",
+        ],
       };
 
       const CHART_TYPES = [
         {
-          id: 'bar', label: 'Bar',
+          id: "bar",
+          label: "Bar",
           svg: '<svg width="20" height="16" viewBox="0 0 20 16"><rect x="1" y="8" width="3" height="7" fill="currentColor" opacity=".6"/><rect x="6" y="4" width="3" height="11" fill="currentColor" opacity=".8"/><rect x="11" y="1" width="3" height="14" fill="currentColor"/><rect x="16" y="6" width="3" height="9" fill="currentColor" opacity=".7"/></svg>',
         },
         {
-          id: 'hbar', label: 'H-Bar',
+          id: "hbar",
+          label: "H-Bar",
           svg: '<svg width="20" height="16" viewBox="0 0 20 16"><rect x="0" y="1" width="6" height="3" fill="currentColor" opacity=".6"/><rect x="0" y="6" width="14" height="3" fill="currentColor"/><rect x="0" y="11" width="10" height="3" fill="currentColor" opacity=".8"/></svg>',
         },
         {
-          id: 'line', label: 'Line',
+          id: "line",
+          label: "Line",
           svg: '<svg width="20" height="16" viewBox="0 0 20 16"><polyline points="0,13 4,8 9,10 13,4 20,6" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="4" cy="8" r="1.5" fill="currentColor"/><circle cx="9" cy="10" r="1.5" fill="currentColor"/><circle cx="13" cy="4" r="1.5" fill="currentColor"/></svg>',
         },
         {
-          id: 'area', label: 'Area',
+          id: "area",
+          label: "Area",
           svg: '<svg width="20" height="16" viewBox="0 0 20 16"><path d="M0,13 4,8 9,10 13,4 20,6 20,15 0,15Z" fill="currentColor" opacity=".4"/><polyline points="0,13 4,8 9,10 13,4 20,6" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>',
         },
         {
-          id: 'scatter', label: 'Scatter',
+          id: "scatter",
+          label: "Scatter",
           svg: '<svg width="20" height="16" viewBox="0 0 20 16"><circle cx="3" cy="13" r="1.8" fill="currentColor"/><circle cx="7" cy="8" r="1.8" fill="currentColor"/><circle cx="11" cy="11" r="1.8" fill="currentColor"/><circle cx="15" cy="4" r="1.8" fill="currentColor"/><circle cx="9" cy="5" r="1.8" fill="currentColor"/><circle cx="17" cy="9" r="1.8" fill="currentColor"/><circle cx="5" cy="14" r="1.8" fill="currentColor" opacity=".6"/></svg>',
         },
         {
-          id: 'histogram', label: 'Histogram',
+          id: "histogram",
+          label: "Histogram",
           svg: '<svg width="20" height="16" viewBox="0 0 20 16"><rect x="0" y="11" width="3" height="4" fill="currentColor" opacity=".5"/><rect x="3" y="7" width="3" height="8" fill="currentColor" opacity=".7"/><rect x="6" y="2" width="3" height="13" fill="currentColor"/><rect x="9" y="5" width="3" height="10" fill="currentColor" opacity=".85"/><rect x="12" y="9" width="3" height="6" fill="currentColor" opacity=".65"/><rect x="15" y="12" width="3" height="3" fill="currentColor" opacity=".5"/></svg>',
         },
         {
-          id: 'pie', label: 'Pie',
+          id: "pie",
+          label: "Pie",
           svg: '<svg width="16" height="16" viewBox="0 0 16 16"><path d="M8,8 L8,1 A7,7 0 0,1 15,8 Z" fill="currentColor"/><path d="M8,8 L15,8 A7,7 0 0,1 4.5,14.3 Z" fill="currentColor" opacity=".6"/><path d="M8,8 L4.5,14.3 A7,7 0 1,1 8,1 Z" fill="currentColor" opacity=".35"/></svg>',
         },
         {
-          id: 'doughnut', label: 'Doughnut',
+          id: "doughnut",
+          label: "Doughnut",
           svg: '<svg width="16" height="16" viewBox="0 0 16 16"><path d="M8,8 L8,1 A7,7 0 0,1 15,8 Z" fill="currentColor"/><path d="M8,8 L15,8 A7,7 0 0,1 4.5,14.3 Z" fill="currentColor" opacity=".6"/><path d="M8,8 L4.5,14.3 A7,7 0 1,1 8,1 Z" fill="currentColor" opacity=".35"/><circle cx="8" cy="8" r="3.2" fill="#f6f8fa"/></svg>',
         },
       ];
@@ -420,7 +712,7 @@
       function parseCSV(text) {
         const lines = [];
         let currentLine = [];
-        let currentField = '';
+        let currentField = "";
         let insideQuotes = false;
 
         for (let i = 0; i < text.length; i++) {
@@ -434,16 +726,17 @@
             } else {
               insideQuotes = !insideQuotes;
             }
-          } else if (char === ',' && !insideQuotes) {
+          } else if (char === "," && !insideQuotes) {
             currentLine.push(currentField);
-            currentField = '';
-          } else if ((char === '\n' || char === '\r') && !insideQuotes) {
-            if (char === '\r' && nextChar === '\n') i++;
+            currentField = "";
+          } else if ((char === "\n" || char === "\r") && !insideQuotes) {
+            if (char === "\r" && nextChar === "\n") i++;
             if (currentField || currentLine.length > 0) {
               currentLine.push(currentField);
-              if (currentLine.some(f => f.trim() !== '')) lines.push(currentLine);
+              if (currentLine.some((f) => f.trim() !== ""))
+                lines.push(currentLine);
               currentLine = [];
-              currentField = '';
+              currentField = "";
             }
           } else {
             currentField += char;
@@ -451,7 +744,7 @@
         }
         if (currentField || currentLine.length > 0) {
           currentLine.push(currentField);
-          if (currentLine.some(f => f.trim() !== '')) lines.push(currentLine);
+          if (currentLine.some((f) => f.trim() !== "")) lines.push(currentLine);
         }
         return lines;
       }
@@ -459,34 +752,40 @@
       /* ========================= Type Inference ========================= */
 
       function isNumericValue(v) {
-        const s = String(v).trim().replace(/,/g, '');
-        if (s === '') return false;
+        const s = String(v).trim().replace(/,/g, "");
+        if (s === "") return false;
         return !isNaN(parseFloat(s)) && isFinite(s);
       }
 
       function isDateValue(v) {
         const s = String(v).trim();
-        if (s === '' || isNumericValue(v)) return false;
+        if (s === "" || isNumericValue(v)) return false;
         const d = new Date(s);
         return !isNaN(d.getTime()) && s.length >= 6;
       }
 
       function inferType(values) {
-        const sample = values.slice(0, 200).filter(v => String(v).trim() !== '');
-        if (sample.length === 0) return 'text';
-        const numCount  = sample.filter(isNumericValue).length;
+        const sample = values
+          .slice(0, 200)
+          .filter((v) => String(v).trim() !== "");
+        if (sample.length === 0) return "text";
+        const numCount = sample.filter(isNumericValue).length;
         const dateCount = sample.filter(isDateValue).length;
-        if (numCount  / sample.length >= 0.8) return 'numeric';
-        if (dateCount / sample.length >= 0.8) return 'date';
-        const unique = new Set(values.map(v => String(v).trim()));
-        if (unique.size <= 50 || unique.size / Math.max(sample.length, 1) <= 0.5) return 'categorical';
-        return 'text';
+        if (numCount / sample.length >= 0.8) return "numeric";
+        if (dateCount / sample.length >= 0.8) return "date";
+        const unique = new Set(values.map((v) => String(v).trim()));
+        if (
+          unique.size <= 50 ||
+          unique.size / Math.max(sample.length, 1) <= 0.5
+        )
+          return "categorical";
+        return "text";
       }
 
       function inferAllTypes(headers, rows) {
         const types = {};
         headers.forEach((h, i) => {
-          types[h] = inferType(rows.map(r => r[i] || ''));
+          types[h] = inferType(rows.map((r) => r[i] || ""));
         });
         return types;
       }
@@ -494,53 +793,77 @@
       /* ========================= HTML Escape ========================= */
 
       function esc(s) {
-        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        return String(s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
       }
 
       /* ========================= Compatible Chart Logic ========================= */
 
       function getCompatibility() {
         const types = Object.values(columnTypes);
-        const n = types.filter(t => t === 'numeric').length;
-        const cat = types.includes('categorical');
-        const date = types.includes('date');
+        const n = types.filter((t) => t === "numeric").length;
+        const cat = types.includes("categorical");
+        const date = types.includes("date");
         return {
-          bar:       n >= 1 && (cat || date || n >= 2),
-          hbar:      n >= 1 && (cat || date || n >= 2),
-          line:      n >= 2 || (n >= 1 && date),
-          area:      n >= 2 || (n >= 1 && date),
-          scatter:   n >= 2,
+          bar: n >= 1 && (cat || date || n >= 2),
+          hbar: n >= 1 && (cat || date || n >= 2),
+          line: n >= 2 || (n >= 1 && date),
+          area: n >= 2 || (n >= 1 && date),
+          scatter: n >= 2,
           histogram: n >= 1,
-          pie:       cat,
-          doughnut:  cat,
+          pie: cat,
+          doughnut: cat,
         };
       }
 
-      /* ========================= Column Types UI ========================= */
+      /* ========================= Inline Type Widgets ========================= */
 
-      function buildColumnTypesUI() {
-        const grid = document.getElementById('columnTypesGrid');
-        grid.innerHTML = csvData.headers.map(h => {
-          const t = columnTypes[h] || 'text';
-          return `<div class="col-type-item">
-            <div class="col-type-name" title="${esc(h)}">${esc(h)}</div>
-            <div class="col-type-row">
-              <span class="type-badge ${t}" id="badge_${esc(h)}">${t}</span>
-              <select class="type-select" onchange="overrideType(this,'${esc(h)}')">
-                <option value="numeric"${t==='numeric'?' selected':''}>numeric</option>
-                <option value="date"${t==='date'?' selected':''}>date</option>
-                <option value="categorical"${t==='categorical'?' selected':''}>categorical</option>
-                <option value="text"${t==='text'?' selected':''}>text</option>
-              </select>
-            </div>
-          </div>`;
-        }).join('');
+      function typeWidgetHTML(col, widgetId, colSelectId) {
+        if (!col) return `<span id="typeWidgetContainer_${widgetId}"></span>`;
+        const t = columnTypes[col] || "text";
+        return `<span id="typeWidgetContainer_${widgetId}" class="type-widget">
+          <span class="type-badge ${t}">${t}</span>
+          <select class="type-select-inline" onchange="overrideAxisType('${colSelectId}', this)">
+            <option value="numeric"${t === "numeric" ? " selected" : ""}>numeric</option>
+            <option value="date"${t === "date" ? " selected" : ""}>date</option>
+            <option value="categorical"${t === "categorical" ? " selected" : ""}>categorical</option>
+            <option value="text"${t === "text" ? " selected" : ""}>text</option>
+          </select>
+        </span>`;
       }
 
-      function overrideType(select, col) {
-        columnTypes[col] = select.value;
-        const badge = document.getElementById('badge_' + col);
-        if (badge) { badge.className = 'type-badge ' + select.value; badge.textContent = select.value; }
+      function updateTypeWidget(widgetId, colName, colSelectId) {
+        const container = document.getElementById(
+          "typeWidgetContainer_" + widgetId,
+        );
+        if (!container) return;
+        if (!colName) {
+          container.innerHTML = "";
+          return;
+        }
+        const t = columnTypes[colName] || "text";
+        container.className = "type-widget";
+        container.innerHTML = `<span class="type-badge ${t}">${t}</span>
+          <select class="type-select-inline" onchange="overrideAxisType('${colSelectId}', this)">
+            <option value="numeric"${t === "numeric" ? " selected" : ""}>numeric</option>
+            <option value="date"${t === "date" ? " selected" : ""}>date</option>
+            <option value="categorical"${t === "categorical" ? " selected" : ""}>categorical</option>
+            <option value="text"${t === "text" ? " selected" : ""}>text</option>
+          </select>`;
+      }
+
+      function overrideAxisType(colSelectId, typeSelect) {
+        const colSel = document.getElementById(colSelectId);
+        if (!colSel || !colSel.value) return;
+        columnTypes[colSel.value] = typeSelect.value;
+        const badge = typeSelect.previousElementSibling;
+        if (badge) {
+          badge.className = "type-badge " + typeSelect.value;
+          badge.textContent = typeSelect.value;
+        }
         buildChartTypeUI();
         buildAxisConfigUI();
       }
@@ -549,21 +872,24 @@
 
       function buildChartTypeUI() {
         const compat = getCompatibility();
-        document.getElementById('chartTypeGrid').innerHTML = CHART_TYPES.map(ct => {
-          const sel = ct.id === selectedChartType;
-          const rec = compat[ct.id];
-          return `<button class="chart-type-btn${sel?' selected':''}${!rec?' dimmed':''}"
-            onclick="selectChartType('${ct.id}')" title="${ct.label}${rec?' (recommended)':''}">
+        document.getElementById("chartTypeGrid").innerHTML = CHART_TYPES.map(
+          (ct) => {
+            const sel = ct.id === selectedChartType;
+            const rec = compat[ct.id];
+            return `<button class="chart-type-btn${sel ? " selected" : ""}${!rec ? " dimmed" : ""}"
+            onclick="selectChartType('${ct.id}')" title="${ct.label}${rec ? " (recommended)" : ""}">
             <span class="chart-icon">${ct.svg}</span>
             <span>${ct.label}</span>
             ${rec ? '<span class="rec-star">★</span>' : '<span style="font-size:10px;visibility:hidden">★</span>'}
           </button>`;
-        }).join('');
+          },
+        ).join("");
       }
 
       function selectChartType(type) {
         selectedChartType = type;
-        if (['histogram','pie','doughnut','scatter'].includes(type)) numYSeries = 1;
+        if (["histogram", "pie", "doughnut", "scatter"].includes(type))
+          numYSeries = 1;
         buildChartTypeUI();
         buildAxisConfigUI();
       }
@@ -571,34 +897,50 @@
       /* ========================= Axis Config UI ========================= */
 
       function colOptions(selectedVal, preferTypes) {
-        return csvData.headers.map(h => {
-          const t = columnTypes[h] || 'text';
-          const hint = preferTypes.length && !preferTypes.includes(t) ? ' *' : '';
-          return `<option value="${esc(h)}"${h===selectedVal?' selected':''}>${esc(h)} (${t}${hint})</option>`;
-        }).join('');
+        return csvData.headers
+          .map((h) => {
+            const t = columnTypes[h] || "text";
+            const hint =
+              preferTypes.length && !preferTypes.includes(t) ? " *" : "";
+            return `<option value="${esc(h)}"${h === selectedVal ? " selected" : ""}>${esc(h)} (${t}${hint})</option>`;
+          })
+          .join("");
       }
 
       function firstColOfType(...types) {
-        return csvData.headers.find(h => types.includes(columnTypes[h])) || csvData.headers[0] || '';
+        return (
+          csvData.headers.find((h) => types.includes(columnTypes[h])) ||
+          csvData.headers[0] ||
+          ""
+        );
       }
 
       function buildAxisConfigUI() {
-        const container = document.getElementById('axisConfig');
-        if (!csvData) { container.innerHTML = ''; return; }
+        const container = document.getElementById("axisConfig");
+        if (!csvData) {
+          container.innerHTML = "";
+          return;
+        }
         const t = selectedChartType;
 
         // Preserve existing X selection
-        const prevX = document.getElementById('xAxisSelect')?.value || '';
-        const prevY0 = document.getElementById('yAxisSelect0')?.value || '';
-        const prevAgg = document.getElementById('aggregationSelect')?.value || '';
+        const prevX = document.getElementById("xAxisSelect")?.value || "";
+        const prevY0 = document.getElementById("yAxisSelect0")?.value || "";
+        const prevAgg =
+          document.getElementById("aggregationSelect")?.value || "";
 
-        if (t === 'histogram') {
-          const defX = (prevX && csvData.headers.includes(prevX)) ? prevX : firstColOfType('numeric');
-          const bins = document.getElementById('binsSlider')?.value || '20';
+        if (t === "histogram") {
+          const defX =
+            prevX && csvData.headers.includes(prevX)
+              ? prevX
+              : firstColOfType("numeric");
+          const bins = document.getElementById("binsSlider")?.value || "20";
           container.innerHTML = `
             <div class="axis-row">
               <span class="axis-label">Value</span>
-              <select class="axis-select" id="xAxisSelect">${colOptions(defX, ['numeric'])}</select>
+              <select class="axis-select" id="xAxisSelect"
+                onchange="updateTypeWidget('x', this.value, this.id)">${colOptions(defX, ["numeric"])}</select>
+              ${typeWidgetHTML(defX, "x", "xAxisSelect")}
             </div>
             <div class="axis-row">
               <span class="axis-label">Bins</span>
@@ -608,85 +950,118 @@
                 <span class="bins-val" id="binsVal">${bins}</span>
               </div>
             </div>`;
-
-        } else if (t === 'pie' || t === 'doughnut') {
-          const defCat = (prevX && csvData.headers.includes(prevX)) ? prevX : firstColOfType('categorical');
-          const defVal = (prevY0 && csvData.headers.includes(prevY0)) ? prevY0 : '';
-          const defAgg = prevAgg || 'count';
+        } else if (t === "pie" || t === "doughnut") {
+          const defCat =
+            prevX && csvData.headers.includes(prevX)
+              ? prevX
+              : firstColOfType("categorical");
+          const defVal =
+            prevY0 && csvData.headers.includes(prevY0) ? prevY0 : "";
+          const defAgg = prevAgg || "count";
           container.innerHTML = `
             <div class="axis-row">
               <span class="axis-label">Category</span>
-              <select class="axis-select" id="xAxisSelect">${colOptions(defCat, ['categorical'])}</select>
+              <select class="axis-select" id="xAxisSelect"
+                onchange="updateTypeWidget('x', this.value, this.id)">${colOptions(defCat, ["categorical"])}</select>
+              ${typeWidgetHTML(defCat, "x", "xAxisSelect")}
             </div>
             <div class="axis-row">
               <span class="axis-label">Value</span>
-              <select class="axis-select" id="yAxisSelect0">
+              <select class="axis-select" id="yAxisSelect0"
+                onchange="updateTypeWidget('y0', this.value, this.id)">
                 <option value="">— Count occurrences —</option>
-                ${colOptions(defVal, ['numeric'])}
+                ${colOptions(defVal, ["numeric"])}
               </select>
+              ${typeWidgetHTML(defVal, "y0", "yAxisSelect0")}
             </div>
             <div class="axis-row">
               <span class="axis-label">Aggregate</span>
               <select class="axis-select" id="aggregationSelect" style="flex:0;min-width:120px">
-                <option value="count"${defAgg==='count'?' selected':''}>Count</option>
-                <option value="sum"${defAgg==='sum'?' selected':''}>Sum</option>
-                <option value="avg"${defAgg==='avg'?' selected':''}>Average</option>
+                <option value="count"${defAgg === "count" ? " selected" : ""}>Count</option>
+                <option value="sum"${defAgg === "sum" ? " selected" : ""}>Sum</option>
+                <option value="avg"${defAgg === "avg" ? " selected" : ""}>Average</option>
               </select>
             </div>`;
-
-        } else if (t === 'scatter') {
-          const defX = (prevX && csvData.headers.includes(prevX)) ? prevX : firstColOfType('numeric');
-          const numCols = csvData.headers.filter(h => columnTypes[h] === 'numeric');
-          const defY = (prevY0 && csvData.headers.includes(prevY0)) ? prevY0 : (numCols[1] || numCols[0] || csvData.headers[0]);
+        } else if (t === "scatter") {
+          const defX =
+            prevX && csvData.headers.includes(prevX)
+              ? prevX
+              : firstColOfType("numeric");
+          const numCols = csvData.headers.filter(
+            (h) => columnTypes[h] === "numeric",
+          );
+          const defY =
+            prevY0 && csvData.headers.includes(prevY0)
+              ? prevY0
+              : numCols[1] || numCols[0] || csvData.headers[0];
           container.innerHTML = `
             <div class="axis-row">
               <span class="axis-label">X-axis</span>
-              <select class="axis-select" id="xAxisSelect">${colOptions(defX, ['numeric'])}</select>
+              <select class="axis-select" id="xAxisSelect"
+                onchange="updateTypeWidget('x', this.value, this.id)">${colOptions(defX, ["numeric"])}</select>
+              ${typeWidgetHTML(defX, "x", "xAxisSelect")}
             </div>
             <div class="axis-row">
               <span class="axis-label">Y-axis</span>
-              <select class="axis-select" id="yAxisSelect0">${colOptions(defY, ['numeric'])}</select>
+              <select class="axis-select" id="yAxisSelect0"
+                onchange="updateTypeWidget('y0', this.value, this.id)">${colOptions(defY, ["numeric"])}</select>
+              ${typeWidgetHTML(defY, "y0", "yAxisSelect0")}
             </div>`;
-
         } else {
           // bar, hbar, line, area
-          const defX = (prevX && csvData.headers.includes(prevX)) ? prevX : firstColOfType('categorical','date','numeric');
-          const defAgg = prevAgg || (['line','area'].includes(t) ? 'avg' : 'sum');
-          const numCols = csvData.headers.filter(h => columnTypes[h] === 'numeric');
+          const defX =
+            prevX && csvData.headers.includes(prevX)
+              ? prevX
+              : firstColOfType("categorical", "date", "numeric");
+          const defAgg =
+            prevAgg || (["line", "area"].includes(t) ? "avg" : "sum");
+          const numCols = csvData.headers.filter(
+            (h) => columnTypes[h] === "numeric",
+          );
 
           // Build Y series rows
-          let yRows = '';
+          let yRows = "";
           for (let i = 0; i < numYSeries; i++) {
             const prevSelId = `yAxisSelect${i}`;
-            const prevSel = document.getElementById(prevSelId)?.value || '';
-            const def = (prevSel && csvData.headers.includes(prevSel)) ? prevSel
-              : (numCols[i] || numCols[0] || csvData.headers[0] || '');
+            const prevSel = document.getElementById(prevSelId)?.value || "";
+            const def =
+              prevSel && csvData.headers.includes(prevSel)
+                ? prevSel
+                : numCols[i] || numCols[0] || csvData.headers[0] || "";
             yRows += `<div class="y-series-row">
-              <select class="axis-select" id="yAxisSelect${i}">${colOptions(def, ['numeric'])}</select>
-              ${numYSeries > 1 ? `<button class="remove-series-btn" onclick="removeSeries(${i})" title="Remove">×</button>` : ''}
+              <select class="axis-select" id="yAxisSelect${i}"
+                onchange="updateTypeWidget('y${i}', this.value, this.id)">${colOptions(def, ["numeric"])}</select>
+              ${typeWidgetHTML(def, "y" + i, "yAxisSelect" + i)}
+              ${numYSeries > 1 ? `<button class="remove-series-btn" onclick="removeSeries(${i})" title="Remove">×</button>` : ""}
             </div>`;
           }
 
           container.innerHTML = `
             <div class="axis-row">
               <span class="axis-label">X-axis</span>
-              <select class="axis-select" id="xAxisSelect">${colOptions(defX, ['categorical','date'])}</select>
+              <select class="axis-select" id="xAxisSelect"
+                onchange="updateTypeWidget('x', this.value, this.id)">${colOptions(defX, ["categorical", "date"])}</select>
+              ${typeWidgetHTML(defX, "x", "xAxisSelect")}
             </div>
             <div class="axis-row">
               <span class="axis-label">Y-axis</span>
               <div class="y-series-list">${yRows}</div>
             </div>
-            ${numYSeries < 5 ? `<div class="axis-row"><span class="axis-label"></span>
+            ${
+              numYSeries < 5
+                ? `<div class="axis-row"><span class="axis-label"></span>
               <button class="btn secondary" onclick="addSeries()" style="font-size:12px;padding:4px 10px">+ Add Series</button>
-            </div>` : ''}
+            </div>`
+                : ""
+            }
             <div class="axis-row">
               <span class="axis-label">Aggregate</span>
               <select class="axis-select" id="aggregationSelect" style="flex:0;min-width:130px">
-                <option value="sum"${defAgg==='sum'?' selected':''}>Sum</option>
-                <option value="avg"${defAgg==='avg'?' selected':''}>Average</option>
-                <option value="count"${defAgg==='count'?' selected':''}>Count</option>
-                <option value="min"${defAgg==='min'?' selected':''}>Min</option>
-                <option value="max"${defAgg==='max'?' selected':''}>Max</option>
+                <option value="sum"${defAgg === "sum" ? " selected" : ""}>Sum</option>
+                <option value="avg"${defAgg === "avg" ? " selected" : ""}>Average</option>
+                <option value="count"${defAgg === "count" ? " selected" : ""}>Count</option>
+                <option value="min"${defAgg === "min" ? " selected" : ""}>Min</option>
+                <option value="max"${defAgg === "max" ? " selected" : ""}>Max</option>
               </select>
             </div>`;
         }
@@ -717,41 +1092,51 @@
       /* ========================= Data Processing ========================= */
 
       function parseNum(v) {
-        const n = parseFloat(String(v).replace(/,/g, ''));
+        const n = parseFloat(String(v).replace(/,/g, ""));
         return isNaN(n) ? null : n;
       }
 
-      function colIdx(col) { return csvData.headers.indexOf(col); }
+      function colIdx(col) {
+        return csvData.headers.indexOf(col);
+      }
 
       function colValues(col) {
         const i = colIdx(col);
-        return i === -1 ? [] : csvData.rows.map(r => r[i] || '');
+        return i === -1 ? [] : csvData.rows.map((r) => r[i] || "");
       }
 
       function aggregateXY(xCol, yCol, method) {
-        const xi = colIdx(xCol), yi = colIdx(yCol);
+        const xi = colIdx(xCol),
+          yi = colIdx(yCol);
         if (xi === -1 || yi === -1) return { labels: [], data: [] };
         const groups = new Map();
-        csvData.rows.forEach(r => {
-          const x = r[xi] || '';
+        csvData.rows.forEach((r) => {
+          const x = r[xi] || "";
           const y = parseNum(r[yi]);
           if (!groups.has(x)) groups.set(x, []);
           if (y !== null) groups.get(x).push(y);
         });
         let labels = Array.from(groups.keys());
         const xType = columnTypes[xCol];
-        if (xType === 'date') labels.sort((a, b) => new Date(a) - new Date(b));
-        else if (xType === 'numeric') labels.sort((a, b) => parseFloat(a) - parseFloat(b));
-        const data = labels.map(lbl => {
+        if (xType === "date") labels.sort((a, b) => new Date(a) - new Date(b));
+        else if (xType === "numeric")
+          labels.sort((a, b) => parseFloat(a) - parseFloat(b));
+        const data = labels.map((lbl) => {
           const vs = groups.get(lbl) || [];
           if (vs.length === 0) return 0;
           switch (method) {
-            case 'sum':   return vs.reduce((a, b) => a + b, 0);
-            case 'avg':   return vs.reduce((a, b) => a + b, 0) / vs.length;
-            case 'count': return vs.length;
-            case 'min':   return Math.min(...vs);
-            case 'max':   return Math.max(...vs);
-            default:      return vs.reduce((a, b) => a + b, 0);
+            case "sum":
+              return vs.reduce((a, b) => a + b, 0);
+            case "avg":
+              return vs.reduce((a, b) => a + b, 0) / vs.length;
+            case "count":
+              return vs.length;
+            case "min":
+              return Math.min(...vs);
+            case "max":
+              return Math.max(...vs);
+            default:
+              return vs.reduce((a, b) => a + b, 0);
           }
         });
         return { labels, data };
@@ -760,123 +1145,182 @@
       function countByCategory(col) {
         const vals = colValues(col);
         const counts = new Map();
-        vals.forEach(v => { if (v.trim()) counts.set(v, (counts.get(v) || 0) + 1); });
+        vals.forEach((v) => {
+          if (v.trim()) counts.set(v, (counts.get(v) || 0) + 1);
+        });
         const sorted = [...counts.entries()].sort((a, b) => b[1] - a[1]);
-        return { labels: sorted.map(e => e[0]), data: sorted.map(e => e[1]) };
+        return {
+          labels: sorted.map((e) => e[0]),
+          data: sorted.map((e) => e[1]),
+        };
       }
 
       function histogramBins(values, numBins) {
-        const nums = values.map(parseNum).filter(v => v !== null);
+        const nums = values.map(parseNum).filter((v) => v !== null);
         if (nums.length === 0) return { labels: [], data: [] };
-        const min = Math.min(...nums), max = Math.max(...nums);
+        const min = Math.min(...nums),
+          max = Math.max(...nums);
         if (min === max) return { labels: [String(min)], data: [nums.length] };
         const w = (max - min) / numBins;
         const counts = new Array(numBins).fill(0);
-        nums.forEach(v => {
+        nums.forEach((v) => {
           let b = Math.floor((v - min) / w);
           if (b >= numBins) b = numBins - 1;
           counts[b]++;
         });
-        const fmt = n => parseFloat(n.toPrecision(4));
-        const labels = Array.from({ length: numBins }, (_, i) => `${fmt(min + i * w)}–${fmt(min + (i + 1) * w)}`);
+        const fmt = (n) => parseFloat(n.toPrecision(4));
+        const labels = Array.from(
+          { length: numBins },
+          (_, i) => `${fmt(min + i * w)}–${fmt(min + (i + 1) * w)}`,
+        );
         return { labels, data: counts };
       }
 
       /* ========================= Colors ========================= */
 
       function hexToRgba(hex, a) {
-        hex = hex.replace('#', '');
-        if (hex.length === 3) hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
-        const r = parseInt(hex.substring(0,2),16);
-        const g = parseInt(hex.substring(2,4),16);
-        const b = parseInt(hex.substring(4,6),16);
+        hex = hex.replace("#", "");
+        if (hex.length === 3)
+          hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+        const r = parseInt(hex.substring(0, 2), 16);
+        const g = parseInt(hex.substring(2, 4), 16);
+        const b = parseInt(hex.substring(4, 6), 16);
         return `rgba(${r},${g},${b},${a})`;
       }
 
       function palette(n) {
-        const pal = PALETTES[document.getElementById('paletteSelect').value] || PALETTES.default;
+        const pal =
+          PALETTES[document.getElementById("paletteSelect").value] ||
+          PALETTES.default;
         return Array.from({ length: n }, (_, i) => pal[i % pal.length]);
       }
 
       /* ========================= Chart Config ========================= */
 
       function buildConfig() {
-        const title   = document.getElementById('chartTitle').value.trim();
-        const legend  = document.getElementById('showLegend').checked;
-        const t       = selectedChartType;
+        const title = document.getElementById("chartTitle").value.trim();
+        const legend = document.getElementById("showLegend").checked;
+        const t = selectedChartType;
 
         const pluginsBase = {
           legend: { display: legend },
-          title: title ? { display: true, text: title, font: { size: 15 }, padding: { bottom: 12 } } : { display: false },
+          title: title
+            ? {
+                display: true,
+                text: title,
+                font: { size: 15 },
+                padding: { bottom: 12 },
+              }
+            : { display: false },
         };
 
-        if (t === 'histogram') {
-          const xCol   = document.getElementById('xAxisSelect')?.value; if (!xCol) return null;
-          const bins   = parseInt(document.getElementById('binsSlider')?.value || 20);
+        if (t === "histogram") {
+          const xCol = document.getElementById("xAxisSelect")?.value;
+          if (!xCol) return null;
+          const bins = parseInt(
+            document.getElementById("binsSlider")?.value || 20,
+          );
           const { labels, data } = histogramBins(colValues(xCol), bins);
-          const [hex]  = palette(1);
+          const [hex] = palette(1);
           return {
-            type: 'bar',
-            data: { labels, datasets: [{ label: xCol, data,
-              backgroundColor: hexToRgba(hex, 0.75),
-              borderColor: hexToRgba(hex, 1), borderWidth: 1 }] },
+            type: "bar",
+            data: {
+              labels,
+              datasets: [
+                {
+                  label: xCol,
+                  data,
+                  backgroundColor: hexToRgba(hex, 0.75),
+                  borderColor: hexToRgba(hex, 1),
+                  borderWidth: 1,
+                },
+              ],
+            },
             options: {
-              responsive: true, maintainAspectRatio: false,
+              responsive: true,
+              maintainAspectRatio: false,
               plugins: { ...pluginsBase, legend: { display: false } },
               scales: {
                 x: { title: { display: true, text: xCol } },
-                y: { beginAtZero: true, title: { display: true, text: 'Count' } },
+                y: {
+                  beginAtZero: true,
+                  title: { display: true, text: "Count" },
+                },
               },
-              barPercentage: 1, categoryPercentage: 1,
+              barPercentage: 1,
+              categoryPercentage: 1,
             },
           };
-
-        } else if (t === 'pie' || t === 'doughnut') {
-          const xCol  = document.getElementById('xAxisSelect')?.value; if (!xCol) return null;
-          const yCol  = document.getElementById('yAxisSelect0')?.value || '';
-          const agg   = document.getElementById('aggregationSelect')?.value || 'count';
+        } else if (t === "pie" || t === "doughnut") {
+          const xCol = document.getElementById("xAxisSelect")?.value;
+          if (!xCol) return null;
+          const yCol = document.getElementById("yAxisSelect0")?.value || "";
+          const agg =
+            document.getElementById("aggregationSelect")?.value || "count";
           let labels, data;
-          if (!yCol || agg === 'count') {
+          if (!yCol || agg === "count") {
             ({ labels, data } = countByCategory(xCol));
           } else {
             ({ labels, data } = aggregateXY(xCol, yCol, agg));
-            const paired = labels.map((l, i) => [l, data[i]]).sort((a, b) => b[1] - a[1]);
-            labels = paired.map(p => p[0]);
-            data   = paired.map(p => p[1]);
+            const paired = labels
+              .map((l, i) => [l, data[i]])
+              .sort((a, b) => b[1] - a[1]);
+            labels = paired.map((p) => p[0]);
+            data = paired.map((p) => p[1]);
           }
           if (labels.length > 20) {
             const rest = data.slice(19).reduce((s, v) => s + v, 0);
-            labels = [...labels.slice(0, 19), 'Other'];
-            data   = [...data.slice(0, 19), rest];
+            labels = [...labels.slice(0, 19), "Other"];
+            data = [...data.slice(0, 19), rest];
           }
           const hexes = palette(labels.length);
           return {
             type: t,
-            data: { labels, datasets: [{ data,
-              backgroundColor: hexes.map(h => hexToRgba(h, 0.85)),
-              borderColor: '#fff', borderWidth: 2 }] },
+            data: {
+              labels,
+              datasets: [
+                {
+                  data,
+                  backgroundColor: hexes.map((h) => hexToRgba(h, 0.85)),
+                  borderColor: "#fff",
+                  borderWidth: 2,
+                },
+              ],
+            },
             options: {
-              responsive: true, maintainAspectRatio: false,
+              responsive: true,
+              maintainAspectRatio: false,
               plugins: { ...pluginsBase },
             },
           };
-
-        } else if (t === 'scatter') {
-          const xCol = document.getElementById('xAxisSelect')?.value; if (!xCol) return null;
-          const yCol = document.getElementById('yAxisSelect0')?.value; if (!yCol) return null;
-          const xi = colIdx(xCol), yi = colIdx(yCol);
+        } else if (t === "scatter") {
+          const xCol = document.getElementById("xAxisSelect")?.value;
+          if (!xCol) return null;
+          const yCol = document.getElementById("yAxisSelect0")?.value;
+          if (!yCol) return null;
+          const xi = colIdx(xCol),
+            yi = colIdx(yCol);
           const pts = csvData.rows
-            .map(r => ({ x: parseNum(r[xi]), y: parseNum(r[yi]) }))
-            .filter(p => p.x !== null && p.y !== null)
+            .map((r) => ({ x: parseNum(r[xi]), y: parseNum(r[yi]) }))
+            .filter((p) => p.x !== null && p.y !== null)
             .slice(0, 2000);
           const [hex] = palette(1);
           const radius = pts.length > 500 ? 2 : pts.length > 100 ? 3 : 4;
           return {
-            type: 'scatter',
-            data: { datasets: [{ label: `${yCol} vs ${xCol}`, data: pts,
-              backgroundColor: hexToRgba(hex, 0.65), pointRadius: radius }] },
+            type: "scatter",
+            data: {
+              datasets: [
+                {
+                  label: `${yCol} vs ${xCol}`,
+                  data: pts,
+                  backgroundColor: hexToRgba(hex, 0.65),
+                  pointRadius: radius,
+                },
+              ],
+            },
             options: {
-              responsive: true, maintainAspectRatio: false,
+              responsive: true,
+              maintainAspectRatio: false,
               plugins: { ...pluginsBase },
               scales: {
                 x: { title: { display: true, text: xCol } },
@@ -884,11 +1328,12 @@
               },
             },
           };
-
         } else {
           // bar, hbar, line, area
-          const xCol = document.getElementById('xAxisSelect')?.value; if (!xCol) return null;
-          const agg  = document.getElementById('aggregationSelect')?.value || 'sum';
+          const xCol = document.getElementById("xAxisSelect")?.value;
+          if (!xCol) return null;
+          const agg =
+            document.getElementById("aggregationSelect")?.value || "sum";
           const yCols = [];
           for (let i = 0; i < numYSeries; i++) {
             const v = document.getElementById(`yAxisSelect${i}`)?.value;
@@ -896,43 +1341,54 @@
           }
           if (yCols.length === 0) return null;
 
-          const hexes   = palette(yCols.length);
-          const isLine  = t === 'line' || t === 'area';
-          const isArea  = t === 'area';
-          const isHBar  = t === 'hbar';
+          const hexes = palette(yCols.length);
+          const isLine = t === "line" || t === "area";
+          const isArea = t === "area";
+          const isHBar = t === "hbar";
 
-          const first   = aggregateXY(xCol, yCols[0], agg);
+          const first = aggregateXY(xCol, yCols[0], agg);
           const allLabels = first.labels;
 
           const datasets = yCols.map((yCol, si) => {
             const res = si === 0 ? first : aggregateXY(xCol, yCol, agg);
             const map = new Map(res.labels.map((l, i) => [l, res.data[i]]));
-            const data = allLabels.map(l => map.get(l) ?? 0);
-            const hex  = hexes[si];
+            const data = allLabels.map((l) => map.get(l) ?? 0);
+            const hex = hexes[si];
             return {
-              label: yCol, data,
-              backgroundColor: isArea ? hexToRgba(hex, 0.25) : hexToRgba(hex, 0.8),
+              label: yCol,
+              data,
+              backgroundColor: isArea
+                ? hexToRgba(hex, 0.25)
+                : hexToRgba(hex, 0.8),
               borderColor: hexToRgba(hex, 1),
               borderWidth: isLine ? 2 : 1,
               fill: isArea,
               tension: isLine ? 0.3 : 0,
               pointRadius: isLine ? (allLabels.length > 60 ? 2 : 4) : undefined,
-              type: isLine ? 'line' : 'bar',
+              type: isLine ? "line" : "bar",
             };
           });
 
           return {
-            type: isLine ? 'line' : 'bar',
+            type: isLine ? "line" : "bar",
             data: { labels: allLabels, datasets },
             options: {
-              responsive: true, maintainAspectRatio: false,
-              indexAxis: isHBar ? 'y' : 'x',
+              responsive: true,
+              maintainAspectRatio: false,
+              indexAxis: isHBar ? "y" : "x",
               plugins: { ...pluginsBase },
               scales: isHBar
-                ? { x: { beginAtZero: true, title: { display: true, text: agg } },
-                    y: { title: { display: true, text: xCol } } }
-                : { x: { title: { display: true, text: xCol } },
-                    y: { beginAtZero: true } },
+                ? {
+                    x: {
+                      beginAtZero: true,
+                      title: { display: true, text: agg },
+                    },
+                    y: { title: { display: true, text: xCol } },
+                  }
+                : {
+                    x: { title: { display: true, text: xCol } },
+                    y: { beginAtZero: true },
+                  },
             },
           };
         }
@@ -941,33 +1397,41 @@
       /* ========================= Render ========================= */
 
       function drawChart() {
-        const warn = document.getElementById('configWarning');
-        warn.style.display = 'none';
+        const warn = document.getElementById("configWarning");
+        warn.style.display = "none";
         let config;
-        try { config = buildConfig(); } catch (e) {
-          warn.textContent = 'Error: ' + e.message;
-          warn.style.display = 'block'; return;
+        try {
+          config = buildConfig();
+        } catch (e) {
+          warn.textContent = "Error: " + e.message;
+          warn.style.display = "block";
+          return;
         }
         if (!config) {
-          warn.textContent = 'Please select all required columns.';
-          warn.style.display = 'block'; return;
+          warn.textContent = "Please select all required columns.";
+          warn.style.display = "block";
+          return;
         }
-        const canvas = document.getElementById('chartCanvas');
-        const empty  = document.getElementById('chartEmptyState');
-        if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
-        canvas.style.display = 'block';
-        empty.style.display  = 'none';
-        chartInstance = new Chart(canvas.getContext('2d'), config);
-        document.getElementById('downloadBtn').disabled = false;
-        document.getElementById('vizPanel') || document.querySelector('.panel:last-child');
-        canvas.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        const canvas = document.getElementById("chartCanvas");
+        const empty = document.getElementById("chartEmptyState");
+        if (chartInstance) {
+          chartInstance.destroy();
+          chartInstance = null;
+        }
+        canvas.style.display = "block";
+        empty.style.display = "none";
+        chartInstance = new Chart(canvas.getContext("2d"), config);
+        document.getElementById("downloadBtn").disabled = false;
+        document.getElementById("vizPanel") ||
+          document.querySelector(".panel:last-child");
+        canvas.scrollIntoView({ behavior: "smooth", block: "nearest" });
       }
 
       function downloadChart() {
         if (!chartInstance) return;
-        const a = document.createElement('a');
-        a.href = document.getElementById('chartCanvas').toDataURL('image/png');
-        a.download = 'chart.png';
+        const a = document.createElement("a");
+        a.href = document.getElementById("chartCanvas").toDataURL("image/png");
+        a.download = "chart.png";
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -976,49 +1440,78 @@
       /* ========================= Load File ========================= */
 
       function buildPreview(headers, rows) {
-        const head = '<thead><tr>' + headers.map(h => `<th>${esc(h)}</th>`).join('') + '</tr></thead>';
-        const body = '<tbody>' + rows.slice(0, 5).map(r =>
-          '<tr>' + headers.map((_, i) => `<td title="${esc(r[i]||'')}">${esc(r[i]||'')}</td>`).join('') + '</tr>'
-        ).join('') + '</tbody>';
+        const head =
+          "<thead><tr>" +
+          headers.map((h) => `<th>${esc(h)}</th>`).join("") +
+          "</tr></thead>";
+        const body =
+          "<tbody>" +
+          rows
+            .slice(0, 5)
+            .map(
+              (r) =>
+                "<tr>" +
+                headers
+                  .map(
+                    (_, i) =>
+                      `<td title="${esc(r[i] || "")}">${esc(r[i] || "")}</td>`,
+                  )
+                  .join("") +
+                "</tr>",
+            )
+            .join("") +
+          "</tbody>";
         return head + body;
       }
 
       function loadFile(file) {
         const reader = new FileReader();
-        reader.onload = e => {
+        reader.onload = (e) => {
           const lines = parseCSV(e.target.result);
-          if (lines.length < 2) { alert('CSV must have at least a header row and one data row.'); return; }
+          if (lines.length < 2) {
+            alert("CSV must have at least a header row and one data row.");
+            return;
+          }
           csvData = { headers: lines[0], rows: lines.slice(1) };
           columnTypes = inferAllTypes(csvData.headers, csvData.rows);
           numYSeries = 1;
 
-          document.getElementById('loadStatus').textContent =
-            `${esc(file.name)} — ${csvData.headers.length} column${csvData.headers.length!==1?'s':''}, ${csvData.rows.length} row${csvData.rows.length!==1?'s':''}`;
-          document.getElementById('previewTable').innerHTML = buildPreview(csvData.headers, csvData.rows);
-          document.getElementById('previewDetails').style.display = '';
-          document.getElementById('configPanel').style.display = '';
+          document.getElementById("loadStatus").textContent =
+            `${esc(file.name)} — ${csvData.headers.length} column${csvData.headers.length !== 1 ? "s" : ""}, ${csvData.rows.length} row${csvData.rows.length !== 1 ? "s" : ""}`;
+          document.getElementById("previewTable").innerHTML = buildPreview(
+            csvData.headers,
+            csvData.rows,
+          );
+          document.getElementById("previewDetails").style.display = "";
+          document.getElementById("configPanel").style.display = "";
 
-          buildColumnTypesUI();
           buildChartTypeUI();
           buildAxisConfigUI();
 
           // Destroy old chart if reloading
-          if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
-          document.getElementById('chartCanvas').style.display = 'none';
-          document.getElementById('chartEmptyState').style.display = '';
-          document.getElementById('downloadBtn').disabled = true;
+          if (chartInstance) {
+            chartInstance.destroy();
+            chartInstance = null;
+          }
+          document.getElementById("chartCanvas").style.display = "none";
+          document.getElementById("chartEmptyState").style.display = "";
+          document.getElementById("downloadBtn").disabled = true;
         };
-        reader.onerror = () => alert('Error reading file.');
+        reader.onerror = () => alert("Error reading file.");
         reader.readAsText(file);
       }
 
       /* ========================= Events ========================= */
 
-      document.getElementById('fileInput').addEventListener('change', e => {
+      document.getElementById("fileInput").addEventListener("change", (e) => {
         if (e.target.files[0]) loadFile(e.target.files[0]);
       });
-      document.getElementById('drawChartBtn').addEventListener('click', drawChart);
-      document.getElementById('downloadBtn').addEventListener('click', downloadChart);
+      document
+        .getElementById("drawChartBtn")
+        .addEventListener("click", drawChart);
+      document
+        .getElementById("downloadBtn")
+        .addEventListener("click", downloadChart);
     </script>
   </body>
 </html>
