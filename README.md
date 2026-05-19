@@ -61,6 +61,7 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 
 ### Maps and Spatial Data
 
+- **[CSV Map Viewer](csv-map-viewer.html)** — load a CSV file containing geographic coordinates and display point data on an interactive map; auto-detects common latitude/longitude column names and WKT geometry columns, with a manual column picker fallback and a linked properties table
 - **[Feature Service Viewer](feature-service-viewer.html)** — load and visualize ArcGIS Feature Services and MapServer layers on an interactive map
 - **[GeoJSON Editor](geojson-editor.html)** — draw points, polygons, and lines on an interactive map, add custom properties, and export as GeoJSON
 - **[GeoJSON Viewer](geojson-viewer.html)** — visualize and explore GeoJSON files on an interactive map
