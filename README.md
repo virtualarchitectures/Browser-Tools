@@ -26,6 +26,7 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 
 ### Data Visualisation
 
+- **[Data Summary](data-summary.html)** — load a CSV and profile dataset quality with a completeness bar chart, per-column summary table, and detailed statistics including non-blank counts, unique values, min/max/mean for numeric columns, date ranges, and top values
 - **[Data Visualiser](data-visualiser.html)** — load a CSV and create bar, line, area, scatter, histogram, pie, and doughnut charts with automatic column type inference and per-axis type overrides
 
 ### Digital Forensics
