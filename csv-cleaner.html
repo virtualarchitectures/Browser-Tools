@@ -324,6 +324,22 @@
         position: relative;
         overflow: hidden;
         white-space: nowrap;
+        cursor: text;
+      }
+      .data-table th:hover {
+        background: #0256c5;
+      }
+      .th-edit-input {
+        background: transparent;
+        border: none;
+        outline: 2px solid rgba(255,255,255,0.7);
+        border-radius: 2px;
+        color: #ffffff;
+        font-size: 14px;
+        font-weight: 600;
+        font-family: inherit;
+        width: 100%;
+        padding: 0;
       }
       .th-text {
         display: block;
@@ -573,6 +589,7 @@
       let cleanedData = null; // re-derived by runPipeline() from originalData
       let resizing = null;
       let splitArrayCols = new Set(); // originalData column indices to split
+      let headerOverrides = {}; // pipeline-derived header name → user-defined name
 
       /* =====================
          DOM References
@@ -751,7 +768,11 @@
           });
         }
 
-        cleanedData = { headers, rows };
+        // Stage 4: Apply header name overrides
+        const pipelineHeaders = [...headers];
+        headers = headers.map((h) => headerOverrides[h] !== undefined ? headerOverrides[h] : h);
+
+        cleanedData = { headers, rows, pipelineHeaders };
         updateStatus();
         updatePreview();
         updateExportPreview();
@@ -793,13 +814,17 @@
 
         const thead = document.createElement("thead");
         const headerTr = document.createElement("tr");
-        headers.forEach((h) => {
+        headers.forEach((h, colIdx) => {
           const th = document.createElement("th");
           th.title = h;
           const span = document.createElement("span");
           span.className = "th-text";
           span.textContent = h;
           th.appendChild(span);
+          th.addEventListener("click", (e) => {
+            if (e.target.classList.contains("col-resize-handle")) return;
+            makeHeaderEditable(th, colIdx);
+          });
           headerTr.appendChild(th);
         });
         thead.appendChild(headerTr);
@@ -823,6 +848,48 @@
         previewTableContainer.appendChild(table);
         addColumnResizeHandles(table);
         previewLimitNote.style.display = limited ? "block" : "none";
+      }
+
+      function makeHeaderEditable(th, colIdx) {
+        if (th.querySelector(".th-edit-input")) return; // already editing
+        const span = th.querySelector(".th-text");
+        if (!span) return;
+
+        const pipelineName = cleanedData.pipelineHeaders[colIdx];
+        const currentName = cleanedData.headers[colIdx];
+
+        const input = document.createElement("input");
+        input.className = "th-edit-input";
+        input.value = currentName;
+        span.replaceWith(input);
+        input.focus();
+        input.select();
+
+        let committed = false;
+        function commit() {
+          if (committed) return;
+          committed = true;
+          const newName = input.value.trim() || pipelineName;
+          if (newName !== pipelineName) {
+            headerOverrides[pipelineName] = newName;
+          } else {
+            delete headerOverrides[pipelineName];
+          }
+          cleanedData.headers[colIdx] = newName;
+          const newSpan = document.createElement("span");
+          newSpan.className = "th-text";
+          newSpan.textContent = newName;
+          th.title = newName;
+          input.replaceWith(newSpan);
+          updateExportPreview();
+          populateApplyToSelect();
+        }
+
+        input.addEventListener("blur", commit);
+        input.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") { e.preventDefault(); input.blur(); }
+          if (e.key === "Escape") { input.value = currentName; input.blur(); }
+        });
       }
 
       function addColumnResizeHandles(table) {
@@ -1111,6 +1178,7 @@
         originalData = null;
         cleanedData = null;
         splitArrayCols = new Set();
+        headerOverrides = {};
         fileInput.value = "";
         pasteInput.value = "";
         pasteArea.style.display = "none";
