@@ -297,18 +297,21 @@
         overflow-x: auto;
         overflow-y: auto;
         max-height: 400px;
+        min-height: 80px;
         border-radius: 6px;
         border: 1px solid #e1e4e8;
+        resize: vertical;
       }
       .data-table {
-        width: 100%;
-        border-collapse: collapse;
+        min-width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
         font-size: 14px;
       }
       .data-table thead {
         position: sticky;
         top: 0;
-        z-index: 1;
+        z-index: 2;
       }
       .data-table th {
         background: #0366d6;
@@ -316,15 +319,36 @@
         text-align: left;
         font-weight: 600;
         color: #ffffff;
-        border: 1px solid #0366d6;
+        border-right: 1px solid #0366d6;
+        border-bottom: 1px solid #0366d6;
+        position: relative;
+        overflow: hidden;
         white-space: nowrap;
-        max-width: 200px;
+      }
+      .th-text {
+        display: block;
         overflow: hidden;
         text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .col-resize-handle {
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 5px;
+        cursor: col-resize;
+        user-select: none;
+        z-index: 1;
+      }
+      .col-resize-handle:hover,
+      .col-resize-handle.resizing {
+        background: rgba(255, 255, 255, 0.3);
       }
       .data-table td {
         padding: 8px 12px;
-        border: 1px solid #e1e4e8;
+        border-right: 1px solid #e1e4e8;
+        border-bottom: 1px solid #e1e4e8;
         color: #24292e;
         text-align: left;
         vertical-align: top;
@@ -499,7 +523,7 @@
     <div class="panel">
       <h2>Preview</h2>
       <div class="info" id="previewInfo">No data loaded</div>
-      <div class="table-wrapper">
+      <div class="table-wrapper" id="previewTableWrapper">
         <div id="previewTableContainer">
           <div class="empty-state" style="padding: 16px">
             Load a CSV file to see a preview
@@ -540,6 +564,7 @@
          ===================== */
       let originalData = null; // { headers: string[], rows: string[][] } — never mutated
       let cleanedData = null; // re-derived by runPipeline() from originalData
+      let resizing = null;
 
       /* =====================
          DOM References
@@ -571,11 +596,10 @@
         "chkStripObjectBraces",
       );
 
-      const previewInfo = document.getElementById("previewInfo");
-      const previewTableContainer = document.getElementById(
-        "previewTableContainer",
-      );
-      const previewLimitNote = document.getElementById("previewLimitNote");
+      const previewTableWrapper   = document.getElementById("previewTableWrapper");
+      const previewInfo           = document.getElementById("previewInfo");
+      const previewTableContainer = document.getElementById("previewTableContainer");
+      const previewLimitNote      = document.getElementById("previewLimitNote");
 
       const downloadBtn = document.getElementById("downloadBtn");
       const copyBtn = document.getElementById("copyBtn");
@@ -723,8 +747,11 @@
         const headerTr = document.createElement("tr");
         headers.forEach((h) => {
           const th = document.createElement("th");
-          th.textContent = h;
           th.title = h;
+          const span = document.createElement("span");
+          span.className = "th-text";
+          span.textContent = h;
+          th.appendChild(span);
           headerTr.appendChild(th);
         });
         thead.appendChild(headerTr);
@@ -746,7 +773,57 @@
 
         previewTableContainer.innerHTML = "";
         previewTableContainer.appendChild(table);
+        addColumnResizeHandles(table);
         previewLimitNote.style.display = limited ? "block" : "none";
+      }
+
+      function addColumnResizeHandles(table) {
+        const ths = Array.from(table.querySelectorAll("th"));
+        ths.forEach((th) => {
+          const handle = document.createElement("div");
+          handle.className = "col-resize-handle";
+          th.appendChild(handle);
+        });
+
+        const headerRow = table.querySelector("thead tr");
+        headerRow.addEventListener("mousedown", (e) => {
+          const handle = e.target;
+          if (!handle.classList.contains("col-resize-handle")) return;
+          e.preventDefault();
+
+          if (table.style.tableLayout !== "fixed") {
+            ths.forEach((h) => {
+              const w = h.offsetWidth;
+              h.style.width = w + "px";
+              h.style.minWidth = w + "px";
+            });
+            table.style.tableLayout = "fixed";
+            table.style.width = "auto";
+          }
+
+          const th = handle.parentElement;
+          handle.classList.add("resizing");
+          resizing = { th, startX: e.pageX, startWidth: th.offsetWidth, handle };
+
+          document.addEventListener("mousemove", doResize);
+          document.addEventListener("mouseup", stopResize);
+        });
+      }
+
+      function doResize(e) {
+        if (!resizing) return;
+        const newWidth = Math.max(50, resizing.startWidth + e.pageX - resizing.startX);
+        resizing.th.style.width = newWidth + "px";
+        resizing.th.style.minWidth = newWidth + "px";
+      }
+
+      function stopResize() {
+        if (resizing) {
+          resizing.handle.classList.remove("resizing");
+          resizing = null;
+        }
+        document.removeEventListener("mousemove", doResize);
+        document.removeEventListener("mouseup", stopResize);
       }
 
       function updateExportPreview() {
@@ -794,6 +871,8 @@
         downloadBtn.disabled = false;
         copyBtn.disabled = false;
         pasteArea.style.display = "none";
+        previewTableWrapper.style.height = "400px";
+        previewTableWrapper.style.maxHeight = "none";
         runPipeline();
       }
 
@@ -936,6 +1015,9 @@
         replaceAllBtn.disabled = true;
         downloadBtn.disabled = true;
         copyBtn.disabled = true;
+
+        previewTableWrapper.style.height = "";
+        previewTableWrapper.style.maxHeight = "";
 
         updateStatus();
         updatePreview();
