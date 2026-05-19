@@ -445,7 +445,14 @@
     </div>
     <!-- /.panels-grid -->
 
-    <!-- Panel 3: Find & Replace -->
+    <!-- Panel 3: Split Array Columns -->
+    <div class="panel" id="arrayColsPanel">
+      <h2>Split Array Columns</h2>
+      <div class="info" id="arrayColsInfo">Load a CSV file to detect array columns.</div>
+      <div class="checkbox-group" id="arrayColsList"></div>
+    </div>
+
+    <!-- Panel 4: Find & Replace -->
     <div class="panel">
       <h2>Find &amp; Replace</h2>
       <div class="fr-inputs">
@@ -565,6 +572,7 @@
       let originalData = null; // { headers: string[], rows: string[][] } — never mutated
       let cleanedData = null; // re-derived by runPipeline() from originalData
       let resizing = null;
+      let splitArrayCols = new Set(); // originalData column indices to split
 
       /* =====================
          DOM References
@@ -703,6 +711,46 @@
             row.map((cell) => cell.replace(/[{}]/g, "")),
           );
         }
+
+        // Stage 3: Split array columns (reverse order to preserve indices during splice)
+        if (splitArrayCols.size > 0) {
+          const colsToSplit = [...splitArrayCols].sort((a, b) => b - a);
+          colsToSplit.forEach((colIdx) => {
+            if (colIdx >= headers.length) return;
+            let maxLen = 0;
+            rows.forEach((row) => {
+              const val = (row[colIdx] ?? "").trim();
+              if (val.startsWith("[")) {
+                try {
+                  const arr = JSON.parse(val);
+                  if (Array.isArray(arr)) maxLen = Math.max(maxLen, arr.length);
+                } catch (e) {}
+              }
+            });
+            if (maxLen === 0) return;
+            const origHeader = headers[colIdx];
+            headers.splice(
+              colIdx,
+              1,
+              ...Array.from({ length: maxLen }, (_, k) => `${origHeader}[${k}]`),
+            );
+            rows = rows.map((row) => {
+              const val = (row[colIdx] ?? "").trim();
+              let parsed = [];
+              if (val.startsWith("[")) {
+                try { parsed = JSON.parse(val); } catch (e) {}
+              }
+              if (!Array.isArray(parsed)) parsed = [];
+              const expanded = Array.from({ length: maxLen }, (_, k) =>
+                k < parsed.length ? String(parsed[k]) : "",
+              );
+              const newRow = [...row];
+              newRow.splice(colIdx, 1, ...expanded);
+              return newRow;
+            });
+          });
+        }
+
         cleanedData = { headers, rows };
         updateStatus();
         updatePreview();
@@ -853,6 +901,78 @@
       }
 
       /* =====================
+         Array Column Detection
+         ===================== */
+      const arrayColsInfo = document.getElementById("arrayColsInfo");
+      const arrayColsList = document.getElementById("arrayColsList");
+
+      function detectScalarArrayColumns(data) {
+        if (!data) return [];
+        const results = [];
+        data.headers.forEach((header, i) => {
+          const samples = data.rows
+            .slice(0, 20)
+            .map((r) => (r[i] ?? "").trim())
+            .filter((v) => v.startsWith("[") && v.endsWith("]"));
+          if (samples.length === 0) return;
+          let maxLen = 0;
+          let sample = null;
+          samples.forEach((s) => {
+            try {
+              const arr = JSON.parse(s);
+              if (!Array.isArray(arr)) return;
+              if (arr.some((el) => el !== null && typeof el === "object")) return;
+              if (arr.length > maxLen) { maxLen = arr.length; sample = arr; }
+            } catch (e) {}
+          });
+          if (maxLen > 0 && sample !== null) {
+            results.push({ index: i, header, maxLen, sample });
+          }
+        });
+        return results;
+      }
+
+      function updateArrayColumnsPanel() {
+        arrayColsList.innerHTML = "";
+        if (!originalData) {
+          arrayColsInfo.textContent = "Load a CSV file to detect array columns.";
+          arrayColsInfo.style.display = "";
+          return;
+        }
+        const detected = detectScalarArrayColumns(originalData);
+        // Remove stale indices
+        const validIndices = new Set(detected.map((d) => d.index));
+        for (const idx of splitArrayCols) {
+          if (!validIndices.has(idx)) splitArrayCols.delete(idx);
+        }
+        if (detected.length === 0) {
+          arrayColsInfo.textContent = "No scalar array columns detected.";
+          arrayColsInfo.style.display = "";
+          return;
+        }
+        arrayColsInfo.style.display = "none";
+        detected.forEach(({ index, header, maxLen, sample }) => {
+          const label = document.createElement("label");
+          label.className = "checkbox-label";
+          const cb = document.createElement("input");
+          cb.type = "checkbox";
+          cb.value = index;
+          cb.checked = splitArrayCols.has(index);
+          cb.addEventListener("change", () => {
+            if (cb.checked) splitArrayCols.add(index);
+            else splitArrayCols.delete(index);
+            runPipeline();
+          });
+          const sampleStr = JSON.stringify(sample).slice(0, 40) + (JSON.stringify(sample).length > 40 ? "…]" : "");
+          label.appendChild(cb);
+          label.appendChild(
+            document.createTextNode(` ${header}  ${sampleStr}  →  ${maxLen} column${maxLen !== 1 ? "s" : ""}`),
+          );
+          arrayColsList.appendChild(label);
+        });
+      }
+
+      /* =====================
          Data Loading
          ===================== */
       function loadFromText(text) {
@@ -873,6 +993,7 @@
         pasteArea.style.display = "none";
         previewTableWrapper.style.height = "400px";
         previewTableWrapper.style.maxHeight = "none";
+        updateArrayColumnsPanel();
         runPipeline();
       }
 
@@ -989,6 +1110,7 @@
       function clearAll() {
         originalData = null;
         cleanedData = null;
+        splitArrayCols = new Set();
         fileInput.value = "";
         pasteInput.value = "";
         pasteArea.style.display = "none";
@@ -1019,6 +1141,7 @@
         previewTableWrapper.style.height = "";
         previewTableWrapper.style.maxHeight = "";
 
+        updateArrayColumnsPanel();
         updateStatus();
         updatePreview();
         updateExportPreview();
