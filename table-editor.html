@@ -123,7 +123,7 @@
         background: #ffffff;
         overflow-x: auto;
         overflow-y: auto;
-        height: 824px;
+        max-height: 824px;
         min-height: 80px;
         border-radius: 6px;
         border: 1px solid #e1e4e8;
@@ -464,7 +464,7 @@
       </div>
       <div class="status" id="status">3 columns, 3 rows</div>
       <div class="table-container">
-        <div class="table-wrapper">
+        <div class="table-wrapper" id="tableWrapper">
         <table class="data-table" id="dataTable">
           <thead>
             <tr id="headerRow">
@@ -760,8 +760,10 @@
          ========================= */
 
       function buildTableFromData(headers, rows) {
-        // Reset table layout to auto for natural column widths
         document.getElementById("dataTable").style.tableLayout = "auto";
+        const wrapper = document.getElementById("tableWrapper");
+        wrapper.style.height = "824px";
+        wrapper.style.maxHeight = "none";
 
         // Build header row
         let headerHTML = '<th class="delete-row-header"></th>';
@@ -936,8 +938,10 @@
       }
 
       function clearAll() {
-        // Reset table layout to auto for natural column widths
         document.getElementById("dataTable").style.tableLayout = "auto";
+        const wrapper = document.getElementById("tableWrapper");
+        wrapper.style.height = "";
+        wrapper.style.maxHeight = "";
 
         headerRow.innerHTML = `
           <th class="delete-row-header"></th>
