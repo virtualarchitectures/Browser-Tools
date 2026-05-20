@@ -430,6 +430,30 @@
         background: #e1e4e8;
         margin: 0 4px;
       }
+      .panel:fullscreen {
+        border-radius: 0;
+        border: none;
+        margin: 0;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        box-sizing: border-box;
+        overflow: hidden;
+      }
+      .panel:fullscreen .table-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        margin-bottom: 0;
+      }
+      .panel:fullscreen .table-wrapper {
+        flex: 1;
+        max-height: none;
+        height: auto;
+        resize: none;
+      }
     </style>
   </head>
   <body>
@@ -461,6 +485,8 @@
         </div>
         <div class="separator"></div>
         <button class="btn danger" id="clearBtn">Clear All</button>
+        <div class="separator"></div>
+        <button class="btn secondary" id="fullscreenBtn">Fullscreen</button>
       </div>
       <div class="status" id="status">3 columns, 3 rows</div>
       <div class="table-container">
@@ -1191,6 +1217,27 @@
       }
 
       headerRow.addEventListener("mousedown", initResize);
+
+      /* =========================
+         Fullscreen
+         ========================= */
+
+      const fullscreenBtn = document.getElementById("fullscreenBtn");
+      const editPanel = fullscreenBtn.closest(".panel");
+
+      fullscreenBtn.addEventListener("click", () => {
+        if (!document.fullscreenElement) {
+          editPanel.requestFullscreen();
+        } else {
+          document.exitFullscreen();
+        }
+      });
+
+      document.addEventListener("fullscreenchange", () => {
+        fullscreenBtn.textContent = document.fullscreenElement
+          ? "Exit Fullscreen"
+          : "Fullscreen";
+      });
 
       /* =========================
          Initialization
