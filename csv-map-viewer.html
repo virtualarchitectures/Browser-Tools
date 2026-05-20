@@ -218,6 +218,8 @@
         padding: 8px 12px;
         border: 1px solid #e1e4e8;
         color: #24292e;
+        text-align: left;
+        vertical-align: top;
       }
       .properties-table tr:hover {
         background: #f6f8fa;
@@ -280,6 +282,31 @@
       }
       .msg-error {
         color: #d73a49;
+      }
+      .properties-table thead {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+      }
+      #propertiesPanel:fullscreen {
+        border-radius: 0;
+        border: none;
+        margin: 0;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        box-sizing: border-box;
+        overflow: hidden;
+      }
+      #propertiesPanel:fullscreen #propertiesDisplay {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: auto;
+        min-height: 0;
+      }
+      #propertiesPanel:fullscreen .table-content {
+        max-height: none;
       }
     </style>
   </head>
@@ -366,7 +393,10 @@
     </div>
 
     <div class="panel" id="propertiesPanel">
-      <h2>CSV Properties</h2>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;">
+        <h2 style="margin-bottom:0">CSV Properties</h2>
+        <button class="btn secondary" id="tableFullscreenBtn">Fullscreen</button>
+      </div>
       <div id="propertiesDisplay" class="empty-state">
         No file selected. Upload a CSV file to view properties.
       </div>
@@ -860,6 +890,21 @@
         ) {
           fullscreenBtn.click();
         }
+      });
+
+      const tableFullscreenBtn = document.getElementById("tableFullscreenBtn");
+      const propertiesPanel = document.getElementById("propertiesPanel");
+      tableFullscreenBtn.addEventListener("click", () => {
+        if (!document.fullscreenElement) {
+          propertiesPanel.requestFullscreen();
+        } else {
+          document.exitFullscreen();
+        }
+      });
+      document.addEventListener("fullscreenchange", () => {
+        tableFullscreenBtn.textContent = document.fullscreenElement
+          ? "Exit Fullscreen"
+          : "Fullscreen";
       });
     </script>
   </body>

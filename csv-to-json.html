@@ -252,6 +252,33 @@
         color: #586069;
         margin-top: 4px;
       }
+      #csvPanel:fullscreen {
+        border-radius: 0;
+        border: none;
+        margin: 0;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        box-sizing: border-box;
+        overflow: hidden;
+      }
+      #csvPanel:fullscreen .panel-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        overflow: hidden;
+      }
+      #csvPanel:fullscreen .table-wrapper {
+        flex: 1;
+        max-height: none;
+        height: auto;
+        resize: none;
+        overflow-x: auto;
+        overflow-y: auto;
+        min-height: 0;
+      }
     </style>
   </head>
   <body>
@@ -267,7 +294,10 @@
     </div>
 
     <div class="panel" id="csvPanel">
-      <h2 id="csvHeader">CSV Data Preview</h2>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <h2 id="csvHeader" style="margin-bottom:0">CSV Data Preview</h2>
+        <button class="btn secondary" id="tableFullscreenBtn">Fullscreen</button>
+      </div>
       <div class="panel-content" id="csvContent">
         <div class="info">
           Upload a CSV file to preview its contents and convert to JSON format.
@@ -605,6 +635,22 @@
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
+      });
+
+      const tableFullscreenBtn = document.getElementById("tableFullscreenBtn");
+      tableFullscreenBtn.addEventListener("click", () => {
+        if (!document.fullscreenElement) {
+          csvHeader.classList.remove("collapsed");
+          csvContent.classList.remove("collapsed");
+          document.getElementById("csvPanel").requestFullscreen();
+        } else {
+          document.exitFullscreen();
+        }
+      });
+      document.addEventListener("fullscreenchange", () => {
+        tableFullscreenBtn.textContent = document.fullscreenElement
+          ? "Exit Fullscreen"
+          : "Fullscreen";
       });
 
       // Clear all data

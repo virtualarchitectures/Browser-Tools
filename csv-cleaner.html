@@ -398,6 +398,25 @@
         padding: 1px 4px;
         border-radius: 3px;
       }
+      #previewPanel:fullscreen {
+        border-radius: 0;
+        border: none;
+        margin: 0;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        box-sizing: border-box;
+        overflow: hidden;
+      }
+      #previewPanel:fullscreen .table-wrapper {
+        flex: 1;
+        max-height: none;
+        height: auto;
+        resize: none;
+        overflow-x: auto;
+        overflow-y: auto;
+      }
     </style>
   </head>
   <body>
@@ -543,8 +562,11 @@
     </div>
 
     <!-- Panel 5: Preview -->
-    <div class="panel">
-      <h2>Preview</h2>
+    <div class="panel" id="previewPanel">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <h2 style="margin-bottom:0">Preview</h2>
+        <button class="btn secondary" id="tableFullscreenBtn">Fullscreen</button>
+      </div>
       <div class="info" id="previewInfo">No data loaded</div>
       <div class="table-wrapper" id="previewTableWrapper">
         <div id="previewTableContainer">
@@ -1267,6 +1289,21 @@
 
       downloadBtn.addEventListener("click", downloadCSV);
       copyBtn.addEventListener("click", copyToClipboard);
+
+      const tableFullscreenBtn = document.getElementById("tableFullscreenBtn");
+      const previewPanel = document.getElementById("previewPanel");
+      tableFullscreenBtn.addEventListener("click", () => {
+        if (!document.fullscreenElement) {
+          previewPanel.requestFullscreen();
+        } else {
+          document.exitFullscreen();
+        }
+      });
+      document.addEventListener("fullscreenchange", () => {
+        tableFullscreenBtn.textContent = document.fullscreenElement
+          ? "Exit Fullscreen"
+          : "Fullscreen";
+      });
     </script>
   </body>
 </html>

@@ -441,6 +441,8 @@
         max-width: 160px;
         overflow: hidden;
         text-overflow: ellipsis;
+        text-align: left;
+        vertical-align: top;
       }
       .preview-table tr:hover td {
         background: #f6f8fa;
@@ -491,6 +493,32 @@
         padding-right: 4px;
       }
 
+      #previewPanel:fullscreen {
+        border-radius: 0;
+        border: none;
+        margin: 0;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        box-sizing: border-box;
+        overflow: hidden;
+      }
+      #previewPanel:fullscreen details {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        overflow: hidden;
+      }
+      #previewPanel:fullscreen .preview-wrapper {
+        flex: 1;
+        max-height: none;
+        overflow-x: auto;
+        overflow-y: auto;
+        min-height: 0;
+      }
+
       /* Bins slider */
       .bins-row {
         display: flex;
@@ -514,7 +542,7 @@
     <h1>Data Visualiser</h1>
 
     <!-- Panel 1: Load Data -->
-    <div class="panel">
+    <div class="panel" id="previewPanel">
       <h2>Load Data</h2>
       <div class="info">
         Load a CSV file to visualise. Column types are inferred automatically
@@ -527,6 +555,9 @@
       <div class="status" id="loadStatus">No file loaded</div>
       <details id="previewDetails" style="display: none">
         <summary>Show data preview</summary>
+        <div style="display:flex;justify-content:flex-end;margin:6px 0 4px;">
+          <button class="btn secondary" id="tableFullscreenBtn">Fullscreen</button>
+        </div>
         <div class="preview-wrapper">
           <table class="preview-table" id="previewTable"></table>
         </div>
@@ -1579,6 +1610,26 @@
       document
         .getElementById("downloadBtn")
         .addEventListener("click", downloadChart);
+
+      const tableFullscreenBtn = document.getElementById("tableFullscreenBtn");
+      const previewPanel = document.getElementById("previewPanel");
+      const previewDetails = document.getElementById("previewDetails");
+      tableFullscreenBtn.addEventListener("click", () => {
+        if (!document.fullscreenElement) {
+          previewDetails.open = true;
+          previewPanel.requestFullscreen();
+        } else {
+          document.exitFullscreen();
+        }
+      });
+      document.addEventListener("fullscreenchange", () => {
+        if (document.fullscreenElement) {
+          previewDetails.open = true;
+          tableFullscreenBtn.textContent = "Exit Fullscreen";
+        } else {
+          tableFullscreenBtn.textContent = "Fullscreen";
+        }
+      });
     </script>
   </body>
 </html>
