@@ -977,6 +977,7 @@
       }
 
       function populateApplyToSelect() {
+        const savedValue = applyToSelect.value;
         while (applyToSelect.options.length > 3) {
           applyToSelect.remove(3);
         }
@@ -991,6 +992,9 @@
           opt.textContent = h || `(column ${i + 1})`;
           applyToSelect.appendChild(opt);
         });
+        if (savedValue && Array.from(applyToSelect.options).some((o) => o.value === savedValue)) {
+          applyToSelect.value = savedValue;
+        }
       }
 
       /* =====================
