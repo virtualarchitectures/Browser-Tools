@@ -981,10 +981,14 @@
           applyToSelect.remove(3);
         }
         if (!cleanedData) return;
+        const sep = document.createElement("option");
+        sep.disabled = true;
+        sep.textContent = "───────────────";
+        applyToSelect.appendChild(sep);
         cleanedData.headers.forEach((h, i) => {
           const opt = document.createElement("option");
           opt.value = `col:${i}`;
-          opt.textContent = `Column: ${h || `(column ${i + 1})`}`;
+          opt.textContent = h || `(column ${i + 1})`;
           applyToSelect.appendChild(opt);
         });
       }
