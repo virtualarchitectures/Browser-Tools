@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Unit Converter</title>
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+        line-height: 1.6;
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 20px;
+        color: #24292e;
+        background: #ffffff;
+      }
+      h1 {
+        border-bottom: 1px solid #eaecef;
+        padding-bottom: 0.3em;
+        margin-top: 0;
+        font-size: 32px;
+        font-weight: 600;
+      }
+      .back-link {
+        display: inline-block;
+        margin-bottom: 16px;
+        color: #0366d6;
+        text-decoration: none;
+        font-size: 14px;
+      }
+      .back-link:hover { text-decoration: underline; }
+      .instruction {
+        font-size: 13px;
+        color: #586069;
+        margin-bottom: 20px;
+        padding: 12px;
+        background: #f6f8fa;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+      }
+      .tabs {
+        display: flex;
+        gap: 0;
+        border-bottom: 2px solid #e1e4e8;
+        margin-bottom: 24px;
+      }
+      .tab {
+        padding: 8px 20px;
+        cursor: pointer;
+        border: none;
+        background: none;
+        font-size: 15px;
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+        color: #586069;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -2px;
+      }
+      .tab:hover { color: #0366d6; }
+      .tab.active {
+        color: #0366d6;
+        border-bottom-color: #0366d6;
+        font-weight: 600;
+      }
+      .tab-panel { display: none; }
+      .tab-panel.active { display: block; }
+      .converter-grid {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        gap: 16px;
+        align-items: end;
+        margin-bottom: 24px;
+      }
+      .input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      label {
+        font-size: 14px;
+        font-weight: 600;
+        color: #24292e;
+      }
+      input[type="number"] {
+        width: 100%;
+        padding: 10px 12px;
+        font-size: 18px;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        background: #ffffff;
+        color: #24292e;
+      }
+      input[type="number"]:focus {
+        outline: none;
+        border-color: #0366d6;
+      }
+      select {
+        width: 100%;
+        padding: 10px 12px;
+        font-size: 15px;
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        background: #ffffff;
+        color: #24292e;
+      }
+      select:focus {
+        outline: none;
+        border-color: #0366d6;
+      }
+      .swap-btn {
+        background: #fafbfc;
+        color: #24292e;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+        border-radius: 6px;
+        padding: 10px 14px;
+        font-size: 18px;
+        cursor: pointer;
+        align-self: end;
+        line-height: 1;
+      }
+      .swap-btn:hover { background: #f3f4f6; }
+      .result-box {
+        background: #f6f8fa;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        padding: 16px 20px;
+        margin-bottom: 24px;
+        font-size: 22px;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        color: #24292e;
+        min-height: 60px;
+      }
+      .result-box .result-value { font-weight: 600; color: #0366d6; }
+      .result-box .result-unit { color: #586069; font-size: 16px; margin-left: 6px; }
+      .reference-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+        margin-top: 8px;
+      }
+      .reference-table th {
+        background: #0366d6;
+        color: #fff;
+        padding: 8px 12px;
+        text-align: left;
+        font-weight: 600;
+      }
+      .reference-table td {
+        padding: 7px 12px;
+        border: 1px solid #e1e4e8;
+        color: #24292e;
+      }
+      .reference-table tr:nth-child(even) td { background: #f6f8fa; }
+      .reference-header {
+        font-size: 13px;
+        font-weight: 600;
+        color: #586069;
+        margin-bottom: 8px;
+        margin-top: 0;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      .table-wrapper {
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        overflow: hidden;
+        max-height: 340px;
+        overflow-y: auto;
+      }
+      @media (max-width: 600px) {
+        .converter-grid { grid-template-columns: 1fr; }
+        .swap-btn { width: 100%; }
+      }
+    </style>
+  </head>
+  <body>
+    <a href="index.html" class="back-link">← Back to Browser Tools</a>
+    <h1>Unit Converter</h1>
+    <p class="instruction">
+      Enter a value and select units to convert between length, weight/mass, and temperature.
+      The reference table below shows all common conversions from the current input.
+    </p>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="length">Length</button>
+      <button class="tab" data-tab="weight">Weight / Mass</button>
+      <button class="tab" data-tab="temperature">Temperature</button>
+    </div>
+
+    <!-- LENGTH -->
+    <div class="tab-panel active" id="tab-length">
+      <div class="converter-grid">
+        <div class="input-group">
+          <label for="len-value">Value</label>
+          <input type="number" id="len-value" value="1" step="any" />
+          <select id="len-from"></select>
+        </div>
+        <button class="swap-btn" id="len-swap" title="Swap units">⇄</button>
+        <div class="input-group">
+          <label for="len-result">Result</label>
+          <input type="number" id="len-result" step="any" readonly style="background:#f6f8fa;cursor:default;" />
+          <select id="len-to"></select>
+        </div>
+      </div>
+      <p class="reference-header">All length conversions from input value</p>
+      <div class="table-wrapper">
+        <table class="reference-table" id="len-table">
+          <thead><tr><th>Unit</th><th>Value</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- WEIGHT -->
+    <div class="tab-panel" id="tab-weight">
+      <div class="converter-grid">
+        <div class="input-group">
+          <label for="wt-value">Value</label>
+          <input type="number" id="wt-value" value="1" step="any" />
+          <select id="wt-from"></select>
+        </div>
+        <button class="swap-btn" id="wt-swap" title="Swap units">⇄</button>
+        <div class="input-group">
+          <label for="wt-result">Result</label>
+          <input type="number" id="wt-result" step="any" readonly style="background:#f6f8fa;cursor:default;" />
+          <select id="wt-to"></select>
+        </div>
+      </div>
+      <p class="reference-header">All weight conversions from input value</p>
+      <div class="table-wrapper">
+        <table class="reference-table" id="wt-table">
+          <thead><tr><th>Unit</th><th>Value</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TEMPERATURE -->
+    <div class="tab-panel" id="tab-temperature">
+      <div class="converter-grid">
+        <div class="input-group">
+          <label for="tmp-value">Value</label>
+          <input type="number" id="tmp-value" value="0" step="any" />
+          <select id="tmp-from"></select>
+        </div>
+        <button class="swap-btn" id="tmp-swap" title="Swap units">⇄</button>
+        <div class="input-group">
+          <label for="tmp-result">Result</label>
+          <input type="number" id="tmp-result" step="any" readonly style="background:#f6f8fa;cursor:default;" />
+          <select id="tmp-to"></select>
+        </div>
+      </div>
+      <p class="reference-header">All temperature conversions from input value</p>
+      <div class="table-wrapper">
+        <table class="reference-table" id="tmp-table">
+          <thead><tr><th>Unit</th><th>Value</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <script type="module">
+      // ── Length units (base: metre) ──────────────────────────────────────────
+      const LENGTH_UNITS = [
+        { key: "mm",   label: "Millimetres (mm)",     factor: 0.001 },
+        { key: "cm",   label: "Centimetres (cm)",     factor: 0.01 },
+        { key: "m",    label: "Metres (m)",           factor: 1 },
+        { key: "km",   label: "Kilometres (km)",      factor: 1000 },
+        { key: "in",   label: "Inches (in)",          factor: 0.0254 },
+        { key: "ft",   label: "Feet (ft)",            factor: 0.3048 },
+        { key: "yd",   label: "Yards (yd)",           factor: 0.9144 },
+        { key: "mi",   label: "Miles (mi)",           factor: 1609.344 },
+        { key: "nmi",  label: "Nautical Miles (nmi)", factor: 1852 },
+        { key: "ly",   label: "Light-years (ly)",     factor: 9.461e15 },
+      ];
+
+      // ── Weight units (base: gram) ───────────────────────────────────────────
+      const WEIGHT_UNITS = [
+        { key: "mcg",  label: "Micrograms (µg)",      factor: 0.000001 },
+        { key: "mg",   label: "Milligrams (mg)",      factor: 0.001 },
+        { key: "g",    label: "Grams (g)",            factor: 1 },
+        { key: "kg",   label: "Kilograms (kg)",       factor: 1000 },
+        { key: "t",    label: "Metric Tonnes (t)",    factor: 1e6 },
+        { key: "oz",   label: "Ounces (oz)",          factor: 28.349523125 },
+        { key: "lb",   label: "Pounds (lb)",          factor: 453.59237 },
+        { key: "st",   label: "Stone (st)",           factor: 6350.29318 },
+        { key: "ton",  label: "Short Tons (US ton)",  factor: 907184.74 },
+        { key: "lton", label: "Long Tons (UK ton)",   factor: 1016046.9088 },
+      ];
+
+      // ── Temperature ─────────────────────────────────────────────────────────
+      const TEMP_UNITS = [
+        { key: "C", label: "Celsius (°C)" },
+        { key: "F", label: "Fahrenheit (°F)" },
+        { key: "K", label: "Kelvin (K)" },
+        { key: "R", label: "Rankine (°R)" },
+      ];
+
+      function toBasetemp(val, from) {
+        switch (from) {
+          case "C": return val;
+          case "F": return (val - 32) * 5 / 9;
+          case "K": return val - 273.15;
+          case "R": return (val - 491.67) * 5 / 9;
+        }
+      }
+      function fromBasetemp(celsius, to) {
+        switch (to) {
+          case "C": return celsius;
+          case "F": return celsius * 9 / 5 + 32;
+          case "K": return celsius + 273.15;
+          case "R": return (celsius + 273.15) * 9 / 5;
+        }
+      }
+
+      function formatNum(n) {
+        if (!isFinite(n)) return "—";
+        if (Math.abs(n) >= 1e10 || (Math.abs(n) < 1e-6 && n !== 0)) {
+          return n.toExponential(6).replace(/\.?0+e/, "e");
+        }
+        const s = parseFloat(n.toPrecision(10)).toString();
+        return s;
+      }
+
+      function populateSelect(sel, units, defaultKey) {
+        units.forEach(u => {
+          const opt = document.createElement("option");
+          opt.value = u.key;
+          opt.textContent = u.label;
+          if (u.key === defaultKey) opt.selected = true;
+          sel.appendChild(opt);
+        });
+      }
+
+      function buildConverter({ units, valueId, fromId, toId, swapId, tableId, defaultFrom, defaultTo, toBase, fromBase }) {
+        const valueEl = document.getElementById(valueId);
+        const fromEl  = document.getElementById(fromId);
+        const toEl    = document.getElementById(toId);
+        const swapEl  = document.getElementById(swapId);
+        const tblBody = document.querySelector(`#${tableId} tbody`);
+        const resultEl = document.getElementById(toId.replace("from", "result").replace("to", "result"));
+        const resId = valueId.replace("value", "result");
+        const resultInput = document.getElementById(resId);
+
+        populateSelect(fromEl, units, defaultFrom);
+        populateSelect(toEl,   units, defaultTo);
+
+        function convert() {
+          const raw = parseFloat(valueEl.value);
+          if (isNaN(raw)) { resultInput.value = ""; tblBody.innerHTML = ""; return; }
+
+          const fromKey = fromEl.value;
+          const toKey   = toEl.value;
+
+          let result;
+          if (toBase) {
+            const base = toBase(raw, fromKey);
+            result = fromBase(base, toKey);
+          } else {
+            const fromU = units.find(u => u.key === fromKey);
+            const toU   = units.find(u => u.key === toKey);
+            result = raw * fromU.factor / toU.factor;
+          }
+          resultInput.value = formatNum(result);
+
+          // Reference table
+          tblBody.innerHTML = "";
+          units.forEach(u => {
+            let v;
+            if (toBase) {
+              const base = toBase(raw, fromKey);
+              v = fromBase(base, u.key);
+            } else {
+              const fromU = units.find(x => x.key === fromKey);
+              v = raw * fromU.factor / u.factor;
+            }
+            const tr = document.createElement("tr");
+            if (u.key === toKey) tr.style.background = "#dbeafe";
+            tr.innerHTML = `<td>${u.label}</td><td style="font-family:monospace">${formatNum(v)}</td>`;
+            tblBody.appendChild(tr);
+          });
+        }
+
+        valueEl.addEventListener("input", convert);
+        fromEl.addEventListener("change", convert);
+        toEl.addEventListener("change", convert);
+        swapEl.addEventListener("click", () => {
+          const tmp = fromEl.value;
+          fromEl.value = toEl.value;
+          toEl.value = tmp;
+          convert();
+        });
+
+        convert();
+      }
+
+      // Length
+      buildConverter({
+        units: LENGTH_UNITS,
+        valueId: "len-value", fromId: "len-from", toId: "len-to",
+        swapId: "len-swap", tableId: "len-table",
+        defaultFrom: "m", defaultTo: "ft",
+      });
+
+      // Weight
+      buildConverter({
+        units: WEIGHT_UNITS,
+        valueId: "wt-value", fromId: "wt-from", toId: "wt-to",
+        swapId: "wt-swap", tableId: "wt-table",
+        defaultFrom: "kg", defaultTo: "lb",
+      });
+
+      // Temperature
+      buildConverter({
+        units: TEMP_UNITS,
+        valueId: "tmp-value", fromId: "tmp-from", toId: "tmp-to",
+        swapId: "tmp-swap", tableId: "tmp-table",
+        defaultFrom: "C", defaultTo: "F",
+        toBase: toBasetemp, fromBase: fromBasetemp,
+      });
+
+      // Tabs
+      document.querySelectorAll(".tab").forEach(tab => {
+        tab.addEventListener("click", () => {
+          document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+          document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+          tab.classList.add("active");
+          document.getElementById("tab-" + tab.dataset.tab).classList.add("active");
+        });
+      });
+    </script>
+  </body>
+</html>
