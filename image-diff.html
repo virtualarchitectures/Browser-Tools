@@ -166,7 +166,7 @@
         background: repeating-conic-gradient(#eee 0% 25%, #fff 0% 50%) 0 0 / 16px 16px;
         max-height: 600px;
       }
-      canvas.result { display: block; }
+      canvas.result { display: block; margin: 0 auto; }
       .dl-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
       @media (max-width: 600px) {
         .upload-grid { grid-template-columns: 1fr; }
@@ -251,12 +251,14 @@
 
       <div class="rtab-panel" id="rtab-slider">
         <p style="font-size:13px;color:#586069;margin:0 0 8px 0;">Drag the slider to compare the two images directly.</p>
-        <div id="slider-wrap" style="position:relative;display:block;border:1px solid #e1e4e8;border-radius:6px;overflow:hidden;">
+        <div id="slider-wrap" style="position:relative;display:block;border:1px solid #e1e4e8;border-radius:6px;overflow:hidden;margin:0 auto;">
           <canvas id="canvas-a-s" class="result"></canvas>
           <canvas id="canvas-b-s" class="result" style="position:absolute;top:0;left:0;"></canvas>
           <div id="slide-divider" style="position:absolute;top:0;bottom:0;left:50%;width:2px;background:#fff;box-shadow:0 0 4px rgba(0,0,0,0.6);transform:translateX(-50%);pointer-events:none;z-index:5;"></div>
+          <span style="position:absolute;top:8px;left:10px;background:rgba(0,0,0,0.5);color:#fff;font-size:11px;font-weight:600;padding:2px 6px;border-radius:3px;pointer-events:none;z-index:6;">A</span>
+          <span style="position:absolute;top:8px;right:10px;background:rgba(0,0,0,0.5);color:#fff;font-size:11px;font-weight:600;padding:2px 6px;border-radius:3px;pointer-events:none;z-index:6;">B</span>
           <input type="range" id="slide-pos" min="0" max="100" value="50"
-            style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);width:80%;z-index:10;cursor:ew-resize;" />
+            style="position:absolute;bottom:10px;left:0;width:100%;z-index:10;cursor:ew-resize;margin:0;padding:0;" />
         </div>
       </div>
     </div>
@@ -464,6 +466,7 @@
         canvasAS.style.height = dH + "px";
         canvasBS.style.width  = dW + "px";
         canvasBS.style.height = dH + "px";
+        document.getElementById("slider-wrap").style.width = dW + "px";
 
         const totalPx = W * H;
         const pct = ((diffCount / totalPx) * 100).toFixed(2);
@@ -481,6 +484,7 @@
         statsBar.classList.add("visible");
         resultsEl.classList.add("visible");
         resultsEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        setSlider(50);
       }
 
       // --- Auto-align: SSD-based translation search at thumbnail scale ---
@@ -500,6 +504,10 @@
         const ow = Math.min(wA - xsA, wB - xsB);
         const oh = Math.min(hA - ysA, hB - ysB);
         if (ow <= 0 || oh <= 0) return Infinity;
+        // Require the overlap to cover ≥25% of A's area.
+        // Using A (not min/max) as the reference means a tiny scaled-down B
+        // can never win just by fitting entirely inside a small uniform patch of A.
+        if (ow * oh < 0.25 * wA * hA) return Infinity;
         let sum = 0;
         for (let r = 0; r < oh; r++) {
           const baseA = (ysA + r) * wA + xsA;
@@ -520,46 +528,49 @@
       });
 
       function autoAlign() {
-        const sc = Math.max(0.01, parseFloat(scaleBEl.value) || 1.0);
         const THUMB = 64;
-
-        // Scale both images (with current B scale applied) down to THUMB
-        const maxDim = Math.max(
-          imgA.naturalWidth, imgA.naturalHeight,
-          imgB.naturalWidth * sc, imgB.naturalHeight * sc
-        );
-        const tScale = THUMB / maxDim;
-
-        const taW = Math.max(1, Math.round(imgA.naturalWidth * tScale));
+        // A thumbnail is the fixed reference — tScale is based on A's dimensions only
+        const tScale = THUMB / Math.max(imgA.naturalWidth, imgA.naturalHeight);
+        const taW = Math.max(1, Math.round(imgA.naturalWidth  * tScale));
         const taH = Math.max(1, Math.round(imgA.naturalHeight * tScale));
-        const tbW = Math.max(1, Math.round(imgB.naturalWidth * sc * tScale));
-        const tbH = Math.max(1, Math.round(imgB.naturalHeight * sc * tScale));
 
         const ta = document.createElement("canvas");
-        const tb = document.createElement("canvas");
         ta.width = taW; ta.height = taH;
-        tb.width = tbW; tb.height = tbH;
-
         const ctA2 = ta.getContext("2d", { willReadFrequently: true });
-        const ctB2 = tb.getContext("2d", { willReadFrequently: true });
         ctA2.drawImage(imgA, 0, 0, taW, taH);
-        ctB2.drawImage(imgB, 0, 0, tbW, tbH);
-
         const gA = toGrey(ctA2.getImageData(0, 0, taW, taH).data);
-        const gB = toGrey(ctB2.getImageData(0, 0, tbW, tbH).data);
 
-        // Search all offsets within the full combined image bounds
-        const rangeX = Math.max(taW, tbW);
-        const rangeY = Math.max(taH, tbH);
-        let bestSSD = Infinity, bestDx = 0, bestDy = 0;
+        // Candidate scales: standard range + natural A/B dimension ratios
+        const snap = s => Math.round(s * 20) / 20; // round to nearest 0.05
+        const rH = snap(imgA.naturalHeight / imgB.naturalHeight);
+        const rW = snap(imgA.naturalWidth  / imgB.naturalWidth);
+        const SCALES = [...new Set(
+          [0.5, 0.6, 0.67, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0, 1.05, 1.1, 1.25, 1.33, 1.5, 2.0, rH, rW]
+            .map(snap).filter(s => s >= 0.5 && s <= 2.0)
+        )].sort((a, b) => a - b);
 
-        for (let dy = -rangeY; dy <= rangeY; dy++) {
-          for (let dx = -rangeX; dx <= rangeX; dx++) {
-            const s = computeSSD(gA, taW, taH, gB, tbW, tbH, dx, dy);
-            if (s < bestSSD) { bestSSD = s; bestDx = dx; bestDy = dy; }
+        let bestSSD = Infinity, bestDx = 0, bestDy = 0, bestSc = 1.0;
+
+        for (const sc of SCALES) {
+          const tbW = Math.max(1, Math.round(imgB.naturalWidth  * sc * tScale));
+          const tbH = Math.max(1, Math.round(imgB.naturalHeight * sc * tScale));
+          const tb = document.createElement("canvas");
+          tb.width = tbW; tb.height = tbH;
+          const ctB2 = tb.getContext("2d", { willReadFrequently: true });
+          ctB2.drawImage(imgB, 0, 0, tbW, tbH);
+          const gB = toGrey(ctB2.getImageData(0, 0, tbW, tbH).data);
+
+          // Search offsets up to ±A-thumbnail dimensions (covers full image in full-res)
+          for (let dy = -taH; dy <= taH; dy++) {
+            for (let dx = -taW; dx <= taW; dx++) {
+              const s = computeSSD(gA, taW, taH, gB, tbW, tbH, dx, dy);
+              if (s < bestSSD) { bestSSD = s; bestDx = dx; bestDy = dy; bestSc = sc; }
+            }
           }
         }
 
+        scaleBEl.value = bestSc;
+        scaleBVal.textContent = bestSc.toFixed(2) + "×";
         offsetXEl.value = Math.round(bestDx / tScale);
         offsetYEl.value = Math.round(bestDy / tScale);
 
@@ -577,10 +588,16 @@
       });
 
       // Slider
-      const slidePos = document.getElementById("slide-pos");
-      slidePos.addEventListener("input", () => {
-        canvasBS.style.clipPath = `inset(0 ${100 - slidePos.value}% 0 0)`;
-      });
+      const slidePos     = document.getElementById("slide-pos");
+      const slideDivider = document.getElementById("slide-divider");
+
+      function setSlider(pct) {
+        slidePos.value = pct;
+        canvasBS.style.clipPath = `inset(0 0 0 ${pct}%)`;
+        slideDivider.style.left = pct + "%";
+      }
+
+      slidePos.addEventListener("input", () => setSlider(+slidePos.value));
 
       // Result tabs
       document.querySelectorAll(".rtab").forEach(tab => {
