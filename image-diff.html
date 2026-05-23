@@ -220,6 +220,7 @@
         <option value="heatmap">Heatmap</option>
         <option value="greyscale">Greyscale diff</option>
         <option value="a-minus-b">A minus B (signed)</option>
+        <option value="slider">Slider</option>
       </select>
       <label>Threshold</label>
       <div class="range-group">
@@ -238,11 +239,6 @@
     </div>
 
     <div class="results-section" id="results">
-      <div class="results-tabs">
-        <button class="rtab active" data-rtab="diff">Diff View</button>
-        <button class="rtab" data-rtab="slider">Slider</button>
-      </div>
-
       <div class="rtab-panel active" id="rtab-diff">
         <div class="canvas-wrap"><canvas id="canvas-diff" class="result"></canvas></div>
         <div class="dl-row">
@@ -251,7 +247,6 @@
       </div>
 
       <div class="rtab-panel" id="rtab-slider">
-        <p style="font-size:13px;color:#586069;margin:0 0 8px 0;">Drag the slider to compare the two images directly.</p>
         <div id="slider-wrap" style="position:relative;display:block;border:1px solid #e1e4e8;border-radius:6px;overflow:hidden;margin:0 auto;">
           <canvas id="canvas-a-s" class="result"></canvas>
           <canvas id="canvas-b-s" class="result" style="position:absolute;top:0;left:0;"></canvas>
@@ -310,6 +305,7 @@
         "heatmap":   "Difference intensity is mapped to colour: blue = identical, green = small difference, yellow = moderate, red = large difference.",
         "greyscale": "Each pixel is shown as a shade of grey proportional to its difference — black means identical, white means maximum difference.",
         "a-minus-b": "Shows the signed difference between A and B. Mid-grey (128) means no difference; lighter means A was brighter, darker means B was brighter.",
+        "slider":    "Drag the divider to reveal Image A or B — a direct visual comparison with no pixel processing.",
       };
       function updateModeDesc() {
         modeDescEl.textContent = modeDescriptions[diffMode.value] || "";
@@ -393,7 +389,34 @@
         };
       }
 
+      function showSlider() {
+        const { sc, ox, oy } = getTransform();
+        const W = Math.max(imgA.naturalWidth, imgB.naturalWidth);
+        const H = Math.max(imgA.naturalHeight, imgB.naturalHeight);
+        canvasAS.width = W; canvasAS.height = H;
+        canvasBS.width = W; canvasBS.height = H;
+        ctxAS.drawImage(imgA, 0, 0);
+        ctxBS.save();
+        ctxBS.translate(ox, oy);
+        ctxBS.scale(sc, sc);
+        ctxBS.drawImage(imgB, 0, 0);
+        ctxBS.restore();
+        const availW = resultsEl.clientWidth || 900;
+        const fit = Math.min(1, availW / W, 600 / H);
+        const dW = Math.round(W * fit);
+        const dH = Math.round(H * fit);
+        canvasAS.style.width = dW + "px"; canvasAS.style.height = dH + "px";
+        canvasBS.style.width = dW + "px"; canvasBS.style.height = dH + "px";
+        document.getElementById("slider-wrap").style.width = dW + "px";
+        document.getElementById("rtab-diff").classList.remove("active");
+        document.getElementById("rtab-slider").classList.add("active");
+        resultsEl.classList.add("visible");
+        resultsEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        setSlider(50);
+      }
+
       function runDiff() {
+        if (diffMode.value === "slider") { showSlider(); return; }
         const { sc, ox, oy } = getTransform();
         const W = Math.max(imgA.naturalWidth, imgB.naturalWidth);
         const H = Math.max(imgA.naturalHeight, imgB.naturalHeight);
@@ -496,10 +519,11 @@
         document.getElementById("stat-max").textContent = maxDelta;
         document.getElementById("stat-mean").textContent = meanDelta;
 
+        document.getElementById("rtab-diff").classList.add("active");
+        document.getElementById("rtab-slider").classList.remove("active");
         statsBar.classList.add("visible");
         resultsEl.classList.add("visible");
         resultsEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
-        setSlider(50);
       }
 
       // --- Auto-align: SSD-based translation search at thumbnail scale ---
@@ -613,16 +637,6 @@
       }
 
       slidePos.addEventListener("input", () => setSlider(+slidePos.value));
-
-      // Result tabs
-      document.querySelectorAll(".rtab").forEach(tab => {
-        tab.addEventListener("click", () => {
-          document.querySelectorAll(".rtab").forEach(t => t.classList.remove("active"));
-          document.querySelectorAll(".rtab-panel").forEach(p => p.classList.remove("active"));
-          tab.classList.add("active");
-          document.getElementById("rtab-" + tab.dataset.rtab).classList.add("active");
-        });
-      });
 
       // Download
       document.getElementById("dl-diff-btn").addEventListener("click", () => {
