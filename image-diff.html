@@ -1,0 +1,459 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Image Diff Tool</title>
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+        line-height: 1.6;
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 20px;
+        color: #24292e;
+        background: #ffffff;
+      }
+      h1 {
+        border-bottom: 1px solid #eaecef;
+        padding-bottom: 0.3em;
+        margin-top: 0;
+        font-size: 32px;
+        font-weight: 600;
+      }
+      .back-link {
+        display: inline-block;
+        margin-bottom: 16px;
+        color: #0366d6;
+        text-decoration: none;
+        font-size: 14px;
+      }
+      .back-link:hover { text-decoration: underline; }
+      .instruction {
+        font-size: 13px;
+        color: #586069;
+        margin-bottom: 20px;
+        padding: 12px;
+        background: #f6f8fa;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+      }
+      .upload-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+      .upload-panel {
+        border: 2px dashed #e1e4e8;
+        border-radius: 6px;
+        background: #f6f8fa;
+        padding: 20px;
+        text-align: center;
+        cursor: pointer;
+        transition: border-color 0.2s, background 0.2s;
+        min-height: 160px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+      }
+      .upload-panel:hover, .upload-panel.dragging { border-color: #0366d6; background: #f0f7ff; }
+      .upload-panel.loaded { border-style: solid; border-color: #0366d6; cursor: default; }
+      .upload-panel img {
+        max-width: 100%;
+        max-height: 200px;
+        border-radius: 4px;
+        border: 1px solid #e1e4e8;
+        display: block;
+      }
+      .upload-label { font-size: 14px; color: #586069; }
+      .upload-title { font-size: 13px; font-weight: 600; color: #24292e; margin-bottom: 4px; }
+      .img-meta { font-size: 12px; color: #586069; font-family: monospace; }
+      input[type="file"] { display: none; }
+      .options-row {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+      }
+      .options-row label { font-size: 14px; font-weight: 600; color: #24292e; white-space: nowrap; }
+      .options-row select {
+        padding: 6px 10px;
+        font-size: 14px;
+        font-family: Helvetica, sans-serif;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        background: #fff;
+        color: #24292e;
+      }
+      .options-row input[type="range"] { }
+      .range-group { display: flex; align-items: center; gap: 8px; }
+      .range-val { font-family: monospace; min-width: 32px; font-size: 14px; }
+      .btn {
+        background: #fafbfc;
+        color: #24292e;
+        padding: 8px 14px;
+        border-radius: 6px;
+        border: 1px solid rgba(27,31,35,0.15);
+        cursor: pointer;
+        font-size: 14px;
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+        white-space: nowrap;
+      }
+      .btn:hover { background: #f3f4f6; }
+      .btn.primary { background: #0366d6; color: #fff; }
+      .btn.primary:hover { background: #0256c5; }
+      .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+      .stats-bar {
+        display: none;
+        gap: 20px;
+        flex-wrap: wrap;
+        background: #f6f8fa;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        padding: 12px 16px;
+        margin-bottom: 16px;
+        font-size: 14px;
+      }
+      .stats-bar.visible { display: flex; }
+      .stat { display: flex; flex-direction: column; }
+      .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #586069; }
+      .stat-value { font-family: monospace; font-size: 16px; font-weight: 600; color: #24292e; }
+      .stat-value.bad { color: #cb2431; }
+      .stat-value.ok { color: #176f2c; }
+      .results-section { display: none; }
+      .results-section.visible { display: block; }
+      .results-label { font-size: 14px; font-weight: 600; color: #24292e; margin-bottom: 8px; }
+      .results-tabs {
+        display: flex;
+        gap: 0;
+        border-bottom: 2px solid #e1e4e8;
+        margin-bottom: 12px;
+      }
+      .rtab {
+        padding: 6px 16px;
+        cursor: pointer;
+        border: none;
+        background: none;
+        font-size: 14px;
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+        color: #586069;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -2px;
+      }
+      .rtab:hover { color: #0366d6; }
+      .rtab.active { color: #0366d6; border-bottom-color: #0366d6; font-weight: 600; }
+      .rtab-panel { display: none; }
+      .rtab-panel.active { display: block; }
+      .canvas-wrap {
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        overflow: auto;
+        background: repeating-conic-gradient(#eee 0% 25%, #fff 0% 50%) 0 0 / 16px 16px;
+        max-height: 600px;
+      }
+      canvas.result { display: block; }
+      .slider-overlay-wrap { position: relative; display: inline-block; }
+      .dl-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+      @media (max-width: 600px) {
+        .upload-grid { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <a href="index.html" class="back-link">← Back to Browser Tools</a>
+    <h1>Image Diff Tool</h1>
+    <p class="instruction">
+      Load two images to compare them pixel-by-pixel. The diff view highlights changed pixels;
+      the slider lets you swipe between the two images. Images are aligned to the top-left —
+      pixels outside the smaller image's bounds are treated as fully different.
+    </p>
+
+    <div class="upload-grid">
+      <div class="upload-panel" id="drop-a" title="Click or drop image A">
+        <div class="upload-title">Image A</div>
+        <div class="upload-label" id="label-a">Drop or click to load</div>
+        <input type="file" id="file-a" accept="image/*" />
+      </div>
+      <div class="upload-panel" id="drop-b" title="Click or drop image B">
+        <div class="upload-title">Image B</div>
+        <div class="upload-label" id="label-b">Drop or click to load</div>
+        <input type="file" id="file-b" accept="image/*" />
+      </div>
+    </div>
+
+    <div class="options-row">
+      <label>Mode</label>
+      <select id="diff-mode">
+        <option value="highlight">Highlight differences</option>
+        <option value="heatmap">Heatmap</option>
+        <option value="greyscale">Greyscale diff</option>
+        <option value="a-minus-b">A minus B (signed)</option>
+      </select>
+      <label>Threshold</label>
+      <div class="range-group">
+        <input type="range" id="threshold" min="0" max="50" value="10" />
+        <span class="range-val" id="threshold-val">10</span>
+      </div>
+      <button class="btn primary" id="compare-btn" disabled>Compare</button>
+      <button class="btn" id="clear-btn">Clear</button>
+    </div>
+
+    <div class="stats-bar" id="stats-bar">
+      <div class="stat"><span class="stat-label">Dimensions</span><span class="stat-value" id="stat-dim">—</span></div>
+      <div class="stat"><span class="stat-label">Different pixels</span><span class="stat-value" id="stat-diff">—</span></div>
+      <div class="stat"><span class="stat-label">% different</span><span class="stat-value" id="stat-pct">—</span></div>
+      <div class="stat"><span class="stat-label">Max channel delta</span><span class="stat-value" id="stat-max">—</span></div>
+      <div class="stat"><span class="stat-label">Mean delta (different px)</span><span class="stat-value" id="stat-mean">—</span></div>
+    </div>
+
+    <div class="results-section" id="results">
+      <div class="results-tabs">
+        <button class="rtab active" data-rtab="diff">Diff View</button>
+        <button class="rtab" data-rtab="slider">Slider</button>
+      </div>
+
+      <div class="rtab-panel active" id="rtab-diff">
+        <div class="canvas-wrap"><canvas id="canvas-diff" class="result"></canvas></div>
+        <div class="dl-row">
+          <button class="btn" id="dl-diff-btn">Download diff image</button>
+        </div>
+      </div>
+
+      <div class="rtab-panel" id="rtab-slider">
+        <p style="font-size:13px;color:#586069;margin:0 0 8px 0;">Drag the slider to compare the two images directly.</p>
+        <div style="position:relative;display:inline-block;border:1px solid #e1e4e8;border-radius:6px;overflow:hidden;max-width:100%;">
+          <canvas id="canvas-a-s" class="result"></canvas>
+          <canvas id="canvas-b-s" class="result" style="position:absolute;top:0;left:0;clip-path:inset(0 50% 0 0);"></canvas>
+          <input type="range" id="slide-pos" min="0" max="100" value="50"
+            style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);width:80%;z-index:10;cursor:ew-resize;" />
+        </div>
+      </div>
+    </div>
+
+    <canvas id="canvas-a" style="display:none"></canvas>
+    <canvas id="canvas-b" style="display:none"></canvas>
+
+    <script type="module">
+      const fileA = document.getElementById("file-a");
+      const fileB = document.getElementById("file-b");
+      const dropA = document.getElementById("drop-a");
+      const dropB = document.getElementById("drop-b");
+      const labelA = document.getElementById("label-a");
+      const labelB = document.getElementById("label-b");
+      const compareBtn = document.getElementById("compare-btn");
+      const clearBtn   = document.getElementById("clear-btn");
+      const diffMode   = document.getElementById("diff-mode");
+      const threshEl   = document.getElementById("threshold");
+      const threshVal  = document.getElementById("threshold-val");
+      const statsBar   = document.getElementById("stats-bar");
+      const resultsEl  = document.getElementById("results");
+
+      const canvasA  = document.getElementById("canvas-a");
+      const canvasB  = document.getElementById("canvas-b");
+      const canvasDiff = document.getElementById("canvas-diff");
+      const canvasAS = document.getElementById("canvas-a-s");
+      const canvasBS = document.getElementById("canvas-b-s");
+
+      const ctxA  = canvasA.getContext("2d", { willReadFrequently: true });
+      const ctxB  = canvasB.getContext("2d", { willReadFrequently: true });
+      const ctxD  = canvasDiff.getContext("2d");
+      const ctxAS = canvasAS.getContext("2d");
+      const ctxBS = canvasBS.getContext("2d");
+
+      threshEl.addEventListener("input", () => threshVal.textContent = threshEl.value);
+
+      let imgA = null, imgB = null;
+
+      function setupDrop(dropEl, fileEl, label, setter) {
+        dropEl.addEventListener("click", () => { if (!dropEl.classList.contains("loaded")) fileEl.click(); });
+        fileEl.addEventListener("change", () => {
+          if (fileEl.files[0]) loadImage(fileEl.files[0], dropEl, label, setter);
+        });
+        dropEl.addEventListener("dragover", e => { e.preventDefault(); dropEl.classList.add("dragging"); });
+        dropEl.addEventListener("dragleave", () => dropEl.classList.remove("dragging"));
+        dropEl.addEventListener("drop", e => {
+          e.preventDefault();
+          dropEl.classList.remove("dragging");
+          if (e.dataTransfer.files[0]) loadImage(e.dataTransfer.files[0], dropEl, label, setter);
+        });
+      }
+
+      function loadImage(file, dropEl, labelEl, setter) {
+        if (!file.type.startsWith("image/")) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+          const img = new Image();
+          img.onload = () => {
+            setter(img);
+            dropEl.classList.add("loaded");
+            dropEl.innerHTML = "";
+            const title = document.createElement("div");
+            title.className = "upload-title";
+            title.textContent = dropEl.id === "drop-a" ? "Image A" : "Image B";
+            const preview = document.createElement("img");
+            preview.src = e.target.result;
+            preview.alt = "preview";
+            const meta = document.createElement("div");
+            meta.className = "img-meta";
+            meta.textContent = `${img.naturalWidth} × ${img.naturalHeight} px`;
+            const changeLink = document.createElement("button");
+            changeLink.className = "btn";
+            changeLink.textContent = "Change image";
+            changeLink.style.marginTop = "6px";
+            changeLink.addEventListener("click", e => {
+              e.stopPropagation();
+              dropEl.id === "drop-a" ? fileA.click() : fileB.click();
+            });
+            dropEl.append(title, preview, meta, changeLink);
+            checkReady();
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+
+      setupDrop(dropA, fileA, labelA, img => imgA = img);
+      setupDrop(dropB, fileB, labelB, img => imgB = img);
+
+      function checkReady() {
+        compareBtn.disabled = !(imgA && imgB);
+      }
+
+      compareBtn.addEventListener("click", runDiff);
+      diffMode.addEventListener("change", () => { if (imgA && imgB) runDiff(); });
+
+      function runDiff() {
+        const W = Math.max(imgA.naturalWidth, imgB.naturalWidth);
+        const H = Math.max(imgA.naturalHeight, imgB.naturalHeight);
+        const thresh = parseInt(threshEl.value);
+
+        // Draw both images to offscreen canvases
+        canvasA.width = W; canvasA.height = H;
+        canvasB.width = W; canvasB.height = H;
+        ctxA.clearRect(0, 0, W, H);
+        ctxB.clearRect(0, 0, W, H);
+        ctxA.drawImage(imgA, 0, 0);
+        ctxB.drawImage(imgB, 0, 0);
+
+        const dataA = ctxA.getImageData(0, 0, W, H).data;
+        const dataB = ctxB.getImageData(0, 0, W, H).data;
+
+        canvasDiff.width = W; canvasDiff.height = H;
+        const outId = ctxD.createImageData(W, H);
+        const out   = outId.data;
+
+        const mode = diffMode.value;
+        let diffCount = 0, maxDelta = 0, sumDelta = 0;
+
+        for (let i = 0; i < W * H * 4; i += 4) {
+          const ra = dataA[i], ga = dataA[i+1], ba = dataA[i+2];
+          const rb = dataB[i], gb = dataB[i+1], bb = dataB[i+2];
+          const dr = Math.abs(ra - rb), dg = Math.abs(ga - gb), db = Math.abs(ba - bb);
+          const delta = Math.max(dr, dg, db);
+          const different = delta > thresh;
+
+          if (different) {
+            diffCount++;
+            if (delta > maxDelta) maxDelta = delta;
+            sumDelta += (dr + dg + db) / 3;
+          }
+
+          out[i + 3] = 255;
+          if (mode === "highlight") {
+            if (different) {
+              out[i] = 255; out[i+1] = 50; out[i+2] = 50;
+            } else {
+              const grey = Math.round(0.299 * ra + 0.587 * ga + 0.114 * ba);
+              out[i] = grey; out[i+1] = grey; out[i+2] = grey;
+              out[i+3] = 180;
+            }
+          } else if (mode === "heatmap") {
+            const t = delta / 255;
+            out[i]   = Math.round(t < 0.5 ? 0 : (t - 0.5) * 2 * 255);
+            out[i+1] = Math.round(t < 0.5 ? t * 2 * 255 : (1 - (t - 0.5) * 2) * 255);
+            out[i+2] = Math.round(t < 0.5 ? (1 - t * 2) * 255 : 0);
+          } else if (mode === "greyscale") {
+            const g = delta;
+            out[i] = g; out[i+1] = g; out[i+2] = g;
+          } else if (mode === "a-minus-b") {
+            const rd = (ra - rb + 255) >> 1;
+            const gd = (ga - gb + 255) >> 1;
+            const bd = (ba - bb + 255) >> 1;
+            out[i] = rd; out[i+1] = gd; out[i+2] = bd;
+          }
+        }
+
+        ctxD.putImageData(outId, 0, 0);
+
+        // Slider canvases
+        canvasAS.width = W; canvasAS.height = H;
+        canvasBS.width = W; canvasBS.height = H;
+        ctxAS.drawImage(imgA, 0, 0);
+        ctxBS.drawImage(imgB, 0, 0);
+
+        // Stats
+        const totalPx = W * H;
+        const pct = ((diffCount / totalPx) * 100).toFixed(2);
+        const meanDelta = diffCount > 0 ? (sumDelta / diffCount).toFixed(1) : "0";
+        document.getElementById("stat-dim").textContent = `${W} × ${H}`;
+        const sdEl = document.getElementById("stat-diff");
+        sdEl.textContent = diffCount.toLocaleString();
+        sdEl.className = "stat-value " + (diffCount === 0 ? "ok" : "bad");
+        const spEl = document.getElementById("stat-pct");
+        spEl.textContent = pct + "%";
+        spEl.className = "stat-value " + (parseFloat(pct) === 0 ? "ok" : "bad");
+        document.getElementById("stat-max").textContent = maxDelta;
+        document.getElementById("stat-mean").textContent = meanDelta;
+
+        statsBar.classList.add("visible");
+        resultsEl.classList.add("visible");
+        resultsEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+
+      // Slider
+      const slidePos = document.getElementById("slide-pos");
+      slidePos.addEventListener("input", () => {
+        const pct = slidePos.value + "%";
+        canvasBS.style.clipPath = `inset(0 ${100 - slidePos.value}% 0 0)`;
+      });
+
+      // Result tabs
+      document.querySelectorAll(".rtab").forEach(tab => {
+        tab.addEventListener("click", () => {
+          document.querySelectorAll(".rtab").forEach(t => t.classList.remove("active"));
+          document.querySelectorAll(".rtab-panel").forEach(p => p.classList.remove("active"));
+          tab.classList.add("active");
+          document.getElementById("rtab-" + tab.dataset.rtab).classList.add("active");
+        });
+      });
+
+      // Download
+      document.getElementById("dl-diff-btn").addEventListener("click", () => {
+        const a = document.createElement("a");
+        a.href = canvasDiff.toDataURL("image/png");
+        a.download = "image-diff.png";
+        a.click();
+      });
+
+      // Clear
+      clearBtn.addEventListener("click", () => {
+        imgA = imgB = null;
+        [dropA, dropB].forEach((el, i) => {
+          el.classList.remove("loaded");
+          el.innerHTML = `<div class="upload-title">Image ${i === 0 ? "A" : "B"}</div>
+            <div class="upload-label">Drop or click to load</div>`;
+        });
+        dropA.appendChild(fileA);
+        dropB.appendChild(fileB);
+        statsBar.classList.remove("visible");
+        resultsEl.classList.remove("visible");
+        compareBtn.disabled = true;
+      });
+    </script>
+  </body>
+</html>
