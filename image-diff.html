@@ -243,6 +243,7 @@
         <div class="canvas-wrap"><canvas id="canvas-diff" class="result"></canvas></div>
         <div class="dl-row">
           <button class="btn" id="dl-diff-btn">Download diff image</button>
+          <button class="btn" id="dl-diff-crop-btn">Download cropped diff</button>
         </div>
       </div>
 
@@ -257,6 +258,10 @@
           <input type="range" id="slide-pos" min="0" max="100" value="50"
             style="position:absolute;bottom:10px;left:0;width:100%;z-index:10;cursor:ew-resize;margin:0;padding:0;" />
         </div>
+        </div>
+        <div class="dl-row">
+          <button class="btn" id="dl-slider-crop-btn">Download A &amp; B cropped</button>
+          <button class="btn" id="dl-slider-side-btn">Download side by side</button>
         </div>
       </div>
     </div>
@@ -643,12 +648,58 @@
 
       slidePos.addEventListener("input", () => setSlider(+slidePos.value));
 
-      // Download
-      document.getElementById("dl-diff-btn").addEventListener("click", () => {
+      // Download helpers
+      function dlCanvas(canvas, filename) {
         const a = document.createElement("a");
-        a.href = canvasDiff.toDataURL("image/png");
-        a.download = "image-diff.png";
+        a.href = canvas.toDataURL("image/png");
+        a.download = filename;
         a.click();
+      }
+
+      function cropCanvas(src, x, y, w, h) {
+        const c = document.createElement("canvas");
+        c.width = w; c.height = h;
+        c.getContext("2d").drawImage(src, x, y, w, h, 0, 0, w, h);
+        return c;
+      }
+
+      function getIntersection() {
+        const { sc, ox, oy } = getTransform();
+        const x0 = Math.round(Math.max(0, ox));
+        const y0 = Math.round(Math.max(0, oy));
+        const x1 = Math.round(Math.min(imgA.naturalWidth,  ox + imgB.naturalWidth  * sc));
+        const y1 = Math.round(Math.min(imgA.naturalHeight, oy + imgB.naturalHeight * sc));
+        const w = x1 - x0, h = y1 - y0;
+        if (w <= 0 || h <= 0) return null;
+        return { x: x0, y: y0, w, h };
+      }
+
+      document.getElementById("dl-diff-btn").addEventListener("click", () => {
+        dlCanvas(canvasDiff, "image-diff.png");
+      });
+
+      document.getElementById("dl-diff-crop-btn").addEventListener("click", () => {
+        const r = getIntersection();
+        if (!r) { alert("The images do not overlap with the current alignment."); return; }
+        dlCanvas(cropCanvas(canvasDiff, r.x, r.y, r.w, r.h), "image-diff-cropped.png");
+      });
+
+      document.getElementById("dl-slider-crop-btn").addEventListener("click", () => {
+        const r = getIntersection();
+        if (!r) { alert("The images do not overlap with the current alignment."); return; }
+        dlCanvas(cropCanvas(canvasAS, r.x, r.y, r.w, r.h), "image-a-cropped.png");
+        setTimeout(() => dlCanvas(cropCanvas(canvasBS, r.x, r.y, r.w, r.h), "image-b-cropped.png"), 150);
+      });
+
+      document.getElementById("dl-slider-side-btn").addEventListener("click", () => {
+        const r = getIntersection();
+        if (!r) { alert("The images do not overlap with the current alignment."); return; }
+        const c = document.createElement("canvas");
+        c.width = r.w * 2; c.height = r.h;
+        const ctx = c.getContext("2d");
+        ctx.drawImage(canvasAS, r.x, r.y, r.w, r.h, 0,    0, r.w, r.h);
+        ctx.drawImage(canvasBS, r.x, r.y, r.w, r.h, r.w,  0, r.w, r.h);
+        dlCanvas(c, "image-a-b-side-by-side.png");
       });
 
       // Clear
