@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Timestamp Converter</title>
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+        line-height: 1.6;
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 20px;
+        color: #24292e;
+        background: #ffffff;
+      }
+      h1 {
+        border-bottom: 1px solid #eaecef;
+        padding-bottom: 0.3em;
+        margin-top: 0;
+        font-size: 32px;
+        font-weight: 600;
+      }
+      h2 {
+        font-size: 16px;
+        font-weight: 600;
+        color: #24292e;
+        margin: 0 0 10px 0;
+        border-bottom: 1px solid #eaecef;
+        padding-bottom: 6px;
+      }
+      .back-link {
+        display: inline-block;
+        margin-bottom: 16px;
+        color: #0366d6;
+        text-decoration: none;
+        font-size: 14px;
+      }
+      .back-link:hover { text-decoration: underline; }
+      .instruction {
+        font-size: 13px;
+        color: #586069;
+        margin-bottom: 20px;
+        padding: 12px;
+        background: #f6f8fa;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+      }
+      .section {
+        background: #f6f8fa;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        padding: 16px;
+        margin-bottom: 16px;
+      }
+      .row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 10px;
+        flex-wrap: wrap;
+      }
+      label {
+        font-size: 14px;
+        font-weight: 600;
+        color: #24292e;
+        white-space: nowrap;
+        min-width: 160px;
+      }
+      input[type="text"], input[type="number"], select {
+        padding: 8px 12px;
+        font-size: 15px;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        background: #ffffff;
+        color: #24292e;
+        flex: 1;
+        min-width: 180px;
+      }
+      input[type="text"]:focus, input[type="number"]:focus, select:focus {
+        outline: none;
+        border-color: #0366d6;
+      }
+      select {
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      }
+      .btn {
+        background: #fafbfc;
+        color: #24292e;
+        padding: 8px 14px;
+        border-radius: 6px;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+        cursor: pointer;
+        font-size: 14px;
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+        white-space: nowrap;
+      }
+      .btn:hover { background: #f3f4f6; }
+      .btn.primary { background: #0366d6; color: #fff; border-color: rgba(27,31,35,0.15); }
+      .btn.primary:hover { background: #0256c5; }
+      .output-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+        background: #ffffff;
+        border-radius: 6px;
+        overflow: hidden;
+        border: 1px solid #e1e4e8;
+      }
+      .output-table th {
+        background: #0366d6;
+        color: #fff;
+        padding: 8px 12px;
+        text-align: left;
+        font-weight: 600;
+      }
+      .output-table td {
+        padding: 8px 12px;
+        border-bottom: 1px solid #e1e4e8;
+        vertical-align: top;
+      }
+      .output-table tr:last-child td { border-bottom: none; }
+      .output-table td:first-child { color: #586069; font-size: 13px; white-space: nowrap; width: 200px; }
+      .output-table td:last-child { font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; word-break: break-all; }
+      .copy-cell { display: flex; align-items: center; gap: 8px; }
+      .copy-btn {
+        background: none;
+        border: 1px solid #e1e4e8;
+        border-radius: 4px;
+        padding: 2px 8px;
+        font-size: 12px;
+        cursor: pointer;
+        color: #586069;
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+        flex-shrink: 0;
+      }
+      .copy-btn:hover { background: #f6f8fa; color: #24292e; }
+      .error { color: #cb2431; font-size: 13px; padding: 8px 0; }
+      .divider { border: none; border-top: 1px solid #e1e4e8; margin: 20px 0; }
+      .now-row { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+      .current-ts { font-family: monospace; font-size: 16px; background: #fff; padding: 6px 12px; border: 1px solid #e1e4e8; border-radius: 6px; }
+      @media (max-width: 600px) {
+        label { min-width: unset; width: 100%; }
+        input, select { min-width: unset; width: 100%; }
+      }
+    </style>
+  </head>
+  <body>
+    <a href="index.html" class="back-link">← Back to Browser Tools</a>
+    <h1>Timestamp Converter</h1>
+    <p class="instruction">
+      Convert Unix timestamps (seconds or milliseconds) to human-readable dates, or convert
+      a date/time string back to a Unix timestamp. All conversions are shown in UTC and your
+      local timezone.
+    </p>
+
+    <!-- Current time -->
+    <div class="section">
+      <h2>Current Time</h2>
+      <div class="now-row">
+        <span class="current-ts" id="now-ts">—</span>
+        <span style="font-size:13px;color:#586069">Unix seconds</span>
+        <span class="current-ts" id="now-ms">—</span>
+        <span style="font-size:13px;color:#586069">Unix milliseconds</span>
+        <button class="btn" id="use-now-btn">Use current time</button>
+      </div>
+    </div>
+
+    <!-- Unix → Human -->
+    <div class="section">
+      <h2>Unix Timestamp → Date / Time</h2>
+      <div class="row">
+        <label for="unix-input">Unix timestamp</label>
+        <input type="text" id="unix-input" placeholder="e.g. 1700000000 or 1700000000000" />
+        <select id="unix-unit" style="max-width:200px;font-family:Helvetica,sans-serif;">
+          <option value="auto">Auto-detect (s / ms)</option>
+          <option value="s">Seconds (s)</option>
+          <option value="ms">Milliseconds (ms)</option>
+        </select>
+      </div>
+      <div id="unix-error" class="error" style="display:none"></div>
+      <table class="output-table" id="unix-output" style="display:none">
+        <thead><tr><th>Format</th><th>Value</th></tr></thead>
+        <tbody id="unix-tbody"></tbody>
+      </table>
+    </div>
+
+    <!-- Human → Unix -->
+    <div class="section">
+      <h2>Date / Time → Unix Timestamp</h2>
+      <div class="row">
+        <label for="date-input">Date / time string</label>
+        <input type="text" id="date-input" placeholder="e.g. 2024-01-15 14:30:00 or 2024-01-15T14:30:00Z" />
+      </div>
+      <div class="row">
+        <label for="tz-hint">Interpret as</label>
+        <select id="tz-hint" style="font-family:Helvetica,sans-serif;">
+          <option value="local">Local time</option>
+          <option value="utc">UTC</option>
+        </select>
+      </div>
+      <div id="date-error" class="error" style="display:none"></div>
+      <table class="output-table" id="date-output" style="display:none">
+        <thead><tr><th>Format</th><th>Value</th></tr></thead>
+        <tbody id="date-tbody"></tbody>
+      </table>
+    </div>
+
+    <script type="module">
+      // ── Live clock ──────────────────────────────────────────────────────────
+      const nowTs = document.getElementById("now-ts");
+      const nowMs = document.getElementById("now-ms");
+      function tick() {
+        const now = Date.now();
+        nowTs.textContent = Math.floor(now / 1000).toString();
+        nowMs.textContent = now.toString();
+      }
+      tick();
+      setInterval(tick, 1000);
+
+      // ── Helpers ─────────────────────────────────────────────────────────────
+      const pad = (n, w = 2) => String(n).padStart(w, "0");
+
+      function fmtUTC(d) {
+        return `${d.getUTCFullYear()}-${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())} ` +
+               `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())} UTC`;
+      }
+      function fmtLocal(d) {
+        const off = -d.getTimezoneOffset();
+        const sign = off >= 0 ? "+" : "-";
+        const ah = pad(Math.floor(Math.abs(off) / 60));
+        const am = pad(Math.abs(off) % 60);
+        return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ` +
+               `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())} ${sign}${ah}:${am}`;
+      }
+      function fmtRelative(ms) {
+        const diff = Date.now() - ms;
+        const abs = Math.abs(diff);
+        const future = diff < 0;
+        const suf = future ? "from now" : "ago";
+        if (abs < 60000) return `${Math.round(abs/1000)} seconds ${suf}`;
+        if (abs < 3600000) return `${Math.round(abs/60000)} minutes ${suf}`;
+        if (abs < 86400000) return `${Math.round(abs/3600000)} hours ${suf}`;
+        if (abs < 31536000000) return `${Math.round(abs/86400000)} days ${suf}`;
+        return `${Math.round(abs/31536000000)} years ${suf}`;
+      }
+      function dayName(d) {
+        return ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][d.getUTCDay()];
+      }
+      function monthName(d) {
+        return ["January","February","March","April","May","June","July","August","September","October","November","December"][d.getUTCMonth()];
+      }
+
+      function copyBtn(text) {
+        const btn = document.createElement("button");
+        btn.className = "copy-btn";
+        btn.textContent = "Copy";
+        btn.addEventListener("click", () => {
+          navigator.clipboard.writeText(text).then(() => {
+            btn.textContent = "Copied!";
+            setTimeout(() => btn.textContent = "Copy", 1500);
+          });
+        });
+        return btn;
+      }
+
+      function renderRows(tbody, rows) {
+        tbody.innerHTML = "";
+        rows.forEach(([label, value]) => {
+          const tr = document.createElement("tr");
+          const tdLabel = document.createElement("td");
+          tdLabel.textContent = label;
+          const tdVal = document.createElement("td");
+          const wrap = document.createElement("div");
+          wrap.className = "copy-cell";
+          wrap.textContent = value;
+          wrap.appendChild(copyBtn(value));
+          tdVal.appendChild(wrap);
+          tr.appendChild(tdLabel);
+          tr.appendChild(tdVal);
+          tbody.appendChild(tr);
+        });
+      }
+
+      // ── Unix → Human ────────────────────────────────────────────────────────
+      const unixInput  = document.getElementById("unix-input");
+      const unixUnit   = document.getElementById("unix-unit");
+      const unixError  = document.getElementById("unix-error");
+      const unixOutput = document.getElementById("unix-output");
+      const unixTbody  = document.getElementById("unix-tbody");
+
+      function convertUnix() {
+        const raw = unixInput.value.trim();
+        if (!raw) { unixOutput.style.display = "none"; unixError.style.display = "none"; return; }
+        const num = parseFloat(raw);
+        if (isNaN(num)) {
+          unixError.textContent = "Not a valid number.";
+          unixError.style.display = "";
+          unixOutput.style.display = "none";
+          return;
+        }
+        unixError.style.display = "none";
+
+        let ms;
+        const unit = unixUnit.value;
+        if (unit === "ms" || (unit === "auto" && num > 1e12)) {
+          ms = num;
+        } else {
+          ms = num * 1000;
+        }
+
+        const d = new Date(ms);
+        if (isNaN(d.getTime())) {
+          unixError.textContent = "Timestamp out of range.";
+          unixError.style.display = "";
+          unixOutput.style.display = "none";
+          return;
+        }
+
+        const rows = [
+          ["UTC",               fmtUTC(d)],
+          ["Local time",        fmtLocal(d)],
+          ["ISO 8601",          d.toISOString()],
+          ["RFC 2822",          d.toUTCString()],
+          ["Unix seconds",      String(Math.floor(ms / 1000))],
+          ["Unix milliseconds", String(Math.round(ms))],
+          ["Day of week (UTC)", dayName(d)],
+          ["Month (UTC)",       monthName(d)],
+          ["Relative",          fmtRelative(ms)],
+        ];
+        renderRows(unixTbody, rows);
+        unixOutput.style.display = "";
+      }
+
+      unixInput.addEventListener("input", convertUnix);
+      unixUnit.addEventListener("change", convertUnix);
+
+      // ── Human → Unix ────────────────────────────────────────────────────────
+      const dateInput  = document.getElementById("date-input");
+      const tzHint     = document.getElementById("tz-hint");
+      const dateError  = document.getElementById("date-error");
+      const dateOutput = document.getElementById("date-output");
+      const dateTbody  = document.getElementById("date-tbody");
+
+      function parseDate(str, tz) {
+        // Try native Date first
+        let d = new Date(str);
+        if (!isNaN(d.getTime())) return d;
+
+        // Try YYYY-MM-DD HH:MM:SS (no timezone)
+        const m = str.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2}))?$/);
+        if (m) {
+          const [, yr, mo, dy, hr, mn, sc = "0"] = m;
+          if (tz === "utc") {
+            d = new Date(Date.UTC(+yr, +mo-1, +dy, +hr, +mn, +sc));
+          } else {
+            d = new Date(+yr, +mo-1, +dy, +hr, +mn, +sc);
+          }
+          if (!isNaN(d.getTime())) return d;
+        }
+        return null;
+      }
+
+      function convertDate() {
+        const raw = dateInput.value.trim();
+        if (!raw) { dateOutput.style.display = "none"; dateError.style.display = "none"; return; }
+        const d = parseDate(raw, tzHint.value);
+        if (!d) {
+          dateError.textContent = "Could not parse date. Try YYYY-MM-DD HH:MM:SS or ISO 8601 format.";
+          dateError.style.display = "";
+          dateOutput.style.display = "none";
+          return;
+        }
+        dateError.style.display = "none";
+        const ms = d.getTime();
+        const rows = [
+          ["Unix seconds",      String(Math.floor(ms / 1000))],
+          ["Unix milliseconds", String(ms)],
+          ["UTC",               fmtUTC(d)],
+          ["Local time",        fmtLocal(d)],
+          ["ISO 8601",          d.toISOString()],
+          ["RFC 2822",          d.toUTCString()],
+          ["Relative",          fmtRelative(ms)],
+        ];
+        renderRows(dateTbody, rows);
+        dateOutput.style.display = "";
+      }
+
+      dateInput.addEventListener("input", convertDate);
+      tzHint.addEventListener("change", convertDate);
+
+      // ── Use current time button ─────────────────────────────────────────────
+      document.getElementById("use-now-btn").addEventListener("click", () => {
+        unixInput.value = Math.floor(Date.now() / 1000).toString();
+        unixUnit.value = "s";
+        convertUnix();
+        unixInput.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      });
+    </script>
+  </body>
+</html>
