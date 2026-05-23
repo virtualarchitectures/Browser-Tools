@@ -178,10 +178,10 @@
     <a href="index.html" class="back-link">← Back to Browser Tools</a>
     <h1>Image Diff Tool</h1>
     <p class="instruction">
-      Load two images to compare them pixel-by-pixel. Use the <strong>Align B</strong> controls to scale and
-      position Image B relative to Image A before comparing — or click <strong>Auto-align</strong> to detect
-      the best translation offset automatically. Scale must be set manually first if the images are at different
-      resolutions; auto-align then finds the X/Y offset.
+      Load two images to compare them pixel-by-pixel. First use the <strong>Align B</strong> controls to scale
+      and position Image B relative to Image A — or click <strong>Auto-align</strong> to detect the best offset
+      automatically (set scale manually first if the images are at different resolutions). The diff updates
+      automatically as you adjust any setting.
     </p>
 
     <div class="upload-grid">
@@ -198,26 +198,6 @@
     </div>
 
     <div class="options-row">
-      <label>Mode</label>
-      <select id="diff-mode">
-        <option value="highlight">Highlight differences</option>
-        <option value="heatmap">Heatmap</option>
-        <option value="greyscale">Greyscale diff</option>
-        <option value="a-minus-b">A minus B (signed)</option>
-      </select>
-    </div>
-    <p class="mode-desc" id="mode-desc"></p>
-    <div class="options-row" id="options-row-rest">
-      <label>Threshold</label>
-      <div class="range-group">
-        <input type="range" id="threshold" min="0" max="50" value="10" />
-        <span class="range-val" id="threshold-val">10</span>
-      </div>
-      <button class="btn primary" id="compare-btn" disabled>Compare</button>
-      <button class="btn" id="clear-btn">Clear</button>
-    </div>
-
-    <div class="options-row">
       <label>Align B</label>
       <span class="opt-label">Scale</span>
       <div class="range-group">
@@ -230,7 +210,24 @@
       <input type="number" id="offset-y" value="0" step="1" class="num-input" />
       <button class="btn" id="auto-align-btn" disabled>Auto-align</button>
       <button class="btn" id="reset-transform-btn">Reset</button>
+      <button class="btn" id="clear-btn">Clear</button>
     </div>
+
+    <div class="options-row">
+      <label>Mode</label>
+      <select id="diff-mode">
+        <option value="highlight">Highlight differences</option>
+        <option value="heatmap">Heatmap</option>
+        <option value="greyscale">Greyscale diff</option>
+        <option value="a-minus-b">A minus B (signed)</option>
+      </select>
+      <label>Threshold</label>
+      <div class="range-group">
+        <input type="range" id="threshold" min="0" max="50" value="10" />
+        <span class="range-val" id="threshold-val">10</span>
+      </div>
+    </div>
+    <p class="mode-desc" id="mode-desc"></p>
 
     <div class="stats-bar" id="stats-bar">
       <div class="stat"><span class="stat-label">Dimensions</span><span class="stat-value" id="stat-dim">—</span></div>
@@ -277,7 +274,6 @@
       const dropB        = document.getElementById("drop-b");
       const labelA       = document.getElementById("label-a");
       const labelB       = document.getElementById("label-b");
-      const compareBtn   = document.getElementById("compare-btn");
       const clearBtn     = document.getElementById("clear-btn");
       const diffMode     = document.getElementById("diff-mode");
       const threshEl     = document.getElementById("threshold");
@@ -303,7 +299,10 @@
       const ctxAS = canvasAS.getContext("2d");
       const ctxBS = canvasBS.getContext("2d");
 
-      threshEl.addEventListener("input", () => threshVal.textContent = threshEl.value);
+      threshEl.addEventListener("input", () => {
+        threshVal.textContent = threshEl.value;
+        if (imgA && imgB) runDiff();
+      });
 
       const modeDescEl = document.getElementById("mode-desc");
       const modeDescriptions = {
@@ -380,11 +379,10 @@
 
       function checkReady() {
         const ready = !!(imgA && imgB);
-        compareBtn.disabled = !ready;
         autoAlignBtn.disabled = !ready;
+        if (ready) runDiff();
       }
 
-      compareBtn.addEventListener("click", runDiff);
       diffMode.addEventListener("change", () => { if (imgA && imgB) runDiff(); });
 
       function getTransform() {
@@ -646,7 +644,6 @@
         dropB.appendChild(fileB);
         statsBar.classList.remove("visible");
         resultsEl.classList.remove("visible");
-        compareBtn.disabled = true;
         autoAlignBtn.disabled = true;
         scaleBEl.value = 1;
         scaleBVal.textContent = "1.00×";
