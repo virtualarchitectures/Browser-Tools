@@ -53,9 +53,11 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 
 ### Image
 
+- **[Colour Palette Extractor](colour-palette-extractor.html)** — extract the dominant colours from any image using k-means clustering; displays swatches with hex, RGB, and HSL values, and exports the palette as CSS variables or JSON
 - **[EXIF Data Viewer](exif-viewer.html)** — extract and view EXIF metadata from photos including camera settings, GPS location, and timestamps
 - **[Image Background Removal](image-bg-removal.html)** — remove image backgrounds using a magic wand flood-fill tool with adjustable tolerance and edge feathering, then download as transparent PNG
 - **[Image Crop Tool](image-crop.html)** — crop images with interactive selection, aspect ratio presets, and precise dimension controls
+- **[Image Diff Tool](image-diff.html)** — compare two images pixel-by-pixel with highlight, heatmap, greyscale, and signed difference modes; shows a stats summary and an interactive before/after slider
 - **[Image Resize Tool](image-resize.html)** — resize images by percentage or pixels with precise scale factor control for copying scale factor to other images
 - **[Image Rotate Tool](image-rotate.html)** — rotate images by any angle with fine control, flip horizontally or vertically
 - **[Pixel Coordinates](pixel-coords.html)** — click on images to capture and record pixel coordinates
@@ -95,6 +97,11 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 
 - **[GitHub Commits Viewer](github-commits.html)** — view and export commit history from GitHub repositories with support for CSV, JSON, and Markdown exports
 - **[Localhost Port Scanner](localhost-port-scanner.html)** — scan ports on your local machine to detect running services, Docker containers, and development servers with preset scans for common ports and custom range options
+
+### Unit Conversion
+
+- **[Timestamp Converter](timestamp-converter.html)** — convert Unix timestamps (seconds or milliseconds) to human-readable dates and vice versa; shows UTC, local time, ISO 8601, RFC 2822, and relative time formats
+- **[Unit Converter](unit-converter.html)** — convert between units of length (mm to light-years), weight/mass (µg to long tons), and temperature (°C, °F, K, °R) with a full reference table of all conversions
 
 ### Web Development
 
