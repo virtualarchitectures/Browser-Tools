@@ -1,0 +1,1576 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Linear Regression</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+        line-height: 1.6;
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 20px;
+        color: #24292e;
+        background: #ffffff;
+      }
+      h1 {
+        border-bottom: 1px solid #eaecef;
+        padding-bottom: 0.3em;
+        margin-top: 0;
+        font-size: 32px;
+        font-weight: 600;
+      }
+      h3 { margin: 0 0 10px; font-size: 15px; font-weight: 600; color: #24292e; }
+      .back-link {
+        display: inline-block;
+        margin-bottom: 16px;
+        color: #0366d6;
+        text-decoration: none;
+        font-size: 14px;
+      }
+      .back-link:hover { text-decoration: underline; }
+      .panel {
+        background: #f6f8fa;
+        padding: 16px;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+        margin-bottom: 16px;
+      }
+      .panel h2 { margin-top: 0; margin-bottom: 12px; font-size: 20px; font-weight: 600; }
+      .section { margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid #e1e4e8; }
+      .section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+      .btn {
+        background: #fafbfc;
+        color: #24292e;
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid rgba(27,31,35,0.15);
+        cursor: pointer;
+        font-size: 14px;
+        line-height: 20px;
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+        display: inline-block;
+        text-decoration: none;
+      }
+      .btn:hover { background: #f3f4f6; }
+      .btn.primary { background: #0366d6; color: #fff; }
+      .btn.primary:hover { background: #0256c5; }
+      input[type="file"] { display: none; }
+      .controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+      .status { font-size: 13px; color: #586069; margin-bottom: 8px; }
+      .info { font-size: 13px; color: #586069; margin-bottom: 12px; }
+
+      /* Drop zone */
+      .drop-zone {
+        border: 2px dashed #e1e4e8;
+        border-radius: 6px;
+        padding: 24px;
+        text-align: center;
+        color: #586069;
+        font-size: 14px;
+        transition: border-color 0.2s, background 0.2s;
+        cursor: pointer;
+        margin-bottom: 12px;
+      }
+      .drop-zone.drag-over { border-color: #0366d6; background: #f0f7ff; color: #0366d6; }
+
+      /* Preview table */
+      .preview-wrapper {
+        overflow-x: auto;
+        margin-top: 10px;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+        background: #fff;
+        max-height: 200px;
+        overflow-y: auto;
+      }
+      .preview-table { border-collapse: collapse; font-size: 13px; width: 100%; }
+      .preview-table th {
+        background: #0366d6;
+        color: #fff;
+        padding: 6px 10px;
+        text-align: left;
+        white-space: nowrap;
+        font-weight: 600;
+        position: sticky;
+        top: 0;
+      }
+      .preview-table td {
+        padding: 5px 10px;
+        border-bottom: 1px solid #e1e4e8;
+        white-space: nowrap;
+        max-width: 160px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .preview-table tr:hover td { background: #f6f8fa; }
+      details summary {
+        cursor: pointer;
+        font-size: 13px;
+        color: #0366d6;
+        user-select: none;
+        margin-top: 8px;
+      }
+      details summary:hover { text-decoration: underline; }
+
+      /* Config selects */
+      .axis-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+      .axis-label { font-size: 13px; font-weight: 600; width: 90px; flex-shrink: 0; color: #24292e; }
+      .axis-select {
+        padding: 6px 10px;
+        font-size: 14px;
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        background: #ffffff;
+        color: #24292e;
+        flex: 1;
+        min-width: 180px;
+        max-width: 340px;
+      }
+      .axis-select:focus { outline: none; border-color: #0366d6; }
+      .type-badge {
+        font-size: 11px;
+        padding: 1px 6px;
+        border-radius: 10px;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      .type-badge.numeric { background: #dbeafe; color: #1d4ed8; }
+
+      /* Warning / Error */
+      .warning {
+        background: #fff8c5;
+        border: 1px solid #e6c84f;
+        color: #6a4f00;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 13px;
+        margin-top: 8px;
+      }
+      .error-box {
+        background: #ffeef0;
+        border: 1px solid #f9a5ab;
+        color: #86181d;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 13px;
+        margin-top: 8px;
+      }
+
+      /* Summary card */
+      .summary-card {
+        background: #ffffff;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        padding: 16px;
+        margin-bottom: 16px;
+      }
+      .equation-display {
+        font-size: 18px;
+        font-weight: 700;
+        color: #0366d6;
+        letter-spacing: 0.01em;
+        margin-bottom: 14px;
+        word-break: break-all;
+      }
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 10px;
+      }
+      .stat-cell {
+        background: #f6f8fa;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        padding: 10px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .stat-cell .val {
+        font-size: 22px;
+        font-weight: 700;
+        color: #24292e;
+        line-height: 1.2;
+      }
+      .stat-cell .val.sig { color: #22863a; }
+      .stat-cell .val.not-sig { color: #b08800; }
+      .stat-cell .lbl { font-size: 11px; color: #586069; }
+      .stat-cell .desc {
+        font-size: 11px;
+        color: #8c959f;
+        line-height: 1.4;
+        margin-top: 3px;
+        padding-top: 4px;
+        border-top: 1px solid #eaecef;
+      }
+      .sig-badge {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 10px;
+        margin-left: 8px;
+        vertical-align: middle;
+      }
+      .sig-badge.sig { background: #dcffe4; color: #22863a; }
+      .sig-badge.not-sig { background: #fff8c5; color: #6a4f00; }
+      .sig-badge.marginal { background: #ffe4b5; color: #8a5c00; }
+
+      /* Chart containers */
+      .chart-container {
+        background: #ffffff;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        padding: 12px;
+        position: relative;
+      }
+      .chart-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: #24292e;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .chart-canvas-wrap { position: relative; height: 380px; }
+      .diag-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-top: 0;
+      }
+      @media (max-width: 640px) { .diag-grid { grid-template-columns: 1fr; } }
+      .diag-canvas-wrap { position: relative; height: 280px; }
+
+      /* Chart options row */
+      .chart-opts { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+      .chart-desc {
+        font-size: 13px;
+        color: #586069;
+        line-height: 1.6;
+        margin-top: 10px;
+        padding: 9px 12px;
+        background: #f6f8fa;
+        border-radius: 4px;
+        border-left: 3px solid #d0d7de;
+      }
+      .checkbox-label {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 13px;
+        cursor: pointer;
+        user-select: none;
+        color: #586069;
+      }
+      .checkbox-label input[type="checkbox"] { width: 14px; height: 14px; cursor: pointer; }
+
+      /* Coefficient table */
+      .coef-table {
+        border-collapse: collapse;
+        font-size: 13px;
+        width: 100%;
+        background: #fff;
+        border-radius: 6px;
+        overflow: hidden;
+        border: 1px solid #e1e4e8;
+      }
+      .coef-table th {
+        background: #0366d6;
+        color: #fff;
+        padding: 7px 12px;
+        text-align: left;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      .coef-table th:not(:first-child) { text-align: right; }
+      .coef-table td {
+        padding: 6px 12px;
+        border-bottom: 1px solid #e1e4e8;
+        white-space: nowrap;
+      }
+      .coef-table td:not(:first-child) { text-align: right; font-family: monospace; font-size: 13px; }
+      .coef-table tr:last-child td { border-bottom: none; }
+      .coef-table tr:hover td { background: #f6f8fa; }
+      .stars { color: #e15759; font-weight: 700; }
+
+      /* ANOVA table */
+      .anova-table {
+        border-collapse: collapse;
+        font-size: 13px;
+        width: 100%;
+        background: #fff;
+        border-radius: 6px;
+        overflow: hidden;
+        border: 1px solid #e1e4e8;
+        margin-top: 10px;
+      }
+      .anova-table th {
+        background: #586069;
+        color: #fff;
+        padding: 6px 12px;
+        text-align: right;
+        font-weight: 600;
+      }
+      .anova-table th:first-child { text-align: left; }
+      .anova-table td {
+        padding: 5px 12px;
+        border-bottom: 1px solid #e1e4e8;
+        text-align: right;
+        font-family: monospace;
+        font-size: 13px;
+      }
+      .anova-table td:first-child { text-align: left; font-family: inherit; }
+      .anova-table tr:last-child td { border-bottom: none; font-weight: 600; background: #f6f8fa; }
+
+      /* Stat rows for additional info */
+      .stat-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        font-size: 13px;
+        padding: 4px 0;
+        border-bottom: 1px solid #f0f2f4;
+      }
+      .stat-row:last-child { border-bottom: none; }
+      .stat-row .slbl { color: #586069; }
+      .stat-row .sval { font-weight: 600; font-family: monospace; }
+
+      /* Interpretation */
+      .interp-body { font-size: 14px; line-height: 1.7; color: #24292e; }
+      .interp-body p { margin: 0 0 10px; }
+      .interp-body p:last-child { margin-bottom: 0; }
+
+      /* Flags */
+      .flag {
+        padding: 10px 14px;
+        border-radius: 6px;
+        font-size: 13px;
+        margin-bottom: 10px;
+        border-left: 4px solid;
+        line-height: 1.5;
+      }
+      .flag:last-child { margin-bottom: 0; }
+      .flag strong { display: block; margin-bottom: 2px; font-size: 13px; }
+      .flag-warning { background: #fff8c5; border-left-color: #e6c84f; color: #6a4f00; }
+      .flag-info { background: #dbeafe; border-left-color: #3b82f6; color: #1e3a5f; }
+      .flag-check { background: #f6f8fa; border-left-color: #bbbec3; color: #24292e; }
+
+      /* Details/summary for collapsible sections */
+      details.section-details { margin-bottom: 16px; }
+      details.section-details > summary {
+        cursor: pointer;
+        font-size: 15px;
+        font-weight: 600;
+        color: #24292e;
+        list-style: none;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 12px 16px;
+        background: #f6f8fa;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        user-select: none;
+      }
+      details.section-details > summary::-webkit-details-marker { display: none; }
+      details.section-details > summary::marker { display: none; }
+      details.section-details > summary::before {
+        content: "▶";
+        font-size: 10px;
+        color: #586069;
+        display: inline-block;
+        transition: transform 0.15s;
+        flex-shrink: 0;
+      }
+      details.section-details[open] > summary::before { transform: rotate(90deg); }
+      details.section-details[open] > summary {
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+        border-bottom-color: #e1e4e8;
+      }
+      .section-details-body {
+        background: #ffffff;
+        border: 1px solid #e1e4e8;
+        border-top: none;
+        border-bottom-left-radius: 6px;
+        border-bottom-right-radius: 6px;
+        padding: 16px;
+      }
+
+      /* Glossary */
+      .glossary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 10px;
+      }
+      .glossary-group-label {
+        grid-column: 1 / -1;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        color: #586069;
+        padding: 8px 0 2px;
+        border-bottom: 1px solid #e1e4e8;
+        margin-top: 6px;
+      }
+      .glossary-group-label:first-child { margin-top: 0; }
+      .glossary-entry {
+        background: #fff;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        padding: 11px 13px;
+      }
+      .glossary-entry dt {
+        font-size: 13px;
+        font-weight: 700;
+        color: #0366d6;
+        margin: 0 0 4px;
+      }
+      .glossary-entry dd {
+        font-size: 13px;
+        color: #444d56;
+        margin: 0;
+        line-height: 1.55;
+      }
+    </style>
+  </head>
+  <body>
+    <a href="index.html" class="back-link">← Back to Browser Tools</a>
+    <h1>Linear Regression</h1>
+
+    <!-- Panel 1: Load Data -->
+    <div class="panel">
+      <h2>Load Data</h2>
+      <div class="info">Load a CSV file to analyse. All processing happens in your browser — no data is uploaded.</div>
+      <div class="drop-zone" id="dropZone">
+        Drag and drop a CSV file here, or click to browse
+        <input type="file" id="fileInput" accept=".csv,text/csv" />
+      </div>
+      <div class="status" id="loadStatus">No file loaded</div>
+      <details id="previewDetails" style="display:none">
+        <summary>Show data preview</summary>
+        <div class="preview-wrapper">
+          <table class="preview-table" id="previewTable"></table>
+        </div>
+      </details>
+    </div>
+
+    <!-- Panel 2: Configure -->
+    <div class="panel" id="configPanel" style="display:none">
+      <h2>Configure Regression</h2>
+      <div class="info">Select the predictor (X) and outcome (Y) columns. Only numeric columns are shown. Both columns must differ.</div>
+      <div class="axis-row">
+        <span class="axis-label">Predictor (X)</span>
+        <select class="axis-select" id="xSelect"></select>
+      </div>
+      <div class="axis-row">
+        <span class="axis-label">Outcome (Y)</span>
+        <select class="axis-select" id="ySelect"></select>
+      </div>
+      <div id="configError" class="error-box" style="display:none"></div>
+      <div style="margin-top:12px">
+        <button class="btn primary" id="runBtn">Run Regression</button>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div id="resultsPanel" style="display:none">
+
+      <!-- Summary card -->
+      <details class="section-details" open>
+        <summary>Model Summary</summary>
+        <div class="section-details-body">
+          <div class="summary-card" style="margin-bottom:0">
+            <div class="equation-display" id="equationDisplay"></div>
+            <div class="stats-grid" id="statsGrid"></div>
+          </div>
+        </div>
+      </details>
+
+      <!-- Scatter plot -->
+      <details class="section-details" open>
+        <summary>Scatter Plot with Regression Line</summary>
+        <div class="section-details-body">
+          <div class="chart-title">
+            <span id="scatterTitle">Scatter Plot</span>
+            <div class="chart-opts">
+              <label class="checkbox-label">
+                <input type="checkbox" id="showCI" checked>
+                95% Confidence Band
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" id="showPI">
+                95% Prediction Interval
+              </label>
+            </div>
+          </div>
+          <div class="chart-container">
+            <div class="chart-canvas-wrap">
+              <canvas id="scatterCanvas"></canvas>
+            </div>
+          </div>
+          <div class="chart-desc" id="scatterDesc"></div>
+        </div>
+      </details>
+
+      <!-- Residual diagnostics -->
+      <details class="section-details" open>
+        <summary>Residual Diagnostics</summary>
+        <div class="section-details-body">
+          <div class="diag-grid">
+            <div>
+              <div class="chart-title"><span>Residuals vs. Fitted Values</span></div>
+              <div class="chart-container">
+                <div class="diag-canvas-wrap"><canvas id="residCanvas"></canvas></div>
+              </div>
+              <div class="chart-desc">Residuals are the gaps between actual values and the regression line — what the model could not explain. Blue dots sit above the line (the model under-predicted); red dots sit below (it over-predicted). Look for a random horizontal cloud of points. Curves or arcs suggest the relationship is not truly linear. A funnel shape — where the spread widens as fitted values increase — indicates the model's errors are inconsistent, which can make p-values unreliable.</div>
+            </div>
+            <div>
+              <div class="chart-title"><span>Histogram of Residuals</span></div>
+              <div class="chart-container">
+                <div class="diag-canvas-wrap"><canvas id="histCanvas"></canvas></div>
+              </div>
+              <div class="chart-desc">This shows how prediction errors (residuals) are distributed. The red curve is the shape a perfectly normal distribution would take. Bars that roughly follow the curve suggest the normality assumption holds. A lopsided or heavily skewed shape — especially with small samples — may reduce the reliability of p-values and confidence intervals. With larger samples (n ≥ 30) some skew is less critical due to the Central Limit Theorem.</div>
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <!-- Coefficients & ANOVA -->
+      <details class="section-details">
+        <summary>Detailed Statistics</summary>
+        <div class="section-details-body">
+          <h3 style="margin-bottom:10px">Coefficients</h3>
+          <div style="overflow-x:auto">
+            <table class="coef-table" id="coefTable"></table>
+          </div>
+          <h3 style="margin-top:16px;margin-bottom:10px">ANOVA Table</h3>
+          <div style="overflow-x:auto">
+            <table class="anova-table" id="anovaTable"></table>
+          </div>
+          <h3 style="margin-top:16px;margin-bottom:10px">Additional Measures</h3>
+          <div id="additionalStats"></div>
+          <p style="font-size:11px;color:#586069;margin-top:10px;margin-bottom:0">
+            Significance codes: *** p &lt; 0.001 &nbsp; ** p &lt; 0.01 &nbsp; * p &lt; 0.05 &nbsp; . p &lt; 0.1 &nbsp; ns p &ge; 0.1
+          </p>
+        </div>
+      </details>
+
+      <!-- Interpretation -->
+      <details class="section-details" open>
+        <summary>Interpretation</summary>
+        <div class="section-details-body">
+          <div class="interp-body" id="interpBody"></div>
+        </div>
+      </details>
+
+      <!-- Critical Reflection -->
+      <details class="section-details" open>
+        <summary>Critical Reflection</summary>
+        <div class="section-details-body">
+          <div id="flagsBody"></div>
+        </div>
+      </details>
+
+    </div><!-- /resultsPanel -->
+
+    <!-- Glossary (always visible) -->
+    <details class="section-details" id="glossarySection" style="margin-top:16px">
+      <summary>Glossary of Terms</summary>
+      <div class="section-details-body">
+        <p class="info" style="margin-bottom:16px">Plain-language explanations of the statistical terms used in this tool. Open any term to read more.</p>
+        <dl class="glossary-grid">
+
+          <div class="glossary-group-label">The basics</div>
+
+          <div class="glossary-entry">
+            <dt>Linear Regression</dt>
+            <dd>A technique that fits a straight line through your data to describe how one variable tends to change as another changes. The result is an equation you can use to summarise the relationship and predict new values.</dd>
+          </div>
+
+          <div class="glossary-entry">
+            <dt>Predictor (X) / Independent Variable</dt>
+            <dd>The variable you are using as the input — shown on the horizontal axis. It is called "independent" because it is not what you are trying to explain; it is what you are using to do the explaining.</dd>
+          </div>
+
+          <div class="glossary-entry">
+            <dt>Outcome (Y) / Dependent Variable</dt>
+            <dd>The variable you are trying to understand or predict — shown on the vertical axis. Also called the response variable. Its value is assumed to be associated with (or influenced by) X.</dd>
+          </div>
+
+          <div class="glossary-entry">
+            <dt>Regression Line (Line of Best Fit)</dt>
+            <dd>A straight line through the data that minimises the total squared vertical distances between the data points and the line itself. It represents the average value of Y for any given value of X.</dd>
+          </div>
+
+          <div class="glossary-entry">
+            <dt>Slope (b₁)</dt>
+            <dd>How much Y changes, on average, for every one-unit increase in X. A slope of 3 means Y goes up by 3 when X goes up by 1. A negative slope means Y decreases as X increases. This is usually the most important number for understanding the relationship.</dd>
+          </div>
+
+          <div class="glossary-entry">
+            <dt>Intercept (b₀)</dt>
+            <dd>The predicted value of Y when X equals zero — where the regression line crosses the vertical axis. It does not always have a meaningful interpretation. If X is, say, someone's height, then X = 0 is outside the data range and the intercept is just a mathematical anchor for the line.</dd>
+          </div>
+
+          <div class="glossary-group-label">Measuring fit</div>
+
+          <div class="glossary-entry">
+            <dt>R² (R-squared / Coefficient of Determination)</dt>
+            <dd>A number between 0 and 1 measuring how well the model fits the data. An R² of 0.75 means 75% of the variation in Y is explained by X; the remaining 25% is due to other factors. Higher is generally better, but what counts as "good" depends on the subject area.</dd>
+          </div>
+
+          <div class="glossary-entry">
+            <dt>Adjusted R²</dt>
+            <dd>A version of R² that is slightly penalised for the number of predictors in the model. For simple regression (one predictor) the difference is small. It is useful when comparing models with different numbers of variables, because adding more predictors always raises R² even if they add no real information.</dd>
+          </div>
+
+          <div class="glossary-entry">
+            <dt>Pearson's r (Correlation Coefficient)</dt>
+            <dd>A number between −1 and +1 measuring the strength and direction of the linear relationship. A value of +1 is a perfect upward line; −1 is a perfect downward line; 0 means no linear relationship. R² is simply Pearson's r squared, so the two always tell the same story about fit.</dd>
+          </div>
+
+          <div class="glossary-group-label">Significance testing</div>
+
+          <div class="glossary-entry">
+            <dt>Null Hypothesis</dt>
+            <dd>The starting assumption being tested: that there is no linear relationship between X and Y in the population — in other words, that the true slope is zero. The p-value tells you how consistent your data are with this assumption.</dd>
+          </div>
+
+          <div class="glossary-entry">
+            <dt>p-value</dt>
+            <dd>The probability of observing a slope as large as yours (or larger) purely by chance, if there were actually no relationship in the population. A small p-value (commonly &lt; 0.05) is taken as evidence against the null hypothesis. Crucially, the p-value is not the probability that your result is correct or incorrect.</dd>
+          </div>
+
+          <div class="glossary-entry">
+            <dt>Statistical Significance</dt>
+            <dd>A result is called statistically significant when the p-value falls below a chosen threshold — usually 0.05 (i.e. a 5% chance). This is a convention, not a hard dividing line between "true" and "false." With very large samples, even tiny, practically meaningless effects can be statistically significant. Always consider effect size alongside the p-value.</dd>
+          </div>
+
+          <div class="glossary-entry">
+            <dt>t-value (t-statistic)</dt>
+            <dd>The slope estimate divided by its standard error. It measures how many standard errors the estimated slope is away from zero. A t-value with a large absolute value (typically greater than about 2) suggests the slope is unlikely to be zero. The p-value is derived from the t-value.</dd>
+          </div>
+
+          <div class="glossary-entry">
+            <dt>Degrees of Freedom (df)</dt>
+            <dd>The number of independent pieces of information available to estimate uncertainty. For simple linear regression, df = n − 2 (total observations minus 2, because we estimated the slope and intercept). The t-distribution used to calculate p-values depends on the degrees of freedom — smaller df leads to wider, flatter distributions and less certainty.</dd>
+          </div>
+
+          <div class="glossary-entry">
+            <dt>F-statistic</dt>
+            <dd>An overall test of whether the model explains significantly more variation than a flat horizontal line would. For simple regression (one predictor), the F-statistic equals the t-statistic squared, so the two tests always give the same p-value. The F-statistic becomes more useful when comparing models with multiple predictors.</dd>
+          </div>
+
+          <div class="glossary-group-label">Uncertainty</div>
+
+          <div class="glossary-entry">
+            <dt>Standard Error (SE)</dt>
+            <dd>A measure of how uncertain an estimate is. The standard error of the slope tells you how much the estimated slope would vary if you repeated your study with different samples from the same population. A smaller SE means a more precise, trustworthy estimate.</dd>
+          </div>
+
+          <div class="glossary-entry">
+            <dt>Confidence Interval (CI)</dt>
+            <dd>A range of values constructed so that, if you repeated the study many times, about 95% of those intervals would contain the true population value. A 95% confidence interval for the slope is not the probability that this particular interval contains the truth — it is a statement about the long-run reliability of the method.</dd>
+          </div>
+
+          <div class="glossary-entry">
+            <dt>Confidence Band</dt>
+            <dd>The confidence interval extended across the whole regression line, creating a curved band around it. It is narrowest at the mean of X (where the line is pinned most tightly by the data) and fans outward toward the edges. It reflects uncertainty about where the true average line lies in the population.</dd>
+          </div>
+
+          <div class="glossary-entry">
+            <dt>Prediction Interval (PI)</dt>
+            <dd>Wider than the confidence band, the prediction interval shows the range within which a single new, individual observation is likely to fall. It is wider because it accounts for both uncertainty about the true line and the natural variability between individual data points. Confidence bands and prediction intervals both widen away from the centre of the data.</dd>
+          </div>
+
+          <div class="glossary-group-label">Residuals and assumptions</div>
+
+          <div class="glossary-entry">
+            <dt>Residuals</dt>
+            <dd>The vertical gap between each actual data point and the regression line — in other words, what the model could not explain. A positive residual means the actual value is above the line; negative means it is below. Ideally, residuals should look like random noise with no pattern.</dd>
+          </div>
+
+          <div class="glossary-entry">
+            <dt>Residuals vs. Fitted Plot</dt>
+            <dd>A diagnostic chart showing residuals on the vertical axis against predicted (fitted) values on the horizontal axis. A random cloud of points around the zero line is ideal. Curves or arcs suggest the true relationship is not linear. A funnel shape — where spread increases or decreases — suggests the model's errors are not consistent across all predicted values.</dd>
+          </div>
+
+          <div class="glossary-entry">
+            <dt>Homoscedasticity</dt>
+            <dd>The assumption that residuals have roughly equal spread across all values of X. When this holds, the model's uncertainty is consistent everywhere. The opposite — heteroscedasticity — means errors vary in size depending on where you are in the data, which can distort standard errors and make p-values unreliable even when the slope estimate itself is unbiased.</dd>
+          </div>
+
+          <div class="glossary-entry">
+            <dt>Normality of Residuals</dt>
+            <dd>The assumption that residuals follow an approximately bell-shaped (normal) distribution. This matters mainly for small samples. For larger samples (roughly n ≥ 30), a mathematical theorem called the Central Limit Theorem means slope estimates behave normally even when residuals are not perfectly bell-shaped.</dd>
+          </div>
+
+          <div class="glossary-entry">
+            <dt>Independence of Observations</dt>
+            <dd>The assumption that knowing one observation tells you nothing about another. This is violated by time-series data (where today's value depends on yesterday's), grouped or clustered data (students within schools, patients within hospitals), or repeated measurements from the same individuals. Violated independence typically makes standard errors too small, so p-values appear more significant than they truly are.</dd>
+          </div>
+
+          <div class="glossary-group-label">Analysis of variance (ANOVA)</div>
+
+          <div class="glossary-entry">
+            <dt>Sum of Squares (SS)</dt>
+            <dd>A way of measuring variation. SSTotal is the total spread in Y around its mean. SSRegression is the portion the model explains. SSResiduals is what is left over. R² is simply SSRegression divided by SSTotal, so the three quantities always sum consistently: SSTotal = SSRegression + SSResiduals.</dd>
+          </div>
+
+          <div class="glossary-entry">
+            <dt>Mean Squares (MS)</dt>
+            <dd>A sum of squares divided by its corresponding degrees of freedom. Mean squares make sums of squares comparable regardless of sample size — like an average amount of variation per degree of freedom. The F-statistic is MSRegression divided by MSResiduals.</dd>
+          </div>
+
+          <div class="glossary-entry">
+            <dt>ANOVA Table</dt>
+            <dd>A structured breakdown of the total variation in Y into what the regression model explains and what it does not. For simple regression it provides the same F-test as the t-test for the slope, but the table format becomes essential when comparing models or working with multiple predictors.</dd>
+          </div>
+
+        </dl>
+      </div>
+    </details>
+
+    <script>
+      /* ========================= State ========================= */
+      let csvData = null;
+      let columnTypes = {};
+      let regressionResult = null;
+      let scatterChart = null, residChart = null, histChart = null;
+
+      /* ========================= Utilities ========================= */
+      function parseNum(v) {
+        const n = parseFloat(String(v).trim().replace(/,/g, ''));
+        return isNaN(n) ? null : n;
+      }
+
+      function esc(s) {
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      }
+
+      function fmtSig(n, d = 5) {
+        if (n === null || n === undefined || isNaN(n)) return '—';
+        if (n === 0) return '0';
+        return parseFloat(n.toPrecision(d)).toString();
+      }
+
+      function fmtFixed(n, d = 4) {
+        if (n === null || n === undefined || isNaN(n)) return '—';
+        return n.toFixed(d);
+      }
+
+      function fmtP(p) {
+        if (p === null || isNaN(p)) return '—';
+        if (p < 0.001) return '< 0.001';
+        return p.toFixed(4);
+      }
+
+      function sigStars(p) {
+        if (p < 0.001) return '***';
+        if (p < 0.01) return '**';
+        if (p < 0.05) return '*';
+        if (p < 0.1) return '.';
+        return 'ns';
+      }
+
+      function hexToRgba(hex, a) {
+        const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+        return `rgba(${r},${g},${b},${a})`;
+      }
+
+      /* ========================= Statistics ========================= */
+
+      function lgamma(x) {
+        const c = [0.99999999999980993,676.5203681218851,-1259.1392167224028,
+                   771.32342877765313,-176.61502916214059,12.507343278686905,
+                   -0.13857109526572012,9.9843695780195716e-6,1.5056327351493116e-7];
+        if (x < 0.5) return Math.log(Math.PI / Math.sin(Math.PI * x)) - lgamma(1 - x);
+        x -= 1;
+        let a = c[0];
+        const t = x + 7.5;
+        for (let i = 1; i < 9; i++) a += c[i] / (x + i);
+        return 0.5 * Math.log(2 * Math.PI) + (x + 0.5) * Math.log(t) - t + Math.log(a);
+      }
+
+      function betaCF(x, a, b) {
+        const maxIter = 200, eps = 3e-7, fpMin = 1e-30;
+        const qab = a + b, qap = a + 1, qam = a - 1;
+        let c = 1, d = 1 - qab * x / qap;
+        if (Math.abs(d) < fpMin) d = fpMin;
+        d = 1 / d;
+        let h = d;
+        for (let m = 1; m <= maxIter; m++) {
+          const m2 = 2 * m;
+          let aa = m * (b - m) * x / ((qam + m2) * (a + m2));
+          d = 1 + aa * d; if (Math.abs(d) < fpMin) d = fpMin;
+          c = 1 + aa / c; if (Math.abs(c) < fpMin) c = fpMin;
+          d = 1 / d; h *= d * c;
+          aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2));
+          d = 1 + aa * d; if (Math.abs(d) < fpMin) d = fpMin;
+          c = 1 + aa / c; if (Math.abs(c) < fpMin) c = fpMin;
+          d = 1 / d; const del = d * c; h *= del;
+          if (Math.abs(del - 1) < eps) break;
+        }
+        return h;
+      }
+
+      function betaInc(x, a, b) {
+        if (x <= 0) return 0;
+        if (x >= 1) return 1;
+        const lbeta = lgamma(a) + lgamma(b) - lgamma(a + b);
+        if (x < (a + 1) / (a + b + 2)) {
+          return Math.exp(a * Math.log(x) + b * Math.log(1-x) - lbeta) / a * betaCF(x, a, b);
+        } else {
+          return 1 - Math.exp(b * Math.log(1-x) + a * Math.log(x) - lbeta) / b * betaCF(1-x, b, a);
+        }
+      }
+
+      function tCDF(t, df) {
+        const x = df / (df + t * t);
+        const p = betaInc(x, df / 2, 0.5) / 2;
+        return t >= 0 ? 1 - p : p;
+      }
+
+      function twoTailP(t, df) {
+        return 2 * (1 - tCDF(Math.abs(t), df));
+      }
+
+      function tQuantile(p, df) {
+        if (p >= 1) return Infinity;
+        if (p <= 0) return -Infinity;
+        let lo = 0, hi = 1000;
+        for (let i = 0; i < 100; i++) {
+          const mid = (lo + hi) / 2;
+          if (tCDF(mid, df) < p) lo = mid; else hi = mid;
+        }
+        return (lo + hi) / 2;
+      }
+
+      /* ========================= CSV Parsing ========================= */
+      function parseCSV(text) {
+        const lines = [];
+        let line = [], field = '', inQ = false;
+        for (let i = 0; i < text.length; i++) {
+          const c = text[i], nx = text[i+1];
+          if (c === '"') {
+            if (inQ && nx === '"') { field += '"'; i++; }
+            else inQ = !inQ;
+          } else if (c === ',' && !inQ) {
+            line.push(field); field = '';
+          } else if ((c === '\n' || c === '\r') && !inQ) {
+            if (c === '\r' && nx === '\n') i++;
+            if (field || line.length > 0) {
+              line.push(field);
+              if (line.some(f => f.trim() !== '')) lines.push(line);
+              line = []; field = '';
+            }
+          } else { field += c; }
+        }
+        if (field || line.length > 0) {
+          line.push(field);
+          if (line.some(f => f.trim() !== '')) lines.push(line);
+        }
+        return lines;
+      }
+
+      function isNumericValue(v) {
+        const s = String(v).trim().replace(/,/g, '');
+        return s !== '' && !isNaN(parseFloat(s)) && isFinite(s);
+      }
+
+      function inferAllTypes(headers, rows) {
+        const types = {};
+        headers.forEach((h, i) => {
+          const sample = rows.slice(0, 200).map(r => r[i] || '').filter(v => v.trim() !== '');
+          if (sample.length === 0) { types[h] = 'text'; return; }
+          types[h] = sample.filter(isNumericValue).length / sample.length >= 0.8 ? 'numeric' : 'other';
+        });
+        return types;
+      }
+
+      /* ========================= Linear Regression ========================= */
+      function computeRegression(xValues, yValues) {
+        const pairs = [];
+        const total = Math.min(xValues.length, yValues.length);
+        for (let i = 0; i < total; i++) {
+          const x = parseNum(xValues[i]), y = parseNum(yValues[i]);
+          if (x !== null && y !== null) pairs.push([x, y]);
+        }
+        const n = pairs.length;
+        const excluded = total - n;
+        if (n < 3) return { error: `Need at least 3 complete pairs (found ${n}).` };
+
+        const xs = pairs.map(p => p[0]);
+        const ys = pairs.map(p => p[1]);
+        const xMean = xs.reduce((s, v) => s + v, 0) / n;
+        const yMean = ys.reduce((s, v) => s + v, 0) / n;
+
+        const Sxx = xs.reduce((s, x) => s + (x - xMean) ** 2, 0);
+        const Syy = ys.reduce((s, y) => s + (y - yMean) ** 2, 0);
+        const Sxy = xs.reduce((s, x, i) => s + (x - xMean) * (ys[i] - yMean), 0);
+
+        if (Sxx === 0) return { error: 'X column has zero variance — all values are identical.' };
+        if (Syy === 0) return { error: 'Y column has zero variance — all values are identical.' };
+
+        const slope = Sxy / Sxx;
+        const intercept = yMean - slope * xMean;
+        const fitted = xs.map(x => slope * x + intercept);
+        const residuals = ys.map((y, i) => y - fitted[i]);
+
+        const SSResid = residuals.reduce((s, r) => s + r ** 2, 0);
+        const SSTotal = Syy;
+        const SSReg = SSTotal - SSResid;
+        const r2 = SSResid >= SSTotal ? 0 : SSReg / SSTotal;
+        const r = Sxy / Math.sqrt(Sxx * Syy);
+
+        const df = n - 2;
+        const mse = SSResid / df;
+        const se = Math.sqrt(mse);
+        const slopeSE = se / Math.sqrt(Sxx);
+        const sx2sum = xs.reduce((s, x) => s + x ** 2, 0);
+        const interceptSE = se * Math.sqrt(sx2sum / (n * Sxx));
+        const tSlope = slope / slopeSE;
+        const tIntercept = intercept / interceptSE;
+        const pSlope = twoTailP(tSlope, df);
+        const pIntercept = twoTailP(tIntercept, df);
+
+        const tCrit95 = tQuantile(0.975, df);
+        const slopeCI = [slope - tCrit95 * slopeSE, slope + tCrit95 * slopeSE];
+        const interceptCI = [intercept - tCrit95 * interceptSE, intercept + tCrit95 * interceptSE];
+
+        const r2adj = 1 - (1 - r2) * (n - 1) / df;
+        const MSReg = SSReg;
+        const MSResid = SSResid / df;
+        const Fstat = MSReg / MSResid;
+        const pF = twoTailP(Math.sqrt(Fstat), df); // F = t² so p(F,1,df) = p(t,df)
+
+        const residMean = residuals.reduce((s, r) => s + r, 0) / n;
+        const residSD = Math.sqrt(residuals.reduce((s, r) => s + (r - residMean) ** 2, 0) / (n - 1));
+
+        return {
+          n, pairs, xs, ys, fitted, residuals, excluded,
+          xMean, yMean, slope, intercept, Sxx, Syy, Sxy,
+          r, r2, r2adj, SSResid, SSTotal, SSReg, df,
+          mse, se, slopeSE, interceptSE,
+          tSlope, tIntercept, pSlope, pIntercept,
+          tCrit95, slopeCI, interceptCI,
+          MSReg, MSResid, Fstat, pF,
+          residMean, residSD
+        };
+      }
+
+      /* ========================= Charts ========================= */
+      function destroyCharts() {
+        [scatterChart, residChart, histChart].forEach(c => { if (c) c.destroy(); });
+        scatterChart = residChart = histChart = null;
+      }
+
+      function buildScatterChart(res, xCol, yCol) {
+        if (scatterChart) { scatterChart.destroy(); scatterChart = null; }
+        const ctx = document.getElementById('scatterCanvas').getContext('2d');
+        const showCI = document.getElementById('showCI').checked;
+        const showPI = document.getElementById('showPI').checked;
+
+        const N = 120;
+        const xMin = Math.min(...res.xs), xMax = Math.max(...res.xs);
+        const pad = (xMax - xMin) * 0.06 || 1;
+        const xPlot = Array.from({length: N}, (_, i) => (xMin - pad) + (xMax - xMin + 2 * pad) * i / (N - 1));
+        const yFit = xPlot.map(x => res.slope * x + res.intercept);
+
+        function seAt(x, forPI) {
+          const base = res.se * Math.sqrt((forPI ? 1 : 0) + 1/res.n + (x - res.xMean)**2 / res.Sxx);
+          return base;
+        }
+
+        const datasets = [];
+
+        if (showPI) {
+          datasets.push({
+            type: 'line', label: '95% Prediction Interval',
+            data: xPlot.map((x, i) => ({x, y: yFit[i] + res.tCrit95 * seAt(x, true)})),
+            borderColor: 'rgba(200,100,0,0.35)', borderWidth: 1, borderDash: [6,4],
+            backgroundColor: 'rgba(200,100,0,0.07)', pointRadius: 0, tension: 0,
+            fill: '+1',
+          });
+          datasets.push({
+            type: 'line', label: '_pi_lower',
+            data: xPlot.map((x, i) => ({x, y: yFit[i] - res.tCrit95 * seAt(x, true)})),
+            borderColor: 'rgba(200,100,0,0.35)', borderWidth: 1, borderDash: [6,4],
+            backgroundColor: 'transparent', pointRadius: 0, tension: 0, fill: false,
+          });
+        }
+
+        if (showCI) {
+          datasets.push({
+            type: 'line', label: '95% Confidence Band',
+            data: xPlot.map((x, i) => ({x, y: yFit[i] + res.tCrit95 * seAt(x, false)})),
+            borderColor: 'rgba(3,102,214,0.35)', borderWidth: 1, borderDash: [3,3],
+            backgroundColor: 'rgba(3,102,214,0.1)', pointRadius: 0, tension: 0,
+            fill: '+1',
+          });
+          datasets.push({
+            type: 'line', label: '_ci_lower',
+            data: xPlot.map((x, i) => ({x, y: yFit[i] - res.tCrit95 * seAt(x, false)})),
+            borderColor: 'rgba(3,102,214,0.35)', borderWidth: 1, borderDash: [3,3],
+            backgroundColor: 'transparent', pointRadius: 0, tension: 0, fill: false,
+          });
+        }
+
+        datasets.push({
+          type: 'line', label: 'Regression line',
+          data: xPlot.map((x, i) => ({x, y: yFit[i]})),
+          borderColor: '#e15759', borderWidth: 2.5,
+          backgroundColor: 'transparent', pointRadius: 0, tension: 0,
+        });
+
+        datasets.push({
+          type: 'scatter', label: 'Data',
+          data: res.pairs.map(([x, y]) => ({x, y})),
+          backgroundColor: hexToRgba('#4e79a7', 0.6),
+          pointRadius: res.n > 500 ? 2 : res.n > 150 ? 3 : 4,
+          pointHoverRadius: 5,
+        });
+
+        scatterChart = new Chart(ctx, {
+          type: 'scatter',
+          data: { datasets },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                labels: { filter: item => !item.text.startsWith('_') }
+              },
+              tooltip: {
+                filter: item => item.dataset.label === 'Data',
+                callbacks: {
+                  label: ctx => `${xCol}: ${fmtSig(ctx.parsed.x)},  ${yCol}: ${fmtSig(ctx.parsed.y)}`
+                }
+              }
+            },
+            scales: {
+              x: { type: 'linear', title: { display: true, text: xCol } },
+              y: { title: { display: true, text: yCol } },
+            }
+          }
+        });
+      }
+
+      function buildResidChart(res, xCol, yCol) {
+        if (residChart) { residChart.destroy(); residChart = null; }
+        const ctx = document.getElementById('residCanvas').getContext('2d');
+        const fMin = Math.min(...res.fitted), fMax = Math.max(...res.fitted);
+        const pad = (fMax - fMin) * 0.05 || 1;
+
+        residChart = new Chart(ctx, {
+          type: 'scatter',
+          data: {
+            datasets: [
+              {
+                type: 'line', label: 'Zero line',
+                data: [{x: fMin - pad, y: 0}, {x: fMax + pad, y: 0}],
+                borderColor: 'rgba(180,0,0,0.55)', borderWidth: 1.5, borderDash: [4,4],
+                pointRadius: 0, fill: false, backgroundColor: 'transparent',
+              },
+              {
+                type: 'scatter', label: 'Residuals',
+                data: res.fitted.map((f, i) => ({x: f, y: res.residuals[i]})),
+                backgroundColor: res.residuals.map(r => r >= 0 ? hexToRgba('#4e79a7', 0.6) : hexToRgba('#e15759', 0.6)),
+                pointRadius: res.n > 500 ? 2 : res.n > 150 ? 3 : 4,
+                pointHoverRadius: 5,
+              }
+            ]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                filter: item => item.dataset.label === 'Residuals',
+                callbacks: {
+                  label: ctx => `Fitted: ${fmtSig(ctx.parsed.x)},  Resid: ${fmtSig(ctx.parsed.y)}`
+                }
+              }
+            },
+            scales: {
+              x: { type: 'linear', title: { display: true, text: 'Fitted values (ŷ)' } },
+              y: { title: { display: true, text: 'Residuals (y − ŷ)' } }
+            }
+          }
+        });
+      }
+
+      function buildHistChart(res) {
+        if (histChart) { histChart.destroy(); histChart = null; }
+        const ctx = document.getElementById('histCanvas').getContext('2d');
+
+        const resids = res.residuals;
+        const nBins = Math.max(8, Math.min(30, Math.round(Math.sqrt(resids.length))));
+        const rMin = Math.min(...resids), rMax = Math.max(...resids);
+        const binW = (rMax - rMin) / nBins || 1;
+
+        const counts = new Array(nBins).fill(0);
+        resids.forEach(r => {
+          let b = Math.floor((r - rMin) / binW);
+          if (b >= nBins) b = nBins - 1;
+          counts[b]++;
+        });
+
+        const labels = Array.from({length: nBins}, (_, i) =>
+          parseFloat((rMin + (i + 0.5) * binW).toPrecision(3)).toString()
+        );
+
+        const normalCurve = Array.from({length: nBins}, (_, i) => {
+          const x = rMin + (i + 0.5) * binW;
+          const pdf = Math.exp(-0.5 * (x / res.se) ** 2) / (res.se * Math.sqrt(2 * Math.PI));
+          return pdf * resids.length * binW;
+        });
+
+        histChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels,
+            datasets: [
+              {
+                label: 'Frequency',
+                data: counts,
+                backgroundColor: hexToRgba('#4e79a7', 0.65),
+                borderColor: hexToRgba('#4e79a7', 0.9),
+                borderWidth: 1,
+                order: 1,
+              },
+              {
+                type: 'line', label: 'Normal',
+                data: normalCurve,
+                borderColor: '#e15759', borderWidth: 2,
+                pointRadius: 0, backgroundColor: 'transparent', fill: false, tension: 0.4,
+                order: 0,
+              }
+            ]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+              legend: { display: true, position: 'top', labels: { boxWidth: 14, font: { size: 12 } } }
+            },
+            scales: {
+              x: { title: { display: true, text: 'Residual value' } },
+              y: { beginAtZero: true, title: { display: true, text: 'Frequency' } }
+            },
+            barPercentage: 1,
+            categoryPercentage: 1,
+          }
+        });
+      }
+
+      /* ========================= Results Rendering ========================= */
+      function renderSummaryCard(res, xCol, yCol) {
+        const sign = res.slope >= 0 ? ' + ' : ' − ';
+        const eq = `ŷ = ${fmtSig(res.intercept, 6)}${sign}${fmtSig(Math.abs(res.slope), 6)} × x`;
+        document.getElementById('equationDisplay').textContent = eq;
+
+        const pSig = res.pSlope < 0.001 ? '< 0.001' : res.pSlope.toFixed(4);
+        let sigClass = 'not-sig', sigLabel = 'Not significant', badgeClass = 'not-sig';
+        if (res.pSlope < 0.001) { sigClass = 'sig'; sigLabel = 'p < 0.001'; badgeClass = 'sig'; }
+        else if (res.pSlope < 0.01) { sigClass = 'sig'; sigLabel = 'p < 0.01'; badgeClass = 'sig'; }
+        else if (res.pSlope < 0.05) { sigClass = 'sig'; sigLabel = 'p < 0.05'; badgeClass = 'sig'; }
+        else if (res.pSlope < 0.1) { badgeClass = 'marginal'; sigLabel = 'Marginal (p < 0.1)'; }
+
+        const cells = [
+          { val: res.r2.toFixed(4), lbl: 'R²',
+            desc: 'Share of the variation in Y explained by X. 0 = none, 1 = perfect.' },
+          { val: res.r2adj.toFixed(4), lbl: 'Adjusted R²',
+            desc: 'Like R², but slightly lower to account for model complexity.' },
+          { val: res.r.toFixed(4), lbl: 'Pearson r',
+            desc: 'Strength and direction of the linear relationship. −1 to +1.' },
+          { val: fmtP(res.pSlope), lbl: 'p-value (slope)', cls: sigClass,
+            desc: 'Probability of this slope occurring by chance if there is truly no relationship. Below 0.05 is typically considered significant.' },
+          { val: fmtSig(res.se, 5), lbl: 'Std. Error of Regression',
+            desc: 'Typical size of prediction errors, in the same units as Y.' },
+          { val: res.n.toString(), lbl: 'Observations (n)',
+            desc: 'Complete rows used after removing any missing values.' },
+          ...(res.excluded > 0 ? [{ val: res.excluded.toString(), lbl: 'Excluded (missing)',
+            desc: 'Rows dropped because X or Y was blank or non-numeric.' }] : []),
+        ];
+
+        let sigDesc;
+        if (res.pSlope < 0.05) sigDesc = 'There is evidence of a real linear association. This does not prove causation.';
+        else if (res.pSlope < 0.1) sigDesc = 'Borderline result. The evidence is weak — interpret with caution.';
+        else sigDesc = 'The slope could plausibly be zero by chance. Insufficient evidence of a real association.';
+
+        document.getElementById('statsGrid').innerHTML = cells.map(c =>
+          `<div class="stat-cell">
+            <span class="val${c.cls ? ' ' + c.cls : ''}">${esc(c.val)}</span>
+            <span class="lbl">${esc(c.lbl)}</span>
+            <span class="desc">${esc(c.desc)}</span>
+          </div>`
+        ).join('') + `<div class="stat-cell">
+          <span class="val"><span class="sig-badge ${badgeClass}">${esc(sigLabel)}</span></span>
+          <span class="lbl">Significance</span>
+          <span class="desc">${esc(sigDesc)}</span>
+        </div>`;
+      }
+
+      function renderCoefTable(res, xCol) {
+        const ci = (lo, hi) => `[${fmtSig(lo, 4)}, ${fmtSig(hi, 4)}]`;
+        document.getElementById('coefTable').innerHTML = `
+          <thead><tr>
+            <th>Term</th>
+            <th>Estimate</th>
+            <th>Std. Error</th>
+            <th>t value</th>
+            <th>p-value</th>
+            <th>95% CI</th>
+            <th></th>
+          </tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>Intercept</strong></td>
+              <td>${fmtSig(res.intercept, 6)}</td>
+              <td>${fmtSig(res.interceptSE, 5)}</td>
+              <td>${res.tIntercept.toFixed(3)}</td>
+              <td>${fmtP(res.pIntercept)}</td>
+              <td>${ci(res.interceptCI[0], res.interceptCI[1])}</td>
+              <td class="stars">${sigStars(res.pIntercept)}</td>
+            </tr>
+            <tr>
+              <td><strong>${esc(xCol)}</strong></td>
+              <td>${fmtSig(res.slope, 6)}</td>
+              <td>${fmtSig(res.slopeSE, 5)}</td>
+              <td>${res.tSlope.toFixed(3)}</td>
+              <td>${fmtP(res.pSlope)}</td>
+              <td>${ci(res.slopeCI[0], res.slopeCI[1])}</td>
+              <td class="stars">${sigStars(res.pSlope)}</td>
+            </tr>
+          </tbody>`;
+      }
+
+      function renderAnovaTable(res) {
+        const fmt = n => fmtSig(n, 6);
+        document.getElementById('anovaTable').innerHTML = `
+          <thead><tr>
+            <th>Source</th><th>SS</th><th>df</th><th>MS</th><th>F</th><th>p-value</th>
+          </tr></thead>
+          <tbody>
+            <tr>
+              <td>Regression</td>
+              <td>${fmt(res.SSReg)}</td><td>1</td>
+              <td>${fmt(res.MSReg)}</td>
+              <td>${res.Fstat.toFixed(3)}</td>
+              <td>${fmtP(res.pF)}</td>
+            </tr>
+            <tr>
+              <td>Residuals</td>
+              <td>${fmt(res.SSResid)}</td><td>${res.df}</td>
+              <td>${fmt(res.MSResid)}</td>
+              <td></td><td></td>
+            </tr>
+            <tr>
+              <td>Total</td>
+              <td>${fmt(res.SSTotal)}</td><td>${res.n - 1}</td>
+              <td></td><td></td><td></td>
+            </tr>
+          </tbody>`;
+      }
+
+      function renderAdditionalStats(res) {
+        const rows = [
+          ['F-statistic', `${res.Fstat.toFixed(3)} on 1 and ${res.df} df`],
+          ['Residual std. error', `${fmtSig(res.se, 5)} on ${res.df} df`],
+          ['Mean of residuals', fmtSig(res.residMean, 4)],
+          ['Std. dev. of residuals', fmtSig(res.residSD, 5)],
+          ['Mean of X', fmtSig(res.xMean, 6)],
+          ['Mean of Y', fmtSig(res.yMean, 6)],
+        ];
+        document.getElementById('additionalStats').innerHTML =
+          rows.map(([l, v]) => `<div class="stat-row"><span class="slbl">${esc(l)}</span><span class="sval">${esc(v)}</span></div>`).join('');
+      }
+
+      /* ========================= Interpretation ========================= */
+      function renderInterpretation(res, xCol, yCol) {
+        const r2pct = (res.r2 * 100).toFixed(1);
+        const residPct = (100 - parseFloat(r2pct)).toFixed(1);
+        let fitDesc = 'poor';
+        if (res.r2 >= 0.9) fitDesc = 'very strong';
+        else if (res.r2 >= 0.7) fitDesc = 'strong';
+        else if (res.r2 >= 0.5) fitDesc = 'moderate';
+        else if (res.r2 >= 0.3) fitDesc = 'weak';
+
+        const rAbs = Math.abs(res.r);
+        let rDesc = 'very weak or negligible';
+        if (rAbs >= 0.9) rDesc = 'very strong';
+        else if (rAbs >= 0.7) rDesc = 'strong';
+        else if (rAbs >= 0.5) rDesc = 'moderate';
+        else if (rAbs >= 0.3) rDesc = 'weak';
+        const rDir = res.r >= 0 ? 'positive' : 'negative';
+        const slopeDir = res.slope >= 0 ? 'increases' : 'decreases';
+        const slopeDirNeg = res.slope >= 0 ? 'positive' : 'negative';
+
+        let sigSentence;
+        if (res.pSlope < 0.001) {
+          sigSentence = `The relationship is <strong>highly statistically significant</strong> (t(${res.df}) = ${res.tSlope.toFixed(3)}, p &lt; 0.001).`;
+        } else if (res.pSlope < 0.05) {
+          sigSentence = `The relationship is <strong>statistically significant</strong> at the 5% level (t(${res.df}) = ${res.tSlope.toFixed(3)}, p = ${fmtP(res.pSlope)}).`;
+        } else if (res.pSlope < 0.1) {
+          sigSentence = `The relationship is <strong>marginally significant</strong> (t(${res.df}) = ${res.tSlope.toFixed(3)}, p = ${fmtP(res.pSlope)}), falling between the 5% and 10% thresholds.`;
+        } else {
+          sigSentence = `The relationship is <strong>not statistically significant</strong> at the 5% level (t(${res.df}) = ${res.tSlope.toFixed(3)}, p = ${fmtP(res.pSlope)}). There is insufficient evidence to conclude a linear association exists in the population.`;
+        }
+
+        const excNote = res.excluded > 0
+          ? ` (${res.excluded} row${res.excluded > 1 ? 's' : ''} excluded due to missing values)`
+          : '';
+
+        document.getElementById('interpBody').innerHTML = `
+          <p>This simple linear regression models <strong>${esc(yCol)}</strong> as a function of <strong>${esc(xCol)}</strong> using <strong>${res.n} observations</strong>${excNote}.</p>
+          <p>The model has a <strong>${fitDesc} fit</strong> (R² = ${res.r2.toFixed(4)}), explaining <strong>${r2pct}% of the variance</strong> in ${esc(yCol)}. The remaining ${residPct}% is attributable to other factors or random variation not captured by this model.</p>
+          <p>${sigSentence}</p>
+          <p>The estimated slope is <strong>${fmtSig(res.slope, 5)}</strong>, indicating a <strong>${slopeDirNeg} relationship</strong>: for each one-unit increase in ${esc(xCol)}, ${esc(yCol)} ${slopeDir} by <strong>${fmtSig(Math.abs(res.slope), 5)} units</strong> on average. The 95% confidence interval for the slope is [${fmtSig(res.slopeCI[0], 4)}, ${fmtSig(res.slopeCI[1], 4)}].</p>
+          <p>Pearson's r = <strong>${res.r.toFixed(4)}</strong>, indicating a <strong>${rDesc} ${rDir} linear correlation</strong>. The adjusted R² is ${res.r2adj.toFixed(4)}, which accounts for the number of predictors in the model.</p>`;
+      }
+
+      /* ========================= Critical Reflection ========================= */
+      function renderFlags(res, xCol, yCol) {
+        const flags = [];
+
+        flags.push({
+          type: 'info',
+          title: 'Correlation does not imply causation',
+          text: `A statistically significant relationship does not mean that ${esc(xCol)} <em>causes</em> changes in ${esc(yCol)}. Both may be driven by unmeasured confounders, or the direction of causality may be reversed. Linear regression describes association, not mechanism.`
+        });
+
+        if (res.n < 30) {
+          flags.push({
+            type: 'warning',
+            title: `Small sample size (n = ${res.n})`,
+            text: `With fewer than 30 observations, parameter estimates are unreliable and p-values depend heavily on the normality assumption. Results should be interpreted with caution — consider collecting more data before drawing conclusions.`
+          });
+        }
+
+        if (res.pSlope >= 0.05) {
+          flags.push({
+            type: 'warning',
+            title: `Slope is not statistically significant (p = ${fmtP(res.pSlope)})`,
+            text: `The observed slope could plausibly be due to sampling variability. Failing to reject the null does not prove there is no relationship — low statistical power (small n or high variance) may prevent detection of a real effect.`
+          });
+        }
+
+        if (res.r2 < 0.1 && res.pSlope < 0.05) {
+          flags.push({
+            type: 'warning',
+            title: `Significant but low explanatory power (R² = ${res.r2.toFixed(3)})`,
+            text: `The model is statistically significant but explains very little variance. This is common with large samples where even tiny effects become detectable. Statistical significance here does not imply practical importance.`
+          });
+        }
+
+        flags.push({
+          type: 'check',
+          title: 'Linearity: inspect the scatter plot',
+          text: 'The regression assumes the true relationship is linear. If the scatter plot shows a curved or non-monotonic pattern, a linear model is misspecified and the slope estimate is misleading. The residuals vs. fitted plot should show a horizontal band with no curves or arcs — any systematic pattern suggests non-linearity.'
+        });
+
+        flags.push({
+          type: 'check',
+          title: 'Homoscedasticity: inspect the residuals vs. fitted plot',
+          text: 'OLS assumes constant residual variance across all fitted values. A "funnel" or "fan" shape in the residuals plot (variance increasing or decreasing with fitted values) indicates heteroscedasticity. This does not bias the slope estimate but inflates or deflates standard errors, making p-values and CIs unreliable.'
+        });
+
+        flags.push({
+          type: 'check',
+          title: 'Normality of residuals: inspect the histogram',
+          text: `The histogram of residuals should approximate a bell curve centred near zero. Heavy skew or extreme outliers in the residuals suggest the normality assumption may be violated. ${res.n >= 30 ? 'With n = ' + res.n + ', the central limit theorem partially protects slope inference, but prediction intervals remain sensitive to this assumption.' : 'With n = ' + res.n + ' observations, this assumption is important and hard to verify reliably.'}`
+        });
+
+        flags.push({
+          type: 'check',
+          title: 'Independence of observations',
+          text: `OLS assumes each observation is independent. If rows are repeated measurements, clustered by group, or have a time-series structure, standard errors will be underestimated and p-values will be too small. This tool cannot detect dependence — you must consider it from your data collection context.`
+        });
+
+        flags.push({
+          type: 'check',
+          title: 'Outliers and influential points',
+          text: `Individual observations with extreme X values (high leverage) or large residuals (high influence) can substantially distort the regression line. Review the scatter plot and residuals plot for any isolated points that appear far from the main data cloud. Consider re-running the regression without them to assess their impact.`
+        });
+
+        flags.push({
+          type: 'info',
+          title: 'Simple linear regression has one predictor',
+          text: `This model uses only ${esc(xCol)} to predict ${esc(yCol)}. In reality, outcomes are usually shaped by multiple variables. Omitting important predictors can cause omitted variable bias, where the slope for ${esc(xCol)} absorbs the effect of correlated predictors not included in the model.`
+        });
+
+        const typeMap = { warning: 'flag-warning', info: 'flag-info', check: 'flag-check' };
+        document.getElementById('flagsBody').innerHTML = flags.map(f =>
+          `<div class="flag ${typeMap[f.type] || 'flag-check'}"><strong>${f.title}</strong>${f.text}</div>`
+        ).join('');
+      }
+
+      /* ========================= Scatter Description ========================= */
+      function renderScatterDesc(res, xCol, yCol) {
+        const slopeDir = res.slope >= 0 ? 'upward' : 'downward';
+        const slopeWord = res.slope >= 0 ? 'increases' : 'decreases';
+
+        let fitNote;
+        if (res.r2 >= 0.7) {
+          fitNote = `The data sits close to the line (R² = ${res.r2.toFixed(2)}), suggesting a strong linear fit.`;
+        } else if (res.r2 >= 0.4) {
+          fitNote = `There is moderate scatter around the line (R² = ${res.r2.toFixed(2)}), meaning other factors also influence ${esc(yCol)}.`;
+        } else {
+          fitNote = `The data is widely scattered around the line (R² = ${res.r2.toFixed(2)}), suggesting a weak fit — other factors likely play a bigger role in determining ${esc(yCol)}.`;
+        }
+
+        let shapeNote;
+        if (res.pSlope >= 0.05) {
+          shapeNote = `The relationship is not statistically significant, so the slope of the line may simply reflect random variation in this sample.`;
+        } else {
+          shapeNote = `If the data follows a curve rather than a straight line, a linear model may not be the right choice.`;
+        }
+
+        document.getElementById('scatterDesc').textContent =
+          `Each dot is one observation. The red line is the model's best fit — as ${xCol} ${slopeWord}, the predicted value of ${yCol} ${slopeWord} at a rate of ${fmtSig(Math.abs(res.slope), 4)} units per unit of ${xCol}. ${fitNote} ${shapeNote}`;
+      }
+
+      /* ========================= Run ========================= */
+      function runRegression() {
+        const errEl = document.getElementById('configError');
+        errEl.style.display = 'none';
+
+        const xCol = document.getElementById('xSelect').value;
+        const yCol = document.getElementById('ySelect').value;
+
+        if (!xCol || !yCol) {
+          errEl.textContent = 'Please select both X and Y columns.';
+          errEl.style.display = '';
+          return;
+        }
+        if (xCol === yCol) {
+          errEl.textContent = 'X and Y columns must be different.';
+          errEl.style.display = '';
+          return;
+        }
+
+        const xi = csvData.headers.indexOf(xCol);
+        const yi = csvData.headers.indexOf(yCol);
+        const xValues = csvData.rows.map(r => r[xi] || '');
+        const yValues = csvData.rows.map(r => r[yi] || '');
+
+        const res = computeRegression(xValues, yValues);
+        if (res.error) {
+          errEl.textContent = res.error;
+          errEl.style.display = '';
+          return;
+        }
+
+        regressionResult = res;
+        destroyCharts();
+
+        document.getElementById('resultsPanel').style.display = '';
+        document.getElementById('scatterTitle').textContent = `${yCol} vs ${xCol}`;
+
+        renderSummaryCard(res, xCol, yCol);
+        buildScatterChart(res, xCol, yCol);
+        renderScatterDesc(res, xCol, yCol);
+        buildResidChart(res, xCol, yCol);
+        buildHistChart(res);
+        renderCoefTable(res, xCol);
+        renderAnovaTable(res);
+        renderAdditionalStats(res);
+        renderInterpretation(res, xCol, yCol);
+        renderFlags(res, xCol, yCol);
+
+        document.getElementById('resultsPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+
+      /* ========================= Load File ========================= */
+      function buildPreview(headers, rows) {
+        const head = '<thead><tr>' + headers.map(h => `<th>${esc(h)}</th>`).join('') + '</tr></thead>';
+        const body = '<tbody>' + rows.slice(0, 5).map(r =>
+          '<tr>' + headers.map((_, i) => `<td title="${esc(r[i]||'')}">${esc(r[i]||'')}</td>`).join('') + '</tr>'
+        ).join('') + '</tbody>';
+        return head + body;
+      }
+
+      function populateColumnSelects(headers, types) {
+        const numericCols = headers.filter(h => types[h] === 'numeric');
+        if (numericCols.length < 2) {
+          document.getElementById('configPanel').style.display = 'none';
+          document.getElementById('loadStatus').textContent += ' — Warning: fewer than 2 numeric columns detected.';
+          return;
+        }
+        const opts = numericCols.map(h => `<option value="${esc(h)}">${esc(h)}</option>`).join('');
+        document.getElementById('xSelect').innerHTML = opts;
+        document.getElementById('ySelect').innerHTML = opts;
+        // Default: select different columns
+        if (numericCols.length >= 2) {
+          document.getElementById('ySelect').value = numericCols[1];
+        }
+        document.getElementById('configPanel').style.display = '';
+      }
+
+      function loadFile(file) {
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+          const lines = parseCSV(e.target.result);
+          if (lines.length < 2) { alert('CSV must have at least a header row and one data row.'); return; }
+          csvData = { headers: lines[0], rows: lines.slice(1) };
+          columnTypes = inferAllTypes(csvData.headers, csvData.rows);
+
+          document.getElementById('loadStatus').textContent =
+            `${file.name} — ${csvData.headers.length} column${csvData.headers.length !== 1 ? 's' : ''}, ${csvData.rows.length} row${csvData.rows.length !== 1 ? 's' : ''}`;
+          document.getElementById('previewTable').innerHTML = buildPreview(csvData.headers, csvData.rows);
+          document.getElementById('previewDetails').style.display = '';
+          document.getElementById('resultsPanel').style.display = 'none';
+          destroyCharts();
+          populateColumnSelects(csvData.headers, columnTypes);
+        };
+        reader.onerror = () => alert('Error reading file.');
+        reader.readAsText(file);
+      }
+
+      /* ========================= Events ========================= */
+      document.getElementById('fileInput').addEventListener('change', e => {
+        if (e.target.files[0]) loadFile(e.target.files[0]);
+      });
+
+      const dropZone = document.getElementById('dropZone');
+      dropZone.addEventListener('click', () => document.getElementById('fileInput').click());
+      dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+      dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+      dropZone.addEventListener('drop', e => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+        const f = e.dataTransfer.files[0];
+        if (f) loadFile(f);
+      });
+
+      document.getElementById('runBtn').addEventListener('click', runRegression);
+
+      document.getElementById('showCI').addEventListener('change', () => {
+        if (regressionResult) {
+          const xCol = document.getElementById('xSelect').value;
+          const yCol = document.getElementById('ySelect').value;
+          buildScatterChart(regressionResult, xCol, yCol);
+        }
+      });
+
+      document.getElementById('showPI').addEventListener('change', () => {
+        if (regressionResult) {
+          const xCol = document.getElementById('xSelect').value;
+          const yCol = document.getElementById('ySelect').value;
+          buildScatterChart(regressionResult, xCol, yCol);
+        }
+      });
+    </script>
+  </body>
+</html>

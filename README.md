@@ -28,6 +28,7 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 
 - **[Data Summary](data-summary.html)** — load a CSV and profile dataset quality with a completeness bar chart, per-column summary table, and detailed statistics including non-blank counts, unique values, min/max/mean for numeric columns, date ranges, and top values
 - **[Data Visualiser](data-visualiser.html)** — load a CSV and create bar, line, area, scatter, histogram, pie, and doughnut charts with automatic column type inference and per-axis type overrides
+- **[Linear Regression](linear-regression.html)** — fit a simple linear regression to two numeric columns from a CSV; shows the regression equation, R², Pearson r, p-value, confidence and prediction interval bands, residual diagnostics (residuals vs. fitted, histogram with normal overlay), a detailed coefficients and ANOVA table, auto-generated interpretation, and a critical reflection section covering assumptions and caveats
 
 ### Digital Forensics
 
