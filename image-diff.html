@@ -93,6 +93,7 @@
       .range-group { display: flex; align-items: center; gap: 8px; }
       .range-val { font-family: monospace; min-width: 32px; font-size: 14px; }
       .opt-label { font-size: 14px; color: #24292e; white-space: nowrap; }
+      .mode-desc { font-size: 12px; color: #586069; margin: -10px 0 10px 0; padding: 0 2px; }
       .num-input {
         width: 72px;
         padding: 5px 8px;
@@ -204,6 +205,9 @@
         <option value="greyscale">Greyscale diff</option>
         <option value="a-minus-b">A minus B (signed)</option>
       </select>
+    </div>
+    <p class="mode-desc" id="mode-desc"></p>
+    <div class="options-row" id="options-row-rest">
       <label>Threshold</label>
       <div class="range-group">
         <input type="range" id="threshold" min="0" max="50" value="10" />
@@ -300,6 +304,19 @@
       const ctxBS = canvasBS.getContext("2d");
 
       threshEl.addEventListener("input", () => threshVal.textContent = threshEl.value);
+
+      const modeDescEl = document.getElementById("mode-desc");
+      const modeDescriptions = {
+        "highlight": "Different pixels are shown in bright red; identical pixels are rendered as semi-transparent greyscale, keeping the original image visible beneath.",
+        "heatmap":   "Difference intensity is mapped to colour: blue = identical, green = small difference, yellow = moderate, red = large difference.",
+        "greyscale": "Each pixel is shown as a shade of grey proportional to its difference — black means identical, white means maximum difference.",
+        "a-minus-b": "Shows the signed difference between A and B. Mid-grey (128) means no difference; lighter means A was brighter, darker means B was brighter.",
+      };
+      function updateModeDesc() {
+        modeDescEl.textContent = modeDescriptions[diffMode.value] || "";
+      }
+      diffMode.addEventListener("change", updateModeDesc);
+      updateModeDesc();
 
       scaleBEl.addEventListener("input", () => {
         scaleBVal.textContent = parseFloat(scaleBEl.value).toFixed(2) + "×";
