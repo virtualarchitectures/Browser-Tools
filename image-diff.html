@@ -90,9 +90,19 @@
         background: #fff;
         color: #24292e;
       }
-      .options-row input[type="range"] { }
       .range-group { display: flex; align-items: center; gap: 8px; }
       .range-val { font-family: monospace; min-width: 32px; font-size: 14px; }
+      .opt-label { font-size: 14px; color: #24292e; white-space: nowrap; }
+      .num-input {
+        width: 72px;
+        padding: 5px 8px;
+        font-size: 14px;
+        font-family: monospace;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        background: #fff;
+        color: #24292e;
+      }
       .btn {
         background: #fafbfc;
         color: #24292e;
@@ -157,7 +167,6 @@
         max-height: 600px;
       }
       canvas.result { display: block; }
-      .slider-overlay-wrap { position: relative; display: inline-block; }
       .dl-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
       @media (max-width: 600px) {
         .upload-grid { grid-template-columns: 1fr; }
@@ -168,9 +177,10 @@
     <a href="index.html" class="back-link">← Back to Browser Tools</a>
     <h1>Image Diff Tool</h1>
     <p class="instruction">
-      Load two images to compare them pixel-by-pixel. The diff view highlights changed pixels;
-      the slider lets you swipe between the two images. Images are aligned to the top-left —
-      pixels outside the smaller image's bounds are treated as fully different.
+      Load two images to compare them pixel-by-pixel. Use the <strong>Align B</strong> controls to scale and
+      position Image B relative to Image A before comparing — or click <strong>Auto-align</strong> to detect
+      the best translation offset automatically. Scale must be set manually first if the images are at different
+      resolutions; auto-align then finds the X/Y offset.
     </p>
 
     <div class="upload-grid">
@@ -203,6 +213,21 @@
       <button class="btn" id="clear-btn">Clear</button>
     </div>
 
+    <div class="options-row">
+      <label>Align B</label>
+      <span class="opt-label">Scale</span>
+      <div class="range-group">
+        <input type="range" id="scale-b" min="0.25" max="4" step="0.05" value="1" />
+        <span class="range-val" id="scale-b-val">1.00×</span>
+      </div>
+      <span class="opt-label">Offset X</span>
+      <input type="number" id="offset-x" value="0" step="1" class="num-input" />
+      <span class="opt-label">Y</span>
+      <input type="number" id="offset-y" value="0" step="1" class="num-input" />
+      <button class="btn" id="auto-align-btn" disabled>Auto-align</button>
+      <button class="btn" id="reset-transform-btn">Reset</button>
+    </div>
+
     <div class="stats-bar" id="stats-bar">
       <div class="stat"><span class="stat-label">Dimensions</span><span class="stat-value" id="stat-dim">—</span></div>
       <div class="stat"><span class="stat-label">Different pixels</span><span class="stat-value" id="stat-diff">—</span></div>
@@ -226,9 +251,10 @@
 
       <div class="rtab-panel" id="rtab-slider">
         <p style="font-size:13px;color:#586069;margin:0 0 8px 0;">Drag the slider to compare the two images directly.</p>
-        <div style="position:relative;display:inline-block;border:1px solid #e1e4e8;border-radius:6px;overflow:hidden;max-width:100%;">
+        <div id="slider-wrap" style="position:relative;display:block;border:1px solid #e1e4e8;border-radius:6px;overflow:hidden;">
           <canvas id="canvas-a-s" class="result"></canvas>
-          <canvas id="canvas-b-s" class="result" style="position:absolute;top:0;left:0;clip-path:inset(0 50% 0 0);"></canvas>
+          <canvas id="canvas-b-s" class="result" style="position:absolute;top:0;left:0;"></canvas>
+          <div id="slide-divider" style="position:absolute;top:0;bottom:0;left:50%;width:2px;background:#fff;box-shadow:0 0 4px rgba(0,0,0,0.6);transform:translateX(-50%);pointer-events:none;z-index:5;"></div>
           <input type="range" id="slide-pos" min="0" max="100" value="50"
             style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);width:80%;z-index:10;cursor:ew-resize;" />
         </div>
@@ -239,25 +265,31 @@
     <canvas id="canvas-b" style="display:none"></canvas>
 
     <script type="module">
-      const fileA = document.getElementById("file-a");
-      const fileB = document.getElementById("file-b");
-      const dropA = document.getElementById("drop-a");
-      const dropB = document.getElementById("drop-b");
-      const labelA = document.getElementById("label-a");
-      const labelB = document.getElementById("label-b");
-      const compareBtn = document.getElementById("compare-btn");
-      const clearBtn   = document.getElementById("clear-btn");
-      const diffMode   = document.getElementById("diff-mode");
-      const threshEl   = document.getElementById("threshold");
-      const threshVal  = document.getElementById("threshold-val");
-      const statsBar   = document.getElementById("stats-bar");
-      const resultsEl  = document.getElementById("results");
+      const fileA        = document.getElementById("file-a");
+      const fileB        = document.getElementById("file-b");
+      const dropA        = document.getElementById("drop-a");
+      const dropB        = document.getElementById("drop-b");
+      const labelA       = document.getElementById("label-a");
+      const labelB       = document.getElementById("label-b");
+      const compareBtn   = document.getElementById("compare-btn");
+      const clearBtn     = document.getElementById("clear-btn");
+      const diffMode     = document.getElementById("diff-mode");
+      const threshEl     = document.getElementById("threshold");
+      const threshVal    = document.getElementById("threshold-val");
+      const statsBar     = document.getElementById("stats-bar");
+      const resultsEl    = document.getElementById("results");
+      const scaleBEl     = document.getElementById("scale-b");
+      const scaleBVal    = document.getElementById("scale-b-val");
+      const offsetXEl    = document.getElementById("offset-x");
+      const offsetYEl    = document.getElementById("offset-y");
+      const autoAlignBtn = document.getElementById("auto-align-btn");
+      const resetBtn     = document.getElementById("reset-transform-btn");
 
-      const canvasA  = document.getElementById("canvas-a");
-      const canvasB  = document.getElementById("canvas-b");
+      const canvasA    = document.getElementById("canvas-a");
+      const canvasB    = document.getElementById("canvas-b");
       const canvasDiff = document.getElementById("canvas-diff");
-      const canvasAS = document.getElementById("canvas-a-s");
-      const canvasBS = document.getElementById("canvas-b-s");
+      const canvasAS   = document.getElementById("canvas-a-s");
+      const canvasBS   = document.getElementById("canvas-b-s");
 
       const ctxA  = canvasA.getContext("2d", { willReadFrequently: true });
       const ctxB  = canvasB.getContext("2d", { willReadFrequently: true });
@@ -266,6 +298,13 @@
       const ctxBS = canvasBS.getContext("2d");
 
       threshEl.addEventListener("input", () => threshVal.textContent = threshEl.value);
+
+      scaleBEl.addEventListener("input", () => {
+        scaleBVal.textContent = parseFloat(scaleBEl.value).toFixed(2) + "×";
+        if (resultsEl.classList.contains("visible")) runDiff();
+      });
+      offsetXEl.addEventListener("input", () => { if (resultsEl.classList.contains("visible")) runDiff(); });
+      offsetYEl.addEventListener("input", () => { if (resultsEl.classList.contains("visible")) runDiff(); });
 
       let imgA = null, imgB = null;
 
@@ -321,24 +360,39 @@
       setupDrop(dropB, fileB, labelB, img => imgB = img);
 
       function checkReady() {
-        compareBtn.disabled = !(imgA && imgB);
+        const ready = !!(imgA && imgB);
+        compareBtn.disabled = !ready;
+        autoAlignBtn.disabled = !ready;
       }
 
       compareBtn.addEventListener("click", runDiff);
       diffMode.addEventListener("change", () => { if (imgA && imgB) runDiff(); });
 
+      function getTransform() {
+        return {
+          sc: Math.max(0.01, parseFloat(scaleBEl.value) || 1.0),
+          ox: parseInt(offsetXEl.value) || 0,
+          oy: parseInt(offsetYEl.value) || 0,
+        };
+      }
+
       function runDiff() {
+        const { sc, ox, oy } = getTransform();
         const W = Math.max(imgA.naturalWidth, imgB.naturalWidth);
         const H = Math.max(imgA.naturalHeight, imgB.naturalHeight);
         const thresh = parseInt(threshEl.value);
 
-        // Draw both images to offscreen canvases
         canvasA.width = W; canvasA.height = H;
-        canvasB.width = W; canvasB.height = H;
         ctxA.clearRect(0, 0, W, H);
-        ctxB.clearRect(0, 0, W, H);
         ctxA.drawImage(imgA, 0, 0);
+
+        canvasB.width = W; canvasB.height = H;
+        ctxB.clearRect(0, 0, W, H);
+        ctxB.save();
+        ctxB.translate(ox, oy);
+        ctxB.scale(sc, sc);
         ctxB.drawImage(imgB, 0, 0);
+        ctxB.restore();
 
         const dataA = ctxA.getImageData(0, 0, W, H).data;
         const dataB = ctxB.getImageData(0, 0, W, H).data;
@@ -390,13 +444,27 @@
 
         ctxD.putImageData(outId, 0, 0);
 
-        // Slider canvases
         canvasAS.width = W; canvasAS.height = H;
         canvasBS.width = W; canvasBS.height = H;
         ctxAS.drawImage(imgA, 0, 0);
+        ctxBS.save();
+        ctxBS.translate(ox, oy);
+        ctxBS.scale(sc, sc);
         ctxBS.drawImage(imgB, 0, 0);
+        ctxBS.restore();
 
-        // Stats
+        // Scale all result canvases to fit the viewing area
+        const availW = resultsEl.clientWidth || 900;
+        const fit = Math.min(1, availW / W, 600 / H);
+        const dW = Math.round(W * fit);
+        const dH = Math.round(H * fit);
+        canvasDiff.style.width  = dW + "px";
+        canvasDiff.style.height = dH + "px";
+        canvasAS.style.width  = dW + "px";
+        canvasAS.style.height = dH + "px";
+        canvasBS.style.width  = dW + "px";
+        canvasBS.style.height = dH + "px";
+
         const totalPx = W * H;
         const pct = ((diffCount / totalPx) * 100).toFixed(2);
         const meanDelta = diffCount > 0 ? (sumDelta / diffCount).toFixed(1) : "0";
@@ -415,10 +483,102 @@
         resultsEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
       }
 
+      // --- Auto-align: SSD-based translation search at thumbnail scale ---
+
+      function toGrey(data) {
+        const n = data.length >>> 2;
+        const g = new Float32Array(n);
+        for (let i = 0, j = 0; i < data.length; i += 4, j++) {
+          g[j] = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
+        }
+        return g;
+      }
+
+      function computeSSD(gA, wA, hA, gB, wB, hB, dx, dy) {
+        const xsA = dx > 0 ? dx : 0,  xsB = dx < 0 ? -dx : 0;
+        const ysA = dy > 0 ? dy : 0,  ysB = dy < 0 ? -dy : 0;
+        const ow = Math.min(wA - xsA, wB - xsB);
+        const oh = Math.min(hA - ysA, hB - ysB);
+        if (ow <= 0 || oh <= 0) return Infinity;
+        let sum = 0;
+        for (let r = 0; r < oh; r++) {
+          const baseA = (ysA + r) * wA + xsA;
+          const baseB = (ysB + r) * wB + xsB;
+          for (let c = 0; c < ow; c++) {
+            const d = gA[baseA + c] - gB[baseB + c];
+            sum += d * d;
+          }
+        }
+        return sum / (ow * oh);
+      }
+
+      autoAlignBtn.addEventListener("click", () => {
+        autoAlignBtn.disabled = true;
+        autoAlignBtn.textContent = "Aligning…";
+        // Defer to let the browser repaint before the synchronous search
+        setTimeout(autoAlign, 10);
+      });
+
+      function autoAlign() {
+        const sc = Math.max(0.01, parseFloat(scaleBEl.value) || 1.0);
+        const THUMB = 64;
+
+        // Scale both images (with current B scale applied) down to THUMB
+        const maxDim = Math.max(
+          imgA.naturalWidth, imgA.naturalHeight,
+          imgB.naturalWidth * sc, imgB.naturalHeight * sc
+        );
+        const tScale = THUMB / maxDim;
+
+        const taW = Math.max(1, Math.round(imgA.naturalWidth * tScale));
+        const taH = Math.max(1, Math.round(imgA.naturalHeight * tScale));
+        const tbW = Math.max(1, Math.round(imgB.naturalWidth * sc * tScale));
+        const tbH = Math.max(1, Math.round(imgB.naturalHeight * sc * tScale));
+
+        const ta = document.createElement("canvas");
+        const tb = document.createElement("canvas");
+        ta.width = taW; ta.height = taH;
+        tb.width = tbW; tb.height = tbH;
+
+        const ctA2 = ta.getContext("2d", { willReadFrequently: true });
+        const ctB2 = tb.getContext("2d", { willReadFrequently: true });
+        ctA2.drawImage(imgA, 0, 0, taW, taH);
+        ctB2.drawImage(imgB, 0, 0, tbW, tbH);
+
+        const gA = toGrey(ctA2.getImageData(0, 0, taW, taH).data);
+        const gB = toGrey(ctB2.getImageData(0, 0, tbW, tbH).data);
+
+        // Search all offsets within the full combined image bounds
+        const rangeX = Math.max(taW, tbW);
+        const rangeY = Math.max(taH, tbH);
+        let bestSSD = Infinity, bestDx = 0, bestDy = 0;
+
+        for (let dy = -rangeY; dy <= rangeY; dy++) {
+          for (let dx = -rangeX; dx <= rangeX; dx++) {
+            const s = computeSSD(gA, taW, taH, gB, tbW, tbH, dx, dy);
+            if (s < bestSSD) { bestSSD = s; bestDx = dx; bestDy = dy; }
+          }
+        }
+
+        offsetXEl.value = Math.round(bestDx / tScale);
+        offsetYEl.value = Math.round(bestDy / tScale);
+
+        autoAlignBtn.disabled = false;
+        autoAlignBtn.textContent = "Auto-align";
+        runDiff();
+      }
+
+      resetBtn.addEventListener("click", () => {
+        scaleBEl.value = 1;
+        scaleBVal.textContent = "1.00×";
+        offsetXEl.value = 0;
+        offsetYEl.value = 0;
+        if (resultsEl.classList.contains("visible")) runDiff();
+      });
+
       // Slider
       const slidePos = document.getElementById("slide-pos");
       slidePos.addEventListener("input", () => {
-        const pct = slidePos.value + "%";
         canvasBS.style.clipPath = `inset(0 ${100 - slidePos.value}% 0 0)`;
       });
 
@@ -453,6 +613,11 @@
         statsBar.classList.remove("visible");
         resultsEl.classList.remove("visible");
         compareBtn.disabled = true;
+        autoAlignBtn.disabled = true;
+        scaleBEl.value = 1;
+        scaleBVal.textContent = "1.00×";
+        offsetXEl.value = 0;
+        offsetYEl.value = 0;
       });
     </script>
   </body>
