@@ -34,17 +34,9 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 
 - **[Email Header Analysis](email-header-analysis.html)** — analyse and highlight email headers with syntax highlighting for IPs, emails, and URLs
 
-### Documents and Text
+### Document Processing
 
 - **[OCR Reader](ocr-reader.html)** — extract text from images and PDF files using optical character recognition with side-by-side preview
-- **[PDF Metadata Viewer](pdf-metadata.html)** — extract and view PDF metadata including title, author, dates, permissions, and security settings
-- **[PDF Cropper](pdf-cropper.html)** — remove headers, footers, page numbers, and margins from PDF documents by dragging bars to frame the content area you want to keep
-- **[PDF to Images](pdf-to-images.html)** — extract high-quality images of pages from PDF documents with adjustable DPI and format options (PNG, JPEG, WebP)
-- **[PDF Editor](pdf-editor.html)** — remove pages from PDF documents by selecting page ranges or clicking page previews with visual page thumbnails
-- **[Presentation Annotator](annotated-presentation.html)** — add alt text and markdown annotations to presentation slide images with template-based export and live preview
-- **[Text Chunking](text-chunking.html)** — split text documents into manageable chunks using multiple strategies (character count, word count, sentence-based, paragraph-based, recursive split, sliding window) with configurable overlap and export to CSV
-- **[Text Diff](text-diff.html)** — compare two text blocks and highlight added and removed content
-- **[Text Tools](text-tools.html)** — text manipulation toolkit with case transformation, sorting, whitespace cleaning, encoding/decoding (Base64, URL), find & replace, and text tokenization
 
 ### Glitch
 
@@ -54,7 +46,6 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 ### Image
 
 - **[Colour Palette Extractor](colour-palette-extractor.html)** — extract the dominant colours from any image using k-means clustering; displays swatches with hex, RGB, and HSL values, and exports the palette as CSS variables or JSON
-- **[EXIF Data Viewer](exif-viewer.html)** — extract and view EXIF metadata from photos including camera settings, GPS location, and timestamps
 - **[Image Background Removal](image-bg-removal.html)** — remove image backgrounds using a magic wand flood-fill tool with adjustable tolerance and edge feathering, then download as transparent PNG
 - **[Image Crop Tool](image-crop.html)** — crop images with interactive selection, aspect ratio presets, and precise dimension controls
 - **[Image Diff Tool](image-diff.html)** — compare two images pixel-by-pixel with highlight, heatmap, greyscale, and signed difference modes; shows a stats summary and an interactive before/after slider
@@ -91,12 +82,30 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 ### OSINT
 
 - **[Article Access Tool](article-access.html)** — locate accessible versions of news articles via the Internet Archive (Wayback Machine) or optional proxy extraction with Mozilla Readability
+- **[EXIF Data Viewer](exif-viewer.html)** — extract and view EXIF metadata from photos including camera settings, GPS location, and timestamps
 - **[Identifier Extractor](identifier-extractor.html)** — extract and analyse URLs, email addresses, IPv4/IPv6 addresses, phone numbers, and MAC addresses from text with filtering, sorting, and export options
+
+### PDF Tools
+
+- **[PDF Cropper](pdf-cropper.html)** — remove headers, footers, page numbers, and margins from PDF documents by dragging bars to frame the content area you want to keep
+- **[PDF Editor](pdf-editor.html)** — remove pages from PDF documents by selecting page ranges or clicking page previews with visual page thumbnails
+- **[PDF Metadata Viewer](pdf-metadata.html)** — extract and view PDF metadata including title, author, dates, permissions, and security settings
+- **[PDF to Images](pdf-to-images.html)** — extract high-quality images of pages from PDF documents with adjustable DPI and format options (PNG, JPEG, WebP)
+
+### Presentations
+
+- **[Presentation Annotator](annotated-presentation.html)** — add alt text and markdown annotations to presentation slide images with template-based export and live preview
 
 ### Software Development
 
 - **[GitHub Commits Viewer](github-commits.html)** — view and export commit history from GitHub repositories with support for CSV, JSON, and Markdown exports
 - **[Localhost Port Scanner](localhost-port-scanner.html)** — scan ports on your local machine to detect running services, Docker containers, and development servers with preset scans for common ports and custom range options
+
+### Text Tools
+
+- **[Text Chunking](text-chunking.html)** — split text documents into manageable chunks using multiple strategies (character count, word count, sentence-based, paragraph-based, recursive split, sliding window) with configurable overlap and export to CSV
+- **[Text Diff](text-diff.html)** — compare two text blocks and highlight added and removed content
+- **[Text Tools](text-tools.html)** — text manipulation toolkit with case transformation, sorting, whitespace cleaning, encoding/decoding (Base64, URL), find & replace, and text tokenization
 
 ### Unit Conversion
 
