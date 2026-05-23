@@ -166,6 +166,7 @@
         overflow: auto;
         background: repeating-conic-gradient(#eee 0% 25%, #fff 0% 50%) 0 0 / 16px 16px;
         max-height: 600px;
+        margin: 0 auto;
       }
       canvas.result { display: block; margin: 0 auto; }
       .dl-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
@@ -389,6 +390,9 @@
         };
       }
 
+      const uploadGrid = document.querySelector(".upload-grid");
+      function getAvailWidth() { return uploadGrid.offsetWidth || 900; }
+
       function showSlider() {
         const { sc, ox, oy } = getTransform();
         const W = Math.max(imgA.naturalWidth, imgB.naturalWidth);
@@ -401,7 +405,7 @@
         ctxBS.scale(sc, sc);
         ctxBS.drawImage(imgB, 0, 0);
         ctxBS.restore();
-        const availW = resultsEl.clientWidth || 900;
+        const availW = getAvailWidth();
         const fit = Math.min(1, availW / W, 600 / H);
         const dW = Math.round(W * fit);
         const dH = Math.round(H * fit);
@@ -494,10 +498,11 @@
         ctxBS.restore();
 
         // Scale all result canvases to fit the viewing area
-        const availW = resultsEl.clientWidth || 900;
+        const availW = getAvailWidth();
         const fit = Math.min(1, availW / W, 600 / H);
         const dW = Math.round(W * fit);
         const dH = Math.round(H * fit);
+        canvasDiff.parentElement.style.width = dW + "px";
         canvasDiff.style.width  = dW + "px";
         canvasDiff.style.height = dH + "px";
         canvasAS.style.width  = dW + "px";
