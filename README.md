@@ -89,9 +89,9 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 
 - **[PDF Cropper](pdf-cropper.html)** — remove headers, footers, page numbers, and margins from PDF documents by dragging bars to frame the content area you want to keep
 - **[PDF Editor](pdf-editor.html)** — remove pages from PDF documents by selecting page ranges or clicking page previews with visual page thumbnails
+- **[PDF Index Generator](pdf-index-generator.html)** — upload a PDF and a wordlist to generate a keyword index showing each term's occurrence count and the page numbers it appears on, with CSV export
 - **[PDF Metadata Viewer](pdf-metadata.html)** — extract and view PDF metadata including title, author, dates, permissions, and security settings
 - **[PDF to Images](pdf-to-images.html)** — extract high-quality images of pages from PDF documents with adjustable DPI and format options (PNG, JPEG, WebP)
-- **[PDF Index Generator](pdf-index-generator.html)** — upload a PDF and a wordlist to generate a keyword index showing each term's occurrence count and the page numbers it appears on, with CSV export
 
 ### Presentations
 
