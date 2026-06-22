@@ -447,39 +447,16 @@
 
     <div class="status-bar" id="statusBar">Load a PDF and a wordlist to get started</div>
 
-    <!-- Options -->
-    <div class="panel">
-      <h2>Options</h2>
-      <div class="checkbox-group">
-        <label class="checkbox-label">
-          <input type="checkbox" id="chkWholeWord" checked />
-          Whole word matching (do not match substrings)
-        </label>
-        <label class="checkbox-label">
-          <input type="checkbox" id="chkMatchCase" />
-          Case-sensitive matching
-        </label>
-        <label class="checkbox-label">
-          <input type="checkbox" id="chkHideZero" checked />
-          Hide words with zero occurrences
-        </label>
-        <label class="checkbox-label">
-          <input type="checkbox" id="chkDedup" />
-          Deduplicate wordlist (remove repeated terms)
-        </label>
-      </div>
-      <div class="form-row">
-        <label class="form-label" for="pageOffset">Page offset</label>
-        <input type="number" id="pageOffset" class="number-input" value="0" step="1" />
-        <span class="offset-hint" id="offsetHint">No offset applied</span>
-      </div>
-    </div>
-
     <!-- File status + previews -->
     <div class="panels-grid">
       <div class="panel">
         <h2>PDF</h2>
         <div class="file-status" id="pdfStatus">No file loaded</div>
+        <div class="form-row">
+          <label class="form-label" for="pageOffset">Page offset</label>
+          <input type="number" id="pageOffset" class="number-input" value="0" step="1" />
+          <span class="offset-hint" id="offsetHint">No offset applied</span>
+        </div>
         <div id="pdfPreviewSection" style="display:none">
           <div class="preview-nav">
             <button class="btn secondary" id="prevPageBtn" disabled>&#8592;</button>
@@ -495,6 +472,10 @@
         <h2>Wordlist</h2>
         <div class="info" style="margin-bottom:6px">One keyword or phrase per line</div>
         <div class="file-status" id="wordlistStatus">No file loaded</div>
+        <label class="checkbox-label" style="margin-top:8px">
+          <input type="checkbox" id="chkDedup" />
+          Deduplicate wordlist
+        </label>
         <div id="wordlistPreviewSection" style="display:none">
           <input type="text" id="wordlistSearch" class="wordlist-search" placeholder="Search terms..." />
           <div class="wordlist-list" id="wordlistList"></div>
@@ -520,6 +501,20 @@
         </div>
       </div>
       <div class="info" id="resultsInfo">No results yet</div>
+      <div class="checkbox-group" style="margin-bottom:10px">
+        <label class="checkbox-label">
+          <input type="checkbox" id="chkWholeWord" checked />
+          Whole word matching
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" id="chkMatchCase" />
+          Case-sensitive matching
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" id="chkHideZero" checked />
+          Hide words with zero occurrences
+        </label>
+      </div>
       <div class="table-wrapper" id="tableWrapper">
         <div style="padding:16px;" class="empty-state">Generate an index to see results</div>
       </div>
