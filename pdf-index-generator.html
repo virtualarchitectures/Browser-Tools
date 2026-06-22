@@ -360,6 +360,72 @@
         font-size: 13px;
         color: #586069;
       }
+
+      /* =========================
+         Previews
+         ========================= */
+      .preview-nav {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 10px;
+        margin-bottom: 8px;
+      }
+      .preview-nav .btn {
+        padding: 4px 10px;
+        font-size: 13px;
+        line-height: 18px;
+      }
+      .page-info {
+        flex: 1;
+        text-align: center;
+        font-size: 13px;
+        color: #586069;
+      }
+      .canvas-wrapper {
+        border: 1px solid #e1e4e8;
+        border-radius: 4px;
+        overflow: hidden;
+        background: #ffffff;
+      }
+      .canvas-wrapper canvas {
+        display: block;
+        max-width: 100%;
+      }
+      .wordlist-search {
+        width: 100%;
+        padding: 6px 10px;
+        font-size: 13px;
+        font-family: inherit;
+        border: 1px solid #e1e4e8;
+        border-radius: 4px 4px 0 0;
+        border-bottom: none;
+        background: #ffffff;
+        color: #24292e;
+        box-sizing: border-box;
+        margin-top: 10px;
+      }
+      .wordlist-search:focus {
+        outline: none;
+        border-color: #0366d6;
+      }
+      .wordlist-list {
+        border: 1px solid #e1e4e8;
+        border-radius: 0 0 4px 4px;
+        background: #ffffff;
+        max-height: 220px;
+        overflow-y: auto;
+      }
+      .wordlist-list .term-row {
+        padding: 5px 10px;
+        border-bottom: 1px solid #f0f2f4;
+        font-size: 13px;
+        font-family: monospace;
+        color: #24292e;
+      }
+      .wordlist-list .term-row:last-child {
+        border-bottom: none;
+      }
     </style>
   </head>
   <body>
@@ -383,19 +449,6 @@
 
     <div class="status-bar" id="statusBar">Load a PDF and a wordlist to get started</div>
 
-    <!-- File status -->
-    <div class="panels-grid">
-      <div class="panel">
-        <h2>PDF</h2>
-        <div class="file-status" id="pdfStatus">No file loaded</div>
-      </div>
-      <div class="panel">
-        <h2>Wordlist</h2>
-        <div class="info" style="margin-bottom:6px">One keyword or phrase per line</div>
-        <div class="file-status" id="wordlistStatus">No file loaded</div>
-      </div>
-    </div>
-
     <!-- Options -->
     <div class="panel">
       <h2>Options</h2>
@@ -412,11 +465,42 @@
           <input type="checkbox" id="chkHideZero" checked />
           Hide words with zero occurrences
         </label>
+        <label class="checkbox-label">
+          <input type="checkbox" id="chkDedup" />
+          Deduplicate wordlist (remove repeated terms)
+        </label>
       </div>
       <div class="form-row">
         <label class="form-label" for="pageOffset">Page offset</label>
         <input type="number" id="pageOffset" class="number-input" value="0" step="1" />
         <span class="offset-hint" id="offsetHint">No offset applied</span>
+      </div>
+    </div>
+
+    <!-- File status + previews -->
+    <div class="panels-grid">
+      <div class="panel">
+        <h2>PDF</h2>
+        <div class="file-status" id="pdfStatus">No file loaded</div>
+        <div id="pdfPreviewSection" style="display:none">
+          <div class="preview-nav">
+            <button class="btn secondary" id="prevPageBtn" disabled>&#8592;</button>
+            <span class="page-info" id="pageDisplay">Page 1 of 1</span>
+            <button class="btn secondary" id="nextPageBtn" disabled>&#8594;</button>
+          </div>
+          <div class="canvas-wrapper" id="pdfCanvasWrapper">
+            <canvas id="pdfCanvas"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Wordlist</h2>
+        <div class="info" style="margin-bottom:6px">One keyword or phrase per line</div>
+        <div class="file-status" id="wordlistStatus">No file loaded</div>
+        <div id="wordlistPreviewSection" style="display:none">
+          <input type="text" id="wordlistSearch" class="wordlist-search" placeholder="Search terms..." />
+          <div class="wordlist-list" id="wordlistList"></div>
+        </div>
       </div>
     </div>
 
@@ -446,38 +530,52 @@
       /* =========================
          State
          ========================= */
-      let pdfData = null;       // ArrayBuffer
+      let pdfData = null;          // ArrayBuffer
       let pdfName = "";
-      let wordlistTerms = [];   // string[]
+      let pdfDoc = null;           // loaded PDF.js document (for preview + indexing)
+      let currentPreviewPage = 1;
+      let wordlistTerms = [];      // string[] (after dedup if enabled)
+      let wordlistRawTerms = [];   // string[] (original, before dedup)
       let wordlistName = "";
-      let indexResults = [];    // { word, count, pages }[]
+      let indexResults = [];       // { word, count, pages }[]
       let sortCol = "word";
       let sortDir = "asc";
 
       /* =========================
          DOM references
          ========================= */
-      const pdfInput        = document.getElementById("pdfInput");
-      const wordlistInput   = document.getElementById("wordlistInput");
-      const pdfLabel        = document.getElementById("pdfLabel");
-      const wordlistLabel   = document.getElementById("wordlistLabel");
-      const pdfStatus       = document.getElementById("pdfStatus");
-      const wordlistStatus  = document.getElementById("wordlistStatus");
-      const generateBtn     = document.getElementById("generateBtn");
-      const clearBtn        = document.getElementById("clearBtn");
-      const statusBar       = document.getElementById("statusBar");
-      const progressWrap    = document.getElementById("progressWrap");
-      const progressLabel   = document.getElementById("progressLabel");
-      const progressFill    = document.getElementById("progressFill");
-      const resultsInfo     = document.getElementById("resultsInfo");
-      const tableWrapper    = document.getElementById("tableWrapper");
-      const downloadBtn     = document.getElementById("downloadBtn");
-      const sortHint        = document.getElementById("sortHint");
-      const chkWholeWord    = document.getElementById("chkWholeWord");
-      const chkMatchCase    = document.getElementById("chkMatchCase");
-      const chkHideZero     = document.getElementById("chkHideZero");
-      const pageOffsetInput = document.getElementById("pageOffset");
-      const offsetHint      = document.getElementById("offsetHint");
+      const pdfInput           = document.getElementById("pdfInput");
+      const wordlistInput      = document.getElementById("wordlistInput");
+      const pdfLabel           = document.getElementById("pdfLabel");
+      const wordlistLabel      = document.getElementById("wordlistLabel");
+      const pdfStatus          = document.getElementById("pdfStatus");
+      const wordlistStatus     = document.getElementById("wordlistStatus");
+      const generateBtn        = document.getElementById("generateBtn");
+      const clearBtn           = document.getElementById("clearBtn");
+      const statusBar          = document.getElementById("statusBar");
+      const progressWrap       = document.getElementById("progressWrap");
+      const progressLabel      = document.getElementById("progressLabel");
+      const progressFill       = document.getElementById("progressFill");
+      const resultsInfo        = document.getElementById("resultsInfo");
+      const tableWrapper       = document.getElementById("tableWrapper");
+      const downloadBtn        = document.getElementById("downloadBtn");
+      const sortHint           = document.getElementById("sortHint");
+      const chkWholeWord       = document.getElementById("chkWholeWord");
+      const chkMatchCase       = document.getElementById("chkMatchCase");
+      const chkHideZero        = document.getElementById("chkHideZero");
+      const chkDedup           = document.getElementById("chkDedup");
+      const pageOffsetInput    = document.getElementById("pageOffset");
+      const offsetHint         = document.getElementById("offsetHint");
+      // Preview elements
+      const pdfPreviewSection  = document.getElementById("pdfPreviewSection");
+      const pdfCanvasWrapper   = document.getElementById("pdfCanvasWrapper");
+      const pdfCanvas          = document.getElementById("pdfCanvas");
+      const prevPageBtn        = document.getElementById("prevPageBtn");
+      const nextPageBtn        = document.getElementById("nextPageBtn");
+      const pageDisplay        = document.getElementById("pageDisplay");
+      const wordlistPreviewSection = document.getElementById("wordlistPreviewSection");
+      const wordlistSearch         = document.getElementById("wordlistSearch");
+      const wordlistList           = document.getElementById("wordlistList");
 
       /* =========================
          PDF.js setup
@@ -499,6 +597,7 @@
           pdfStatus.className = "file-status loaded";
           updateGenerateBtn();
           updateStatus();
+          loadPdfPreview();
         };
         reader.onerror = () => {
           pdfStatus.textContent = "Error reading file";
@@ -519,16 +618,18 @@
           if (lines.length === 0) {
             wordlistStatus.textContent = "File is empty — no terms found";
             wordlistStatus.className = "file-status";
+            wordlistRawTerms = [];
             wordlistTerms = [];
             wordlistName = "";
+            wordlistPreviewSection.style.display = "none";
+            wordlistList.innerHTML = "";
+            updateGenerateBtn();
+            updateStatus();
           } else {
-            wordlistTerms = lines;
+            wordlistRawTerms = lines;
             wordlistName = file.name;
-            wordlistStatus.textContent = `${file.name} — ${lines.length} term${lines.length !== 1 ? "s" : ""}`;
-            wordlistStatus.className = "file-status loaded";
+            applyWordlistProcessing();
           }
-          updateGenerateBtn();
-          updateStatus();
         };
         reader.onerror = () => {
           wordlistStatus.textContent = "Error reading file";
@@ -548,6 +649,120 @@
         if (wordlistTerms.length > 0) parts.push(`${wordlistTerms.length} term${wordlistTerms.length !== 1 ? "s" : ""} in wordlist`);
         statusBar.textContent = parts.length ? parts.join(" · ") : "Load a PDF and a wordlist to get started";
       }
+
+      /* =========================
+         Wordlist processing
+         ========================= */
+      function applyWordlistProcessing() {
+        if (chkDedup.checked) {
+          const seen = new Set();
+          wordlistTerms = wordlistRawTerms.filter((t) => {
+            if (seen.has(t)) return false;
+            seen.add(t);
+            return true;
+          });
+        } else {
+          wordlistTerms = wordlistRawTerms.slice();
+        }
+
+        const dupCount = wordlistRawTerms.length - wordlistTerms.length;
+        let statusText = `${wordlistName} — ${wordlistTerms.length} term${wordlistTerms.length !== 1 ? "s" : ""}`;
+        if (chkDedup.checked && dupCount > 0) {
+          statusText += ` (${dupCount} duplicate${dupCount !== 1 ? "s" : ""} removed)`;
+        }
+        wordlistStatus.textContent = statusText;
+        wordlistStatus.className = "file-status loaded";
+
+        renderWordlistPreview(wordlistTerms);
+        wordlistSearch.value = "";
+        wordlistPreviewSection.style.display = "block";
+        updateGenerateBtn();
+        updateStatus();
+      }
+
+      chkDedup.addEventListener("change", () => {
+        if (wordlistRawTerms.length > 0) applyWordlistProcessing();
+      });
+
+      /* =========================
+         Wordlist preview
+         ========================= */
+      function renderWordlistPreview(terms) {
+        wordlistList.innerHTML = "";
+        terms.forEach((term) => {
+          const div = document.createElement("div");
+          div.className = "term-row";
+          div.textContent = term;
+          wordlistList.appendChild(div);
+        });
+      }
+
+      wordlistSearch.addEventListener("input", () => {
+        const q = wordlistSearch.value.toLowerCase();
+        wordlistList.querySelectorAll(".term-row").forEach((row) => {
+          row.style.display = row.textContent.toLowerCase().includes(q) ? "" : "none";
+        });
+      });
+
+      /* =========================
+         PDF preview
+         ========================= */
+      async function loadPdfPreview() {
+        try {
+          pdfDoc = await pdfjsLib.getDocument({ data: pdfData.slice(0) }).promise;
+          currentPreviewPage = 1;
+          pdfPreviewSection.style.display = "block";
+          updatePageNav();
+          await renderPreviewPage(currentPreviewPage);
+        } catch (e) {
+          pdfPreviewSection.style.display = "none";
+        }
+      }
+
+      function updatePageNav() {
+        const offset = getPageOffset();
+        const docPage = applyOffset(currentPreviewPage);
+        pageDisplay.textContent = offset !== 0
+          ? `Page ${docPage} (${currentPreviewPage} of ${pdfDoc.numPages})`
+          : `Page ${currentPreviewPage} of ${pdfDoc.numPages}`;
+        prevPageBtn.disabled = currentPreviewPage <= 1;
+        nextPageBtn.disabled = currentPreviewPage >= pdfDoc.numPages;
+      }
+
+      async function renderPreviewPage(pageNum) {
+        try {
+          const page = await pdfDoc.getPage(pageNum);
+          const unscaled = page.getViewport({ scale: 1 });
+          const wrapperWidth = pdfCanvasWrapper.clientWidth || 400;
+          const scale = wrapperWidth / unscaled.width;
+          const viewport = page.getViewport({ scale });
+
+          pdfCanvas.width = viewport.width;
+          pdfCanvas.height = viewport.height;
+
+          const ctx = pdfCanvas.getContext("2d");
+          ctx.clearRect(0, 0, pdfCanvas.width, pdfCanvas.height);
+          await page.render({ canvasContext: ctx, viewport }).promise;
+        } catch (e) {
+          // ignore render errors for individual pages
+        }
+      }
+
+      prevPageBtn.addEventListener("click", async () => {
+        if (currentPreviewPage > 1) {
+          currentPreviewPage--;
+          updatePageNav();
+          await renderPreviewPage(currentPreviewPage);
+        }
+      });
+
+      nextPageBtn.addEventListener("click", async () => {
+        if (pdfDoc && currentPreviewPage < pdfDoc.numPages) {
+          currentPreviewPage++;
+          updatePageNav();
+          await renderPreviewPage(currentPreviewPage);
+        }
+      });
 
       /* =========================
          Index generation
@@ -582,7 +797,8 @@
 
         let pdf;
         try {
-          pdf = await pdfjsLib.getDocument({ data: pdfData.slice(0) }).promise;
+          // Reuse already-loaded document if available, otherwise load fresh
+          pdf = pdfDoc || await pdfjsLib.getDocument({ data: pdfData.slice(0) }).promise;
         } catch (err) {
           statusBar.textContent = "Error: could not load PDF — " + err.message;
           progressWrap.classList.remove("visible");
@@ -648,7 +864,7 @@
       }
 
       function applyOffset(pdfPageNum) {
-        return pdfPageNum + getPageOffset();
+        return pdfPageNum - getPageOffset();
       }
 
       function updateOffsetHint() {
@@ -656,10 +872,11 @@
         if (offset === 0) {
           offsetHint.textContent = "No offset applied";
         } else if (offset > 0) {
-          offsetHint.textContent = `PDF page 1 → displayed as page ${1 + offset}`;
+          offsetHint.textContent = `Page 1 = PDF page ${offset + 1}`;
         } else {
-          offsetHint.textContent = `PDF page ${1 - offset} → displayed as page 1`;
+          offsetHint.textContent = `Page ${1 - offset} = PDF page 1`;
         }
+        if (pdfDoc) updatePageNav();
         if (indexResults.length > 0) renderTable(chkHideZero.checked);
       }
 
@@ -812,17 +1029,24 @@
          ========================= */
       clearBtn.addEventListener("click", () => {
         if (!confirm("Clear all data and reset?")) return;
-        pdfData      = null;
-        pdfName      = "";
-        wordlistTerms = [];
-        wordlistName = "";
-        indexResults  = [];
-        pdfInput.value      = "";
-        wordlistInput.value = "";
+        pdfData           = null;
+        pdfName           = "";
+        pdfDoc            = null;
+        currentPreviewPage = 1;
+        wordlistTerms     = [];
+        wordlistRawTerms  = [];
+        wordlistName      = "";
+        indexResults      = [];
+        pdfInput.value        = "";
+        wordlistInput.value   = "";
         pdfStatus.textContent     = "No file loaded";
         pdfStatus.className       = "file-status";
         wordlistStatus.textContent = "No file loaded";
         wordlistStatus.className   = "file-status";
+        pdfPreviewSection.style.display      = "none";
+        wordlistPreviewSection.style.display = "none";
+        wordlistSearch.value                 = "";
+        wordlistList.innerHTML               = "";
         tableWrapper.innerHTML = '<div style="padding:16px;" class="empty-state">Generate an index to see results</div>';
         resultsInfo.textContent = "No results yet";
         sortHint.style.display  = "none";
