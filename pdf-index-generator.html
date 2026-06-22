@@ -442,8 +442,6 @@
         <input type="file" id="wordlistInput" accept=".txt,text/plain" />
       </div>
       <div class="separator"></div>
-      <button class="btn primary" id="generateBtn" disabled>Generate Index</button>
-      <div class="separator"></div>
       <button class="btn danger" id="clearBtn" disabled>Clear</button>
     </div>
 
@@ -516,7 +514,10 @@
     <div class="panel" id="resultsPanel">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
         <h2 style="margin-bottom:0">Index</h2>
-        <button class="btn secondary" id="downloadBtn" disabled>Download CSV</button>
+        <div style="display:flex;gap:8px;">
+          <button class="btn primary" id="generateBtn" disabled>Generate Index</button>
+          <button class="btn secondary" id="downloadBtn" disabled>Download CSV</button>
+        </div>
       </div>
       <div class="info" id="resultsInfo">No results yet</div>
       <div class="table-wrapper" id="tableWrapper">
