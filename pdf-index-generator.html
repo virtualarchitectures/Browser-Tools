@@ -1,0 +1,838 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PDF Index Generator</title>
+    <style>
+      /* =========================
+         Reset and base styles
+         ========================= */
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family:
+          Helvetica,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Arial,
+          sans-serif;
+        line-height: 1.6;
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 20px;
+        color: #24292e;
+        background: #ffffff;
+      }
+      h1 {
+        border-bottom: 1px solid #eaecef;
+        padding-bottom: 0.3em;
+        margin-top: 0;
+        font-size: 32px;
+        font-weight: 600;
+      }
+
+      /* =========================
+         Layout
+         ========================= */
+      .back-link {
+        display: inline-block;
+        margin-bottom: 16px;
+        color: #0366d6;
+        text-decoration: none;
+        font-size: 14px;
+      }
+      .back-link:hover {
+        text-decoration: underline;
+      }
+      .controls {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 8px;
+        flex-wrap: wrap;
+      }
+      .control-group {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .separator {
+        width: 1px;
+        height: 24px;
+        background: #e1e4e8;
+        margin: 0 4px;
+      }
+      .status-bar {
+        font-size: 13px;
+        color: #586069;
+        margin-bottom: 16px;
+        min-height: 20px;
+      }
+      .panel {
+        background: #f6f8fa;
+        padding: 16px;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+        margin-bottom: 16px;
+      }
+      .panel h2 {
+        margin-top: 0;
+        margin-bottom: 12px;
+        font-size: 16px;
+        font-weight: 600;
+        color: #24292e;
+      }
+      .panels-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+      .panels-grid .panel {
+        margin-bottom: 0;
+      }
+      @media (max-width: 600px) {
+        .panels-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      .info {
+        font-size: 13px;
+        color: #586069;
+        margin-bottom: 12px;
+      }
+      .empty-state {
+        color: #586069;
+        font-style: italic;
+      }
+      .action-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 4px;
+      }
+      .feedback-text {
+        font-size: 13px;
+        color: #586069;
+        font-style: italic;
+      }
+
+      /* =========================
+         Components
+         ========================= */
+      input[type="file"] {
+        display: none;
+      }
+      label.btn {
+        display: inline-block;
+        margin: 0;
+      }
+      .btn {
+        background: #fafbfc;
+        color: #24292e;
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+        cursor: pointer;
+        font-size: 14px;
+        line-height: 20px;
+        text-decoration: none;
+        font-family:
+          Helvetica,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Arial,
+          sans-serif;
+      }
+      .btn:hover {
+        background: #f3f4f6;
+      }
+      .btn.primary {
+        background: #0366d6;
+        color: #fff;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+      }
+      .btn.primary:hover {
+        background: #0256c5;
+      }
+      .btn.secondary {
+        background: #fafbfc;
+        color: #24292e;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+      }
+      .btn.secondary:hover {
+        background: #f3f4f6;
+      }
+      .btn.danger {
+        background: #fafbfc;
+        color: #cb2431;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+      }
+      .btn.danger:hover {
+        background: #ffeef0;
+      }
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .btn.secondary:disabled:hover {
+        background: #fafbfc;
+      }
+      .btn.primary:disabled:hover {
+        background: #0366d6;
+      }
+      .checkbox-label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 14px;
+        color: #24292e;
+        cursor: pointer;
+        user-select: none;
+      }
+      .checkbox-label input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+        flex-shrink: 0;
+      }
+      .checkbox-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .file-status {
+        font-size: 13px;
+        color: #586069;
+        margin-top: 8px;
+        font-style: italic;
+      }
+      .file-status.loaded {
+        color: #22863a;
+        font-style: normal;
+        font-weight: 600;
+      }
+
+      /* =========================
+         Progress bar
+         ========================= */
+      .progress-wrap {
+        display: none;
+        margin-bottom: 16px;
+        background: #f6f8fa;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        padding: 12px 16px;
+      }
+      .progress-wrap.visible {
+        display: block;
+      }
+      .progress-label {
+        font-size: 13px;
+        color: #586069;
+        margin-bottom: 6px;
+      }
+      .progress-bar-track {
+        background: #e1e4e8;
+        border-radius: 4px;
+        height: 8px;
+        overflow: hidden;
+      }
+      .progress-bar-fill {
+        background: #0366d6;
+        height: 100%;
+        width: 0%;
+        border-radius: 4px;
+        transition: width 0.1s ease;
+      }
+
+      /* =========================
+         Results table
+         ========================= */
+      .table-wrapper {
+        background: #ffffff;
+        overflow-x: auto;
+        overflow-y: auto;
+        max-height: 480px;
+        min-height: 80px;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+        resize: vertical;
+      }
+      .data-table {
+        min-width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        font-size: 14px;
+      }
+      .data-table thead {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+      }
+      .data-table th {
+        background: #0366d6;
+        padding: 10px 12px;
+        text-align: left;
+        font-weight: 600;
+        color: #ffffff;
+        border-right: 1px solid rgba(255, 255, 255, 0.2);
+        border-bottom: 1px solid #0256c5;
+        white-space: nowrap;
+        cursor: pointer;
+        user-select: none;
+      }
+      .data-table th:hover {
+        background: #0256c5;
+      }
+      .data-table th.sorted-asc::after {
+        content: " \25B2";
+        font-size: 11px;
+      }
+      .data-table th.sorted-desc::after {
+        content: " \25BC";
+        font-size: 11px;
+      }
+      .data-table td {
+        padding: 8px 12px;
+        border-right: 1px solid #e1e4e8;
+        border-bottom: 1px solid #e1e4e8;
+        color: #24292e;
+        text-align: left;
+        vertical-align: top;
+      }
+      .data-table td.col-word {
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      .data-table td.col-count {
+        text-align: right;
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+      }
+      .data-table td.col-pages {
+        color: #586069;
+        word-break: break-word;
+      }
+      .data-table tr:hover td {
+        background: #f6f8fa;
+      }
+      .sort-hint {
+        font-size: 12px;
+        color: #586069;
+        margin-top: 6px;
+        margin-bottom: 0;
+      }
+      .form-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+      }
+      .form-label {
+        font-size: 14px;
+        color: #24292e;
+        font-weight: 600;
+        flex-shrink: 0;
+      }
+      .number-input {
+        width: 80px;
+        padding: 5px 8px;
+        font-size: 14px;
+        font-family: inherit;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        background: #ffffff;
+        color: #24292e;
+        text-align: right;
+      }
+      .number-input:focus {
+        outline: none;
+        border-color: #0366d6;
+      }
+      .offset-hint {
+        font-size: 13px;
+        color: #586069;
+      }
+    </style>
+  </head>
+  <body>
+    <a href="index.html" class="back-link">← Back to Browser Tools</a>
+
+    <h1>PDF Index Generator</h1>
+
+    <!-- Controls -->
+    <div class="controls">
+      <div class="control-group">
+        <label for="pdfInput" class="btn primary" id="pdfLabel">Load PDF</label>
+        <input type="file" id="pdfInput" accept=".pdf,application/pdf" />
+        <label for="wordlistInput" class="btn secondary" id="wordlistLabel">Load Wordlist</label>
+        <input type="file" id="wordlistInput" accept=".txt,text/plain" />
+      </div>
+      <div class="separator"></div>
+      <button class="btn primary" id="generateBtn" disabled>Generate Index</button>
+      <div class="separator"></div>
+      <button class="btn danger" id="clearBtn" disabled>Clear</button>
+    </div>
+
+    <div class="status-bar" id="statusBar">Load a PDF and a wordlist to get started</div>
+
+    <!-- File status -->
+    <div class="panels-grid">
+      <div class="panel">
+        <h2>PDF</h2>
+        <div class="file-status" id="pdfStatus">No file loaded</div>
+      </div>
+      <div class="panel">
+        <h2>Wordlist</h2>
+        <div class="info" style="margin-bottom:6px">One keyword or phrase per line</div>
+        <div class="file-status" id="wordlistStatus">No file loaded</div>
+      </div>
+    </div>
+
+    <!-- Options -->
+    <div class="panel">
+      <h2>Options</h2>
+      <div class="checkbox-group">
+        <label class="checkbox-label">
+          <input type="checkbox" id="chkWholeWord" checked />
+          Whole word matching (do not match substrings)
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" id="chkMatchCase" />
+          Case-sensitive matching
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" id="chkHideZero" checked />
+          Hide words with zero occurrences
+        </label>
+      </div>
+      <div class="form-row">
+        <label class="form-label" for="pageOffset">Page offset</label>
+        <input type="number" id="pageOffset" class="number-input" value="0" step="1" />
+        <span class="offset-hint" id="offsetHint">No offset applied</span>
+      </div>
+    </div>
+
+    <!-- Progress -->
+    <div class="progress-wrap" id="progressWrap">
+      <div class="progress-label" id="progressLabel">Processing page 0 of 0...</div>
+      <div class="progress-bar-track">
+        <div class="progress-bar-fill" id="progressFill"></div>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div class="panel" id="resultsPanel">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <h2 style="margin-bottom:0">Index</h2>
+        <button class="btn secondary" id="downloadBtn" disabled>Download CSV</button>
+      </div>
+      <div class="info" id="resultsInfo">No results yet</div>
+      <div class="table-wrapper" id="tableWrapper">
+        <div style="padding:16px;" class="empty-state">Generate an index to see results</div>
+      </div>
+      <p class="sort-hint" id="sortHint" style="display:none">Click a column header to sort</p>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+      /* =========================
+         State
+         ========================= */
+      let pdfData = null;       // ArrayBuffer
+      let pdfName = "";
+      let wordlistTerms = [];   // string[]
+      let wordlistName = "";
+      let indexResults = [];    // { word, count, pages }[]
+      let sortCol = "word";
+      let sortDir = "asc";
+
+      /* =========================
+         DOM references
+         ========================= */
+      const pdfInput        = document.getElementById("pdfInput");
+      const wordlistInput   = document.getElementById("wordlistInput");
+      const pdfLabel        = document.getElementById("pdfLabel");
+      const wordlistLabel   = document.getElementById("wordlistLabel");
+      const pdfStatus       = document.getElementById("pdfStatus");
+      const wordlistStatus  = document.getElementById("wordlistStatus");
+      const generateBtn     = document.getElementById("generateBtn");
+      const clearBtn        = document.getElementById("clearBtn");
+      const statusBar       = document.getElementById("statusBar");
+      const progressWrap    = document.getElementById("progressWrap");
+      const progressLabel   = document.getElementById("progressLabel");
+      const progressFill    = document.getElementById("progressFill");
+      const resultsInfo     = document.getElementById("resultsInfo");
+      const tableWrapper    = document.getElementById("tableWrapper");
+      const downloadBtn     = document.getElementById("downloadBtn");
+      const sortHint        = document.getElementById("sortHint");
+      const chkWholeWord    = document.getElementById("chkWholeWord");
+      const chkMatchCase    = document.getElementById("chkMatchCase");
+      const chkHideZero     = document.getElementById("chkHideZero");
+      const pageOffsetInput = document.getElementById("pageOffset");
+      const offsetHint      = document.getElementById("offsetHint");
+
+      /* =========================
+         PDF.js setup
+         ========================= */
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+      /* =========================
+         File loading
+         ========================= */
+      pdfInput.addEventListener("change", () => {
+        const file = pdfInput.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          pdfData = e.target.result;
+          pdfName = file.name;
+          pdfStatus.textContent = file.name;
+          pdfStatus.className = "file-status loaded";
+          updateGenerateBtn();
+          updateStatus();
+        };
+        reader.onerror = () => {
+          pdfStatus.textContent = "Error reading file";
+          pdfStatus.className = "file-status";
+        };
+        reader.readAsArrayBuffer(file);
+      });
+
+      wordlistInput.addEventListener("change", () => {
+        const file = wordlistInput.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const lines = e.target.result
+            .split(/\r?\n/)
+            .map((l) => l.trim())
+            .filter((l) => l.length > 0);
+          if (lines.length === 0) {
+            wordlistStatus.textContent = "File is empty — no terms found";
+            wordlistStatus.className = "file-status";
+            wordlistTerms = [];
+            wordlistName = "";
+          } else {
+            wordlistTerms = lines;
+            wordlistName = file.name;
+            wordlistStatus.textContent = `${file.name} — ${lines.length} term${lines.length !== 1 ? "s" : ""}`;
+            wordlistStatus.className = "file-status loaded";
+          }
+          updateGenerateBtn();
+          updateStatus();
+        };
+        reader.onerror = () => {
+          wordlistStatus.textContent = "Error reading file";
+          wordlistStatus.className = "file-status";
+        };
+        reader.readAsText(file);
+      });
+
+      function updateGenerateBtn() {
+        generateBtn.disabled = !(pdfData && wordlistTerms.length > 0);
+        clearBtn.disabled = !(pdfData || wordlistTerms.length > 0 || indexResults.length > 0);
+      }
+
+      function updateStatus() {
+        const parts = [];
+        if (pdfData) parts.push("PDF loaded");
+        if (wordlistTerms.length > 0) parts.push(`${wordlistTerms.length} term${wordlistTerms.length !== 1 ? "s" : ""} in wordlist`);
+        statusBar.textContent = parts.length ? parts.join(" · ") : "Load a PDF and a wordlist to get started";
+      }
+
+      /* =========================
+         Index generation
+         ========================= */
+      generateBtn.addEventListener("click", generateIndex);
+
+      async function generateIndex() {
+        if (!pdfData || wordlistTerms.length === 0) return;
+
+        generateBtn.disabled = true;
+        downloadBtn.disabled = true;
+        progressWrap.classList.add("visible");
+        tableWrapper.innerHTML = '<div style="padding:16px;" class="empty-state">Processing...</div>';
+        sortHint.style.display = "none";
+        resultsInfo.textContent = "Processing...";
+
+        const wholeWord  = chkWholeWord.checked;
+        const matchCase  = chkMatchCase.checked;
+        const hideZero   = chkHideZero.checked;
+
+        // Build regex map for each term
+        const termPatterns = wordlistTerms.map((term) => {
+          const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+          const pattern = wholeWord ? `(?<![\\w])${escaped}(?![\\w])` : escaped;
+          const flags   = matchCase ? "g" : "gi";
+          return { term, re: new RegExp(pattern, flags) };
+        });
+
+        // Accumulator: term → { count, pages: Set<number> }
+        const acc = new Map();
+        termPatterns.forEach(({ term }) => acc.set(term, { count: 0, pages: new Set() }));
+
+        let pdf;
+        try {
+          pdf = await pdfjsLib.getDocument({ data: pdfData.slice(0) }).promise;
+        } catch (err) {
+          statusBar.textContent = "Error: could not load PDF — " + err.message;
+          progressWrap.classList.remove("visible");
+          generateBtn.disabled = false;
+          updateGenerateBtn();
+          return;
+        }
+
+        const numPages = pdf.numPages;
+
+        for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+          progressLabel.textContent = `Processing page ${pageNum} of ${numPages}...`;
+          progressFill.style.width = `${Math.round((pageNum / numPages) * 100)}%`;
+
+          let pageText = "";
+          try {
+            const page    = await pdf.getPage(pageNum);
+            const content = await page.getTextContent();
+            pageText = content.items.map((item) => item.str).join(" ");
+          } catch (_) {
+            // Skip unreadable pages
+          }
+
+          termPatterns.forEach(({ term, re }) => {
+            re.lastIndex = 0;
+            let m;
+            while ((m = re.exec(pageText)) !== null) {
+              const entry = acc.get(term);
+              entry.count++;
+              entry.pages.add(pageNum);
+              if (!re.global) break;
+            }
+          });
+
+          // Yield to the UI thread every 10 pages
+          if (pageNum % 10 === 0) {
+            await new Promise((r) => setTimeout(r, 0));
+          }
+        }
+
+        progressWrap.classList.remove("visible");
+
+        // Build results array
+        indexResults = wordlistTerms.map((term) => {
+          const entry = acc.get(term);
+          const pages = [...entry.pages].sort((a, b) => a - b);
+          return { word: term, count: entry.count, pages };
+        });
+
+        sortCol = "word";
+        sortDir = "asc";
+        renderTable(hideZero);
+        updateGenerateBtn();
+        statusBar.textContent = `Index generated for ${numPages} page${numPages !== 1 ? "s" : ""} · ${wordlistTerms.length} term${wordlistTerms.length !== 1 ? "s" : ""}`;
+      }
+
+      chkHideZero.addEventListener("change", () => {
+        if (indexResults.length > 0) renderTable(chkHideZero.checked);
+      });
+
+      function getPageOffset() {
+        return parseInt(pageOffsetInput.value, 10) || 0;
+      }
+
+      function applyOffset(pdfPageNum) {
+        return pdfPageNum + getPageOffset();
+      }
+
+      function updateOffsetHint() {
+        const offset = getPageOffset();
+        if (offset === 0) {
+          offsetHint.textContent = "No offset applied";
+        } else if (offset > 0) {
+          offsetHint.textContent = `PDF page 1 → displayed as page ${1 + offset}`;
+        } else {
+          offsetHint.textContent = `PDF page ${1 - offset} → displayed as page 1`;
+        }
+        if (indexResults.length > 0) renderTable(chkHideZero.checked);
+      }
+
+      pageOffsetInput.addEventListener("input", updateOffsetHint);
+
+      /* =========================
+         Table rendering
+         ========================= */
+      function getSortedResults(hideZero) {
+        let rows = hideZero
+          ? indexResults.filter((r) => r.count > 0)
+          : indexResults.slice();
+
+        rows.sort((a, b) => {
+          let va, vb;
+          if (sortCol === "word") {
+            va = a.word.toLowerCase();
+            vb = b.word.toLowerCase();
+          } else if (sortCol === "count") {
+            va = a.count;
+            vb = b.count;
+          } else {
+            va = a.pages.length ? a.pages[0] : Infinity;
+            vb = b.pages.length ? b.pages[0] : Infinity;
+          }
+          if (va < vb) return sortDir === "asc" ? -1 : 1;
+          if (va > vb) return sortDir === "asc" ? 1 : -1;
+          return 0;
+        });
+        return rows;
+      }
+
+      function renderTable(hideZero) {
+        const rows = getSortedResults(hideZero);
+        const total = indexResults.length;
+        const shown = rows.length;
+        const hits  = indexResults.filter((r) => r.count > 0).length;
+
+        resultsInfo.textContent = `${shown} term${shown !== 1 ? "s" : ""} shown · ${hits} with matches (of ${total} total)`;
+
+        if (rows.length === 0) {
+          tableWrapper.innerHTML = '<div style="padding:16px;" class="empty-state">No matching terms found in the PDF.</div>';
+          sortHint.style.display = "none";
+          downloadBtn.disabled = true;
+          return;
+        }
+
+        const table = document.createElement("table");
+        table.className = "data-table";
+
+        // Header
+        const thead = document.createElement("thead");
+        const headerTr = document.createElement("tr");
+        const cols = [
+          { key: "word",  label: "Word / Phrase" },
+          { key: "count", label: "Count" },
+          { key: "pages", label: "Pages" },
+        ];
+        cols.forEach(({ key, label }) => {
+          const th = document.createElement("th");
+          th.textContent = label;
+          if (key === sortCol) {
+            th.className = sortDir === "asc" ? "sorted-asc" : "sorted-desc";
+          }
+          th.addEventListener("click", () => {
+            if (sortCol === key) {
+              sortDir = sortDir === "asc" ? "desc" : "asc";
+            } else {
+              sortCol = key;
+              sortDir = key === "count" ? "desc" : "asc";
+            }
+            renderTable(chkHideZero.checked);
+          });
+          headerTr.appendChild(th);
+        });
+        thead.appendChild(headerTr);
+        table.appendChild(thead);
+
+        // Body
+        const tbody = document.createElement("tbody");
+        rows.forEach(({ word, count, pages }) => {
+          const tr = document.createElement("tr");
+
+          const tdWord = document.createElement("td");
+          tdWord.className = "col-word";
+          tdWord.textContent = word;
+          tr.appendChild(tdWord);
+
+          const tdCount = document.createElement("td");
+          tdCount.className = "col-count";
+          tdCount.textContent = count;
+          tr.appendChild(tdCount);
+
+          const tdPages = document.createElement("td");
+          tdPages.className = "col-pages";
+          tdPages.textContent = pages.length ? pages.map(applyOffset).join(", ") : "—";
+          tr.appendChild(tdPages);
+
+          tbody.appendChild(tr);
+        });
+        table.appendChild(tbody);
+
+        tableWrapper.innerHTML = "";
+        tableWrapper.appendChild(table);
+        sortHint.style.display = "block";
+        downloadBtn.disabled = false;
+      }
+
+      /* =========================
+         Export
+         ========================= */
+      downloadBtn.addEventListener("click", downloadCSV);
+
+      function escapeCSV(val) {
+        const s = String(val);
+        if (s.includes(",") || s.includes('"') || s.includes("\n")) {
+          return '"' + s.replace(/"/g, '""') + '"';
+        }
+        return s;
+      }
+
+      function downloadCSV() {
+        if (!indexResults.length) return;
+        const rows = getSortedResults(chkHideZero.checked);
+        const lines = ["Word / Phrase,Count,Pages"];
+        rows.forEach(({ word, count, pages }) => {
+          lines.push(
+            [
+              escapeCSV(word),
+              escapeCSV(count),
+              escapeCSV(pages.length ? pages.map(applyOffset).join(", ") : ""),
+            ].join(","),
+          );
+        });
+        const csv  = lines.join("\n");
+        const blob = new Blob([csv], { type: "text/csv" });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement("a");
+        a.href     = url;
+        const base = pdfName.replace(/\.pdf$/i, "") || "pdf";
+        a.download = `${base}-index.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+
+      /* =========================
+         Clear
+         ========================= */
+      clearBtn.addEventListener("click", () => {
+        if (!confirm("Clear all data and reset?")) return;
+        pdfData      = null;
+        pdfName      = "";
+        wordlistTerms = [];
+        wordlistName = "";
+        indexResults  = [];
+        pdfInput.value      = "";
+        wordlistInput.value = "";
+        pdfStatus.textContent     = "No file loaded";
+        pdfStatus.className       = "file-status";
+        wordlistStatus.textContent = "No file loaded";
+        wordlistStatus.className   = "file-status";
+        tableWrapper.innerHTML = '<div style="padding:16px;" class="empty-state">Generate an index to see results</div>';
+        resultsInfo.textContent = "No results yet";
+        sortHint.style.display  = "none";
+        progressWrap.classList.remove("visible");
+        downloadBtn.disabled = true;
+        pageOffsetInput.value = "0";
+        offsetHint.textContent = "No offset applied";
+        updateGenerateBtn();
+        updateStatus();
+      });
+    </script>
+  </body>
+</html>
