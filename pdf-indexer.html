@@ -90,6 +90,7 @@
         grid-template-columns: 1fr 1fr;
         gap: 16px;
         margin-bottom: 16px;
+        align-items: start;
       }
       .panels-grid .panel {
         margin-bottom: 0;
@@ -325,8 +326,8 @@
       .sort-hint {
         font-size: 12px;
         color: #586069;
-        margin-top: 6px;
-        margin-bottom: 0;
+        margin-top: 0;
+        margin-bottom: 6px;
       }
       .form-row {
         display: flex;
@@ -409,11 +410,22 @@
         outline: none;
         border-color: #0366d6;
       }
+      #wordlistPanel {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      #wordlistPreviewSection {
+        flex: 1;
+        min-height: 0;
+        flex-direction: column;
+      }
       .wordlist-list {
         border: 1px solid #e1e4e8;
         border-radius: 0 0 4px 4px;
         background: #ffffff;
-        max-height: 220px;
+        flex: 1;
+        min-height: 0;
         overflow-y: auto;
       }
       .wordlist-list .term-row {
@@ -468,7 +480,7 @@
           </div>
         </div>
       </div>
-      <div class="panel">
+      <div class="panel" id="wordlistPanel">
         <h2>Wordlist</h2>
         <div class="info" style="margin-bottom:6px">One keyword or phrase per line</div>
         <div class="file-status" id="wordlistStatus">No file loaded</div>
@@ -515,10 +527,10 @@
           Hide words with zero occurrences
         </label>
       </div>
+      <p class="sort-hint" id="sortHint" style="display:none">Click a column header to sort · Download CSV exports the table in its current sort order</p>
       <div class="table-wrapper" id="tableWrapper">
         <div style="padding:16px;" class="empty-state">Generate an index to see results</div>
       </div>
-      <p class="sort-hint" id="sortHint" style="display:none">Click a column header to sort</p>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -569,6 +581,7 @@
       const prevPageBtn        = document.getElementById("prevPageBtn");
       const nextPageBtn        = document.getElementById("nextPageBtn");
       const pageDisplay        = document.getElementById("pageDisplay");
+      const wordlistPanel          = document.getElementById("wordlistPanel");
       const wordlistPreviewSection = document.getElementById("wordlistPreviewSection");
       const wordlistSearch         = document.getElementById("wordlistSearch");
       const wordlistList           = document.getElementById("wordlistList");
@@ -671,7 +684,7 @@
 
         renderWordlistPreview(wordlistTerms);
         wordlistSearch.value = "";
-        wordlistPreviewSection.style.display = "block";
+        wordlistPreviewSection.style.display = "flex";
         updateGenerateBtn();
         updateStatus();
       }
@@ -739,10 +752,18 @@
           const ctx = pdfCanvas.getContext("2d");
           ctx.clearRect(0, 0, pdfCanvas.width, pdfCanvas.height);
           await page.render({ canvasContext: ctx, viewport }).promise;
+          syncWordlistHeight();
         } catch (e) {
           // ignore render errors for individual pages
         }
       }
+
+      function syncWordlistHeight() {
+        if (!pdfDoc) return;
+        wordlistPanel.style.height = pdfPreviewSection.closest(".panel").offsetHeight + "px";
+      }
+
+      window.addEventListener("resize", syncWordlistHeight);
 
       prevPageBtn.addEventListener("click", async () => {
         if (currentPreviewPage > 1) {
@@ -763,6 +784,17 @@
       /* =========================
          Index generation
          ========================= */
+      function normalizeText(text) {
+        // Collapse line-break hyphens: PDF.js joins items with spaces, so
+        // "evi-dence" split across items becomes "evi- dence" — rejoin it
+        text = text.replace(/([\w])-\s+([\w])/g, "$1-$2");
+        // Normalize Unicode hyphen/dash variants to ASCII hyphen
+        text = text.replace(/[­‐‑‒–—―−﹘﹣－]/g, "-");
+        // Normalize curly/smart quotes to straight quotes
+        text = text.replace(/[‘’]/g, "'").replace(/[“”]/g, '"');
+        return text;
+      }
+
       generateBtn.addEventListener("click", generateIndex);
 
       async function generateIndex() {
@@ -814,6 +846,7 @@
             const page    = await pdf.getPage(pageNum);
             const content = await page.getTextContent();
             pageText = content.items.map((item) => item.str).join(" ");
+            pageText = normalizeText(pageText);
           } catch (_) {
             // Skip unreadable pages
           }
@@ -838,13 +871,13 @@
         progressWrap.classList.remove("visible");
 
         // Build results array
-        indexResults = wordlistTerms.map((term) => {
+        indexResults = wordlistTerms.map((term, i) => {
           const entry = acc.get(term);
           const pages = [...entry.pages].sort((a, b) => a - b);
-          return { word: term, count: entry.count, pages };
+          return { word: term, count: entry.count, pages, inputIndex: i };
         });
 
-        sortCol = "word";
+        sortCol = "input";
         sortDir = "asc";
         renderTable(hideZero);
         updateGenerateBtn();
@@ -888,7 +921,10 @@
 
         rows.sort((a, b) => {
           let va, vb;
-          if (sortCol === "word") {
+          if (sortCol === "input") {
+            va = a.inputIndex;
+            vb = b.inputIndex;
+          } else if (sortCol === "word") {
             va = a.word.toLowerCase();
             vb = b.word.toLowerCase();
           } else if (sortCol === "count") {
@@ -927,6 +963,7 @@
         const thead = document.createElement("thead");
         const headerTr = document.createElement("tr");
         const cols = [
+          { key: "input", label: "#" },
           { key: "word",  label: "Word / Phrase" },
           { key: "count", label: "Count" },
           { key: "pages", label: "Pages" },
@@ -946,6 +983,10 @@
             }
             renderTable(chkHideZero.checked);
           });
+          if (key === "input") {
+            th.style.width = "40px";
+            th.style.textAlign = "center";
+          }
           headerTr.appendChild(th);
         });
         thead.appendChild(headerTr);
@@ -953,8 +994,14 @@
 
         // Body
         const tbody = document.createElement("tbody");
-        rows.forEach(({ word, count, pages }) => {
+        rows.forEach(({ word, count, pages, inputIndex }) => {
           const tr = document.createElement("tr");
+
+          const tdNum = document.createElement("td");
+          tdNum.className = "col-count";
+          tdNum.style.color = "#586069";
+          tdNum.textContent = inputIndex + 1;
+          tr.appendChild(tdNum);
 
           const tdWord = document.createElement("td");
           tdWord.className = "col-word";
@@ -997,10 +1044,11 @@
       function downloadCSV() {
         if (!indexResults.length) return;
         const rows = getSortedResults(chkHideZero.checked);
-        const lines = ["Word / Phrase,Count,Pages"];
-        rows.forEach(({ word, count, pages }) => {
+        const lines = ["#,Word / Phrase,Count,Pages"];
+        rows.forEach(({ word, count, pages, inputIndex }) => {
           lines.push(
             [
+              escapeCSV(inputIndex + 1),
               escapeCSV(word),
               escapeCSV(count),
               escapeCSV(pages.length ? pages.map(applyOffset).join(", ") : ""),
@@ -1025,6 +1073,7 @@
          ========================= */
       clearBtn.addEventListener("click", () => {
         if (!confirm("Clear all data and reset?")) return;
+        wordlistPanel.style.height = "";
         pdfData           = null;
         pdfName           = "";
         pdfDoc            = null;
