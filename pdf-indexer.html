@@ -811,12 +811,17 @@
         const matchCase  = chkMatchCase.checked;
         const hideZero   = chkHideZero.checked;
 
-        // Build regex map for each term
+        // Build regex map — one pattern per unique term to avoid double-counting duplicates
+        const seenTerms = new Set();
         const termPatterns = wordlistTerms.map((term) => {
           const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
           const pattern = wholeWord ? `(?<![\\w])${escaped}(?![\\w])` : escaped;
           const flags   = matchCase ? "g" : "gi";
           return { term, re: new RegExp(pattern, flags) };
+        }).filter(({ term }) => {
+          if (seenTerms.has(term)) return false;
+          seenTerms.add(term);
+          return true;
         });
 
         // Accumulator: term → { count, pages: Set<number> }
