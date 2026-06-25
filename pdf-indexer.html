@@ -513,6 +513,13 @@
         </div>
       </div>
       <div class="info" id="resultsInfo">No results yet</div>
+      <div class="form-row" style="margin-bottom:10px">
+        <label class="form-label">Page range to index (after offset)</label>
+        <input type="number" id="pageRangeFrom" class="number-input" min="1" placeholder="First" style="width:70px" />
+        <span class="offset-hint">to</span>
+        <input type="number" id="pageRangeTo" class="number-input" min="1" placeholder="Last" style="width:70px" />
+        <span class="offset-hint" id="pageRangeHint"></span>
+      </div>
       <div class="checkbox-group" style="margin-bottom:10px">
         <label class="checkbox-label">
           <input type="checkbox" id="chkWholeWord" checked />
@@ -585,6 +592,9 @@
       const wordlistPreviewSection = document.getElementById("wordlistPreviewSection");
       const wordlistSearch         = document.getElementById("wordlistSearch");
       const wordlistList           = document.getElementById("wordlistList");
+      const pageRangeFrom          = document.getElementById("pageRangeFrom");
+      const pageRangeTo            = document.getElementById("pageRangeTo");
+      const pageRangeHint          = document.getElementById("pageRangeHint");
 
       /* =========================
          PDF.js setup
@@ -720,8 +730,11 @@
         try {
           pdfDoc = await pdfjsLib.getDocument({ data: pdfData.slice(0) }).promise;
           currentPreviewPage = 1;
+          pageRangeFrom.max = pdfDoc.numPages;
+          pageRangeTo.max   = pdfDoc.numPages;
           pdfPreviewSection.style.display = "block";
           updatePageNav();
+          updatePageRangeHint();
           await renderPreviewPage(currentPreviewPage);
         } catch (e) {
           pdfPreviewSection.style.display = "none";
@@ -841,10 +854,13 @@
         }
 
         const numPages = pdf.numPages;
+        const { from: rangeFrom, to: rangeTo } = getPageRange(numPages);
+        const rangeTotal = Math.max(0, rangeTo - rangeFrom + 1);
 
-        for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+        for (let pageNum = rangeFrom; pageNum <= rangeTo; pageNum++) {
+          const rangeProgress = pageNum - rangeFrom + 1;
           progressLabel.textContent = `Processing page ${pageNum} of ${numPages}...`;
-          progressFill.style.width = `${Math.round((pageNum / numPages) * 100)}%`;
+          progressFill.style.width = `${Math.round((rangeProgress / rangeTotal) * 100)}%`;
 
           let pageText = "";
           try {
@@ -886,7 +902,11 @@
         sortDir = "asc";
         renderTable(hideZero);
         updateGenerateBtn();
-        statusBar.textContent = `Index generated for ${numPages} page${numPages !== 1 ? "s" : ""} · ${wordlistTerms.length} term${wordlistTerms.length !== 1 ? "s" : ""}`;
+        const isFullRange = rangeFrom === 1 && rangeTo === numPages;
+        const rangeLabel = isFullRange
+          ? `${numPages} page${numPages !== 1 ? "s" : ""}`
+          : `pages ${applyOffset(rangeFrom)}–${applyOffset(rangeTo)} of ${numPages}`;
+        statusBar.textContent = `Index generated · ${rangeLabel} · ${wordlistTerms.length} term${wordlistTerms.length !== 1 ? "s" : ""}`;
       }
 
       chkHideZero.addEventListener("change", () => {
@@ -911,7 +931,22 @@
           offsetHint.textContent = `Page ${1 - offset} = PDF page 1`;
         }
         if (pdfDoc) updatePageNav();
+        updatePageRangeHint();
         if (indexResults.length > 0) renderTable(chkHideZero.checked);
+      }
+
+      function updatePageRangeHint() {
+        if (!pdfDoc) { pageRangeHint.textContent = ""; return; }
+        pageRangeHint.textContent = `(${applyOffset(1)}–${applyOffset(pdfDoc.numPages)})`;
+      }
+
+      function getPageRange(numPages) {
+        const offset  = getPageOffset();
+        const rawFrom = parseInt(pageRangeFrom.value, 10);
+        const rawTo   = parseInt(pageRangeTo.value,   10);
+        const from = isNaN(rawFrom) ? 1        : Math.max(1,        rawFrom + offset);
+        const to   = isNaN(rawTo)   ? numPages : Math.min(numPages, rawTo   + offset);
+        return { from, to };
       }
 
       pageOffsetInput.addEventListener("input", updateOffsetHint);
@@ -1104,6 +1139,9 @@
         downloadBtn.disabled = true;
         pageOffsetInput.value = "0";
         offsetHint.textContent = "No offset applied";
+        pageRangeFrom.value = "";
+        pageRangeTo.value   = "";
+        pageRangeHint.textContent = "";
         updateGenerateBtn();
         updateStatus();
       });
