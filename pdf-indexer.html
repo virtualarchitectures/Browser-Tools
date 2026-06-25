@@ -548,7 +548,6 @@
           type="number"
           id="pageRangeFrom"
           class="number-input"
-          min="1"
           placeholder="First"
           style="width: 70px"
         />
@@ -557,7 +556,6 @@
           type="number"
           id="pageRangeTo"
           class="number-input"
-          min="1"
           placeholder="Last"
           style="width: 70px"
         />
@@ -812,8 +810,7 @@
           pdfDoc = await pdfjsLib.getDocument({ data: pdfData.slice(0) })
             .promise;
           currentPreviewPage = 1;
-          pageRangeFrom.max = pdfDoc.numPages;
-          pageRangeTo.max = pdfDoc.numPages;
+          updatePageRangeInputLimits();
           pdfPreviewSection.style.display = "block";
           updatePageNav();
           updatePageRangeHint();
@@ -1015,10 +1012,23 @@
         return pdfPageNum - getPageOffset();
       }
 
+      function updatePageRangeInputLimits() {
+        if (!pdfDoc) return;
+        const minPage = applyOffset(1);
+        const maxPage = applyOffset(pdfDoc.numPages);
+        pageRangeFrom.min = minPage;
+        pageRangeFrom.max = maxPage;
+        pageRangeTo.min = minPage;
+        pageRangeTo.max = maxPage;
+      }
+
       function updateOffsetHint() {
         const offset = getPageOffset();
         offsetHint.textContent = offset === 0 ? "No offset applied" : "";
-        if (pdfDoc) updatePageNav();
+        if (pdfDoc) {
+          updatePageNav();
+          updatePageRangeInputLimits();
+        }
         updatePageRangeHint();
       }
 
