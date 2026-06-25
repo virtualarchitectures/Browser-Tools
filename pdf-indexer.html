@@ -450,14 +450,19 @@
       <div class="control-group">
         <label for="pdfInput" class="btn primary" id="pdfLabel">Load PDF</label>
         <input type="file" id="pdfInput" accept=".pdf,application/pdf" />
-        <label for="wordlistInput" class="btn secondary" id="wordlistLabel">Load Wordlist</label>
+        <label for="wordlistInput" class="btn secondary" id="wordlistLabel"
+          >Load Wordlist</label
+        >
         <input type="file" id="wordlistInput" accept=".txt,text/plain" />
       </div>
       <div class="separator"></div>
       <button class="btn danger" id="clearBtn" disabled>Clear</button>
     </div>
 
-    <div class="status-bar" id="statusBar">Load a PDF and a wordlist to get started</div>
+    <div class="status-bar" id="statusBar">
+      Load a PDF and a wordlist to get started. The wordlist should be a plain
+      .txt file containing one keyword or phrase per line.
+    </div>
 
     <!-- File status + previews -->
     <div class="panels-grid">
@@ -466,14 +471,24 @@
         <div class="file-status" id="pdfStatus">No file loaded</div>
         <div class="form-row">
           <label class="form-label" for="pageOffset">Page offset</label>
-          <input type="number" id="pageOffset" class="number-input" value="0" step="1" />
+          <input
+            type="number"
+            id="pageOffset"
+            class="number-input"
+            value="0"
+            step="1"
+          />
           <span class="offset-hint" id="offsetHint">No offset applied</span>
         </div>
-        <div id="pdfPreviewSection" style="display:none">
+        <div id="pdfPreviewSection" style="display: none">
           <div class="preview-nav">
-            <button class="btn secondary" id="prevPageBtn" disabled>&#8592;</button>
+            <button class="btn secondary" id="prevPageBtn" disabled>
+              &#8592;
+            </button>
             <span class="page-info" id="pageDisplay">Page 1 of 1</span>
-            <button class="btn secondary" id="nextPageBtn" disabled>&#8594;</button>
+            <button class="btn secondary" id="nextPageBtn" disabled>
+              &#8594;
+            </button>
           </div>
           <div class="canvas-wrapper" id="pdfCanvasWrapper">
             <canvas id="pdfCanvas"></canvas>
@@ -482,14 +497,18 @@
       </div>
       <div class="panel" id="wordlistPanel">
         <h2>Wordlist</h2>
-        <div class="info" style="margin-bottom:6px">One keyword or phrase per line</div>
         <div class="file-status" id="wordlistStatus">No file loaded</div>
-        <label class="checkbox-label" style="margin-top:8px">
+        <label class="checkbox-label" style="margin-top: 8px">
           <input type="checkbox" id="chkDedup" />
           Deduplicate wordlist
         </label>
-        <div id="wordlistPreviewSection" style="display:none">
-          <input type="text" id="wordlistSearch" class="wordlist-search" placeholder="Search terms..." />
+        <div id="wordlistPreviewSection" style="display: none">
+          <input
+            type="text"
+            id="wordlistSearch"
+            class="wordlist-search"
+            placeholder="Search terms..."
+          />
           <div class="wordlist-list" id="wordlistList"></div>
         </div>
       </div>
@@ -497,7 +516,9 @@
 
     <!-- Progress -->
     <div class="progress-wrap" id="progressWrap">
-      <div class="progress-label" id="progressLabel">Processing page 0 of 0...</div>
+      <div class="progress-label" id="progressLabel">
+        Processing page 0 of 0...
+      </div>
       <div class="progress-bar-track">
         <div class="progress-bar-fill" id="progressFill"></div>
       </div>
@@ -505,15 +526,38 @@
 
     <!-- Index controls -->
     <div class="panel" id="resultsPanel">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-        <h2 style="margin-bottom:0">Index</h2>
-        <button class="btn primary" id="generateBtn" disabled>Generate Index</button>
+      <div
+        style="
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 12px;
+        "
+      >
+        <h2 style="margin-bottom: 0">Index</h2>
+        <button class="btn primary" id="generateBtn" disabled>
+          Generate Index
+        </button>
       </div>
-      <div class="form-row" style="margin-bottom:10px">
+      <div class="form-row" style="margin-bottom: 10px">
         <label class="form-label">Page range to index (after offset)</label>
-        <input type="number" id="pageRangeFrom" class="number-input" min="1" placeholder="First" style="width:70px" />
+        <input
+          type="number"
+          id="pageRangeFrom"
+          class="number-input"
+          min="1"
+          placeholder="First"
+          style="width: 70px"
+        />
         <span class="offset-hint">to</span>
-        <input type="number" id="pageRangeTo" class="number-input" min="1" placeholder="Last" style="width:70px" />
+        <input
+          type="number"
+          id="pageRangeTo"
+          class="number-input"
+          min="1"
+          placeholder="Last"
+          style="width: 70px"
+        />
         <span class="offset-hint" id="pageRangeHint"></span>
       </div>
       <div class="checkbox-group">
@@ -530,20 +574,34 @@
 
     <!-- Results table -->
     <div class="panel" id="tablePanel">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-        <div style="display:flex;align-items:center;gap:16px;">
-          <h2 style="margin-bottom:0">Results</h2>
-          <label class="checkbox-label" style="font-weight:normal">
+      <div
+        style="
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 12px;
+        "
+      >
+        <div style="display: flex; align-items: center; gap: 16px">
+          <h2 style="margin-bottom: 0">Results</h2>
+          <label class="checkbox-label" style="font-weight: normal">
             <input type="checkbox" id="chkHideZero" checked />
             Hide words with zero occurrences
           </label>
         </div>
-        <button class="btn secondary" id="downloadBtn" disabled>Download CSV</button>
+        <button class="btn secondary" id="downloadBtn" disabled>
+          Download CSV
+        </button>
       </div>
       <div class="info" id="resultsInfo">No results yet</div>
-      <p class="sort-hint" id="sortHint" style="display:none">Click a column header to sort · Download CSV exports the table in its current sort order</p>
+      <p class="sort-hint" id="sortHint" style="display: none">
+        Click a column header to sort · Download CSV exports the table in its
+        current sort order
+      </p>
       <div class="table-wrapper" id="tableWrapper">
-        <div style="padding:16px;" class="empty-state">Generate an index to see results</div>
+        <div style="padding: 16px" class="empty-state">
+          Generate an index to see results
+        </div>
       </div>
     </div>
 
@@ -552,56 +610,58 @@
       /* =========================
          State
          ========================= */
-      let pdfData = null;          // ArrayBuffer
+      let pdfData = null; // ArrayBuffer
       let pdfName = "";
-      let pdfDoc = null;           // loaded PDF.js document (for preview + indexing)
+      let pdfDoc = null; // loaded PDF.js document (for preview + indexing)
       let currentPreviewPage = 1;
-      let wordlistTerms = [];      // string[] (after dedup if enabled)
-      let wordlistRawTerms = [];   // string[] (original, before dedup)
+      let wordlistTerms = []; // string[] (after dedup if enabled)
+      let wordlistRawTerms = []; // string[] (original, before dedup)
       let wordlistName = "";
-      let indexResults = [];       // { word, count, pages }[]
+      let indexResults = []; // { word, count, pages }[]
       let sortCol = "word";
       let sortDir = "asc";
 
       /* =========================
          DOM references
          ========================= */
-      const pdfInput           = document.getElementById("pdfInput");
-      const wordlistInput      = document.getElementById("wordlistInput");
-      const pdfLabel           = document.getElementById("pdfLabel");
-      const wordlistLabel      = document.getElementById("wordlistLabel");
-      const pdfStatus          = document.getElementById("pdfStatus");
-      const wordlistStatus     = document.getElementById("wordlistStatus");
-      const generateBtn        = document.getElementById("generateBtn");
-      const clearBtn           = document.getElementById("clearBtn");
-      const statusBar          = document.getElementById("statusBar");
-      const progressWrap       = document.getElementById("progressWrap");
-      const progressLabel      = document.getElementById("progressLabel");
-      const progressFill       = document.getElementById("progressFill");
-      const resultsInfo        = document.getElementById("resultsInfo");
-      const tableWrapper       = document.getElementById("tableWrapper");
-      const downloadBtn        = document.getElementById("downloadBtn");
-      const sortHint           = document.getElementById("sortHint");
-      const chkWholeWord       = document.getElementById("chkWholeWord");
-      const chkMatchCase       = document.getElementById("chkMatchCase");
-      const chkHideZero        = document.getElementById("chkHideZero");
-      const chkDedup           = document.getElementById("chkDedup");
-      const pageOffsetInput    = document.getElementById("pageOffset");
-      const offsetHint         = document.getElementById("offsetHint");
+      const pdfInput = document.getElementById("pdfInput");
+      const wordlistInput = document.getElementById("wordlistInput");
+      const pdfLabel = document.getElementById("pdfLabel");
+      const wordlistLabel = document.getElementById("wordlistLabel");
+      const pdfStatus = document.getElementById("pdfStatus");
+      const wordlistStatus = document.getElementById("wordlistStatus");
+      const generateBtn = document.getElementById("generateBtn");
+      const clearBtn = document.getElementById("clearBtn");
+      const statusBar = document.getElementById("statusBar");
+      const progressWrap = document.getElementById("progressWrap");
+      const progressLabel = document.getElementById("progressLabel");
+      const progressFill = document.getElementById("progressFill");
+      const resultsInfo = document.getElementById("resultsInfo");
+      const tableWrapper = document.getElementById("tableWrapper");
+      const downloadBtn = document.getElementById("downloadBtn");
+      const sortHint = document.getElementById("sortHint");
+      const chkWholeWord = document.getElementById("chkWholeWord");
+      const chkMatchCase = document.getElementById("chkMatchCase");
+      const chkHideZero = document.getElementById("chkHideZero");
+      const chkDedup = document.getElementById("chkDedup");
+      const pageOffsetInput = document.getElementById("pageOffset");
+      const offsetHint = document.getElementById("offsetHint");
       // Preview elements
-      const pdfPreviewSection  = document.getElementById("pdfPreviewSection");
-      const pdfCanvasWrapper   = document.getElementById("pdfCanvasWrapper");
-      const pdfCanvas          = document.getElementById("pdfCanvas");
-      const prevPageBtn        = document.getElementById("prevPageBtn");
-      const nextPageBtn        = document.getElementById("nextPageBtn");
-      const pageDisplay        = document.getElementById("pageDisplay");
-      const wordlistPanel          = document.getElementById("wordlistPanel");
-      const wordlistPreviewSection = document.getElementById("wordlistPreviewSection");
-      const wordlistSearch         = document.getElementById("wordlistSearch");
-      const wordlistList           = document.getElementById("wordlistList");
-      const pageRangeFrom          = document.getElementById("pageRangeFrom");
-      const pageRangeTo            = document.getElementById("pageRangeTo");
-      const pageRangeHint          = document.getElementById("pageRangeHint");
+      const pdfPreviewSection = document.getElementById("pdfPreviewSection");
+      const pdfCanvasWrapper = document.getElementById("pdfCanvasWrapper");
+      const pdfCanvas = document.getElementById("pdfCanvas");
+      const prevPageBtn = document.getElementById("prevPageBtn");
+      const nextPageBtn = document.getElementById("nextPageBtn");
+      const pageDisplay = document.getElementById("pageDisplay");
+      const wordlistPanel = document.getElementById("wordlistPanel");
+      const wordlistPreviewSection = document.getElementById(
+        "wordlistPreviewSection",
+      );
+      const wordlistSearch = document.getElementById("wordlistSearch");
+      const wordlistList = document.getElementById("wordlistList");
+      const pageRangeFrom = document.getElementById("pageRangeFrom");
+      const pageRangeTo = document.getElementById("pageRangeTo");
+      const pageRangeHint = document.getElementById("pageRangeHint");
 
       /* =========================
          PDF.js setup
@@ -666,14 +726,23 @@
 
       function updateGenerateBtn() {
         generateBtn.disabled = !(pdfData && wordlistTerms.length > 0);
-        clearBtn.disabled = !(pdfData || wordlistTerms.length > 0 || indexResults.length > 0);
+        clearBtn.disabled = !(
+          pdfData ||
+          wordlistTerms.length > 0 ||
+          indexResults.length > 0
+        );
       }
 
       function updateStatus() {
         const parts = [];
         if (pdfData) parts.push("PDF loaded");
-        if (wordlistTerms.length > 0) parts.push(`${wordlistTerms.length} term${wordlistTerms.length !== 1 ? "s" : ""} in wordlist`);
-        statusBar.textContent = parts.length ? parts.join(" · ") : "Load a PDF and a wordlist to get started";
+        if (wordlistTerms.length > 0)
+          parts.push(
+            `${wordlistTerms.length} term${wordlistTerms.length !== 1 ? "s" : ""} in wordlist`,
+          );
+        statusBar.textContent = parts.length
+          ? parts.join(" · ")
+          : "Load a PDF and a wordlist to get started. The wordlist should contain one keyword or phrase per line.";
       }
 
       /* =========================
@@ -726,7 +795,9 @@
       wordlistSearch.addEventListener("input", () => {
         const q = wordlistSearch.value.toLowerCase();
         wordlistList.querySelectorAll(".term-row").forEach((row) => {
-          row.style.display = row.textContent.toLowerCase().includes(q) ? "" : "none";
+          row.style.display = row.textContent.toLowerCase().includes(q)
+            ? ""
+            : "none";
         });
       });
 
@@ -735,10 +806,11 @@
          ========================= */
       async function loadPdfPreview() {
         try {
-          pdfDoc = await pdfjsLib.getDocument({ data: pdfData.slice(0) }).promise;
+          pdfDoc = await pdfjsLib.getDocument({ data: pdfData.slice(0) })
+            .promise;
           currentPreviewPage = 1;
           pageRangeFrom.max = pdfDoc.numPages;
-          pageRangeTo.max   = pdfDoc.numPages;
+          pageRangeTo.max = pdfDoc.numPages;
           pdfPreviewSection.style.display = "block";
           updatePageNav();
           updatePageRangeHint();
@@ -751,9 +823,10 @@
       function updatePageNav() {
         const offset = getPageOffset();
         const docPage = applyOffset(currentPreviewPage);
-        pageDisplay.textContent = offset !== 0
-          ? `Page ${docPage} (${currentPreviewPage} of ${pdfDoc.numPages})`
-          : `Page ${currentPreviewPage} of ${pdfDoc.numPages}`;
+        pageDisplay.textContent =
+          offset !== 0
+            ? `Page ${docPage} (${currentPreviewPage} of ${pdfDoc.numPages})`
+            : `Page ${currentPreviewPage} of ${pdfDoc.numPages}`;
         prevPageBtn.disabled = currentPreviewPage <= 1;
         nextPageBtn.disabled = currentPreviewPage >= pdfDoc.numPages;
       }
@@ -780,7 +853,8 @@
 
       function syncWordlistHeight() {
         if (!pdfDoc) return;
-        wordlistPanel.style.height = pdfPreviewSection.closest(".panel").offsetHeight + "px";
+        wordlistPanel.style.height =
+          pdfPreviewSection.closest(".panel").offsetHeight + "px";
       }
 
       window.addEventListener("resize", syncWordlistHeight);
@@ -823,35 +897,44 @@
         generateBtn.disabled = true;
         downloadBtn.disabled = true;
         progressWrap.classList.add("visible");
-        tableWrapper.innerHTML = '<div style="padding:16px;" class="empty-state">Processing...</div>';
+        tableWrapper.innerHTML =
+          '<div style="padding:16px;" class="empty-state">Processing...</div>';
         sortHint.style.display = "none";
         resultsInfo.textContent = "Processing...";
 
-        const wholeWord  = chkWholeWord.checked;
-        const matchCase  = chkMatchCase.checked;
-        const hideZero   = chkHideZero.checked;
+        const wholeWord = chkWholeWord.checked;
+        const matchCase = chkMatchCase.checked;
+        const hideZero = chkHideZero.checked;
 
         // Build regex map — one pattern per unique term to avoid double-counting duplicates
         const seenTerms = new Set();
-        const termPatterns = wordlistTerms.map((term) => {
-          const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-          const pattern = wholeWord ? `(?<![\\w])${escaped}(?![\\w])` : escaped;
-          const flags   = matchCase ? "g" : "gi";
-          return { term, re: new RegExp(pattern, flags) };
-        }).filter(({ term }) => {
-          if (seenTerms.has(term)) return false;
-          seenTerms.add(term);
-          return true;
-        });
+        const termPatterns = wordlistTerms
+          .map((term) => {
+            const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+            const pattern = wholeWord
+              ? `(?<![\\w])${escaped}(?![\\w])`
+              : escaped;
+            const flags = matchCase ? "g" : "gi";
+            return { term, re: new RegExp(pattern, flags) };
+          })
+          .filter(({ term }) => {
+            if (seenTerms.has(term)) return false;
+            seenTerms.add(term);
+            return true;
+          });
 
         // Accumulator: term → { count, pages: Set<number> }
         const acc = new Map();
-        termPatterns.forEach(({ term }) => acc.set(term, { count: 0, pages: new Set() }));
+        termPatterns.forEach(({ term }) =>
+          acc.set(term, { count: 0, pages: new Set() }),
+        );
 
         let pdf;
         try {
           // Reuse already-loaded document if available, otherwise load fresh
-          pdf = pdfDoc || await pdfjsLib.getDocument({ data: pdfData.slice(0) }).promise;
+          pdf =
+            pdfDoc ||
+            (await pdfjsLib.getDocument({ data: pdfData.slice(0) }).promise);
         } catch (err) {
           statusBar.textContent = "Error: could not load PDF — " + err.message;
           progressWrap.classList.remove("visible");
@@ -871,7 +954,7 @@
 
           let pageText = "";
           try {
-            const page    = await pdf.getPage(pageNum);
+            const page = await pdf.getPage(pageNum);
             const content = await page.getTextContent();
             pageText = content.items.map((item) => item.str).join(" ");
             pageText = normalizeText(pageText);
@@ -943,16 +1026,19 @@
       }
 
       function updatePageRangeHint() {
-        if (!pdfDoc) { pageRangeHint.textContent = ""; return; }
+        if (!pdfDoc) {
+          pageRangeHint.textContent = "";
+          return;
+        }
         pageRangeHint.textContent = `(${applyOffset(1)}–${applyOffset(pdfDoc.numPages)})`;
       }
 
       function getPageRange(numPages) {
-        const offset  = getPageOffset();
+        const offset = getPageOffset();
         const rawFrom = parseInt(pageRangeFrom.value, 10);
-        const rawTo   = parseInt(pageRangeTo.value,   10);
-        const from = isNaN(rawFrom) ? 1        : Math.max(1,        rawFrom + offset);
-        const to   = isNaN(rawTo)   ? numPages : Math.min(numPages, rawTo   + offset);
+        const rawTo = parseInt(pageRangeTo.value, 10);
+        const from = isNaN(rawFrom) ? 1 : Math.max(1, rawFrom + offset);
+        const to = isNaN(rawTo) ? numPages : Math.min(numPages, rawTo + offset);
         return { from, to };
       }
 
@@ -992,12 +1078,13 @@
         const rows = getSortedResults(hideZero);
         const total = indexResults.length;
         const shown = rows.length;
-        const hits  = indexResults.filter((r) => r.count > 0).length;
+        const hits = indexResults.filter((r) => r.count > 0).length;
 
         resultsInfo.textContent = `${shown} term${shown !== 1 ? "s" : ""} shown · ${hits} with matches (of ${total} total)`;
 
         if (rows.length === 0) {
-          tableWrapper.innerHTML = '<div style="padding:16px;" class="empty-state">No matching terms found in the PDF.</div>';
+          tableWrapper.innerHTML =
+            '<div style="padding:16px;" class="empty-state">No matching terms found in the PDF.</div>';
           sortHint.style.display = "none";
           downloadBtn.disabled = true;
           return;
@@ -1011,7 +1098,7 @@
         const headerTr = document.createElement("tr");
         const cols = [
           { key: "input", label: "#" },
-          { key: "word",  label: "Word / Phrase" },
+          { key: "word", label: "Word / Phrase" },
           { key: "count", label: "Count" },
           { key: "pages", label: "Pages" },
         ];
@@ -1062,7 +1149,9 @@
 
           const tdPages = document.createElement("td");
           tdPages.className = "col-pages";
-          tdPages.textContent = pages.length ? pages.map(applyOffset).join(", ") : "—";
+          tdPages.textContent = pages.length
+            ? pages.map(applyOffset).join(", ")
+            : "—";
           tr.appendChild(tdPages);
 
           tbody.appendChild(tr);
@@ -1102,11 +1191,11 @@
             ].join(","),
           );
         });
-        const csv  = lines.join("\n");
+        const csv = lines.join("\n");
         const blob = new Blob([csv], { type: "text/csv" });
-        const url  = URL.createObjectURL(blob);
-        const a    = document.createElement("a");
-        a.href     = url;
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
         const base = pdfName.replace(/\.pdf$/i, "") || "pdf";
         a.download = `${base}-index.csv`;
         document.body.appendChild(a);
@@ -1121,33 +1210,34 @@
       clearBtn.addEventListener("click", () => {
         if (!confirm("Clear all data and reset?")) return;
         wordlistPanel.style.height = "";
-        pdfData           = null;
-        pdfName           = "";
-        pdfDoc            = null;
+        pdfData = null;
+        pdfName = "";
+        pdfDoc = null;
         currentPreviewPage = 1;
-        wordlistTerms     = [];
-        wordlistRawTerms  = [];
-        wordlistName      = "";
-        indexResults      = [];
-        pdfInput.value        = "";
-        wordlistInput.value   = "";
-        pdfStatus.textContent     = "No file loaded";
-        pdfStatus.className       = "file-status";
+        wordlistTerms = [];
+        wordlistRawTerms = [];
+        wordlistName = "";
+        indexResults = [];
+        pdfInput.value = "";
+        wordlistInput.value = "";
+        pdfStatus.textContent = "No file loaded";
+        pdfStatus.className = "file-status";
         wordlistStatus.textContent = "No file loaded";
-        wordlistStatus.className   = "file-status";
-        pdfPreviewSection.style.display      = "none";
+        wordlistStatus.className = "file-status";
+        pdfPreviewSection.style.display = "none";
         wordlistPreviewSection.style.display = "none";
-        wordlistSearch.value                 = "";
-        wordlistList.innerHTML               = "";
-        tableWrapper.innerHTML = '<div style="padding:16px;" class="empty-state">Generate an index to see results</div>';
+        wordlistSearch.value = "";
+        wordlistList.innerHTML = "";
+        tableWrapper.innerHTML =
+          '<div style="padding:16px;" class="empty-state">Generate an index to see results</div>';
         resultsInfo.textContent = "No results yet";
-        sortHint.style.display  = "none";
+        sortHint.style.display = "none";
         progressWrap.classList.remove("visible");
         downloadBtn.disabled = true;
         pageOffsetInput.value = "0";
         offsetHint.textContent = "No offset applied";
         pageRangeFrom.value = "";
-        pageRangeTo.value   = "";
+        pageRangeTo.value = "";
         pageRangeHint.textContent = "";
         updateGenerateBtn();
         updateStatus();
