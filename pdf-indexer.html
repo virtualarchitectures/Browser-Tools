@@ -503,16 +503,12 @@
       </div>
     </div>
 
-    <!-- Results -->
+    <!-- Index controls -->
     <div class="panel" id="resultsPanel">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
         <h2 style="margin-bottom:0">Index</h2>
-        <div style="display:flex;gap:8px;">
-          <button class="btn primary" id="generateBtn" disabled>Generate Index</button>
-          <button class="btn secondary" id="downloadBtn" disabled>Download CSV</button>
-        </div>
+        <button class="btn primary" id="generateBtn" disabled>Generate Index</button>
       </div>
-      <div class="info" id="resultsInfo">No results yet</div>
       <div class="form-row" style="margin-bottom:10px">
         <label class="form-label">Page range to index (after offset)</label>
         <input type="number" id="pageRangeFrom" class="number-input" min="1" placeholder="First" style="width:70px" />
@@ -520,7 +516,7 @@
         <input type="number" id="pageRangeTo" class="number-input" min="1" placeholder="Last" style="width:70px" />
         <span class="offset-hint" id="pageRangeHint"></span>
       </div>
-      <div class="checkbox-group" style="margin-bottom:10px">
+      <div class="checkbox-group">
         <label class="checkbox-label">
           <input type="checkbox" id="chkWholeWord" checked />
           Whole word matching
@@ -529,11 +525,22 @@
           <input type="checkbox" id="chkMatchCase" />
           Case-sensitive matching
         </label>
-        <label class="checkbox-label">
-          <input type="checkbox" id="chkHideZero" checked />
-          Hide words with zero occurrences
-        </label>
       </div>
+    </div>
+
+    <!-- Results table -->
+    <div class="panel" id="tablePanel">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div style="display:flex;align-items:center;gap:16px;">
+          <h2 style="margin-bottom:0">Results</h2>
+          <label class="checkbox-label" style="font-weight:normal">
+            <input type="checkbox" id="chkHideZero" checked />
+            Hide words with zero occurrences
+          </label>
+        </div>
+        <button class="btn secondary" id="downloadBtn" disabled>Download CSV</button>
+      </div>
+      <div class="info" id="resultsInfo">No results yet</div>
       <p class="sort-hint" id="sortHint" style="display:none">Click a column header to sort · Download CSV exports the table in its current sort order</p>
       <div class="table-wrapper" id="tableWrapper">
         <div style="padding:16px;" class="empty-state">Generate an index to see results</div>
