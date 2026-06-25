@@ -488,7 +488,16 @@
             <button class="btn secondary" id="prevPageBtn" disabled>
               &#8592;
             </button>
-            <span class="page-info" id="pageDisplay">Page 1 of 1</span>
+            <span class="page-info">
+              Page
+              <input
+                type="number"
+                id="pageJumpInput"
+                class="number-input"
+                style="width: 60px; text-align: center"
+              />
+              <span id="pageDisplay"></span>
+            </span>
             <button class="btn secondary" id="nextPageBtn" disabled>
               &#8594;
             </button>
@@ -653,6 +662,7 @@
       const pdfCanvas = document.getElementById("pdfCanvas");
       const prevPageBtn = document.getElementById("prevPageBtn");
       const nextPageBtn = document.getElementById("nextPageBtn");
+      const pageJumpInput = document.getElementById("pageJumpInput");
       const pageDisplay = document.getElementById("pageDisplay");
       const wordlistPanel = document.getElementById("wordlistPanel");
       const wordlistPreviewSection = document.getElementById(
@@ -821,15 +831,28 @@
       }
 
       function updatePageNav() {
-        const offset = getPageOffset();
-        const docPage = applyOffset(currentPreviewPage);
-        pageDisplay.textContent =
-          offset !== 0
-            ? `Page ${docPage} (${currentPreviewPage} of ${pdfDoc.numPages})`
-            : `Page ${currentPreviewPage} of ${pdfDoc.numPages}`;
+        pageJumpInput.value = applyOffset(currentPreviewPage);
+        pageJumpInput.min = applyOffset(1);
+        pageJumpInput.max = applyOffset(pdfDoc.numPages);
+        pageDisplay.textContent = ` of ${applyOffset(pdfDoc.numPages)}`;
         prevPageBtn.disabled = currentPreviewPage <= 1;
         nextPageBtn.disabled = currentPreviewPage >= pdfDoc.numPages;
       }
+
+      async function jumpToPage(inputVal) {
+        if (!pdfDoc) return;
+        const parsed = parseInt(inputVal, 10);
+        if (isNaN(parsed)) return;
+        const pdfPage = parsed + getPageOffset();
+        currentPreviewPage = Math.max(1, Math.min(pdfDoc.numPages, pdfPage));
+        updatePageNav();
+        await renderPreviewPage(currentPreviewPage);
+      }
+
+      pageJumpInput.addEventListener("change", (e) => jumpToPage(e.target.value));
+      pageJumpInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") { e.preventDefault(); jumpToPage(e.target.value); }
+      });
 
       async function renderPreviewPage(pageNum) {
         try {
