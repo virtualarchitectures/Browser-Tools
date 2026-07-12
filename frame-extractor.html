@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Frame Extractor</title>
+    <!-- JSZip: bundle extracted frames into a single zip download -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
       /* =========================
            CSS Styles
@@ -373,11 +375,29 @@
         box-shadow: 0 2px 4px rgba(0, 123, 255, 0.1);
       }
 
+      .frame-item.deselected {
+        opacity: 0.5;
+      }
+
       .frame-header {
         display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      .frame-header-info {
+        display: flex;
+        flex: 1;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 10px;
+      }
+
+      .frame-select-checkbox {
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+        flex-shrink: 0;
       }
 
       .frame-number {
@@ -424,6 +444,33 @@
 
       .frame-download-btn:hover {
         background: #0056b3;
+      }
+
+      .frame-filter-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 15px;
+      }
+
+      .frame-filter-row label {
+        font-weight: 600;
+        color: #333;
+        font-size: 14px;
+      }
+
+      .frame-filter-row input[type="text"] {
+        flex: 1;
+        min-width: 150px;
+        padding: 6px 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+
+      .frame-filter-row .control-description {
+        flex-basis: 100%;
       }
 
       .section-header {
@@ -700,6 +747,10 @@
             </div>
           </div>
 
+        </div>
+
+        <!-- Results Panel -->
+        <div class="results-panel">
           <!-- Progress Section -->
           <div class="panel-section progress-section" id="progress-section">
             <h2>Processing</h2>
@@ -710,10 +761,7 @@
               Extracting video frames...
             </p>
           </div>
-        </div>
 
-        <!-- Results Panel -->
-        <div class="results-panel">
           <!-- Statistics Section -->
           <div class="panel-section export-section" id="export-section">
             <h2>Statistics</h2>
@@ -729,6 +777,10 @@
               <div class="stat-item">
                 <span class="stat-value" id="interval-used">0s</span>
                 <span class="stat-label">Interval Used</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value" id="selected-frames">0</span>
+                <span class="stat-label">Frames Selected</span>
               </div>
             </div>
 
@@ -749,9 +801,30 @@
           <div class="panel-section">
             <div class="section-header">
               <h2>Extracted Frames</h2>
-              <button class="header-button" onclick="downloadAllFrames()">
-                Download All Frames
-              </button>
+              <div class="button-group">
+                <button class="header-button" onclick="selectAllFrames()">
+                  Select All
+                </button>
+                <button class="header-button" onclick="deselectAllFrames()">
+                  Deselect All
+                </button>
+                <button class="header-button" onclick="downloadAllFrames()">
+                  Download Selected
+                </button>
+              </div>
+            </div>
+            <div class="frame-filter-row">
+              <label for="frame-range-input">Frame numbers:</label>
+              <input
+                type="text"
+                id="frame-range-input"
+                placeholder="e.g., 1,5-8"
+              />
+              <div class="control-description" style="margin-left: 0">
+                Enter frame numbers separated by commas. Use hyphens for
+                ranges (e.g., <code>1,5-8</code> selects frames 1, 5, 6, 7,
+                and 8). Clear the box to deselect all.
+              </div>
             </div>
             <div class="frames-list-container">
               <div class="frames-list" id="frames-list">
@@ -794,6 +867,7 @@
       let frames = [];
       let isExtracting = false;
       let shouldStop = false;
+      let usedInterval = 0;
 
       // DOM elements
       const elements = {
@@ -819,6 +893,8 @@
         totalFrames: document.getElementById("total-frames"),
         videoDuration: document.getElementById("video-duration"),
         intervalUsed: document.getElementById("interval-used"),
+        selectedFrames: document.getElementById("selected-frames"),
+        frameRangeInput: document.getElementById("frame-range-input"),
         canvas: document.getElementById("processing-canvas"),
       };
 
@@ -833,6 +909,10 @@
       elements.endTimeInput.addEventListener("input", updateEstimate);
       elements.formatSelect.addEventListener("change", updateFormatControls);
       elements.qualitySlider.addEventListener("input", updateQualityDisplay);
+      elements.frameRangeInput.addEventListener(
+        "input",
+        handleFrameRangeInputChange
+      );
 
       updateFormatControls();
 
@@ -906,6 +986,7 @@
 
         // Reset state
         frames = [];
+        elements.frameRangeInput.value = "";
         updateFramesList();
         elements.exportSection.classList.remove("active");
 
@@ -952,6 +1033,7 @@
         elements.extractBtn.disabled = true;
         elements.startTimeInput.value = "0";
         elements.endTimeInput.value = "0";
+        elements.frameRangeInput.value = "";
         elements.progressSection.classList.remove("active");
         elements.exportSection.classList.remove("active");
         elements.estimateText.textContent =
@@ -1028,6 +1110,7 @@
           frames.push({
             frameNumber: frameNum,
             time: currentTime,
+            selected: true,
             thumbnail:
               format === "png"
                 ? captureCanvas.toDataURL(mimeType)
@@ -1059,6 +1142,7 @@
         isExtracting = false;
         elements.extractBtn.disabled = false;
         elements.stopBtn.disabled = true;
+        usedInterval = interval;
 
         if (!shouldStop) {
           elements.progressBar.style.width = "100%";
@@ -1066,13 +1150,13 @@
           elements.progressText.textContent = `Extraction complete! Captured ${frames.length} frames.`;
 
           updateFramesList();
-          updateStatistics(interval);
+          updateStatistics();
           elements.exportSection.classList.add("active");
         } else {
           elements.progressText.textContent = "Extraction stopped by user.";
           if (frames.length > 0) {
             updateFramesList();
-            updateStatistics(interval);
+            updateStatistics();
             elements.exportSection.classList.add("active");
           }
         }
@@ -1105,12 +1189,19 @@
         }
 
         elements.framesList.innerHTML = frames
-          .map((frame) => {
+          .map((frame, index) => {
             return `
-        <div class="frame-item">
-            <div class="frame-header" onclick="seekToFrame(${frame.time})">
-                <span class="frame-number">Frame ${frame.frameNumber}</span>
-                <span class="frame-time">${formatTime(frame.time)}</span>
+        <div class="frame-item${
+          frame.selected ? "" : " deselected"
+        }" data-frame-index="${index}">
+            <div class="frame-header">
+                <input type="checkbox" class="frame-select-checkbox" ${
+                  frame.selected ? "checked" : ""
+                } onclick="event.stopPropagation()" onchange="toggleFrameSelection(${index})">
+                <div class="frame-header-info" onclick="seekToFrame(${frame.time})">
+                    <span class="frame-number">Frame ${frame.frameNumber}</span>
+                    <span class="frame-time">${formatTime(frame.time)}</span>
+                </div>
             </div>
             <img src="${frame.thumbnail}" alt="Frame ${
               frame.frameNumber
@@ -1128,12 +1219,130 @@
           .join("");
       }
 
-      function updateStatistics(interval) {
+      function toggleFrameSelection(index) {
+        frames[index].selected = !frames[index].selected;
+
+        const item = elements.framesList.querySelector(
+          `[data-frame-index="${index}"]`
+        );
+        if (item) {
+          item.classList.toggle("deselected", !frames[index].selected);
+        }
+
+        syncFrameRangeInput();
+        updateStatistics();
+      }
+
+      function setAllFramesSelected(selected) {
+        if (frames.length === 0) return;
+
+        frames.forEach((frame) => (frame.selected = selected));
+
+        const scrollTop = elements.framesList.scrollTop;
+        updateFramesList();
+        elements.framesList.scrollTop = scrollTop;
+        syncFrameRangeInput();
+        updateStatistics();
+      }
+
+      function selectAllFrames() {
+        setAllFramesSelected(true);
+      }
+
+      function deselectAllFrames() {
+        setAllFramesSelected(false);
+      }
+
+      // Parse a "1,5-8" style string into a Set of frame numbers, bounded to
+      // the frames actually extracted
+      function parseFrameRanges(input) {
+        const frameNumbers = new Set();
+        if (!input.trim()) return frameNumbers;
+
+        const parts = input.split(",");
+        for (const part of parts) {
+          const trimmed = part.trim();
+          if (trimmed.includes("-")) {
+            const [start, end] = trimmed
+              .split("-")
+              .map((s) => parseInt(s.trim()));
+            if (!isNaN(start) && !isNaN(end)) {
+              for (
+                let i = Math.min(start, end);
+                i <= Math.max(start, end);
+                i++
+              ) {
+                if (i >= 1 && i <= frames.length) {
+                  frameNumbers.add(i);
+                }
+              }
+            }
+          } else {
+            const frameNumber = parseInt(trimmed);
+            if (
+              !isNaN(frameNumber) &&
+              frameNumber >= 1 &&
+              frameNumber <= frames.length
+            ) {
+              frameNumbers.add(frameNumber);
+            }
+          }
+        }
+        return frameNumbers;
+      }
+
+      // Convert a Set of frame numbers back into a compact "1,5-8" string
+      function framesToString(frameNumbers) {
+        if (frameNumbers.size === 0) return "";
+
+        const sorted = Array.from(frameNumbers).sort((a, b) => a - b);
+        const ranges = [];
+        let start = sorted[0];
+        let end = sorted[0];
+
+        for (let i = 1; i < sorted.length; i++) {
+          if (sorted[i] === end + 1) {
+            end = sorted[i];
+          } else {
+            ranges.push(start === end ? `${start}` : `${start}-${end}`);
+            start = sorted[i];
+            end = sorted[i];
+          }
+        }
+        ranges.push(start === end ? `${start}` : `${start}-${end}`);
+
+        return ranges.join(",");
+      }
+
+      function syncFrameRangeInput() {
+        const selectedNumbers = new Set(
+          frames.filter((frame) => frame.selected).map((frame) => frame.frameNumber)
+        );
+        elements.frameRangeInput.value = framesToString(selectedNumbers);
+      }
+
+      function handleFrameRangeInputChange() {
+        const frameNumbers = parseFrameRanges(elements.frameRangeInput.value);
+
+        frames.forEach((frame) => {
+          frame.selected = frameNumbers.has(frame.frameNumber);
+        });
+
+        const scrollTop = elements.framesList.scrollTop;
+        updateFramesList();
+        elements.framesList.scrollTop = scrollTop;
+        updateStatistics();
+      }
+
+      function updateStatistics() {
         elements.totalFrames.textContent = frames.length;
         elements.videoDuration.textContent = formatTimeSimple(
           videoElement.duration
         );
-        elements.intervalUsed.textContent = `${interval}s`;
+        elements.intervalUsed.textContent = `${usedInterval}s`;
+        elements.selectedFrames.textContent = frames.filter(
+          (frame) => frame.selected
+        ).length;
       }
 
       function seekToFrame(time) {
@@ -1152,35 +1361,39 @@
         link.click();
       }
 
-      // Download all frames (sequential downloads with delay)
+      // Download all selected frames bundled into a single zip file
       async function downloadAllFrames() {
-        if (frames.length === 0) {
-          alert("No frames to download");
+        const selectedFrames = frames.filter((frame) => frame.selected);
+
+        if (selectedFrames.length === 0) {
+          alert("No frames selected to download");
           return;
         }
 
-        if (
-          !confirm(`This will download ${frames.length} image files. Continue?`)
-        ) {
-          return;
-        }
+        const zip = new JSZip();
 
-        for (let i = 0; i < frames.length; i++) {
-          const frame = frames[i];
-          const link = document.createElement("a");
-          link.href = frame.thumbnail;
-          link.download = frame.filename;
-          link.click();
+        selectedFrames.forEach((frame) => {
+          const base64Data = frame.thumbnail.split(",")[1];
+          zip.file(frame.filename, base64Data, { base64: true });
+        });
 
-          // Small delay between downloads to prevent browser blocking
-          if (i < frames.length - 1) {
-            await new Promise((resolve) => setTimeout(resolve, 100));
-          }
-        }
+        const content = await zip.generateAsync({ type: "blob" });
+        const url = URL.createObjectURL(content);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "frames.zip";
+        a.click();
+        URL.revokeObjectURL(url);
       }
 
       // Export functions
       function exportJSON() {
+        const selectedFrames = frames.filter((frame) => frame.selected);
+        if (selectedFrames.length === 0) {
+          alert("No frames selected to export");
+          return;
+        }
+
         const data = {
           videoInfo: {
             duration: videoElement.duration,
@@ -1193,7 +1406,7 @@
             endTime: parseFloat(elements.endTimeInput.value),
             format: elements.formatSelect.value,
           },
-          frames: frames.map((frame) => ({
+          frames: selectedFrames.map((frame) => ({
             frameNumber: frame.frameNumber,
             time: frame.time,
             filename: frame.filename,
@@ -1212,9 +1425,15 @@
       }
 
       function exportCSV() {
+        const selectedFrames = frames.filter((frame) => frame.selected);
+        if (selectedFrames.length === 0) {
+          alert("No frames selected to export");
+          return;
+        }
+
         let csv = "Frame Number,Time (s),Time (formatted),Filename\n";
 
-        frames.forEach((frame) => {
+        selectedFrames.forEach((frame) => {
           csv += `${frame.frameNumber},${frame.time.toFixed(3)},${formatTime(
             frame.time
           )},${frame.filename}\n`;
@@ -1230,12 +1449,18 @@
       }
 
       function exportTimecodes() {
+        const selectedFrames = frames.filter((frame) => frame.selected);
+        if (selectedFrames.length === 0) {
+          alert("No frames selected to export");
+          return;
+        }
+
         let timecodes = "# Frame Extraction Timecodes\n\n";
-        timecodes += `Total Frames: ${frames.length}\n`;
+        timecodes += `Total Frames: ${selectedFrames.length}\n`;
         timecodes += `Video Duration: ${formatTime(videoElement.duration)}\n\n`;
         timecodes += "---\n\n";
 
-        frames.forEach((frame) => {
+        selectedFrames.forEach((frame) => {
           timecodes += `Frame ${frame.frameNumber}: ${formatTime(
             frame.time
           )} - ${frame.filename}\n`;
