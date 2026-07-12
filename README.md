@@ -87,6 +87,7 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 
 ### PDF Tools
 
+- **[Images to PDF](images-to-pdf.html)** — combine a sequence of images into a single downloadable PDF, with options to select which images to include and how pages are sized
 - **[PDF Cropper](pdf-cropper.html)** — remove headers, footers, page numbers, and margins from PDF documents by dragging bars to frame the content area you want to keep
 - **[PDF Editor](pdf-editor.html)** — remove pages from PDF documents by selecting page ranges or clicking page previews with visual page thumbnails
 - **[PDF Indexer](pdf-indexer.html)** — upload a PDF and a wordlist to generate a keyword index showing each term's occurrence count and the page numbers it appears on, with CSV export
