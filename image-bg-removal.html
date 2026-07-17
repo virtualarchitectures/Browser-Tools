@@ -311,6 +311,15 @@
         <span id="toolHint" class="small">Click on background areas in the Result panel to remove them</span>
       </div>
 
+      <!-- Global colour match (Magic Wand only) -->
+      <div id="globalMatchGroup" class="controls-row">
+        <label class="checkbox-label">
+          <input type="checkbox" id="globalMatchCheckbox" />
+          Match across entire image
+        </label>
+        <span class="small">Removes every matching pixel, not just the connected area touching your click</span>
+      </div>
+
       <!-- Tolerance -->
       <div class="controls-row">
         <label class="input-label" for="toleranceSlider">Tolerance:</label>
@@ -394,6 +403,7 @@
       let undoStack = [];
       const MAX_UNDO = 10;
       let currentTool = "wand";
+      let globalMatch = false;
       let tolerance = 10;
       let featherEnabled = false;
       let featherRadius = 2;
@@ -414,6 +424,8 @@
       const downloadBtn = document.getElementById("downloadBtn");
       const wandBtn = document.getElementById("wandBtn");
       const restoreBtn = document.getElementById("restoreBtn");
+      const globalMatchCheckbox = document.getElementById("globalMatchCheckbox");
+      const globalMatchGroup = document.getElementById("globalMatchGroup");
       const toleranceSlider = document.getElementById("toleranceSlider");
       const toleranceValue = document.getElementById("toleranceValue");
       const featherCheckbox = document.getElementById("featherCheckbox");
@@ -451,6 +463,10 @@
 
       wandBtn.addEventListener("click", () => setTool("wand"));
       restoreBtn.addEventListener("click", () => setTool("restore"));
+
+      globalMatchCheckbox.addEventListener("change", () => {
+        globalMatch = globalMatchCheckbox.checked;
+      });
 
       toleranceSlider.addEventListener("input", () => {
         tolerance = parseInt(toleranceSlider.value);
@@ -495,12 +511,14 @@
           wandBtn.classList.add("active-tool");
           restoreBtn.classList.remove("active-tool");
           brushGroup.style.display = "none";
-          toolHint.textContent = "Click on background areas in the Result panel to remove them";
+          globalMatchGroup.style.display = "flex";
+          toolHint.textContent = "Click on background areas in the Result panel to remove them — check \"Match across entire image\" below to remove matching pixels everywhere, not just the connected area";
           if (resultCanvas) resultCanvas.style.cursor = "crosshair";
         } else {
           restoreBtn.classList.add("active-tool");
           wandBtn.classList.remove("active-tool");
           brushGroup.style.display = "flex";
+          globalMatchGroup.style.display = "none";
           toolHint.textContent = "Paint over transparent areas in the Result panel to restore the original pixels — useful for fixing edges or areas removed by mistake";
           if (resultCanvas) resultCanvas.style.cursor = "cell";
         }
@@ -735,6 +753,23 @@
         const threshold = (tolerance / 100) * 441.67;
         const thresholdSq = threshold * threshold;
 
+        if (globalMatch) {
+          removeMatchingColorGlobal(data, width, height, targetR, targetG, targetB, thresholdSq);
+        } else {
+          removeMatchingColorFloodFill(data, width, height, startX, startY, targetR, targetG, targetB, thresholdSq);
+        }
+
+        // Optional feathering — softens transparency edges
+        if (featherEnabled && featherRadius > 0) {
+          applyFeathering(data, width, height, featherRadius);
+        }
+
+        workingCtx.putImageData(imageData, 0, 0);
+        renderResult();
+      }
+
+      // Removes only the region of matching pixels connected to the start point
+      function removeMatchingColorFloodFill(data, width, height, startX, startY, targetR, targetG, targetB, thresholdSq) {
         // BFS flood fill with head-pointer array (avoids O(n) shifts)
         const visited = new Uint8Array(width * height);
         const queue = [startX, startY];
@@ -770,14 +805,20 @@
             }
           }
         }
+      }
 
-        // Optional feathering — softens transparency edges
-        if (featherEnabled && featherRadius > 0) {
-          applyFeathering(data, width, height, featherRadius);
+      // Removes every matching pixel in the image, regardless of connectivity
+      function removeMatchingColorGlobal(data, width, height, targetR, targetG, targetB, thresholdSq) {
+        for (let i = 0; i < width * height; i++) {
+          const idx = i * 4;
+          if (data[idx + 3] === 0) continue; // already transparent
+          const dr = data[idx] - targetR;
+          const dg = data[idx + 1] - targetG;
+          const db = data[idx + 2] - targetB;
+          if (dr * dr + dg * dg + db * db <= thresholdSq) {
+            data[idx + 3] = 0;
+          }
         }
-
-        workingCtx.putImageData(imageData, 0, 0);
-        renderResult();
       }
 
       /* =========================
