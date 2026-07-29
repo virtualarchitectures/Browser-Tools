@@ -2,7 +2,7 @@
 
 A collection of browser-based HTML+JavaScript tools for various tasks. These tools are prototypes, not products. They have been developed quickly and iteratively using LLMs to test the afforances and limitations of agentic coding. Each tool has been tailored to my own practical needs. At the same time they are also intended to provide genuine utility and value for others.
 
-Some tools require external dependencies which are loaded from trusted CDNs. All tools run entirely in your browser with no server-side processing. Tools that load a CDN library list it at the end of their entry as `Dependencies:` followed by each one; tools without this line have no external dependencies.
+Some tools require external dependencies which are loaded from trusted CDNs. All tools run entirely in your browser with no server-side processing. Tools that load a CDN library list it below their description as a dependency.
 
 ## Features
 
