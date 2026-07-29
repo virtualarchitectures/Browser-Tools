@@ -1112,6 +1112,9 @@
     </section>
 
     <div class="actions-row">
+      <button type="button" class="btn" id="copy-script" disabled>
+        Show conversation
+      </button>
       <button type="button" class="btn" id="show-prompts" disabled>
         Show user prompts
       </button>
@@ -1204,11 +1207,11 @@ Load a file to get started.</pre
       role="dialog"
       aria-modal="true"
       aria-hidden="true"
-      aria-label="User prompts"
+      aria-labelledby="prompts-title"
     >
       <div class="dialog">
         <div class="prompts-head">
-          <div class="prompts-title">User prompts</div>
+          <div class="prompts-title" id="prompts-title">User prompts</div>
           <button
             type="button"
             class="btn"
@@ -1263,7 +1266,9 @@ Load a file to get started.</pre
         imageModalImg: document.getElementById("image-modal-img"),
         imageModalClose: document.getElementById("image-modal-close"),
         showPrompts: document.getElementById("show-prompts"),
+        copyScript: document.getElementById("copy-script"),
         promptsModal: document.getElementById("prompts-modal"),
+        promptsTitle: document.getElementById("prompts-title"),
         promptsClose: document.getElementById("prompts-close"),
         promptsText: document.getElementById("prompts-text"),
         promptsCopy: document.getElementById("prompts-copy"),
@@ -2411,6 +2416,20 @@ Load a file to get started.</pre
         }
       }
 
+      const SYNTHETIC_TEXT_PREFIXES = [
+        "<task-notification>",
+        "<command-name>",
+        "<local-command-stdout>",
+      ];
+
+      function isSyntheticText(text) {
+        if (typeof text !== "string") return false;
+        const trimmed = text.trim();
+        return SYNTHETIC_TEXT_PREFIXES.some((prefix) =>
+          trimmed.startsWith(prefix)
+        );
+      }
+
       function extractUserPrompts() {
         const prompts = [];
         for (const e of state.events) {
@@ -2427,10 +2446,14 @@ Load a file to get started.</pre
 
           const content = message.content;
           if (typeof content === "string") {
-            prompts.push(content);
+            if (!isSyntheticText(content)) prompts.push(content);
           } else if (Array.isArray(content)) {
             for (const item of content) {
-              if (item?.type === "text" && item.text) {
+              if (
+                item?.type === "text" &&
+                item.text &&
+                !isSyntheticText(item.text)
+              ) {
                 prompts.push(item.text);
               }
             }
@@ -2439,7 +2462,45 @@ Load a file to get started.</pre
         return prompts.join("\n\n");
       }
 
-      function openPromptsModal(text) {
+      function extractConversationScript() {
+        const lines = [];
+        for (const e of state.events) {
+          // Script covers both sides of the conversation, text content only
+          if (e.kind !== "user" && e.kind !== "assistant") continue;
+          if (e.role !== "user" && e.role !== "assistant") continue;
+          if (!e.contentTypes.includes("text")) continue;
+          // Skip compact summary messages (auto-generated context summaries) and meta messages
+          if (e.obj?.isCompactSummary === true) continue;
+          if (e.obj?.isMeta === true) continue;
+
+          const message = e.obj?.message;
+          if (!message) continue;
+
+          const content = message.content;
+          const textParts = [];
+          if (typeof content === "string") {
+            if (!isSyntheticText(content)) textParts.push(content);
+          } else if (Array.isArray(content)) {
+            for (const item of content) {
+              if (
+                item?.type === "text" &&
+                item.text &&
+                !isSyntheticText(item.text)
+              ) {
+                textParts.push(item.text);
+              }
+            }
+          }
+          if (!textParts.length) continue;
+
+          const roleLabel = e.role === "assistant" ? "Assistant" : "User";
+          const timestamp = formatTimestamp(e.date, state.tzMode);
+          lines.push(`[${timestamp}] ${roleLabel}:\n${textParts.join("\n\n")}`);
+        }
+        return lines.join("\n\n");
+      }
+
+      function openPromptsModal(text, title = "User prompts") {
         lastActiveElementBeforePrompts =
           document.activeElement instanceof HTMLElement
             ? document.activeElement
@@ -2447,6 +2508,7 @@ Load a file to get started.</pre
         lastBodyOverflowBeforePrompts = document.body.style.overflow;
         document.body.style.overflow = "hidden";
 
+        els.promptsTitle.textContent = title;
         els.promptsText.value = text || "";
         els.promptsModal.classList.add("open");
         els.promptsModal.setAttribute("aria-hidden", "false");
@@ -2483,7 +2545,7 @@ Load a file to get started.</pre
       els.promptsCopy.addEventListener("click", async () => {
         const text = els.promptsText.value || "";
         if (!text.trim()) {
-          setStatus("No user prompts found.", "warn");
+          setStatus("Nothing to copy.", "warn");
           return;
         }
         await copyText(text);
@@ -2501,7 +2563,15 @@ Load a file to get started.</pre
           setStatus("No user prompts found.", "warn");
           return;
         }
-        openPromptsModal(text);
+        openPromptsModal(text, "User prompts");
+      });
+      els.copyScript.addEventListener("click", () => {
+        const text = extractConversationScript();
+        if (!text) {
+          setStatus("No conversation text found.", "warn");
+          return;
+        }
+        openPromptsModal(text, "Conversation script");
       });
 
       els.imageModalClose.addEventListener("click", closeImageModal);
@@ -2579,6 +2649,7 @@ Load a file to get started.</pre
         setStatus(`Parsing ${sourceLabel || "content"}...`, "warn");
         closePromptsModal();
         els.showPrompts.disabled = true;
+        els.copyScript.disabled = true;
         clearSelection({ syncHash: false });
 
         const lines = text.split(/\r?\n/);
@@ -2619,6 +2690,7 @@ Load a file to get started.</pre
 
         state.events = events;
         els.showPrompts.disabled = !events.length;
+        els.copyScript.disabled = !events.length;
         updateFilterOptions(events);
         applyFilters();
         applySelectionFromHash();
