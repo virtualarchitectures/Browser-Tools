@@ -569,7 +569,7 @@
 
     <script type="module">
       // Import PDF.js
-      import * as pdfjsLib from "https://cdn.jsdelivr.net/npm/pdfjs-dist@5.4.449/+esm";
+      import * as pdfjsLib from "https://cdn.jsdelivr.net/npm/pdfjs-dist@5.4.449/build/pdf.min.mjs";
 
       /* =========================
          JavaScript
@@ -918,6 +918,7 @@
           const arrayBuffer = await file.arrayBuffer();
           const loadingTask = pdfjsLib.getDocument({
             data: arrayBuffer,
+            wasmUrl: "https://cdn.jsdelivr.net/npm/pdfjs-dist@5.4.449/wasm/",
           });
           pdfDocument = await loadingTask.promise;
           totalPages = pdfDocument.numPages;

@@ -616,7 +616,7 @@
     </div>
 
     <script type="module">
-      import * as pdfjsLib from "https://cdn.jsdelivr.net/npm/pdfjs-dist@5.4.449/+esm";
+      import * as pdfjsLib from "https://cdn.jsdelivr.net/npm/pdfjs-dist@5.4.449/build/pdf.min.mjs";
 
       /* =========================
          State
@@ -818,8 +818,10 @@
          ========================= */
       async function loadPdfPreview() {
         try {
-          pdfDoc = await pdfjsLib.getDocument({ data: pdfData.slice(0) })
-            .promise;
+          pdfDoc = await pdfjsLib.getDocument({
+            data: pdfData.slice(0),
+            wasmUrl: "https://cdn.jsdelivr.net/npm/pdfjs-dist@5.4.449/wasm/",
+          }).promise;
           currentPreviewPage = 1;
           updatePageRangeInputLimits();
           pdfPreviewSection.style.display = "block";
@@ -958,7 +960,11 @@
           // Reuse already-loaded document if available, otherwise load fresh
           pdf =
             pdfDoc ||
-            (await pdfjsLib.getDocument({ data: pdfData.slice(0) }).promise);
+            (await pdfjsLib.getDocument({
+              data: pdfData.slice(0),
+              wasmUrl:
+                "https://cdn.jsdelivr.net/npm/pdfjs-dist@5.4.449/wasm/",
+            }).promise);
         } catch (err) {
           statusBar.textContent = "Error: could not load PDF — " + err.message;
           progressWrap.classList.remove("visible");

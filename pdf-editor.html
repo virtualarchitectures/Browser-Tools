@@ -633,7 +633,7 @@
          ========================= */
 
       // Import PDF.js library
-      import * as pdfjsLib from "https://cdn.jsdelivr.net/npm/pdfjs-dist@5.4.449/+esm";
+      import * as pdfjsLib from "https://cdn.jsdelivr.net/npm/pdfjs-dist@5.4.449/build/pdf.min.mjs";
 
       // Configure PDF.js worker
       pdfjsLib.GlobalWorkerOptions.workerSrc =
@@ -837,6 +837,7 @@
           const arrayBuffer = await file.arrayBuffer();
           pdfDocument = await pdfjsLib.getDocument({
             data: arrayBuffer,
+            wasmUrl: "https://cdn.jsdelivr.net/npm/pdfjs-dist@5.4.449/wasm/",
           }).promise;
           totalPages = pdfDocument.numPages;
 

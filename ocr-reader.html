@@ -524,7 +524,7 @@
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
     <script type="module">
-      import * as pdfjsLib from "https://cdn.jsdelivr.net/npm/pdfjs-dist@5.4.449/+esm";
+      import * as pdfjsLib from "https://cdn.jsdelivr.net/npm/pdfjs-dist@5.4.449/build/pdf.min.mjs";
 
       /* =========================
          JavaScript
@@ -1142,6 +1142,8 @@
               cMapPacked: true,
               standardFontDataUrl:
                 "https://cdn.jsdelivr.net/npm/pdfjs-dist@5.4.449/standard_fonts/",
+              wasmUrl:
+                "https://cdn.jsdelivr.net/npm/pdfjs-dist@5.4.449/wasm/",
             }).promise;
             totalPages = pdfDocument.numPages;
 
