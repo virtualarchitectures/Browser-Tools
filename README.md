@@ -89,8 +89,8 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 ### PDF Tools
 
 - **[Images to PDF](images-to-pdf.html)** — combine a sequence of images into a single downloadable PDF, with options to select which images to include and how pages are sized. Dependencies: `pdf-lib`
-- **[PDF Cropper](pdf-cropper.html)** — remove headers, footers, page numbers, and margins from PDF documents by dragging bars to frame the content area you want to keep. Dependencies: `pdf-lib`
-- **[PDF Editor](pdf-editor.html)** — remove pages from PDF documents by selecting page ranges or clicking page previews with visual page thumbnails. Dependencies: `pdf-lib`
+- **[PDF Cropper](pdf-cropper.html)** — remove headers, footers, page numbers, and margins from PDF documents by dragging bars to frame the content area you want to keep. Dependencies: `pdf-lib` `pdf.js`
+- **[PDF Editor](pdf-editor.html)** — remove pages from PDF documents by selecting page ranges or clicking page previews with visual page thumbnails. Dependencies: `pdf-lib` `pdf.js`
 - **[PDF Indexer](pdf-indexer.html)** — upload a PDF and a wordlist to generate a keyword index showing each term's occurrence count and the page numbers it appears on, with CSV export. Dependencies: `pdf.js`
 - **[PDF Metadata Viewer](pdf-metadata.html)** — extract and view PDF metadata including title, author, dates, permissions, and security settings. Dependencies: `pdf.js`
 - **[PDF to Images](pdf-to-images.html)** — extract high-quality images of pages from PDF documents with adjustable DPI and format options (PNG, JPEG, WebP). Dependencies: `pdf.js` `JSZip`
