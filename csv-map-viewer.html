@@ -403,7 +403,6 @@
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <script type="module">
       const fileInput = document.getElementById("fileInput");
       const fileStatus = document.getElementById("fileStatus");
@@ -471,17 +470,46 @@
         }
       });
 
+      function parseCSV(text) {
+        const lines = [];
+        let currentLine = [], currentField = "", insideQuotes = false;
+        for (let i = 0; i < text.length; i++) {
+          const char = text[i], nextChar = text[i + 1];
+          if (char === '"') {
+            if (insideQuotes && nextChar === '"') { currentField += '"'; i++; }
+            else insideQuotes = !insideQuotes;
+          } else if (char === "," && !insideQuotes) {
+            currentLine.push(currentField); currentField = "";
+          } else if ((char === "\n" || char === "\r") && !insideQuotes) {
+            if (char === "\r" && nextChar === "\n") i++;
+            if (currentField || currentLine.length > 0) {
+              currentLine.push(currentField);
+              if (currentLine.some((f) => f.trim() !== "")) lines.push(currentLine);
+              currentLine = []; currentField = "";
+            }
+          } else {
+            currentField += char;
+          }
+        }
+        if (currentField || currentLine.length > 0) {
+          currentLine.push(currentField);
+          if (currentLine.some((f) => f.trim() !== "")) lines.push(currentLine);
+        }
+        return lines;
+      }
+
       function loadCSV(file) {
         const reader = new FileReader();
         reader.onload = (e) => {
-          const result = Papa.parse(e.target.result, {
-            header: true,
-            skipEmptyLines: true,
-            dynamicTyping: false,
+          const rows = parseCSV(e.target.result);
+          csvHeaders = rows.length > 0 ? rows[0] : [];
+          parsedData = rows.slice(1).map((row) => {
+            const obj = {};
+            csvHeaders.forEach((h, i) => {
+              obj[h] = row[i] !== undefined ? row[i] : "";
+            });
+            return obj;
           });
-
-          parsedData = result.data;
-          csvHeaders = result.meta.fields || [];
           fileStatus.textContent = `Selected: ${file.name} (${parsedData.length} rows)`;
           clearBtn.disabled = false;
 
