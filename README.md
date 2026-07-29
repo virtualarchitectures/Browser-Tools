@@ -2,7 +2,7 @@
 
 A collection of browser-based HTML+JavaScript tools for various tasks. These tools are prototypes, not products. They have been developed quickly and iteratively using LLMs to test the afforances and limitations of agentic coding. Each tool has been tailored to my own practical needs. At the same time they are also intended to provide genuine utility and value for others.
 
-Some tools require external dependencies which are loaded from trusted CDNs. All tools run entirely in your browser with no server-side processing.
+Some tools require external dependencies which are loaded from trusted CDNs. All tools run entirely in your browser with no server-side processing. Tools that load a CDN library list it at the end of their entry as `Dependencies:` followed by each one; tools without this line have no external dependencies.
 
 ## Features
 
@@ -26,9 +26,9 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 
 ### Data Visualisation
 
-- **[Data Summary](data-summary.html)** — load a CSV and profile dataset quality with a completeness bar chart, per-column summary table, and detailed statistics including non-blank counts, unique values, min/max/mean for numeric columns, date ranges, and top values
-- **[Data Visualiser](data-visualiser.html)** — load a CSV and create bar, line, area, scatter, histogram, pie, and doughnut charts with automatic column type inference and per-axis type overrides
-- **[Linear Regression](linear-regression.html)** — fit a simple linear regression to two numeric columns from a CSV; shows the regression equation, R², Pearson r, p-value, confidence and prediction interval bands, residual diagnostics (residuals vs. fitted, histogram with normal overlay), a detailed coefficients and ANOVA table, auto-generated interpretation, and a critical reflection section covering assumptions and caveats
+- **[Data Summary](data-summary.html)** — load a CSV and profile dataset quality with a completeness bar chart, per-column summary table, and detailed statistics including non-blank counts, unique values, min/max/mean for numeric columns, date ranges, and top values. Dependencies: `Chart.js`
+- **[Data Visualiser](data-visualiser.html)** — load a CSV and create bar, line, area, scatter, histogram, pie, and doughnut charts with automatic column type inference and per-axis type overrides. Dependencies: `Chart.js`
+- **[Linear Regression](linear-regression.html)** — fit a simple linear regression to two numeric columns from a CSV; shows the regression equation, R², Pearson r, p-value, confidence and prediction interval bands, residual diagnostics (residuals vs. fitted, histogram with normal overlay), a detailed coefficients and ANOVA table, auto-generated interpretation, and a critical reflection section covering assumptions and caveats. Dependencies: `Chart.js`
 
 ### Digital Forensics
 
@@ -36,7 +36,7 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 
 ### Document Processing
 
-- **[OCR Reader](ocr-reader.html)** — extract text from images and PDF files using optical character recognition with side-by-side preview
+- **[OCR Reader](ocr-reader.html)** — extract text from images and PDF files using optical character recognition with side-by-side preview. Dependencies: `Tesseract.js` `pdf.js`
 
 ### Glitch
 
@@ -55,25 +55,25 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 
 ### Maps and Spatial Data
 
-- **[CSV Map Viewer](csv-map-viewer.html)** — load a CSV file containing geographic coordinates and display point data on an interactive map; auto-detects common latitude/longitude column names and WKT geometry columns, with a manual column picker fallback and a linked properties table
-- **[Feature Service Viewer](feature-service-viewer.html)** — load and visualize ArcGIS Feature Services and MapServer layers on an interactive map
-- **[GeoJSON Editor](geojson-editor.html)** — draw points, polygons, and lines on an interactive map, add custom properties, and export as GeoJSON
-- **[GeoJSON Viewer](geojson-viewer.html)** — visualize and explore GeoJSON files on an interactive map
+- **[CSV Map Viewer](csv-map-viewer.html)** — load a CSV file containing geographic coordinates and display point data on an interactive map; auto-detects common latitude/longitude column names and WKT geometry columns, with a manual column picker fallback and a linked properties table. Dependencies: `Leaflet`
+- **[Feature Service Viewer](feature-service-viewer.html)** — load and visualize ArcGIS Feature Services and MapServer layers on an interactive map. Dependencies: `Leaflet`
+- **[GeoJSON Editor](geojson-editor.html)** — draw points, polygons, and lines on an interactive map, add custom properties, and export as GeoJSON. Dependencies: `Leaflet`
+- **[GeoJSON Viewer](geojson-viewer.html)** — visualize and explore GeoJSON files on an interactive map. Dependencies: `Leaflet`
 
 ### Media
 
-- **[Audio Editor](audio-editor.html)** — edit audio files in the browser with multichannel waveform display, cut/copy/paste, trim, silence, normalize, reverse, fade in/out, amplify, speed/pitch change, loop playback, clip splitting and drag-and-drop reordering with shuffle and assemble clips, and WAV export
-- **[Frame Extractor](frame-extractor.html)** — extract frames from a video at a regular interval with adjustable time range, output format, and quality controls
-- **[Multi-Webcam Viewer](webcam-viewer.html)** — view multiple webcam feeds simultaneously with support for YouTube embeds, direct video streams (MP4, M3U8, HLS), and iframe-compatible sources
+- **[Audio Editor](audio-editor.html)** — edit audio files in the browser with multichannel waveform display, cut/copy/paste, trim, silence, normalize, reverse, fade in/out, amplify, speed/pitch change, loop playback, clip splitting and drag-and-drop reordering with shuffle and assemble clips, and WAV export. Dependencies: `JSZip`
+- **[Frame Extractor](frame-extractor.html)** — extract frames from a video at a regular interval with adjustable time range, output format, and quality controls. Dependencies: `JSZip`
+- **[Multi-Webcam Viewer](webcam-viewer.html)** — view multiple webcam feeds simultaneously with support for YouTube embeds, direct video streams (MP4, M3U8, HLS), and iframe-compatible sources. Dependencies: `hls.js`
 - **[Scene Detection Tool](scene-detection.html)** — automatically detect scene changes in videos using frame analysis with adjustable sensitivity, minimum scene duration, and sample rate controls
 - **[Transcription Tool](transcribe.html)** — transcribe audio and video files with keyboard shortcuts, timestamps, and speed control
 
 ### Natural Language Processing (NLP)
 
 - **[AI Writing Detector](ai-writing-detector.html)** — analyze text for patterns commonly associated with LLM-generated content including AI vocabulary, significance claims, promotional language, weasel words, structural patterns, punctuation analysis, and LLM artifacts
-- **[Concept Analysis](concept-analysis.html)** — extract sentences containing specific concepts or phrases from text and automatically categorize results as definitions, distinctions, or explanations using NLP and RegEx
-- **[Named Entity Recognition](named-entity-recognition.html)** — extract and identify named entities from text including people, places and organisations using natural language processing
-- **[Sentiment Analysis](sentiment-analysis.html)** — analyze sentiment in CSV text columns using AFINN lexicon with configurable metrics (score, comparative, classification, word counts, tokens) and summary statistics
+- **[Concept Analysis](concept-analysis.html)** — extract sentences containing specific concepts or phrases from text and automatically categorize results as definitions, distinctions, or explanations using NLP and RegEx. Dependencies: `Compromise`
+- **[Named Entity Recognition](named-entity-recognition.html)** — extract and identify named entities from text including people, places and organisations using natural language processing. Dependencies: `Compromise`
+- **[Sentiment Analysis](sentiment-analysis.html)** — analyze sentiment in CSV text columns using AFINN lexicon with configurable metrics (score, comparative, classification, word counts, tokens) and summary statistics. Dependencies: `Sentiment`
 - **[Word Frequency Counter](word-frequency.html)** — analyze word frequency, discover common phrases with n-grams (bigrams, trigrams, 4-grams, 5-grams), and get detailed text statistics with customisable stop word filtering
 
 ### Network Data
@@ -82,27 +82,27 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 
 ### OSINT
 
-- **[Article Access Tool](article-access.html)** — locate accessible versions of news articles via the Internet Archive (Wayback Machine) or optional proxy extraction with Mozilla Readability
-- **[EXIF Data Viewer](exif-viewer.html)** — extract and view EXIF metadata from photos including camera settings, GPS location, and timestamps
+- **[Article Access Tool](article-access.html)** — locate accessible versions of news articles via the Internet Archive (Wayback Machine) or optional proxy extraction with Mozilla Readability. Dependencies: `Mozilla Readability`
+- **[EXIF Data Viewer](exif-viewer.html)** — extract and view EXIF metadata from photos including camera settings, GPS location, and timestamps. Dependencies: `Leaflet` `exif-js`
 - **[Identifier Extractor](identifier-extractor.html)** — extract and analyse URLs, email addresses, IPv4/IPv6 addresses, phone numbers, and MAC addresses from text with filtering, sorting, and export options
 
 ### PDF Tools
 
-- **[Images to PDF](images-to-pdf.html)** — combine a sequence of images into a single downloadable PDF, with options to select which images to include and how pages are sized
-- **[PDF Cropper](pdf-cropper.html)** — remove headers, footers, page numbers, and margins from PDF documents by dragging bars to frame the content area you want to keep
-- **[PDF Editor](pdf-editor.html)** — remove pages from PDF documents by selecting page ranges or clicking page previews with visual page thumbnails
-- **[PDF Indexer](pdf-indexer.html)** — upload a PDF and a wordlist to generate a keyword index showing each term's occurrence count and the page numbers it appears on, with CSV export
-- **[PDF Metadata Viewer](pdf-metadata.html)** — extract and view PDF metadata including title, author, dates, permissions, and security settings
-- **[PDF to Images](pdf-to-images.html)** — extract high-quality images of pages from PDF documents with adjustable DPI and format options (PNG, JPEG, WebP)
+- **[Images to PDF](images-to-pdf.html)** — combine a sequence of images into a single downloadable PDF, with options to select which images to include and how pages are sized. Dependencies: `pdf-lib`
+- **[PDF Cropper](pdf-cropper.html)** — remove headers, footers, page numbers, and margins from PDF documents by dragging bars to frame the content area you want to keep. Dependencies: `pdf-lib`
+- **[PDF Editor](pdf-editor.html)** — remove pages from PDF documents by selecting page ranges or clicking page previews with visual page thumbnails. Dependencies: `pdf-lib`
+- **[PDF Indexer](pdf-indexer.html)** — upload a PDF and a wordlist to generate a keyword index showing each term's occurrence count and the page numbers it appears on, with CSV export. Dependencies: `pdf.js`
+- **[PDF Metadata Viewer](pdf-metadata.html)** — extract and view PDF metadata including title, author, dates, permissions, and security settings. Dependencies: `pdf.js`
+- **[PDF to Images](pdf-to-images.html)** — extract high-quality images of pages from PDF documents with adjustable DPI and format options (PNG, JPEG, WebP). Dependencies: `pdf.js` `JSZip`
 
 ### Presentations
 
-- **[Presentation Annotator](annotated-presentation.html)** — add alt text and markdown annotations to presentation slide images with template-based export and live preview
+- **[Presentation Annotator](annotated-presentation.html)** — add alt text and markdown annotations to presentation slide images with template-based export and live preview. Dependencies: `Marked`
 
 ### Software Development
 
 - **[Claude Code Response Cleanup](claude-code-response-cleanup.html)** — fix wrapped-line whitespace, and join lines from Claude Code terminal output into clean readable text
-- **[Claude Code Timeline Viewer](claude-code-timeline.html)** — explore a Claude Code session `.jsonl` transcript as an interactive timeline with search, filtering by type/content/role, formatted markdown rendering of messages and tool calls, and an extractable list of user prompts
+- **[Claude Code Timeline Viewer](claude-code-timeline.html)** — explore a Claude Code session `.jsonl` transcript as an interactive timeline with search, filtering by type/content/role, formatted markdown rendering of messages and tool calls, and an extractable list of user prompts. Dependencies: `DOMPurify` `markdown-it`
 - **[GitHub Commits Viewer](github-commits.html)** — view and export commit history from GitHub repositories with support for CSV, JSON, and Markdown exports
 - **[Localhost Port Scanner](localhost-port-scanner.html)** — scan ports on your local machine to detect running services, Docker containers, and development servers with preset scans for common ports and custom range options
 
@@ -119,14 +119,14 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 
 ### Web Development
 
-- **[Favicon Generator](favicon-generator.html)** — generate favicons in multiple sizes and formats including SVG, ICO, Apple Touch Icons, and Android icons
+- **[Favicon Generator](favicon-generator.html)** — generate favicons in multiple sizes and formats including SVG, ICO, Apple Touch Icons, and Android icons. Dependencies: `JSZip`
 - **[Robots.txt Checker](robots-txt-checker.html)** — fetch and parse robots.txt files from websites and check whether specific URLs or paths are allowed or disallowed for different web crawlers
 
 ### Web Privacy & Security
 
 - **[Browser Fingerprint Viewer](browser-fingerprint.html)** — view browser fingerprint data that websites can collect including canvas fingerprinting, WebGL info, audio context, detected fonts, and device characteristics
 - **[Cookie & Storage Analysis](cookie-storage-analysis.html)** — examine all data websites can store on your device including cookies, localStorage, sessionStorage, IndexedDB, cache storage, and service workers with detailed analysis
-- **[Packet Analyzer](packet-analyzer.html)** — analyse pcap and pcapng network capture files with protocol breakdown charts, packet timeline, top talkers, and conversation tracking
+- **[Packet Analyzer](packet-analyzer.html)** — analyse pcap and pcapng network capture files with protocol breakdown charts, packet timeline, top talkers, and conversation tracking. Dependencies: `Chart.js`
 
 ## Acknowledgements
 
