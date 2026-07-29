@@ -102,6 +102,7 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 ### Software Development
 
 - **[Claude Code Response Cleanup](claude-code-response-cleanup.html)** — fix wrapped-line whitespace, and join lines from Claude Code terminal output into clean readable text
+- **[Claude Code Timeline Viewer](claude-code-timeline.html)** — explore a Claude Code session `.jsonl` transcript as an interactive timeline with search, filtering by type/content/role, formatted markdown rendering of messages and tool calls, and an extractable list of user prompts
 - **[GitHub Commits Viewer](github-commits.html)** — view and export commit history from GitHub repositories with support for CSV, JSON, and Markdown exports
 - **[Localhost Port Scanner](localhost-port-scanner.html)** — scan ports on your local machine to detect running services, Docker containers, and development servers with preset scans for common ports and custom range options
 
