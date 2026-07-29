@@ -683,6 +683,33 @@
       .pretty-section:last-child {
         margin-bottom: 0;
       }
+      .pretty-label-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 6px;
+      }
+      .pretty-label-row .pretty-label {
+        margin-bottom: 0;
+      }
+      .copy-text-btn {
+        font-size: 11px;
+        font-family: inherit;
+        padding: 2px 9px;
+        border-radius: 999px;
+        border: 1px solid #e1e4e8;
+        background: #fafbfc;
+        color: #586069;
+        cursor: pointer;
+        line-height: 1.5;
+        white-space: nowrap;
+      }
+      .copy-text-btn:hover {
+        background: #f1f8ff;
+        border-color: #0366d6;
+        color: #0366d6;
+      }
       .pretty-label {
         font-size: 11px;
         font-weight: 600;
@@ -2001,6 +2028,35 @@ Load a file to get started.</pre
         breaks: true, // Convert \n to <br>
       });
 
+      function createSectionLabel(labelText, rawText) {
+        const row = document.createElement("div");
+        row.className = "pretty-label-row";
+
+        const label = document.createElement("div");
+        label.className = "pretty-label";
+        label.textContent = labelText;
+        row.appendChild(label);
+
+        if (typeof rawText === "string" && rawText.trim()) {
+          const copyBtn = document.createElement("button");
+          copyBtn.type = "button";
+          copyBtn.className = "copy-text-btn";
+          copyBtn.textContent = "Copy text";
+          copyBtn.addEventListener("click", async (event) => {
+            event.stopPropagation();
+            await copyText(rawText);
+            const original = copyBtn.textContent;
+            copyBtn.textContent = "Copied!";
+            setTimeout(() => {
+              copyBtn.textContent = original;
+            }, 1200);
+          });
+          row.appendChild(copyBtn);
+        }
+
+        return row;
+      }
+
       function renderMarkdown(text) {
         if (typeof text !== "string") return "";
 
@@ -2033,13 +2089,12 @@ Load a file to get started.</pre
         if (typeof content === "string") {
           const section = document.createElement("div");
           section.className = "pretty-section";
-          const label = document.createElement("div");
-          label.className = "pretty-label";
-          label.textContent = message.role || "Message";
+          section.appendChild(
+            createSectionLabel(message.role || "Message", content)
+          );
           const body = document.createElement("div");
           body.className = "pretty-content";
           body.innerHTML = renderMarkdown(content);
-          section.appendChild(label);
           section.appendChild(body);
           fragment.appendChild(section);
           hasContent = true;
@@ -2054,14 +2109,12 @@ Load a file to get started.</pre
             if (item.type === "text" && item.text) {
               const section = document.createElement("div");
               section.className = "pretty-section";
-              const label = document.createElement("div");
-              label.className = "pretty-label";
-              label.textContent =
+              const labelText =
                 message.role === "assistant" ? "Response" : "Message";
+              section.appendChild(createSectionLabel(labelText, item.text));
               const body = document.createElement("div");
               body.className = "pretty-content";
               body.innerHTML = renderMarkdown(item.text);
-              section.appendChild(label);
               section.appendChild(body);
               fragment.appendChild(section);
               hasContent = true;
