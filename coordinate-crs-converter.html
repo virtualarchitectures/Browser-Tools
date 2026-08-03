@@ -1,0 +1,1600 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Coordinate / CRS Converter</title>
+    <script src="https://cdn.jsdelivr.net/npm/proj4@2.9.2/dist/proj4.js"></script>
+    <style>
+      /* =========================
+         Base styles
+         ========================= */
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0 auto;
+        max-width: 1180px;
+        padding: 20px;
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+        line-height: 1.6;
+        color: #24292e;
+        background: #ffffff;
+      }
+
+      h1 {
+        margin: 0 0 12px;
+        padding-bottom: 0.3em;
+        border-bottom: 1px solid #e1e4e8;
+        font-size: 32px;
+        font-weight: 600;
+      }
+
+      h2 {
+        margin: 0 0 12px;
+        font-size: 22px;
+        font-weight: 600;
+      }
+
+      h3 {
+        margin: 0 0 10px;
+        font-size: 16px;
+        font-weight: 600;
+      }
+
+      p {
+        margin: 0;
+      }
+
+      .back-link {
+        display: inline-block;
+        margin-bottom: 16px;
+        color: #0366d6;
+        text-decoration: none;
+        font-size: 14px;
+      }
+
+      .back-link:hover {
+        text-decoration: underline;
+      }
+
+      .intro-copy {
+        margin-bottom: 24px;
+        color: #586069;
+        font-size: 15px;
+      }
+
+      .tabs {
+        display: flex;
+        gap: 0;
+        margin-bottom: 24px;
+        border-bottom: 2px solid #e1e4e8;
+      }
+
+      .tab {
+        margin: 0 16px -2px 0;
+        padding: 10px 4px;
+        border: none;
+        border-bottom: 2px solid transparent;
+        background: none;
+        color: #586069;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      .tab:hover {
+        color: #0366d6;
+      }
+
+      .tab.active {
+        color: #0366d6;
+        border-bottom-color: #0366d6;
+      }
+
+      .tab-panel {
+        display: none;
+      }
+
+      .tab-panel.active {
+        display: block;
+      }
+
+      .panel {
+        margin-bottom: 20px;
+        padding: 18px;
+        border: 1px solid #e1e4e8;
+        border-radius: 12px;
+        background: #ffffff;
+      }
+
+      .panel-muted {
+        background: #f6f8fa;
+      }
+
+      .config-grid,
+      .single-grid,
+      .batch-grid,
+      .options-grid {
+        display: grid;
+        gap: 16px;
+      }
+
+      .config-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .single-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .batch-grid {
+        grid-template-columns: 1.2fr 0.8fr;
+      }
+
+      .options-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .field,
+      .fieldset {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .field-inline {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      label,
+      legend {
+        color: #24292e;
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .field-note,
+      .helper-text,
+      .empty-text {
+        color: #586069;
+        font-size: 13px;
+      }
+
+      .mono,
+      code,
+      textarea,
+      .coordinate-output,
+      .preview-table td,
+      .preview-table th {
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      }
+
+      input[type="text"],
+      input[type="number"],
+      select,
+      textarea {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        background: #ffffff;
+        color: #24292e;
+        font-size: 14px;
+      }
+
+      textarea {
+        min-height: 180px;
+        resize: vertical;
+      }
+
+      input:focus,
+      select:focus,
+      textarea:focus,
+      button:focus-visible {
+        outline: 2px solid rgba(3, 102, 214, 0.22);
+        outline-offset: 1px;
+        border-color: #0366d6;
+      }
+
+      .fieldset {
+        margin: 0;
+        padding: 12px;
+        border: 1px solid #e1e4e8;
+        border-radius: 10px;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      .btn-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 16px;
+      }
+
+      .btn {
+        padding: 8px 12px;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+        border-radius: 6px;
+        background: #fafbfc;
+        color: #24292e;
+        font-size: 14px;
+        line-height: 20px;
+        cursor: pointer;
+      }
+
+      .btn:hover {
+        background: #f3f4f6;
+      }
+
+      .btn.primary {
+        background: #0366d6;
+        color: #ffffff;
+      }
+
+      .btn.primary:hover {
+        background: #0256c5;
+      }
+
+      .btn:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+
+      .status {
+        margin-top: 14px;
+        padding: 12px 14px;
+        border-radius: 8px;
+        border: 1px solid #e1e4e8;
+        font-size: 14px;
+      }
+
+      .status.info {
+        background: #f6f8fa;
+        color: #586069;
+      }
+
+      .status.success {
+        background: #eef9f1;
+        border-color: #b7dfc1;
+        color: #1a5f2f;
+      }
+
+      .status.error {
+        background: #fff5f5;
+        border-color: #f1c0c0;
+        color: #8a1c1c;
+      }
+
+      .coordinate-card,
+      .result-card {
+        padding: 16px;
+        border: 1px solid #e1e4e8;
+        border-radius: 12px;
+        background: #ffffff;
+      }
+
+      .result-card {
+        background: linear-gradient(180deg, #ffffff 0%, #f6f8fa 100%);
+      }
+
+      .coordinate-output {
+        margin: 14px 0 10px;
+        padding: 14px;
+        border: 1px solid #dbe7f3;
+        border-radius: 10px;
+        background: #fbfdff;
+        font-size: 15px;
+        line-height: 1.8;
+      }
+
+      .coordinate-line {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .coordinate-line strong {
+        color: #0366d6;
+      }
+
+      .pill-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 8px;
+        border-radius: 999px;
+        background: #eef6ff;
+        color: #0366d6;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .drop-zone {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 120px;
+        padding: 18px;
+        border: 2px dashed #c7d6e6;
+        border-radius: 12px;
+        background: #fbfdff;
+        text-align: center;
+        color: #586069;
+      }
+
+      .drop-zone.dragover {
+        border-color: #0366d6;
+        background: #eef6ff;
+        color: #0366d6;
+      }
+
+      .preview-shell {
+        overflow: auto;
+        border: 1px solid #e1e4e8;
+        border-radius: 10px;
+        background: #ffffff;
+      }
+
+      .preview-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+
+      .preview-table th,
+      .preview-table td {
+        padding: 8px 10px;
+        border-bottom: 1px solid #e1e4e8;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      .preview-table th {
+        position: sticky;
+        top: 0;
+        background: #f6f8fa;
+        color: #24292e;
+      }
+
+      .preview-table tr:nth-child(even) td {
+        background: #fafbfc;
+      }
+
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+
+      .summary-item {
+        padding: 12px;
+        border: 1px solid #e1e4e8;
+        border-radius: 10px;
+        background: #ffffff;
+      }
+
+      .summary-item strong {
+        display: block;
+        color: #0366d6;
+        font-size: 18px;
+      }
+
+      .output-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      @media (max-width: 900px) {
+        .intro-grid,
+        .config-grid,
+        .single-grid,
+        .batch-grid,
+        .options-grid,
+        .summary-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .intro-card::after {
+          position: static;
+          display: block;
+          margin-top: 12px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- =========================
+         Header
+         ========================= -->
+    <a href="index.html" class="back-link">← Back to Browser Tools</a>
+    <h1>Coordinate / CRS Converter</h1>
+
+    <p class="intro-copy">
+      Convert single coordinates or whole CSV files between common geographic and projected
+      coordinate reference systems. Supports WGS 84, Web Mercator, British National Grid,
+      Irish Transverse Mercator, ETRS89 / LAEA Europe, and zone-based UTM conversions.
+    </p>
+
+    <div class="tabs" role="tablist" aria-label="Converter modes">
+      <button class="tab active" data-tab="single" role="tab" aria-selected="true">
+        Single coordinate
+      </button>
+      <button class="tab" data-tab="batch" role="tab" aria-selected="false">Batch CSV</button>
+    </div>
+
+    <!-- =========================
+         Single coordinate tab
+         ========================= -->
+    <section class="tab-panel active" id="tab-single" role="tabpanel">
+      <div class="panel">
+        <h2>CRS settings</h2>
+        <div class="config-grid">
+          <div class="fieldset">
+            <legend>Source CRS</legend>
+            <div class="field">
+              <label for="singleSourceCrs">Coordinate system</label>
+              <select id="singleSourceCrs"></select>
+              <div class="field-note" id="singleSourceNote"></div>
+            </div>
+            <div class="field-inline hidden" id="singleSourceUtmFields">
+              <div class="field">
+                <label for="singleSourceZone">UTM zone</label>
+                <input id="singleSourceZone" type="number" min="1" max="60" value="30" />
+              </div>
+              <div class="field">
+                <label for="singleSourceHemisphere">Hemisphere</label>
+                <select id="singleSourceHemisphere">
+                  <option value="N">Northern</option>
+                  <option value="S">Southern</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="fieldset">
+            <legend>Target CRS</legend>
+            <div class="field">
+              <label for="singleTargetCrs">Coordinate system</label>
+              <select id="singleTargetCrs"></select>
+              <div class="field-note" id="singleTargetNote"></div>
+            </div>
+            <div class="field-inline hidden" id="singleTargetUtmFields">
+              <div class="field">
+                <label for="singleTargetZone">UTM zone</label>
+                <input id="singleTargetZone" type="number" min="1" max="60" value="30" />
+              </div>
+              <div class="field">
+                <label for="singleTargetHemisphere">Hemisphere</label>
+                <select id="singleTargetHemisphere">
+                  <option value="N">Northern</option>
+                  <option value="S">Southern</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn" id="swapSingleCrsBtn" type="button">Swap CRSs</button>
+        </div>
+      </div>
+
+      <div class="single-grid">
+        <div class="coordinate-card">
+          <h2>Input coordinate</h2>
+          <div class="options-grid">
+            <div class="field">
+              <label for="singleX">X value</label>
+              <input id="singleX" type="text" placeholder="-0.1276" spellcheck="false" />
+            </div>
+            <div class="field">
+              <label for="singleY">Y value</label>
+              <input id="singleY" type="text" placeholder="51.5072" spellcheck="false" />
+            </div>
+            <div class="field">
+              <label for="singlePrecision">Decimal places</label>
+              <input id="singlePrecision" type="number" min="0" max="12" value="6" />
+            </div>
+          </div>
+          <p class="helper-text" id="singleInputHint">
+            WGS 84 accepts decimal degrees or DMS such as 51°30'26.6&quot;N.
+          </p>
+          <div class="btn-row">
+            <button class="btn primary" id="convertSingleBtn" type="button">Convert coordinate</button>
+            <button class="btn" id="useResultBtn" type="button" disabled>Use result as input</button>
+            <button class="btn" id="copyResultBtn" type="button" disabled>Copy result</button>
+          </div>
+          <div class="status info" id="singleStatus">
+            Enter a source coordinate and choose a target CRS.
+          </div>
+        </div>
+
+        <div class="result-card">
+          <h2>Converted result</h2>
+          <div class="pill-row">
+            <span class="pill" id="singleResultSourcePill">Source: WGS 84</span>
+            <span class="pill" id="singleResultTargetPill">Target: Web Mercator</span>
+          </div>
+          <div class="coordinate-output" id="singleResultOutput">
+            <div class="empty-text">Converted coordinates will appear here.</div>
+          </div>
+          <p class="helper-text" id="singleResultHint">
+            Geographic output includes decimal degrees and DMS. Projected output uses metres.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================
+         Batch CSV tab
+         ========================= -->
+    <section class="tab-panel" id="tab-batch" role="tabpanel">
+      <div class="panel">
+        <h2>Batch conversion settings</h2>
+        <div class="config-grid">
+          <div class="fieldset">
+            <legend>Source CRS</legend>
+            <div class="field">
+              <label for="batchSourceCrs">Coordinate system</label>
+              <select id="batchSourceCrs"></select>
+              <div class="field-note" id="batchSourceNote"></div>
+            </div>
+            <div class="field-inline hidden" id="batchSourceUtmFields">
+              <div class="field">
+                <label for="batchSourceZone">UTM zone</label>
+                <input id="batchSourceZone" type="number" min="1" max="60" value="30" />
+              </div>
+              <div class="field">
+                <label for="batchSourceHemisphere">Hemisphere</label>
+                <select id="batchSourceHemisphere">
+                  <option value="N">Northern</option>
+                  <option value="S">Southern</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="fieldset">
+            <legend>Target CRS</legend>
+            <div class="field">
+              <label for="batchTargetCrs">Coordinate system</label>
+              <select id="batchTargetCrs"></select>
+              <div class="field-note" id="batchTargetNote"></div>
+            </div>
+            <div class="field-inline hidden" id="batchTargetUtmFields">
+              <div class="field">
+                <label for="batchTargetZone">UTM zone</label>
+                <input id="batchTargetZone" type="number" min="1" max="60" value="30" />
+              </div>
+              <div class="field">
+                <label for="batchTargetHemisphere">Hemisphere</label>
+                <select id="batchTargetHemisphere">
+                  <option value="N">Northern</option>
+                  <option value="S">Southern</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="batch-grid">
+        <div class="panel">
+          <h2>Load CSV data</h2>
+          <div class="drop-zone" id="dropZone">
+            <div>
+              <p><strong>Drop a CSV file here</strong> or choose a file below.</p>
+              <p class="helper-text">You can also paste CSV text into the editor.</p>
+            </div>
+          </div>
+          <div class="btn-row">
+            <label class="btn" for="batchFileInput">Choose CSV file</label>
+            <input id="batchFileInput" type="file" accept=".csv,text/csv" class="hidden" />
+            <button class="btn" id="loadBatchTextBtn" type="button">Load pasted CSV</button>
+            <button class="btn" id="clearBatchBtn" type="button">Clear</button>
+          </div>
+          <div class="field" style="margin-top: 14px">
+            <label for="batchTextarea">CSV text</label>
+            <textarea
+              id="batchTextarea"
+              spellcheck="false"
+              placeholder="longitude,latitude,name&#10;-0.1276,51.5072,London&#10;2.3522,48.8566,Paris"
+            ></textarea>
+          </div>
+          <div class="status info" id="batchLoadStatus">
+            Load a CSV file or paste CSV text to configure coordinate columns.
+          </div>
+        </div>
+
+        <div class="panel panel-muted">
+          <h2>Column mapping</h2>
+          <div class="field">
+            <label for="batchXColumn">X column</label>
+            <select id="batchXColumn" disabled></select>
+          </div>
+          <div class="field" style="margin-top: 12px">
+            <label for="batchYColumn">Y column</label>
+            <select id="batchYColumn" disabled></select>
+          </div>
+          <div class="field-inline" style="margin-top: 12px">
+            <div class="field">
+              <label for="batchOutputX">Output X column</label>
+              <input id="batchOutputX" type="text" value="converted_x" />
+            </div>
+            <div class="field">
+              <label for="batchOutputY">Output Y column</label>
+              <input id="batchOutputY" type="text" value="converted_y" />
+            </div>
+          </div>
+          <div class="field" style="margin-top: 12px">
+            <label for="batchPrecision">Decimal places</label>
+            <input id="batchPrecision" type="number" min="0" max="12" value="6" />
+          </div>
+          <p class="helper-text" style="margin-top: 10px">
+            Failed rows are preserved and annotated in a <code>conversion_error</code> column.
+          </p>
+          <div class="btn-row">
+            <button class="btn primary" id="convertBatchBtn" type="button" disabled>
+              Convert CSV
+            </button>
+            <button class="btn" id="downloadBatchBtn" type="button" disabled>
+              Download result
+            </button>
+          </div>
+          <div class="status info" id="batchConvertStatus">
+            Output is generated after you load data and run the conversion.
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Output preview</h2>
+        <div class="summary-grid" id="batchSummary">
+          <div class="summary-item">
+            <span class="field-note">Rows loaded</span>
+            <strong id="summaryLoaded">0</strong>
+          </div>
+          <div class="summary-item">
+            <span class="field-note">Converted</span>
+            <strong id="summaryConverted">0</strong>
+          </div>
+          <div class="summary-item">
+            <span class="field-note">Failed</span>
+            <strong id="summaryFailed">0</strong>
+          </div>
+          <div class="summary-item">
+            <span class="field-note">Blank</span>
+            <strong id="summaryBlank">0</strong>
+          </div>
+        </div>
+        <div class="preview-shell" id="batchPreviewShell">
+          <div class="empty-text" style="padding: 16px">Converted rows will appear here.</div>
+        </div>
+      </div>
+    </section>
+
+    <script>
+      /* =========================
+         CRS definitions and state
+         ========================= */
+      const CRS_OPTIONS = [
+        {
+          value: "EPSG:4326",
+          label: "WGS 84 (EPSG:4326)",
+          kind: "geographic",
+          description: "Longitude and latitude in degrees"
+        },
+        {
+          value: "EPSG:3857",
+          label: "Web Mercator (EPSG:3857)",
+          kind: "projected",
+          description: "Projected metres used by most web maps"
+        },
+        {
+          value: "EPSG:27700",
+          label: "British National Grid (EPSG:27700)",
+          kind: "projected",
+          description: "OSGB36 easting and northing in metres"
+        },
+        {
+          value: "EPSG:2157",
+          label: "Irish Transverse Mercator (EPSG:2157)",
+          kind: "projected",
+          description: "ITM easting and northing in metres"
+        },
+        {
+          value: "EPSG:3035",
+          label: "ETRS89 / LAEA Europe (EPSG:3035)",
+          kind: "projected",
+          description: "European equal-area metres"
+        },
+        {
+          value: "UTM",
+          label: "UTM (WGS 84)",
+          kind: "projected",
+          description: "Choose any zone and hemisphere"
+        }
+      ];
+
+      proj4.defs(
+        "EPSG:27700",
+        "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs"
+      );
+      proj4.defs(
+        "EPSG:2157",
+        "+proj=tmerc +lat_0=53.5 +lon_0=-8 +k=0.99982 +x_0=600000 +y_0=750000 +ellps=GRS80 +units=m +no_defs"
+      );
+      proj4.defs(
+        "EPSG:3035",
+        "+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +units=m +no_defs"
+      );
+
+      const singleState = { lastResult: null };
+      const batchState = {
+        filename: "converted-coordinates.csv",
+        headers: [],
+        rows: [],
+        outputText: "",
+        outputRows: []
+      };
+
+      /* =========================
+         Element lookup
+         ========================= */
+      const tabs = document.querySelectorAll(".tab");
+      const panels = document.querySelectorAll(".tab-panel");
+
+      const singleSourceCrs = document.getElementById("singleSourceCrs");
+      const singleTargetCrs = document.getElementById("singleTargetCrs");
+      const singleSourceNote = document.getElementById("singleSourceNote");
+      const singleTargetNote = document.getElementById("singleTargetNote");
+      const singleSourceUtmFields = document.getElementById("singleSourceUtmFields");
+      const singleTargetUtmFields = document.getElementById("singleTargetUtmFields");
+      const singleSourceZone = document.getElementById("singleSourceZone");
+      const singleTargetZone = document.getElementById("singleTargetZone");
+      const singleSourceHemisphere = document.getElementById("singleSourceHemisphere");
+      const singleTargetHemisphere = document.getElementById("singleTargetHemisphere");
+      const singleX = document.getElementById("singleX");
+      const singleY = document.getElementById("singleY");
+      const singlePrecision = document.getElementById("singlePrecision");
+      const singleInputHint = document.getElementById("singleInputHint");
+      const singleStatus = document.getElementById("singleStatus");
+      const singleResultOutput = document.getElementById("singleResultOutput");
+      const singleResultHint = document.getElementById("singleResultHint");
+      const singleResultSourcePill = document.getElementById("singleResultSourcePill");
+      const singleResultTargetPill = document.getElementById("singleResultTargetPill");
+      const convertSingleBtn = document.getElementById("convertSingleBtn");
+      const swapSingleCrsBtn = document.getElementById("swapSingleCrsBtn");
+      const useResultBtn = document.getElementById("useResultBtn");
+      const copyResultBtn = document.getElementById("copyResultBtn");
+
+      const batchSourceCrs = document.getElementById("batchSourceCrs");
+      const batchTargetCrs = document.getElementById("batchTargetCrs");
+      const batchSourceNote = document.getElementById("batchSourceNote");
+      const batchTargetNote = document.getElementById("batchTargetNote");
+      const batchSourceUtmFields = document.getElementById("batchSourceUtmFields");
+      const batchTargetUtmFields = document.getElementById("batchTargetUtmFields");
+      const batchSourceZone = document.getElementById("batchSourceZone");
+      const batchTargetZone = document.getElementById("batchTargetZone");
+      const batchSourceHemisphere = document.getElementById("batchSourceHemisphere");
+      const batchTargetHemisphere = document.getElementById("batchTargetHemisphere");
+      const batchFileInput = document.getElementById("batchFileInput");
+      const batchTextarea = document.getElementById("batchTextarea");
+      const loadBatchTextBtn = document.getElementById("loadBatchTextBtn");
+      const clearBatchBtn = document.getElementById("clearBatchBtn");
+      const batchLoadStatus = document.getElementById("batchLoadStatus");
+      const batchConvertStatus = document.getElementById("batchConvertStatus");
+      const batchXColumn = document.getElementById("batchXColumn");
+      const batchYColumn = document.getElementById("batchYColumn");
+      const batchOutputX = document.getElementById("batchOutputX");
+      const batchOutputY = document.getElementById("batchOutputY");
+      const batchPrecision = document.getElementById("batchPrecision");
+      const convertBatchBtn = document.getElementById("convertBatchBtn");
+      const downloadBatchBtn = document.getElementById("downloadBatchBtn");
+      const batchPreviewShell = document.getElementById("batchPreviewShell");
+      const dropZone = document.getElementById("dropZone");
+      const summaryLoaded = document.getElementById("summaryLoaded");
+      const summaryConverted = document.getElementById("summaryConverted");
+      const summaryFailed = document.getElementById("summaryFailed");
+      const summaryBlank = document.getElementById("summaryBlank");
+
+      /* =========================
+         Utility functions
+         ========================= */
+      function populateCrsSelect(selectEl, defaultValue) {
+        selectEl.innerHTML = "";
+        CRS_OPTIONS.forEach((option) => {
+          const el = document.createElement("option");
+          el.value = option.value;
+          el.textContent = option.label;
+          selectEl.appendChild(el);
+        });
+        selectEl.value = defaultValue;
+      }
+
+      function getOption(value) {
+        return CRS_OPTIONS.find((item) => item.value === value);
+      }
+
+      function getCrsConfig(prefix) {
+        const select = prefix === "singleSource"
+          ? singleSourceCrs
+          : prefix === "singleTarget"
+            ? singleTargetCrs
+            : prefix === "batchSource"
+              ? batchSourceCrs
+              : batchTargetCrs;
+
+        const zoneInput = prefix === "singleSource"
+          ? singleSourceZone
+          : prefix === "singleTarget"
+            ? singleTargetZone
+            : prefix === "batchSource"
+              ? batchSourceZone
+              : batchTargetZone;
+
+        const hemisphereSelect = prefix === "singleSource"
+          ? singleSourceHemisphere
+          : prefix === "singleTarget"
+            ? singleTargetHemisphere
+            : prefix === "batchSource"
+              ? batchSourceHemisphere
+              : batchTargetHemisphere;
+
+        const option = getOption(select.value);
+
+        if (option.value === "UTM") {
+          const zone = clampZone(zoneInput.value);
+          const hemisphere = hemisphereSelect.value === "S" ? "S" : "N";
+          return {
+            value: `UTM-${zone}${hemisphere}`,
+            label: `UTM zone ${zone}${hemisphere} (WGS 84)`,
+            kind: "projected",
+            proj: `+proj=utm +zone=${zone} ${hemisphere === "S" ? "+south " : ""}+datum=WGS84 +units=m +no_defs`,
+            description: `UTM zone ${zone}${hemisphere} easting and northing in metres`,
+            xLabel: "Easting",
+            yLabel: "Northing"
+          };
+        }
+
+        return {
+          value: option.value,
+          label: option.label,
+          kind: option.kind,
+          proj: option.value,
+          description: option.description,
+          xLabel: option.kind === "geographic" ? "Longitude" : "Easting",
+          yLabel: option.kind === "geographic" ? "Latitude" : "Northing"
+        };
+      }
+
+      function clampZone(value) {
+        const numeric = Number.parseInt(value, 10);
+        if (!Number.isFinite(numeric)) {
+          return 30;
+        }
+        return Math.min(60, Math.max(1, numeric));
+      }
+
+      function setStatus(element, type, message) {
+        element.className = `status ${type}`;
+        element.textContent = message;
+      }
+
+      function formatNumber(value, decimals) {
+        const safeDecimals = Math.min(12, Math.max(0, Number.parseInt(decimals, 10) || 0));
+        const numeric = Number(value);
+        const zeroThreshold = 0.5 * 10 ** -safeDecimals;
+        const normalized = Math.abs(numeric) < zeroThreshold ? 0 : numeric;
+        const fixed = normalized.toFixed(safeDecimals);
+        return fixed.replace(/\.0+$/, "").replace(/(\.\d*?)0+$/, "$1");
+      }
+
+      function formatDms(value, axis) {
+        const abs = Math.abs(value);
+        const degrees = Math.floor(abs);
+        const minutesFloat = (abs - degrees) * 60;
+        const minutes = Math.floor(minutesFloat);
+        const seconds = (minutesFloat - minutes) * 60;
+        const hemisphere = axis === "lat"
+          ? value >= 0
+            ? "N"
+            : "S"
+          : value >= 0
+            ? "E"
+            : "W";
+        return `${degrees}° ${minutes}' ${formatNumber(seconds, 2)}" ${hemisphere}`;
+      }
+
+      function parseProjectedNumber(raw, label) {
+        const cleaned = String(raw).trim().replace(/,/g, "");
+        if (!cleaned) {
+          throw new Error(`${label} is required.`);
+        }
+        const value = Number.parseFloat(cleaned);
+        if (!Number.isFinite(value)) {
+          throw new Error(`${label} must be a valid number.`);
+        }
+        return value;
+      }
+
+      function parseAngle(raw, axisLabel) {
+        const value = String(raw).trim();
+        if (!value) {
+          throw new Error(`${axisLabel} is required.`);
+        }
+
+        const numericOnly = value.replace(/,/g, "");
+        if (/^[+-]?\d+(?:\.\d+)?$/.test(numericOnly)) {
+          return Number.parseFloat(numericOnly);
+        }
+
+        const hemisphereMatch = value.match(/[NSEW]/i);
+        const parts = value.match(/-?\d+(?:\.\d+)?/g);
+        if (!parts || parts.length === 0) {
+          throw new Error(`${axisLabel} could not be parsed.`);
+        }
+        if (parts.length > 3) {
+          throw new Error(`${axisLabel} should have degrees, minutes, and optional seconds.`);
+        }
+
+        const deg = Math.abs(Number.parseFloat(parts[0]));
+        const min = parts[1] ? Number.parseFloat(parts[1]) : 0;
+        const sec = parts[2] ? Number.parseFloat(parts[2]) : 0;
+
+        if (min >= 60 || sec >= 60) {
+          throw new Error(`${axisLabel} minutes and seconds must be below 60.`);
+        }
+
+        let sign = value.trim().startsWith("-") ? -1 : 1;
+        if (hemisphereMatch) {
+          const hemisphere = hemisphereMatch[0].toUpperCase();
+          if (hemisphere === "S" || hemisphere === "W") {
+            sign = -1;
+          } else {
+            sign = 1;
+          }
+        }
+
+        return sign * (deg + min / 60 + sec / 3600);
+      }
+
+      function parseCoordinate(raw, axis, crsConfig) {
+        if (crsConfig.kind === "geographic") {
+          const label = axis === "x" ? "Longitude" : "Latitude";
+          const value = parseAngle(raw, label);
+          if (axis === "x" && (value < -180 || value > 180)) {
+            throw new Error("Longitude must be between -180 and 180 degrees.");
+          }
+          if (axis === "y" && (value < -90 || value > 90)) {
+            throw new Error("Latitude must be between -90 and 90 degrees.");
+          }
+          return value;
+        }
+
+        return parseProjectedNumber(raw, axis === "x" ? crsConfig.xLabel : crsConfig.yLabel);
+      }
+
+      function convertPoint(x, y, sourceConfig, targetConfig) {
+        if (sourceConfig.value === targetConfig.value) {
+          return [x, y];
+        }
+        return proj4(sourceConfig.proj, targetConfig.proj, [x, y]);
+      }
+
+      function renderSingleResult(result, targetConfig, precision) {
+        const xLabel = targetConfig.xLabel;
+        const yLabel = targetConfig.yLabel;
+        const xFormatted = formatNumber(result.x, precision);
+        const yFormatted = formatNumber(result.y, precision);
+
+        const lines = [
+          `<div class="coordinate-line"><span>${xLabel}</span><strong>${xFormatted}</strong></div>`,
+          `<div class="coordinate-line"><span>${yLabel}</span><strong>${yFormatted}</strong></div>`
+        ];
+
+        if (targetConfig.kind === "geographic") {
+          lines.push(
+            `<div class="coordinate-line"><span>Longitude (DMS)</span><strong>${formatDms(result.x, "lon")}</strong></div>`
+          );
+          lines.push(
+            `<div class="coordinate-line"><span>Latitude (DMS)</span><strong>${formatDms(result.y, "lat")}</strong></div>`
+          );
+        }
+
+        singleResultOutput.innerHTML = lines.join("");
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function parseCSV(text) {
+        const rows = [];
+        let currentRow = [];
+        let currentField = "";
+        let insideQuotes = false;
+
+        for (let i = 0; i < text.length; i++) {
+          const char = text[i];
+          const nextChar = text[i + 1];
+
+          if (char === '"') {
+            if (insideQuotes && nextChar === '"') {
+              currentField += '"';
+              i++;
+            } else {
+              insideQuotes = !insideQuotes;
+            }
+          } else if (char === "," && !insideQuotes) {
+            currentRow.push(currentField);
+            currentField = "";
+          } else if ((char === "\n" || char === "\r") && !insideQuotes) {
+            if (char === "\r" && nextChar === "\n") {
+              i++;
+            }
+            currentRow.push(currentField);
+            if (currentRow.some((field) => field.trim() !== "")) {
+              rows.push(currentRow);
+            }
+            currentRow = [];
+            currentField = "";
+          } else {
+            currentField += char;
+          }
+        }
+
+        if (currentField !== "" || currentRow.length > 0) {
+          currentRow.push(currentField);
+          if (currentRow.some((field) => field.trim() !== "")) {
+            rows.push(currentRow);
+          }
+        }
+
+        return rows;
+      }
+
+      function escapeCsvField(value) {
+        if (value === null || value === undefined) {
+          return "";
+        }
+        const text = String(value);
+        if (/[",\n\r]/.test(text)) {
+          return `"${text.replace(/"/g, '""')}"`;
+        }
+        return text;
+      }
+
+      function toCSV(rows) {
+        if (!rows.length) {
+          return "";
+        }
+        const headers = Object.keys(rows[0]);
+        const lines = [headers.map(escapeCsvField).join(",")];
+        rows.forEach((row) => {
+          lines.push(headers.map((header) => escapeCsvField(row[header] ?? "")).join(","));
+        });
+        return lines.join("\n");
+      }
+
+      function downloadFile(content, filename, mimeType) {
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+      }
+
+      function populateColumnSelect(selectEl, headers, preferredPatterns) {
+        selectEl.innerHTML = "";
+        headers.forEach((header) => {
+          const option = document.createElement("option");
+          option.value = header;
+          option.textContent = header;
+          selectEl.appendChild(option);
+        });
+
+        const lower = headers.map((header) => header.toLowerCase().trim());
+        const index = lower.findIndex((header) => preferredPatterns.includes(header));
+        if (index !== -1) {
+          selectEl.value = headers[index];
+        }
+        selectEl.disabled = headers.length === 0;
+      }
+
+      function renderPreview(rows, mountEl, limit = 12) {
+        if (!rows.length) {
+          mountEl.innerHTML = '<div class="empty-text" style="padding: 16px">No rows to preview.</div>';
+          return;
+        }
+
+        const headers = Object.keys(rows[0]);
+        const previewRows = rows.slice(0, limit);
+        let html = '<table class="preview-table"><thead><tr>';
+        headers.forEach((header) => {
+          html += `<th>${escapeHtml(header)}</th>`;
+        });
+        html += '</tr></thead><tbody>';
+        previewRows.forEach((row) => {
+          html += '<tr>';
+          headers.forEach((header) => {
+            html += `<td>${escapeHtml(row[header] ?? "")}</td>`;
+          });
+          html += '</tr>';
+        });
+        html += '</tbody></table>';
+        mountEl.innerHTML = html;
+      }
+
+      function defaultOutputColumns(targetConfig) {
+        if (targetConfig.kind === "geographic") {
+          return { x: "converted_longitude", y: "converted_latitude" };
+        }
+        return { x: "converted_easting", y: "converted_northing" };
+      }
+
+      /* =========================
+         UI updates
+         ========================= */
+      function updateCrsUi(prefix) {
+        const config = getCrsConfig(prefix);
+        const isUtm = config.value.startsWith("UTM-");
+
+        if (prefix === "singleSource") {
+          singleSourceNote.textContent = config.description;
+          singleSourceUtmFields.classList.toggle("hidden", !isUtm);
+          document.querySelector('label[for="singleX"]').textContent = `${config.xLabel} value`;
+          document.querySelector('label[for="singleY"]').textContent = `${config.yLabel} value`;
+          singleX.placeholder = config.kind === "geographic" ? "-0.1276" : "529915.826";
+          singleY.placeholder = config.kind === "geographic" ? "51.5072" : "180433.993";
+          singleInputHint.textContent = config.kind === "geographic"
+            ? "WGS 84 accepts decimal degrees or DMS such as 51°30'26.6\"N. Longitude is X, latitude is Y."
+            : `${config.label} expects projected X/Y values in metres.`;
+          singleResultSourcePill.textContent = `Source: ${config.label}`;
+        } else if (prefix === "singleTarget") {
+          singleTargetNote.textContent = config.description;
+          singleTargetUtmFields.classList.toggle("hidden", !isUtm);
+          singleResultTargetPill.textContent = `Target: ${config.label}`;
+          singleResultHint.textContent = config.kind === "geographic"
+            ? "Geographic output includes decimal degrees and DMS."
+            : "Projected output is returned in metres.";
+        } else if (prefix === "batchSource") {
+          batchSourceNote.textContent = config.description;
+          batchSourceUtmFields.classList.toggle("hidden", !isUtm);
+        } else if (prefix === "batchTarget") {
+          batchTargetNote.textContent = config.description;
+          batchTargetUtmFields.classList.toggle("hidden", !isUtm);
+          const defaults = defaultOutputColumns(config);
+          if (!batchOutputX.dataset.touched) {
+            batchOutputX.value = defaults.x;
+          }
+          if (!batchOutputY.dataset.touched) {
+            batchOutputY.value = defaults.y;
+          }
+        }
+      }
+
+      function updateBatchSummary(loaded, converted, failed, blank) {
+        summaryLoaded.textContent = String(loaded);
+        summaryConverted.textContent = String(converted);
+        summaryFailed.textContent = String(failed);
+        summaryBlank.textContent = String(blank);
+      }
+
+      function resetBatchOutput() {
+        batchState.outputText = "";
+        batchState.outputRows = [];
+        downloadBatchBtn.disabled = true;
+        updateBatchSummary(batchState.rows.length, 0, 0, 0);
+        renderPreview([], batchPreviewShell);
+      }
+
+      /* =========================
+         Single coordinate actions
+         ========================= */
+      function convertSingleCoordinate() {
+        try {
+          const sourceConfig = getCrsConfig("singleSource");
+          const targetConfig = getCrsConfig("singleTarget");
+          const precision = Math.min(12, Math.max(0, Number.parseInt(singlePrecision.value, 10) || 0));
+          const x = parseCoordinate(singleX.value, "x", sourceConfig);
+          const y = parseCoordinate(singleY.value, "y", sourceConfig);
+          const [convertedX, convertedY] = convertPoint(x, y, sourceConfig, targetConfig);
+
+          if (!Number.isFinite(convertedX) || !Number.isFinite(convertedY)) {
+            throw new Error("Conversion did not return a valid coordinate.");
+          }
+
+          singleState.lastResult = {
+            x: convertedX,
+            y: convertedY,
+            sourceConfig,
+            targetConfig,
+            precision
+          };
+
+          renderSingleResult(singleState.lastResult, targetConfig, precision);
+          setStatus(singleStatus, "success", `Converted ${sourceConfig.label} to ${targetConfig.label}.`);
+          useResultBtn.disabled = false;
+          copyResultBtn.disabled = false;
+        } catch (error) {
+          singleState.lastResult = null;
+          useResultBtn.disabled = true;
+          copyResultBtn.disabled = true;
+          singleResultOutput.innerHTML = '<div class="empty-text">Converted coordinates will appear here.</div>';
+          setStatus(singleStatus, "error", error.message);
+        }
+      }
+
+      function useSingleResultAsInput() {
+        if (!singleState.lastResult) {
+          return;
+        }
+        const { x, y, targetConfig } = singleState.lastResult;
+        singleSourceCrs.value = targetConfig.value.startsWith("UTM-") ? "UTM" : targetConfig.value;
+        if (targetConfig.value.startsWith("UTM-")) {
+          const utmMatch = targetConfig.value.match(/UTM-(\d+)([NS])/);
+          if (utmMatch) {
+            singleSourceZone.value = utmMatch[1];
+            singleSourceHemisphere.value = utmMatch[2];
+          }
+        }
+        updateCrsUi("singleSource");
+        singleX.value = formatNumber(x, singleState.lastResult.precision);
+        singleY.value = formatNumber(y, singleState.lastResult.precision);
+        setStatus(singleStatus, "info", "Result copied into the source fields for the next conversion.");
+      }
+
+      async function copySingleResult() {
+        if (!singleState.lastResult) {
+          return;
+        }
+        const { x, y, targetConfig, precision } = singleState.lastResult;
+        const lines = [
+          `${targetConfig.xLabel}: ${formatNumber(x, precision)}`,
+          `${targetConfig.yLabel}: ${formatNumber(y, precision)}`
+        ];
+        if (targetConfig.kind === "geographic") {
+          lines.push(`Longitude (DMS): ${formatDms(x, "lon")}`);
+          lines.push(`Latitude (DMS): ${formatDms(y, "lat")}`);
+        }
+        try {
+          await navigator.clipboard.writeText(lines.join("\n"));
+          setStatus(singleStatus, "success", "Converted coordinate copied to the clipboard.");
+        } catch (error) {
+          setStatus(singleStatus, "error", "Clipboard copy failed in this browser context.");
+        }
+      }
+
+      function swapSingleCrs() {
+        const oldSource = singleSourceCrs.value;
+        const oldTarget = singleTargetCrs.value;
+        const oldSourceZone = singleSourceZone.value;
+        const oldTargetZone = singleTargetZone.value;
+        const oldSourceHemisphere = singleSourceHemisphere.value;
+        const oldTargetHemisphere = singleTargetHemisphere.value;
+
+        singleSourceCrs.value = oldTarget;
+        singleTargetCrs.value = oldSource;
+        singleSourceZone.value = oldTargetZone;
+        singleTargetZone.value = oldSourceZone;
+        singleSourceHemisphere.value = oldTargetHemisphere;
+        singleTargetHemisphere.value = oldSourceHemisphere;
+
+        updateCrsUi("singleSource");
+        updateCrsUi("singleTarget");
+      }
+
+      /* =========================
+         Batch actions
+         ========================= */
+      function loadBatchRows(rows, filename) {
+        if (rows.length < 2) {
+          throw new Error("CSV must include a header row and at least one data row.");
+        }
+
+        const headers = rows[0].map((header, index) => header.trim() || `column_${index + 1}`);
+        const dataRows = rows.slice(1).map((row) => {
+          const object = {};
+          headers.forEach((header, index) => {
+            object[header] = row[index] ?? "";
+          });
+          return object;
+        });
+
+        batchState.filename = filename || "converted-coordinates.csv";
+        batchState.headers = headers;
+        batchState.rows = dataRows;
+
+        const sourceConfig = getCrsConfig("batchSource");
+        const xPatterns = sourceConfig.kind === "geographic"
+          ? ["longitude", "lon", "lng", "x"]
+          : ["easting", "x", "east", "utm_easting"];
+        const yPatterns = sourceConfig.kind === "geographic"
+          ? ["latitude", "lat", "y"]
+          : ["northing", "y", "north", "utm_northing"];
+
+        populateColumnSelect(batchXColumn, headers, xPatterns);
+        populateColumnSelect(batchYColumn, headers, yPatterns);
+        convertBatchBtn.disabled = false;
+        setStatus(batchLoadStatus, "success", `Loaded ${dataRows.length} data row${dataRows.length === 1 ? "" : "s"} from ${filename}.`);
+        setStatus(batchConvertStatus, "info", "Choose the source columns and run the batch conversion.");
+        updateBatchSummary(dataRows.length, 0, 0, 0);
+        renderPreview(dataRows, batchPreviewShell);
+        batchState.outputText = "";
+        batchState.outputRows = [];
+        downloadBatchBtn.disabled = true;
+      }
+
+      function loadBatchText() {
+        const text = batchTextarea.value.trim();
+        if (!text) {
+          setStatus(batchLoadStatus, "error", "Paste CSV text or choose a CSV file first.");
+          return;
+        }
+        try {
+          const rows = parseCSV(text);
+          loadBatchRows(rows, "pasted-data.csv");
+        } catch (error) {
+          setStatus(batchLoadStatus, "error", error.message);
+        }
+      }
+
+      function clearBatch() {
+        batchFileInput.value = "";
+        batchTextarea.value = "";
+        batchState.filename = "converted-coordinates.csv";
+        batchState.headers = [];
+        batchState.rows = [];
+        batchState.outputText = "";
+        batchState.outputRows = [];
+        batchXColumn.innerHTML = "";
+        batchYColumn.innerHTML = "";
+        batchXColumn.disabled = true;
+        batchYColumn.disabled = true;
+        convertBatchBtn.disabled = true;
+        downloadBatchBtn.disabled = true;
+        setStatus(batchLoadStatus, "info", "Load a CSV file or paste CSV text to configure coordinate columns.");
+        setStatus(batchConvertStatus, "info", "Output is generated after you load data and run the conversion.");
+        updateBatchSummary(0, 0, 0, 0);
+        renderPreview([], batchPreviewShell);
+      }
+
+      function handleBatchFile(file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          batchTextarea.value = event.target.result;
+          try {
+            const rows = parseCSV(event.target.result);
+            loadBatchRows(rows, file.name);
+          } catch (error) {
+            setStatus(batchLoadStatus, "error", error.message);
+          }
+        };
+        reader.onerror = () => {
+          setStatus(batchLoadStatus, "error", "Failed to read the selected CSV file.");
+        };
+        reader.readAsText(file);
+      }
+
+      function convertBatch() {
+        if (!batchState.rows.length) {
+          setStatus(batchConvertStatus, "error", "Load CSV data before converting.");
+          return;
+        }
+
+        const xColumn = batchXColumn.value;
+        const yColumn = batchYColumn.value;
+        if (!xColumn || !yColumn) {
+          setStatus(batchConvertStatus, "error", "Choose both coordinate columns.");
+          return;
+        }
+
+        const outputX = batchOutputX.value.trim() || "converted_x";
+        const outputY = batchOutputY.value.trim() || "converted_y";
+        const precision = Math.min(12, Math.max(0, Number.parseInt(batchPrecision.value, 10) || 0));
+        const sourceConfig = getCrsConfig("batchSource");
+        const targetConfig = getCrsConfig("batchTarget");
+
+        let converted = 0;
+        let failed = 0;
+        let blank = 0;
+
+        const outputRows = batchState.rows.map((row) => {
+          const sourceX = row[xColumn] ?? "";
+          const sourceY = row[yColumn] ?? "";
+
+          if (String(sourceX).trim() === "" && String(sourceY).trim() === "") {
+            blank += 1;
+            return {
+              ...row,
+              [outputX]: "",
+              [outputY]: "",
+              conversion_error: ""
+            };
+          }
+
+          try {
+            const parsedX = parseCoordinate(sourceX, "x", sourceConfig);
+            const parsedY = parseCoordinate(sourceY, "y", sourceConfig);
+            const [convertedX, convertedY] = convertPoint(parsedX, parsedY, sourceConfig, targetConfig);
+            if (!Number.isFinite(convertedX) || !Number.isFinite(convertedY)) {
+              throw new Error("Invalid conversion result");
+            }
+            converted += 1;
+            return {
+              ...row,
+              [outputX]: formatNumber(convertedX, precision),
+              [outputY]: formatNumber(convertedY, precision),
+              conversion_error: ""
+            };
+          } catch (error) {
+            failed += 1;
+            return {
+              ...row,
+              [outputX]: "",
+              [outputY]: "",
+              conversion_error: error.message
+            };
+          }
+        });
+
+        batchState.outputRows = outputRows;
+        batchState.outputText = toCSV(outputRows);
+        const stem = batchState.filename.replace(/\.csv$/i, "") || "converted-coordinates";
+        batchState.filename = `${stem}-${targetConfig.value.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.csv`;
+        renderPreview(outputRows, batchPreviewShell);
+        updateBatchSummary(batchState.rows.length, converted, failed, blank);
+        downloadBatchBtn.disabled = outputRows.length === 0;
+        setStatus(
+          batchConvertStatus,
+          failed > 0
+            ? "success"
+            : "success",
+          `Converted ${converted} row${converted === 1 ? "" : "s"}; ${failed} failed; ${blank} blank.`
+        );
+      }
+
+      function downloadBatch() {
+        if (!batchState.outputText) {
+          return;
+        }
+        downloadFile(batchState.outputText, batchState.filename, "text/csv;charset=utf-8");
+      }
+
+      /* =========================
+         Event listeners
+         ========================= */
+      tabs.forEach((tab) => {
+        tab.addEventListener("click", () => {
+          tabs.forEach((item) => {
+            item.classList.toggle("active", item === tab);
+            item.setAttribute("aria-selected", item === tab ? "true" : "false");
+          });
+          panels.forEach((panel) => {
+            panel.classList.toggle("active", panel.id === `tab-${tab.dataset.tab}`);
+          });
+        });
+      });
+
+      [singleSourceCrs, singleTargetCrs].forEach((element) => {
+        element.addEventListener("change", () => {
+          updateCrsUi(element === singleSourceCrs ? "singleSource" : "singleTarget");
+        });
+      });
+
+      [batchSourceCrs, batchTargetCrs].forEach((element) => {
+        element.addEventListener("change", () => {
+          const prefix = element === batchSourceCrs ? "batchSource" : "batchTarget";
+          updateCrsUi(prefix);
+          if (batchState.headers.length && prefix === "batchSource") {
+            loadBatchRows([
+              batchState.headers,
+              ...batchState.rows.map((row) => batchState.headers.map((header) => row[header] ?? ""))
+            ], batchState.filename);
+          }
+        });
+      });
+
+      [singleSourceZone, singleSourceHemisphere].forEach((element) => {
+        element.addEventListener("change", () => updateCrsUi("singleSource"));
+      });
+      [singleTargetZone, singleTargetHemisphere].forEach((element) => {
+        element.addEventListener("change", () => updateCrsUi("singleTarget"));
+      });
+      [batchSourceZone, batchSourceHemisphere].forEach((element) => {
+        element.addEventListener("change", () => updateCrsUi("batchSource"));
+      });
+      [batchTargetZone, batchTargetHemisphere].forEach((element) => {
+        element.addEventListener("change", () => updateCrsUi("batchTarget"));
+      });
+
+      batchOutputX.addEventListener("input", () => {
+        batchOutputX.dataset.touched = "true";
+      });
+      batchOutputY.addEventListener("input", () => {
+        batchOutputY.dataset.touched = "true";
+      });
+
+      convertSingleBtn.addEventListener("click", convertSingleCoordinate);
+      useResultBtn.addEventListener("click", useSingleResultAsInput);
+      copyResultBtn.addEventListener("click", copySingleResult);
+      swapSingleCrsBtn.addEventListener("click", swapSingleCrs);
+      [singleX, singleY].forEach((input) => {
+        input.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") {
+            convertSingleCoordinate();
+          }
+        });
+      });
+
+      batchFileInput.addEventListener("change", (event) => {
+        const file = event.target.files[0];
+        if (file) {
+          handleBatchFile(file);
+        }
+      });
+      loadBatchTextBtn.addEventListener("click", loadBatchText);
+      clearBatchBtn.addEventListener("click", clearBatch);
+      convertBatchBtn.addEventListener("click", convertBatch);
+      downloadBatchBtn.addEventListener("click", downloadBatch);
+
+      ["dragenter", "dragover"].forEach((eventName) => {
+        dropZone.addEventListener(eventName, (event) => {
+          event.preventDefault();
+          dropZone.classList.add("dragover");
+        });
+      });
+      ["dragleave", "dragend", "drop"].forEach((eventName) => {
+        dropZone.addEventListener(eventName, (event) => {
+          event.preventDefault();
+          if (eventName === "drop") {
+            const file = event.dataTransfer.files[0];
+            if (file) {
+              handleBatchFile(file);
+            }
+          }
+          dropZone.classList.remove("dragover");
+        });
+      });
+
+      /* =========================
+         Initialization
+         ========================= */
+      populateCrsSelect(singleSourceCrs, "EPSG:4326");
+      populateCrsSelect(singleTargetCrs, "EPSG:3857");
+      populateCrsSelect(batchSourceCrs, "EPSG:4326");
+      populateCrsSelect(batchTargetCrs, "EPSG:3857");
+      updateCrsUi("singleSource");
+      updateCrsUi("singleTarget");
+      updateCrsUi("batchSource");
+      updateCrsUi("batchTarget");
+      updateBatchSummary(0, 0, 0, 0);
+    </script>
+  </body>
+</html>
