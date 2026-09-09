@@ -1,0 +1,1242 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Video Editor</title>
+    <!--
+      ffmpeg.wasm: browser-side video trim/transform/transcode (https://ffmpegwasm.netlify.app/).
+      The @ffmpeg/ffmpeg wrapper and its worker chunk (ffmpeg-wasm/*) are vendored locally because
+      browsers refuse to construct a Web Worker from a cross-origin (CDN) script URL; see
+      ffmpeg-wasm/README.md. The much larger @ffmpeg/core engine (~30 MB) is fetched from jsDelivr
+      at runtime instead of being bundled here. Only the single-threaded core build is used, so no
+      SharedArrayBuffer / cross-origin-isolation (COOP/COEP) headers are required.
+    -->
+    <script src="ffmpeg-wasm/ffmpeg.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/dist/umd/index.js"></script>
+    <style>
+      /* =========================
+         Base styles
+         ========================= */
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0 auto;
+        max-width: 1180px;
+        padding: 20px;
+        font-family:
+          Helvetica,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Arial,
+          sans-serif;
+        line-height: 1.6;
+        color: #24292e;
+        background: #ffffff;
+      }
+
+      h1 {
+        margin: 0 0 12px;
+        padding-bottom: 0.3em;
+        border-bottom: 1px solid #e1e4e8;
+        font-size: 32px;
+        font-weight: 600;
+      }
+
+      h2 {
+        margin: 0 0 14px;
+        font-size: 18px;
+        font-weight: 600;
+      }
+
+      p {
+        margin: 0;
+      }
+
+      .back-link {
+        display: inline-block;
+        margin-bottom: 16px;
+        color: #0366d6;
+        text-decoration: none;
+        font-size: 14px;
+      }
+
+      .back-link:hover {
+        text-decoration: underline;
+      }
+
+      .intro {
+        margin-bottom: 20px;
+        color: #586069;
+        font-size: 14px;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      /* =========================
+         Status message
+         ========================= */
+      .status {
+        margin-bottom: 16px;
+        padding: 12px 14px;
+        border-radius: 8px;
+        border: 1px solid #e1e4e8;
+        font-size: 14px;
+      }
+      .status.info {
+        background: #f6f8fa;
+        color: #586069;
+      }
+      .status.success {
+        background: #eef9f1;
+        border-color: #b7dfc1;
+        color: #1a5f2f;
+      }
+      .status.error {
+        background: #fff5f5;
+        border-color: #f1c0c0;
+        color: #8a1c1c;
+      }
+
+      /* =========================
+         Drop zone / file info
+         ========================= */
+      .drop-zone {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        min-height: 140px;
+        padding: 24px;
+        border: 2px dashed #c7d6e6;
+        border-radius: 12px;
+        background: #fbfdff;
+        text-align: center;
+        color: #586069;
+        cursor: pointer;
+        transition:
+          border-color 0.2s,
+          background 0.2s;
+        margin-bottom: 16px;
+      }
+      .drop-zone.dragover {
+        border-color: #0366d6;
+        background: #eef6ff;
+        color: #0366d6;
+      }
+      .drop-zone .drop-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: #24292e;
+      }
+      .drop-zone.dragover .drop-title {
+        color: #0366d6;
+      }
+      .drop-zone p {
+        font-size: 13px;
+      }
+
+      input[type="file"] {
+        position: absolute;
+        left: -9999px;
+      }
+
+      .file-info {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+        align-items: center;
+        padding: 10px 14px;
+        margin-bottom: 16px;
+        border: 1px solid #e1e4e8;
+        border-radius: 8px;
+        background: #f6f8fa;
+        font-size: 13px;
+        color: #586069;
+      }
+      .file-info strong {
+        color: #24292e;
+      }
+      .file-info .open-new {
+        margin-left: auto;
+        color: #0366d6;
+        background: none;
+        border: none;
+        padding: 0;
+        font-size: 13px;
+        font-family: inherit;
+        cursor: pointer;
+      }
+      .file-info .open-new:hover {
+        text-decoration: underline;
+      }
+
+      /* =========================
+         Video preview
+         ========================= */
+      .video-container {
+        background: #000;
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 20px;
+      }
+      #preview {
+        display: block;
+        width: 100%;
+        max-height: 480px;
+        background: #000;
+      }
+
+      /* =========================
+         Panels / fields
+         ========================= */
+      .panel {
+        margin-bottom: 20px;
+        padding: 18px;
+        border: 1px solid #e1e4e8;
+        border-radius: 12px;
+        background: #ffffff;
+      }
+
+      .field-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px 16px;
+        margin-bottom: 12px;
+      }
+      .field-row:last-child {
+        margin-bottom: 0;
+      }
+
+      label {
+        color: #24292e;
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .field-row label.checkbox {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 500;
+      }
+
+      input[type="text"],
+      input[type="number"],
+      select {
+        padding: 8px 10px;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        background: #ffffff;
+        color: #24292e;
+        font-size: 14px;
+        font-family: inherit;
+      }
+
+      input[type="number"] {
+        width: 90px;
+      }
+
+      input[type="range"] {
+        flex: 1;
+        min-width: 160px;
+      }
+
+      input:focus,
+      select:focus,
+      button:focus-visible {
+        outline: 2px solid rgba(3, 102, 214, 0.22);
+        outline-offset: 1px;
+        border-color: #0366d6;
+      }
+
+      input:disabled,
+      select:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .unit,
+      .value-display {
+        color: #586069;
+        font-size: 13px;
+        min-width: 48px;
+      }
+
+      .hint {
+        margin-top: 8px;
+        color: #586069;
+        font-size: 13px;
+      }
+
+      .hint-inline {
+        color: #586069;
+        font-size: 12px;
+        flex-basis: 100%;
+      }
+
+      .panel.disabled {
+        opacity: 0.5;
+        pointer-events: none;
+      }
+
+      /* =========================
+         Buttons
+         ========================= */
+      .btn-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+
+      .btn {
+        padding: 8px 12px;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+        border-radius: 6px;
+        background: #fafbfc;
+        color: #24292e;
+        font-size: 14px;
+        line-height: 20px;
+        cursor: pointer;
+        font-family: inherit;
+      }
+      .btn:hover:not(:disabled) {
+        background: #f3f4f6;
+      }
+      .btn.primary {
+        background: #0366d6;
+        color: #ffffff;
+        border-color: #0366d6;
+      }
+      .btn.primary:hover:not(:disabled) {
+        background: #0256c5;
+      }
+      .btn:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+
+      /* =========================
+         Progress / log
+         ========================= */
+      .progress-bar-container {
+        width: 100%;
+        height: 24px;
+        background: #e1e4e8;
+        border-radius: 6px;
+        overflow: hidden;
+        margin-bottom: 8px;
+      }
+      .progress-bar {
+        height: 100%;
+        width: 0%;
+        background: #0366d6;
+        color: #ffffff;
+        font-size: 11px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: width 0.2s;
+        white-space: nowrap;
+      }
+      .progress-text {
+        margin-bottom: 10px;
+        font-size: 13px;
+        color: #586069;
+      }
+      .log-box {
+        max-height: 140px;
+        overflow-y: auto;
+        margin: 0;
+        padding: 10px 12px;
+        border: 1px solid #e1e4e8;
+        border-radius: 8px;
+        background: #f6f8fa;
+        color: #586069;
+        font-family:
+          "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 12px;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      /* =========================
+         Result
+         ========================= */
+      #output-preview video,
+      #output-preview img,
+      #output-preview audio {
+        display: block;
+        max-width: 100%;
+        max-height: 420px;
+        margin-bottom: 12px;
+        border-radius: 8px;
+        background: #000;
+      }
+      #output-preview audio {
+        width: 100%;
+        background: none;
+      }
+      #output-info {
+        color: #586069;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <a href="index.html" class="back-link">← Back to Browser Tools</a>
+    <h1>Video Editor</h1>
+    <p class="intro">
+      Trim, resize, rotate, flip, change speed and volume, and convert video
+      entirely in your browser using <strong>FFmpeg</strong> compiled to
+      WebAssembly. Nothing is uploaded. All processing happens on your device.
+      The conversion engine (~30&nbsp;MB) downloads the first time you convert a
+      file.
+    </p>
+
+    <div class="status hidden" id="status"></div>
+
+    <div class="drop-zone" id="drop-zone">
+      <div class="drop-title">Drop a video file here or click to browse</div>
+      <p>MP4, WebM, MOV, MKV, AVI and other common video formats</p>
+    </div>
+    <input type="file" id="file-input" accept="video/*" />
+
+    <div class="file-info hidden" id="file-info">
+      <span><strong>File:</strong> <span id="info-name"></span></span>
+      <span><strong>Size:</strong> <span id="info-size"></span></span>
+      <span><strong>Duration:</strong> <span id="info-duration"></span></span>
+      <span
+        ><strong>Resolution:</strong> <span id="info-resolution"></span
+      ></span>
+      <button class="open-new" id="btn-open-new" type="button">
+        Open different file
+      </button>
+    </div>
+
+    <div id="editor" class="hidden">
+      <div class="video-container">
+        <video id="preview" controls></video>
+      </div>
+
+      <div class="panel">
+        <h2>Trim</h2>
+        <div class="field-row">
+          <label for="trim-start">Start</label>
+          <input type="number" id="trim-start" min="0" step="0.01" value="0" />
+          <span class="unit">sec</span>
+          <button class="btn" id="btn-start-now" type="button">
+            Use current position
+          </button>
+        </div>
+        <input
+          type="range"
+          id="trim-start-range"
+          min="0"
+          max="0"
+          step="0.01"
+          value="0"
+        />
+        <div class="field-row" style="margin-top: 12px">
+          <label for="trim-end">End</label>
+          <input type="number" id="trim-end" min="0" step="0.01" value="0" />
+          <span class="unit">sec</span>
+          <button class="btn" id="btn-end-now" type="button">
+            Use current position
+          </button>
+        </div>
+        <input
+          type="range"
+          id="trim-end-range"
+          min="0"
+          max="0"
+          step="0.01"
+          value="0"
+        />
+        <p class="hint" id="trim-summary">Full video selected.</p>
+      </div>
+
+      <div class="panel" id="transform-panel">
+        <h2>Transform</h2>
+        <div class="field-row">
+          <label class="checkbox"
+            ><input type="checkbox" id="resize-enable" /> Resize output</label
+          >
+          <select id="resize-preset">
+            <option value="">Custom</option>
+            <option value="1920x1080">1920 × 1080</option>
+            <option value="1280x720">1280 × 720</option>
+            <option value="854x480">854 × 480</option>
+            <option value="640x360">640 × 360</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <label for="resize-width">Width</label>
+          <input type="number" id="resize-width" min="2" step="2" disabled />
+          <label for="resize-height">Height</label>
+          <input type="number" id="resize-height" min="2" step="2" disabled />
+          <label class="checkbox"
+            ><input type="checkbox" id="resize-lock" checked /> Lock aspect
+            ratio</label
+          >
+        </div>
+        <div class="field-row">
+          <label for="rotate-select">Rotate</label>
+          <select id="rotate-select">
+            <option value="0">None</option>
+            <option value="90">90° clockwise</option>
+            <option value="180">180°</option>
+            <option value="270">90° counter-clockwise</option>
+          </select>
+          <label class="checkbox"
+            ><input type="checkbox" id="flip-h" /> Flip horizontal</label
+          >
+          <label class="checkbox"
+            ><input type="checkbox" id="flip-v" /> Flip vertical</label
+          >
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Speed &amp; Audio</h2>
+        <div class="field-row">
+          <label for="speed-range">Speed</label>
+          <input
+            type="range"
+            id="speed-range"
+            min="0.25"
+            max="4"
+            step="0.05"
+            value="1"
+          />
+          <span class="value-display" id="speed-value">1.00x</span>
+        </div>
+        <div class="field-row">
+          <label for="volume-range">Volume</label>
+          <input
+            type="range"
+            id="volume-range"
+            min="0"
+            max="2"
+            step="0.05"
+            value="1"
+          />
+          <span class="value-display" id="volume-value">100%</span>
+          <label class="checkbox"
+            ><input type="checkbox" id="mute-check" /> Mute audio</label
+          >
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Output</h2>
+        <div class="field-row">
+          <label for="format-select">Format</label>
+          <select id="format-select">
+            <option value="mp4">MP4 (H.264 / AAC)</option>
+            <option value="gif">Animated GIF</option>
+            <option value="mp3">MP3 (audio only)</option>
+          </select>
+        </div>
+        <div class="field-row quality-row" data-formats="mp4">
+          <label for="quality-select">Quality</label>
+          <select id="quality-select">
+            <option value="high">High quality (larger file)</option>
+            <option value="medium" selected>Balanced</option>
+            <option value="low">Smaller file (lower quality)</option>
+          </select>
+        </div>
+        <div class="field-row quality-row hidden" data-formats="gif">
+          <label for="gif-fps-select">Frame rate</label>
+          <select id="gif-fps-select">
+            <option value="5">5 fps</option>
+            <option value="10" selected>10 fps</option>
+            <option value="15">15 fps</option>
+            <option value="20">20 fps</option>
+          </select>
+          <span class="hint-inline"
+            >Enable Resize above to control GIF dimensions — unresized GIFs are
+            limited to 480px wide to keep file size reasonable.</span
+          >
+        </div>
+        <div class="field-row quality-row hidden" data-formats="mp3">
+          <label for="mp3-bitrate-select">Bitrate</label>
+          <select id="mp3-bitrate-select">
+            <option value="128k">128 kbps</option>
+            <option value="192k" selected>192 kbps</option>
+            <option value="256k">256 kbps</option>
+            <option value="320k">320 kbps</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn primary" id="btn-convert" type="button">
+          Convert Video
+        </button>
+        <button class="btn hidden" id="btn-cancel" type="button">Cancel</button>
+      </div>
+
+      <div class="panel hidden" id="progress-panel">
+        <h2>Processing</h2>
+        <div class="progress-bar-container">
+          <div class="progress-bar" id="progress-bar">0%</div>
+        </div>
+        <div class="progress-text" id="progress-text">
+          Loading FFmpeg engine…
+        </div>
+        <pre class="log-box" id="log-box"></pre>
+      </div>
+
+      <div class="panel hidden" id="output-section">
+        <h2>Result</h2>
+        <div id="output-preview"></div>
+        <div class="field-row">
+          <span id="output-info"></span>
+          <a class="btn primary" id="btn-download" download>Download</a>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      /* =========================
+         State
+         ========================= */
+      const { FFmpeg } = FFmpegWASM;
+      const { fetchFile, toBlobURL } = FFmpegUtil;
+
+      let ffmpeg = null;
+      let ffmpegLoaded = false;
+      let ffmpegLoadPromise = null;
+
+      let currentFile = null;
+      let sourceURL = null;
+      let sourceDuration = 0;
+      let sourceWidth = 0;
+      let sourceHeight = 0;
+
+      let outputBlobURL = null;
+      let converting = false;
+
+      /* =========================
+         Element refs
+         ========================= */
+      const statusEl = document.getElementById("status");
+      const dropZone = document.getElementById("drop-zone");
+      const fileInput = document.getElementById("file-input");
+      const fileInfo = document.getElementById("file-info");
+      const editor = document.getElementById("editor");
+      const preview = document.getElementById("preview");
+
+      const trimStartInput = document.getElementById("trim-start");
+      const trimEndInput = document.getElementById("trim-end");
+      const trimStartRange = document.getElementById("trim-start-range");
+      const trimEndRange = document.getElementById("trim-end-range");
+      const trimSummary = document.getElementById("trim-summary");
+
+      const resizeEnable = document.getElementById("resize-enable");
+      const resizePreset = document.getElementById("resize-preset");
+      const resizeWidth = document.getElementById("resize-width");
+      const resizeHeight = document.getElementById("resize-height");
+      const resizeLock = document.getElementById("resize-lock");
+      const rotateSelect = document.getElementById("rotate-select");
+      const flipH = document.getElementById("flip-h");
+      const flipV = document.getElementById("flip-v");
+      const transformPanel = document.getElementById("transform-panel");
+
+      const speedRange = document.getElementById("speed-range");
+      const speedValue = document.getElementById("speed-value");
+      const volumeRange = document.getElementById("volume-range");
+      const volumeValue = document.getElementById("volume-value");
+      const muteCheck = document.getElementById("mute-check");
+
+      const formatSelect = document.getElementById("format-select");
+      const qualitySelect = document.getElementById("quality-select");
+      const gifFpsSelect = document.getElementById("gif-fps-select");
+      const mp3BitrateSelect = document.getElementById("mp3-bitrate-select");
+
+      const btnConvert = document.getElementById("btn-convert");
+      const btnCancel = document.getElementById("btn-cancel");
+      const progressPanel = document.getElementById("progress-panel");
+      const progressBar = document.getElementById("progress-bar");
+      const progressText = document.getElementById("progress-text");
+      const logBox = document.getElementById("log-box");
+      const outputSection = document.getElementById("output-section");
+      const outputPreview = document.getElementById("output-preview");
+      const outputInfo = document.getElementById("output-info");
+      const btnDownload = document.getElementById("btn-download");
+
+      /* =========================
+         Utilities
+         ========================= */
+      function showStatus(message, type) {
+        statusEl.textContent = message;
+        statusEl.className = "status " + type;
+      }
+      function hideStatus() {
+        statusEl.className = "status hidden";
+      }
+
+      function formatTime(sec) {
+        if (!isFinite(sec)) return "0:00";
+        const m = Math.floor(sec / 60);
+        const s = (sec % 60).toFixed(2).padStart(5, "0");
+        return `${m}:${s}`;
+      }
+
+      function formatBytes(bytes) {
+        if (bytes < 1024) return bytes + " B";
+        const units = ["KB", "MB", "GB"];
+        let val = bytes / 1024;
+        let i = 0;
+        while (val >= 1024 && i < units.length - 1) {
+          val /= 1024;
+          i++;
+        }
+        return val.toFixed(1) + " " + units[i];
+      }
+
+      function evenDim(n) {
+        n = Math.round(n);
+        return n % 2 === 0 ? n : n + 1;
+      }
+
+      function getExt(name, mimeType) {
+        const m = /\.([a-z0-9]+)$/i.exec(name || "");
+        if (m) return m[1].toLowerCase();
+        const map = {
+          "video/mp4": "mp4",
+          "video/webm": "webm",
+          "video/quicktime": "mov",
+          "video/x-matroska": "mkv",
+          "video/x-msvideo": "avi",
+        };
+        return map[mimeType] || "mp4";
+      }
+
+      function appendLog(message) {
+        logBox.textContent += message + "\n";
+        logBox.scrollTop = logBox.scrollHeight;
+      }
+
+      function setProgress(fraction, text) {
+        const pct = Math.max(0, Math.min(100, Math.round(fraction * 100)));
+        progressBar.style.width = pct + "%";
+        progressBar.textContent = pct + "%";
+        if (text) progressText.textContent = text;
+      }
+
+      /* =========================
+         FFmpeg engine loading
+         ========================= */
+      async function loadFFmpegCore() {
+        progressPanel.classList.remove("hidden");
+        setProgress(0, "Loading FFmpeg engine (~30 MB, first time only)…");
+        ffmpeg = new FFmpeg();
+        ffmpeg.on("log", ({ message }) => appendLog(message));
+        ffmpeg.on("progress", ({ progress }) => {
+          if (progress >= 0 && progress <= 1) {
+            setProgress(progress, "Processing…");
+          }
+        });
+        const coreBaseURL =
+          "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/umd";
+        await ffmpeg.load({
+          coreURL: await toBlobURL(
+            `${coreBaseURL}/ffmpeg-core.js`,
+            "text/javascript",
+          ),
+          wasmURL: await toBlobURL(
+            `${coreBaseURL}/ffmpeg-core.wasm`,
+            "application/wasm",
+          ),
+        });
+        ffmpegLoaded = true;
+      }
+
+      function ensureFFmpegLoaded() {
+        if (ffmpegLoaded) return Promise.resolve();
+        if (!ffmpegLoadPromise) {
+          ffmpegLoadPromise = loadFFmpegCore().catch((err) => {
+            ffmpegLoadPromise = null;
+            throw err;
+          });
+        }
+        return ffmpegLoadPromise;
+      }
+
+      /* =========================
+         File loading
+         ========================= */
+      dropZone.addEventListener("click", () => fileInput.click());
+      dropZone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropZone.classList.add("dragover");
+      });
+      dropZone.addEventListener("dragleave", () =>
+        dropZone.classList.remove("dragover"),
+      );
+      dropZone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropZone.classList.remove("dragover");
+        const file = e.dataTransfer.files[0];
+        if (file) loadFile(file);
+      });
+      fileInput.addEventListener("change", (e) => {
+        if (e.target.files[0]) loadFile(e.target.files[0]);
+        e.target.value = "";
+      });
+      document
+        .getElementById("btn-open-new")
+        .addEventListener("click", () => fileInput.click());
+
+      // Some recorded WebM/MKV files report duration as Infinity until the
+      // browser is forced to seek near the end of the stream to resolve it.
+      function resolveDuration(videoEl) {
+        return new Promise((resolve) => {
+          if (isFinite(videoEl.duration) && videoEl.duration > 0) {
+            resolve(videoEl.duration);
+            return;
+          }
+          const onChange = () => {
+            if (isFinite(videoEl.duration) && videoEl.duration > 0) {
+              videoEl.removeEventListener("durationchange", onChange);
+              videoEl.currentTime = 0;
+              resolve(videoEl.duration);
+            }
+          };
+          videoEl.addEventListener("durationchange", onChange);
+          videoEl.currentTime = 1e101;
+        });
+      }
+
+      async function loadFile(file) {
+        if (
+          !file.type.startsWith("video/") &&
+          !/\.(mp4|webm|mov|mkv|avi|m4v)$/i.test(file.name)
+        ) {
+          showStatus("Please choose a video file.", "error");
+          return;
+        }
+        hideStatus();
+        resetOutput();
+
+        if (sourceURL) URL.revokeObjectURL(sourceURL);
+        currentFile = file;
+        sourceURL = URL.createObjectURL(file);
+        preview.src = sourceURL;
+
+        await new Promise((resolve) => {
+          preview.addEventListener("loadedmetadata", resolve, { once: true });
+        });
+        sourceDuration = await resolveDuration(preview);
+        sourceWidth = preview.videoWidth || 0;
+        sourceHeight = preview.videoHeight || 0;
+
+        document.getElementById("info-name").textContent = file.name;
+        document.getElementById("info-size").textContent = formatBytes(
+          file.size,
+        );
+        document.getElementById("info-duration").textContent =
+          formatTime(sourceDuration);
+        document.getElementById("info-resolution").textContent =
+          sourceWidth + " × " + sourceHeight;
+
+        trimStartInput.value = "0";
+        trimEndInput.value = sourceDuration.toFixed(2);
+        trimStartRange.max = sourceDuration;
+        trimEndRange.max = sourceDuration;
+        trimStartRange.value = "0";
+        trimEndRange.value = sourceDuration;
+        updateTrimSummary();
+
+        resizeWidth.value = sourceWidth;
+        resizeHeight.value = sourceHeight;
+
+        dropZone.classList.add("hidden");
+        fileInfo.classList.remove("hidden");
+        editor.classList.remove("hidden");
+        outputSection.classList.add("hidden");
+
+        // Warm up the engine in the background so it is likely ready by the
+        // time the user has finished choosing options.
+        ensureFFmpegLoaded().catch((err) => {
+          console.error(err);
+        });
+      }
+
+      /* =========================
+         Trim controls
+         ========================= */
+      function updateTrimSummary() {
+        const start = parseFloat(trimStartInput.value) || 0;
+        const end = parseFloat(trimEndInput.value) || 0;
+        const dur = Math.max(0, end - start);
+        if (start <= 0.001 && end >= sourceDuration - 0.001) {
+          trimSummary.textContent =
+            "Full video selected (" + formatTime(sourceDuration) + ").";
+        } else {
+          trimSummary.textContent =
+            "Trimmed clip: " +
+            formatTime(dur) +
+            " (from " +
+            formatTime(start) +
+            " to " +
+            formatTime(end) +
+            ").";
+        }
+      }
+
+      function clampTrim() {
+        let start = Math.max(
+          0,
+          Math.min(parseFloat(trimStartInput.value) || 0, sourceDuration),
+        );
+        let end = Math.max(
+          0,
+          Math.min(parseFloat(trimEndInput.value) || 0, sourceDuration),
+        );
+        if (end <= start) end = Math.min(sourceDuration, start + 0.1);
+        trimStartInput.value = start.toFixed(2);
+        trimEndInput.value = end.toFixed(2);
+        trimStartRange.value = start;
+        trimEndRange.value = end;
+        updateTrimSummary();
+      }
+
+      trimStartInput.addEventListener("change", clampTrim);
+      trimEndInput.addEventListener("change", clampTrim);
+      trimStartRange.addEventListener("input", () => {
+        trimStartInput.value = parseFloat(trimStartRange.value).toFixed(2);
+        clampTrim();
+      });
+      trimEndRange.addEventListener("input", () => {
+        trimEndInput.value = parseFloat(trimEndRange.value).toFixed(2);
+        clampTrim();
+      });
+      document.getElementById("btn-start-now").addEventListener("click", () => {
+        trimStartInput.value = preview.currentTime.toFixed(2);
+        clampTrim();
+      });
+      document.getElementById("btn-end-now").addEventListener("click", () => {
+        trimEndInput.value = preview.currentTime.toFixed(2);
+        clampTrim();
+      });
+
+      /* =========================
+         Transform controls
+         ========================= */
+      resizeEnable.addEventListener("change", () => {
+        resizeWidth.disabled = !resizeEnable.checked;
+        resizeHeight.disabled = !resizeEnable.checked;
+      });
+      resizePreset.addEventListener("change", () => {
+        if (!resizePreset.value) return;
+        const [w, h] = resizePreset.value.split("x").map(Number);
+        resizeWidth.value = w;
+        resizeHeight.value = h;
+        resizeEnable.checked = true;
+        resizeWidth.disabled = false;
+        resizeHeight.disabled = false;
+      });
+      resizeWidth.addEventListener("input", () => {
+        resizePreset.value = "";
+        if (resizeLock.checked && sourceWidth && sourceHeight) {
+          resizeHeight.value = Math.round(
+            (resizeWidth.value * sourceHeight) / sourceWidth,
+          );
+        }
+      });
+      resizeHeight.addEventListener("input", () => {
+        resizePreset.value = "";
+        if (resizeLock.checked && sourceWidth && sourceHeight) {
+          resizeWidth.value = Math.round(
+            (resizeHeight.value * sourceWidth) / sourceHeight,
+          );
+        }
+      });
+
+      /* =========================
+         Speed & audio controls
+         ========================= */
+      speedRange.addEventListener("input", () => {
+        speedValue.textContent = parseFloat(speedRange.value).toFixed(2) + "x";
+      });
+      volumeRange.addEventListener("input", () => {
+        volumeValue.textContent =
+          Math.round(parseFloat(volumeRange.value) * 100) + "%";
+      });
+      muteCheck.addEventListener("change", () => {
+        volumeRange.disabled = muteCheck.checked;
+      });
+
+      /* =========================
+         Output format controls
+         ========================= */
+      formatSelect.addEventListener("change", () => {
+        const format = formatSelect.value;
+        document.querySelectorAll(".quality-row").forEach((row) => {
+          const formats = row.dataset.formats.split(",");
+          row.classList.toggle("hidden", !formats.includes(format));
+        });
+        transformPanel.classList.toggle("disabled", format === "mp3");
+      });
+
+      /* =========================
+         Filter graph construction
+         ========================= */
+      function buildAtempoChain(speed) {
+        // The atempo filter only accepts factors between 0.5 and 2.0, so
+        // speeds outside that range are built by chaining multiple stages.
+        const factors = [];
+        let remaining = speed;
+        if (remaining < 0.5) {
+          while (remaining < 0.5) {
+            factors.push(0.5);
+            remaining /= 0.5;
+          }
+        } else if (remaining > 2.0) {
+          while (remaining > 2.0) {
+            factors.push(2.0);
+            remaining /= 2.0;
+          }
+        }
+        factors.push(remaining);
+        return factors.map((f) => "atempo=" + f.toFixed(4)).join(",");
+      }
+
+      function buildVideoFilters(opts) {
+        const vf = [];
+        if (opts.rotate === 90) vf.push("transpose=1");
+        else if (opts.rotate === 270) vf.push("transpose=2");
+        else if (opts.rotate === 180) vf.push("transpose=1,transpose=1");
+        if (opts.flipH) vf.push("hflip");
+        if (opts.flipV) vf.push("vflip");
+        if (opts.resize) {
+          vf.push(`scale=${evenDim(opts.width)}:${evenDim(opts.height)}`);
+        }
+        if (opts.speed !== 1) {
+          vf.push(`setpts=${(1 / opts.speed).toFixed(6)}*PTS`);
+        }
+        return vf;
+      }
+
+      function collectOptions() {
+        return {
+          trimStart: parseFloat(trimStartInput.value) || 0,
+          trimEnd: parseFloat(trimEndInput.value) || sourceDuration,
+          resize: resizeEnable.checked,
+          width: parseInt(resizeWidth.value, 10) || sourceWidth,
+          height: parseInt(resizeHeight.value, 10) || sourceHeight,
+          rotate: parseInt(rotateSelect.value, 10),
+          flipH: flipH.checked,
+          flipV: flipV.checked,
+          speed: parseFloat(speedRange.value),
+          volume: parseFloat(volumeRange.value),
+          mute: muteCheck.checked,
+          format: formatSelect.value,
+          quality: qualitySelect.value,
+          gifFps: parseInt(gifFpsSelect.value, 10),
+          mp3Bitrate: mp3BitrateSelect.value,
+        };
+      }
+
+      const CRF_MAP = {
+        mp4: { high: 18, medium: 23, low: 28 },
+      };
+
+      function buildArgs(inputName, opts) {
+        const args = [];
+        if (opts.trimStart > 0.001) args.push("-ss", opts.trimStart.toFixed(3));
+        args.push("-i", inputName);
+        const trimDuration = opts.trimEnd - opts.trimStart;
+        if (trimDuration < sourceDuration - opts.trimStart - 0.001) {
+          args.push("-t", trimDuration.toFixed(3));
+        }
+
+        if (opts.format === "mp3") {
+          args.push("-vn");
+          const af = [];
+          if (opts.speed !== 1) af.push(buildAtempoChain(opts.speed));
+          if (opts.volume !== 1) af.push(`volume=${opts.volume}`);
+          if (af.length) args.push("-af", af.join(","));
+          args.push("-c:a", "libmp3lame", "-b:a", opts.mp3Bitrate);
+          args.push("output.mp3");
+          return {
+            args,
+            outputName: "output.mp3",
+            mimeType: "audio/mpeg",
+            outExt: "mp3",
+          };
+        }
+
+        if (opts.format === "gif") {
+          const vf = buildVideoFilters(opts);
+          if (!opts.resize) {
+            vf.push("scale='min(480,iw)':-2:flags=lanczos");
+          }
+          vf.push(`fps=${opts.gifFps}`);
+          const filterComplex =
+            vf.join(",") +
+            ",split[a][b];[a]palettegen=stats_mode=diff[p];[b][p]paletteuse=dither=bayer";
+          args.push("-filter_complex", filterComplex, "-loop", "0");
+          args.push("output.gif");
+          return {
+            args,
+            outputName: "output.gif",
+            mimeType: "image/gif",
+            outExt: "gif",
+          };
+        }
+
+        // mp4
+        const vf = buildVideoFilters(opts);
+        if (vf.length) args.push("-vf", vf.join(","));
+        if (opts.mute) {
+          args.push("-an");
+        } else {
+          const af = [];
+          if (opts.speed !== 1) af.push(buildAtempoChain(opts.speed));
+          if (opts.volume !== 1) af.push(`volume=${opts.volume}`);
+          if (af.length) args.push("-af", af.join(","));
+        }
+
+        const crf = CRF_MAP.mp4[opts.quality];
+        args.push(
+          "-c:v",
+          "libx264",
+          "-preset",
+          "veryfast",
+          "-crf",
+          String(crf),
+          "-pix_fmt",
+          "yuv420p",
+        );
+        if (!opts.mute) args.push("-c:a", "aac", "-b:a", "128k");
+        args.push("-movflags", "+faststart", "output.mp4");
+        return {
+          args,
+          outputName: "output.mp4",
+          mimeType: "video/mp4",
+          outExt: "mp4",
+        };
+      }
+
+      /* =========================
+         Conversion
+         ========================= */
+      function resetOutput() {
+        if (outputBlobURL) {
+          URL.revokeObjectURL(outputBlobURL);
+          outputBlobURL = null;
+        }
+        outputSection.classList.add("hidden");
+        outputPreview.innerHTML = "";
+        outputInfo.textContent = "";
+      }
+
+      btnConvert.addEventListener("click", async () => {
+        if (!currentFile || converting) return;
+        hideStatus();
+        resetOutput();
+        converting = true;
+        btnConvert.disabled = true;
+        btnConvert.textContent = "Converting…";
+        btnCancel.classList.remove("hidden");
+        progressPanel.classList.remove("hidden");
+        logBox.textContent = "";
+        setProgress(0, "Preparing…");
+
+        const inputName = "input." + getExt(currentFile.name, currentFile.type);
+        let outputName = null;
+
+        try {
+          await ensureFFmpegLoaded();
+          const opts = collectOptions();
+          setProgress(0, "Writing input file…");
+          await ffmpeg.writeFile(inputName, await fetchFile(currentFile));
+
+          const built = buildArgs(inputName, opts);
+          outputName = built.outputName;
+          setProgress(0, "Running FFmpeg…");
+          const exitCode = await ffmpeg.exec(built.args);
+          if (exitCode !== 0) {
+            throw new Error(
+              "FFmpeg exited with code " +
+                exitCode +
+                ". See the log below for details.",
+            );
+          }
+
+          const data = await ffmpeg.readFile(built.outputName);
+          const blob = new Blob([data.buffer], { type: built.mimeType });
+          showOutput(blob, built.outExt);
+          setProgress(1, "Done.");
+          showStatus("Conversion complete.", "success");
+        } catch (err) {
+          console.error(err);
+          if (err && !/terminat/i.test(err.message || "")) {
+            showStatus("Conversion failed: " + err.message, "error");
+          }
+        } finally {
+          try {
+            await ffmpeg.deleteFile(inputName);
+          } catch (e) {}
+          if (outputName) {
+            try {
+              await ffmpeg.deleteFile(outputName);
+            } catch (e) {}
+          }
+          converting = false;
+          btnConvert.disabled = false;
+          btnConvert.textContent = "Convert Video";
+          btnCancel.classList.add("hidden");
+        }
+      });
+
+      btnCancel.addEventListener("click", async () => {
+        if (!ffmpeg) return;
+        ffmpeg.terminate();
+        ffmpegLoaded = false;
+        ffmpegLoadPromise = null;
+        showStatus("Conversion cancelled.", "info");
+      });
+
+      function showOutput(blob, ext) {
+        outputBlobURL = URL.createObjectURL(blob);
+        const baseName = currentFile.name.replace(/\.[^.]+$/, "");
+        const downloadName = baseName + "-edited." + ext;
+
+        outputPreview.innerHTML = "";
+        let el;
+        if (ext === "gif") {
+          el = document.createElement("img");
+          el.src = outputBlobURL;
+        } else if (ext === "mp3") {
+          el = document.createElement("audio");
+          el.controls = true;
+          el.src = outputBlobURL;
+        } else {
+          el = document.createElement("video");
+          el.controls = true;
+          el.src = outputBlobURL;
+        }
+        outputPreview.appendChild(el);
+
+        outputInfo.textContent = downloadName + " — " + formatBytes(blob.size);
+        btnDownload.href = outputBlobURL;
+        btnDownload.download = downloadName;
+        outputSection.classList.remove("hidden");
+      }
+    </script>
+  </body>
+</html>

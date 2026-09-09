@@ -68,6 +68,7 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 - **[Multi-Webcam Viewer](webcam-viewer.html)** — view multiple webcam feeds simultaneously with support for YouTube embeds, direct video streams (MP4, M3U8, HLS), and iframe-compatible sources. Dependencies: `hls.js`
 - **[Scene Detection Tool](scene-detection.html)** — automatically detect scene changes in videos using frame analysis with adjustable sensitivity, minimum scene duration, and sample rate controls
 - **[Transcription Tool](transcribe.html)** — transcribe audio and video files with keyboard shortcuts, timestamps, and speed control
+- **[Video Editor](video-editor.html)** — trim, resize, rotate, flip, change speed and volume, and convert video files to MP4, animated GIF, or MP3 entirely in the browser. Dependencies: `ffmpeg.wasm`
 
 ### Natural Language Processing (NLP)
 
