@@ -145,7 +145,8 @@
         font-size: 13px;
         color: #586069;
         display: flex;
-        justify-content: space-between;
+        align-items: center;
+        gap: 6px;
       }
 
       /* =========================
@@ -387,6 +388,21 @@
     <div class="container">
       <div class="sidebar">
         <div class="panel">
+          <h3>Load File</h3>
+          <div class="btn-row stacked">
+            <button class="btn small full" id="loadFileBtn">
+              Load HTML File…
+            </button>
+            <input
+              type="file"
+              id="fileInput"
+              accept=".html,.htm,.txt"
+              class="hidden"
+            />
+          </div>
+        </div>
+
+        <div class="panel">
           <h3>Paste Behaviour</h3>
           <div class="option-row">
             <input
@@ -485,26 +501,9 @@
         </div>
 
         <div class="panel">
-          <h3>Stats</h3>
-          <div class="stats">
-            <span id="wordCount">0 words</span>
-            <span id="charCount">0 characters</span>
-          </div>
-        </div>
-
-        <div class="panel">
-          <h3>File</h3>
+          <h3>Download</h3>
           <div class="btn-row stacked">
-            <button class="btn small full" id="loadFileBtn">
-              Load HTML File…
-            </button>
-            <input
-              type="file"
-              id="fileInput"
-              accept=".html,.htm,.txt"
-              class="hidden"
-            />
-            <div class="field-row" style="margin-top: 4px">
+            <div class="field-row" style="margin-top: 0">
               <label for="downloadName">Download filename</label>
               <input type="text" id="downloadName" value="content.html" />
             </div>
@@ -524,6 +523,12 @@
           <button class="tab-btn" id="tabSourceBtn" data-tab="source">
             HTML Source
           </button>
+        </div>
+
+        <div class="stats">
+          <span id="wordCount">0 words</span>
+          <span>/</span>
+          <span id="charCount">0 characters</span>
         </div>
 
         <div class="format-toolbar" id="visualToolbar">
