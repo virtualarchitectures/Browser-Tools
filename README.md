@@ -122,6 +122,7 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 ### Web Development
 
 - **[Favicon Generator](favicon-generator.html)** — generate favicons in multiple sizes and formats including SVG, ICO, Apple Touch Icons, and Android icons. Dependencies: `JSZip`
+- **[HTML Editor](html-editor.html)** — write and format text, or paste in rich text copy and have it automatically cleaned into simple, semantic HTML; also supports pasting, hand-editing, and pretty-printing raw HTML source
 - **[Robots.txt Checker](robots-txt-checker.html)** — fetch and parse robots.txt files from websites and check whether specific URLs or paths are allowed or disallowed for different web crawlers
 
 ### Web Privacy & Security

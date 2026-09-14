@@ -1,0 +1,1541 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HTML Editor</title>
+    <style>
+      /* =========================
+         Reset and Base Styles
+         ========================= */
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family:
+          Helvetica,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Arial,
+          sans-serif;
+        line-height: 1.6;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        color: #24292e;
+        background: #ffffff;
+      }
+      h1 {
+        margin: 0 0 12px;
+        padding-bottom: 0.3em;
+        border-bottom: 1px solid #e1e4e8;
+        font-size: 32px;
+        font-weight: 600;
+      }
+      p.intro {
+        margin: 0 0 20px;
+        color: #586069;
+        font-size: 14px;
+      }
+      .back-link {
+        display: inline-block;
+        margin-bottom: 16px;
+        color: #0366d6;
+        text-decoration: none;
+        font-size: 14px;
+      }
+      .back-link:hover {
+        text-decoration: underline;
+      }
+
+      /* =========================
+         Layout
+         ========================= */
+      .container {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+      @media (min-width: 900px) {
+        .container {
+          grid-template-columns: 300px 1fr;
+        }
+      }
+
+      /* =========================
+         Sidebar
+         ========================= */
+      .sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .panel {
+        background: #f6f8fa;
+        padding: 12px;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+      }
+      .panel h3 {
+        margin: 0 0 10px 0;
+        font-size: 14px;
+        font-weight: 600;
+        color: #24292e;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .panel-note {
+        font-size: 12px;
+        color: #586069;
+        margin: 8px 0 0 0;
+      }
+      .option-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        margin-bottom: 8px;
+        font-size: 13px;
+      }
+      .option-row:last-child {
+        margin-bottom: 0;
+      }
+      .option-row input[type="checkbox"],
+      .option-row input[type="radio"] {
+        margin-top: 3px;
+        flex-shrink: 0;
+      }
+      .option-row label {
+        cursor: pointer;
+      }
+      .option-row.disabled {
+        opacity: 0.5;
+      }
+      .option-row.disabled label {
+        cursor: default;
+      }
+      hr.divider {
+        border: none;
+        border-top: 1px solid #e1e4e8;
+        margin: 10px 0;
+      }
+      .field-row {
+        margin-top: 8px;
+      }
+      .field-row label {
+        display: block;
+        font-size: 12px;
+        color: #586069;
+        margin-bottom: 4px;
+      }
+      .field-row input[type="text"] {
+        width: 100%;
+        padding: 6px 8px;
+        font-size: 13px;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        background: #ffffff;
+        color: #24292e;
+      }
+      .field-row input[type="text"]:focus {
+        outline: none;
+        border-color: #0366d6;
+      }
+      .stats {
+        font-size: 13px;
+        color: #586069;
+        display: flex;
+        justify-content: space-between;
+      }
+
+      /* =========================
+         Buttons
+         ========================= */
+      .btn {
+        background: #fafbfc;
+        color: #24292e;
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+        cursor: pointer;
+        font-size: 14px;
+        line-height: 20px;
+        font-family:
+          Helvetica,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Arial,
+          sans-serif;
+      }
+      .btn:hover {
+        background: #f3f4f6;
+      }
+      .btn.primary {
+        background: #0366d6;
+        color: #fff;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+      }
+      .btn.primary:hover {
+        background: #0256c5;
+      }
+      .btn.small {
+        padding: 6px 10px;
+        font-size: 12px;
+      }
+      .btn.full {
+        width: 100%;
+        text-align: center;
+      }
+      .btn-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .btn-row.stacked {
+        flex-direction: column;
+      }
+
+      /* =========================
+         Editor Panel
+         ========================= */
+      .editor-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .tabs {
+        display: flex;
+        gap: 4px;
+        border-bottom: 1px solid #e1e4e8;
+      }
+      .tab-btn {
+        background: none;
+        border: none;
+        border-bottom: 2px solid transparent;
+        padding: 8px 14px;
+        font-size: 14px;
+        cursor: pointer;
+        color: #586069;
+        font-family: inherit;
+      }
+      .tab-btn:hover {
+        color: #24292e;
+      }
+      .tab-btn.active {
+        color: #0366d6;
+        border-bottom-color: #0366d6;
+        font-weight: 600;
+      }
+
+      .format-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        align-items: center;
+        background: #f6f8fa;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        padding: 6px;
+      }
+      .format-toolbar select {
+        padding: 6px 8px;
+        font-size: 13px;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        background: #ffffff;
+        color: #24292e;
+        font-family: inherit;
+      }
+      .toolbar-sep {
+        width: 1px;
+        align-self: stretch;
+        background: #e1e4e8;
+        margin: 2px 4px;
+      }
+      .tbtn {
+        background: #ffffff;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        width: 32px;
+        height: 32px;
+        cursor: pointer;
+        font-size: 14px;
+        color: #24292e;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .tbtn:hover {
+        background: #f3f4f6;
+      }
+      .tbtn.active {
+        background: #0366d6;
+        color: #fff;
+        border-color: #0366d6;
+      }
+      .tbtn.wide {
+        width: auto;
+        padding: 0 10px;
+      }
+
+      #editor {
+        min-height: 420px;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        padding: 16px;
+        background: #ffffff;
+        font-size: 15px;
+        overflow-y: auto;
+      }
+      #editor:focus {
+        outline: none;
+        border-color: #0366d6;
+      }
+      #editor.empty:before {
+        content: attr(data-placeholder);
+        color: #959da5;
+      }
+      #editor.drag-over {
+        border-color: #0366d6;
+        background: #f6f8fa;
+      }
+      #editor p {
+        margin: 0 0 1em 0;
+      }
+      #editor p:last-child {
+        margin-bottom: 0;
+      }
+      #editor blockquote {
+        border-left: 3px solid #e1e4e8;
+        margin: 0 0 1em 0;
+        padding-left: 12px;
+        color: #586069;
+      }
+      #editor img {
+        max-width: 100%;
+      }
+      #editor table {
+        border-collapse: collapse;
+      }
+      #editor td,
+      #editor th {
+        border: 1px solid #e1e4e8;
+        padding: 4px 8px;
+      }
+
+      #sourceCode {
+        width: 100%;
+        min-height: 420px;
+        font-family:
+          "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 13px;
+        padding: 12px;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        background: #ffffff;
+        color: #24292e;
+        resize: vertical;
+        white-space: pre;
+        overflow: auto;
+      }
+      #sourceCode:focus {
+        outline: none;
+        border-color: #0366d6;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      .toast {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%) translateY(20px);
+        background: #24292e;
+        color: #fff;
+        padding: 10px 18px;
+        border-radius: 6px;
+        font-size: 14px;
+        opacity: 0;
+        pointer-events: none;
+        transition:
+          opacity 0.2s,
+          transform 0.2s;
+        z-index: 100;
+      }
+      .toast.visible {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+      .toast.error {
+        background: #cb2431;
+      }
+    </style>
+  </head>
+  <body>
+    <a href="index.html" class="back-link">← Back to Browser Tools</a>
+    <h1>HTML Editor</h1>
+    <p class="intro">
+      Write and format text, or paste in rich text copy (from Word, Google Docs,
+      Outlook, etc.) and have it automatically cleaned into simple, semantic
+      HTML. Switch to the HTML Source tab to paste in or hand-edit raw markup
+      directly. Copy or save the resulting HTML for your website.
+    </p>
+
+    <div class="container">
+      <div class="sidebar">
+        <div class="panel">
+          <h3>Paste Behaviour</h3>
+          <div class="option-row">
+            <input
+              type="radio"
+              name="pasteMode"
+              id="pasteModeClean"
+              value="clean"
+              checked
+            />
+            <label for="pasteModeClean">Clean formatting (recommended)</label>
+          </div>
+          <div class="option-row">
+            <input
+              type="radio"
+              name="pasteMode"
+              id="pasteModePlain"
+              value="plain"
+            />
+            <label for="pasteModePlain">Plain text only</label>
+          </div>
+          <div class="option-row">
+            <input
+              type="radio"
+              name="pasteMode"
+              id="pasteModeRaw"
+              value="raw"
+            />
+            <label for="pasteModeRaw">Keep formatting as-is</label>
+          </div>
+          <hr class="divider" />
+          <div class="option-row" id="optStripStylesRow">
+            <input type="checkbox" id="optStripStyles" checked />
+            <label for="optStripStyles"
+              >Strip inline styles &amp; classes</label
+            >
+          </div>
+          <div class="option-row" id="optSemanticRow">
+            <input type="checkbox" id="optSemantic" checked />
+            <label for="optSemantic"
+              >Convert styling to semantic tags (bold/italic/underline)</label
+            >
+          </div>
+          <div class="option-row" id="optUnwrapRow">
+            <input type="checkbox" id="optUnwrap" checked />
+            <label for="optUnwrap">Unwrap div/span wrapper elements</label>
+          </div>
+          <div class="option-row" id="optEmptyRow">
+            <input type="checkbox" id="optEmpty" checked />
+            <label for="optEmpty">Remove empty paragraphs &amp; tags</label>
+          </div>
+          <div class="option-row" id="optImagesRow">
+            <input type="checkbox" id="optImages" checked />
+            <label for="optImages">Keep images</label>
+          </div>
+          <p class="panel-note">
+            These settings apply automatically as you paste. Use "Clean Up
+            Content" below to re-apply them to existing content.
+          </p>
+          <div class="btn-row" style="margin-top: 10px">
+            <button class="btn small full" id="reCleanBtn">
+              Clean Up Content
+            </button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Output</h3>
+          <div class="option-row">
+            <input
+              type="radio"
+              name="outputFormat"
+              id="fmtPretty"
+              value="pretty"
+              checked
+            />
+            <label for="fmtPretty">Pretty-printed</label>
+          </div>
+          <div class="option-row">
+            <input
+              type="radio"
+              name="outputFormat"
+              id="fmtMinified"
+              value="minified"
+            />
+            <label for="fmtMinified">Minified</label>
+          </div>
+          <hr class="divider" />
+          <div class="option-row">
+            <input type="checkbox" id="optFullDoc" />
+            <label for="optFullDoc">Wrap as full HTML document</label>
+          </div>
+          <div class="field-row" id="titleRow" style="display: none">
+            <label for="docTitle">Document title</label>
+            <input type="text" id="docTitle" value="Document" />
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Stats</h3>
+          <div class="stats">
+            <span id="wordCount">0 words</span>
+            <span id="charCount">0 characters</span>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>File</h3>
+          <div class="btn-row stacked">
+            <button class="btn small full" id="loadFileBtn">
+              Load HTML File…
+            </button>
+            <input
+              type="file"
+              id="fileInput"
+              accept=".html,.htm,.txt"
+              class="hidden"
+            />
+            <div class="field-row" style="margin-top: 4px">
+              <label for="downloadName">Download filename</label>
+              <input type="text" id="downloadName" value="content.html" />
+            </div>
+            <button class="btn small full" id="downloadBtn">
+              Download HTML
+            </button>
+            <button class="btn small full" id="clearBtn">Clear All</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="editor-panel">
+        <div class="tabs">
+          <button class="tab-btn active" id="tabVisualBtn" data-tab="visual">
+            Visual
+          </button>
+          <button class="tab-btn" id="tabSourceBtn" data-tab="source">
+            HTML Source
+          </button>
+        </div>
+
+        <div class="format-toolbar" id="visualToolbar">
+          <select id="headingSelect" title="Paragraph style">
+            <option value="P">Paragraph</option>
+            <option value="H1">Heading 1</option>
+            <option value="H2">Heading 2</option>
+            <option value="H3">Heading 3</option>
+            <option value="H4">Heading 4</option>
+            <option value="BLOCKQUOTE">Blockquote</option>
+          </select>
+          <div class="toolbar-sep"></div>
+          <button
+            class="tbtn"
+            id="cmdBold"
+            data-cmd="bold"
+            title="Bold (Ctrl+B)"
+          >
+            <strong>B</strong>
+          </button>
+          <button
+            class="tbtn"
+            id="cmdItalic"
+            data-cmd="italic"
+            title="Italic (Ctrl+I)"
+          >
+            <em>I</em>
+          </button>
+          <button
+            class="tbtn"
+            id="cmdUnderline"
+            data-cmd="underline"
+            title="Underline (Ctrl+U)"
+          >
+            <span style="text-decoration: underline">U</span>
+          </button>
+          <button
+            class="tbtn"
+            id="cmdStrike"
+            data-cmd="strikeThrough"
+            title="Strikethrough"
+          >
+            <span style="text-decoration: line-through">S</span>
+          </button>
+          <div class="toolbar-sep"></div>
+          <button
+            class="tbtn"
+            id="cmdUL"
+            data-cmd="insertUnorderedList"
+            title="Bullet list"
+          >
+            &bull; ≡
+          </button>
+          <button
+            class="tbtn"
+            id="cmdOL"
+            data-cmd="insertOrderedList"
+            title="Numbered list"
+          >
+            1. ≡
+          </button>
+          <div class="toolbar-sep"></div>
+          <button class="tbtn wide" id="cmdLink" title="Insert link">
+            Link
+          </button>
+          <button
+            class="tbtn wide"
+            id="cmdUnlink"
+            data-cmd="unlink"
+            title="Remove link"
+          >
+            Unlink
+          </button>
+          <button class="tbtn wide" id="cmdHr" title="Horizontal rule">
+            HR
+          </button>
+          <div class="toolbar-sep"></div>
+          <button
+            class="tbtn wide"
+            id="cmdClearFormat"
+            title="Clear formatting"
+          >
+            Clear
+          </button>
+          <button class="tbtn" id="cmdUndo" title="Undo">↶</button>
+          <button class="tbtn" id="cmdRedo" title="Redo">↷</button>
+        </div>
+
+        <div
+          id="editor"
+          contenteditable="true"
+          data-placeholder="Start typing, or paste rich text here…"
+        ></div>
+        <textarea id="sourceCode" class="hidden" spellcheck="false"></textarea>
+
+        <div class="btn-row">
+          <button class="btn primary" id="copyHtmlBtn">Copy HTML</button>
+          <button class="btn" id="copyRichBtn">Copy as Rich Text</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+      /* =========================
+         Element / tag reference data
+         ========================= */
+      const BLOCK_TAGS = new Set([
+        "p",
+        "div",
+        "ul",
+        "ol",
+        "li",
+        "blockquote",
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "h6",
+        "table",
+        "thead",
+        "tbody",
+        "tfoot",
+        "tr",
+        "td",
+        "th",
+        "hr",
+        "pre",
+        "section",
+        "article",
+        "header",
+        "footer",
+        "nav",
+        "figure",
+        "figcaption",
+      ]);
+      const VOID_TAGS = new Set(["br", "hr", "img"]);
+      const ALLOWED_TAGS = new Set([
+        "p",
+        "br",
+        "hr",
+        "strong",
+        "b",
+        "em",
+        "i",
+        "u",
+        "s",
+        "strike",
+        "del",
+        "ins",
+        "a",
+        "ul",
+        "ol",
+        "li",
+        "blockquote",
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "h6",
+        "table",
+        "thead",
+        "tbody",
+        "tfoot",
+        "tr",
+        "td",
+        "th",
+        "sub",
+        "sup",
+        "code",
+        "pre",
+        "img",
+      ]);
+      const DROP_TAGS = new Set([
+        "script",
+        "style",
+        "meta",
+        "link",
+        "title",
+        "head",
+        "object",
+        "embed",
+        "iframe",
+        "form",
+        "button",
+        "input",
+        "select",
+        "textarea",
+        "noscript",
+        "applet",
+        "xml",
+        "base",
+        "canvas",
+        "audio",
+        "video",
+        "svg",
+      ]);
+      const DIV_LIKE_TAGS = new Set([
+        "div",
+        "section",
+        "article",
+        "header",
+        "footer",
+        "nav",
+      ]);
+      const UNWRAP_ONLY_TAGS = new Set(["span", "font"]);
+      const ALLOWED_ATTRS_BY_TAG = {
+        a: ["href"],
+        img: ["src", "alt"],
+        td: ["colspan", "rowspan"],
+        th: ["colspan", "rowspan"],
+      };
+      const EMPTY_CHECK_TAGS = new Set([
+        "p",
+        "strong",
+        "b",
+        "em",
+        "i",
+        "u",
+        "s",
+        "strike",
+        "del",
+        "ins",
+        "a",
+        "sub",
+        "sup",
+        "code",
+      ]);
+
+      /* =========================
+         DOM references
+         ========================= */
+      const editor = document.getElementById("editor");
+      const sourceCode = document.getElementById("sourceCode");
+      const tabVisualBtn = document.getElementById("tabVisualBtn");
+      const tabSourceBtn = document.getElementById("tabSourceBtn");
+      const visualToolbar = document.getElementById("visualToolbar");
+      const headingSelect = document.getElementById("headingSelect");
+      const toast = document.getElementById("toast");
+      const wordCountEl = document.getElementById("wordCount");
+      const charCountEl = document.getElementById("charCount");
+      const optFullDoc = document.getElementById("optFullDoc");
+      const titleRow = document.getElementById("titleRow");
+      const docTitle = document.getElementById("docTitle");
+      const downloadName = document.getElementById("downloadName");
+
+      let currentTab = "visual";
+      let savedRange = null;
+
+      /* =========================
+         Toast notifications
+         ========================= */
+      let toastTimer = null;
+      function showToast(message, isError) {
+        toast.textContent = message;
+        toast.classList.toggle("error", !!isError);
+        toast.classList.add("visible");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove("visible"), 2200);
+      }
+
+      /* =========================
+         Escaping helpers
+         ========================= */
+      function escapeText(str) {
+        return str
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+      function escapeAttr(str) {
+        return escapeText(str).replace(/"/g, "&quot;");
+      }
+
+      /* =========================
+         Paste / clean-up options
+         ========================= */
+      function getPasteMode() {
+        return document.querySelector('input[name="pasteMode"]:checked').value;
+      }
+      function getCleanOptions() {
+        return {
+          stripStyles: document.getElementById("optStripStyles").checked,
+          semanticTags: document.getElementById("optSemantic").checked,
+          unwrapWrappers: document.getElementById("optUnwrap").checked,
+          removeEmpty: document.getElementById("optEmpty").checked,
+          keepImages: document.getElementById("optImages").checked,
+        };
+      }
+      function updateOptionAvailability() {
+        const mode = getPasteMode();
+        const enabled = mode === "clean";
+        [
+          "optStripStylesRow",
+          "optSemanticRow",
+          "optUnwrapRow",
+          "optEmptyRow",
+          "optImagesRow",
+        ].forEach((id) => {
+          const row = document.getElementById(id);
+          row.classList.toggle("disabled", !enabled);
+          row.querySelector("input").disabled = !enabled;
+        });
+      }
+      document.querySelectorAll('input[name="pasteMode"]').forEach((el) => {
+        el.addEventListener("change", updateOptionAvailability);
+      });
+      updateOptionAvailability();
+
+      optFullDoc.addEventListener("change", () => {
+        titleRow.style.display = optFullDoc.checked ? "block" : "none";
+      });
+
+      /* =========================
+         Safety cleaning (always applied)
+         ========================= */
+      function minimalSafetyClean(root) {
+        root
+          .querySelectorAll(
+            "script,style,meta,link,title,iframe,object,embed,form,input,button,select,textarea,noscript,applet,base",
+          )
+          .forEach((el) => el.remove());
+        root.querySelectorAll("*").forEach((el) => {
+          Array.from(el.attributes).forEach((attr) => {
+            const name = attr.name.toLowerCase();
+            if (name.startsWith("on")) {
+              el.removeAttribute(attr.name);
+              return;
+            }
+            if (
+              (name === "href" || name === "src") &&
+              /^\s*javascript:/i.test(attr.value)
+            ) {
+              el.removeAttribute(attr.name);
+            }
+          });
+        });
+      }
+
+      /* =========================
+         Full cosmetic HTML cleaner
+         ========================= */
+      function wrapWithStyleSemantics(el) {
+        const style = (el.getAttribute("style") || "").toLowerCase();
+        const wrappers = [];
+        if (/font-weight\s*:\s*(bold|[6-9]00)/.test(style))
+          wrappers.push("strong");
+        if (/font-style\s*:\s*italic/.test(style)) wrappers.push("em");
+        if (/text-decoration[a-z-]*\s*:\s*[^;]*underline/.test(style))
+          wrappers.push("u");
+        if (/text-decoration[a-z-]*\s*:\s*[^;]*line-through/.test(style))
+          wrappers.push("s");
+        let current = el;
+        for (const tag of wrappers) {
+          const wrapper = document.createElement(tag);
+          while (current.firstChild) wrapper.appendChild(current.firstChild);
+          current.appendChild(wrapper);
+          current = wrapper;
+        }
+      }
+
+      function unwrapElement(el) {
+        const parent = el.parentNode;
+        if (!parent) return;
+        while (el.firstChild) parent.insertBefore(el.firstChild, el);
+        parent.removeChild(el);
+      }
+
+      function renameElement(el, newTag) {
+        const newEl = document.createElement(newTag);
+        while (el.firstChild) newEl.appendChild(el.firstChild);
+        el.parentNode.replaceChild(newEl, el);
+        return newEl;
+      }
+
+      function filterAttributes(el, tag, opts) {
+        const allowed = new Set(ALLOWED_ATTRS_BY_TAG[tag] || []);
+        if (!opts.stripStyles) {
+          allowed.add("style");
+          allowed.add("class");
+        }
+        Array.from(el.attributes).forEach((attr) => {
+          if (!allowed.has(attr.name.toLowerCase()))
+            el.removeAttribute(attr.name);
+        });
+        if (tag === "a") {
+          const href = el.getAttribute("href");
+          if (!href || /^\s*javascript:/i.test(href))
+            el.removeAttribute("href");
+        }
+        if (tag === "img") {
+          const src = el.getAttribute("src");
+          if (!src || /^\s*javascript:/i.test(src)) {
+            el.remove();
+          }
+        }
+      }
+
+      function isEmptyElement(el) {
+        if (el.querySelector && el.querySelector("img, br")) return false;
+        return el.textContent.trim() === "";
+      }
+
+      function cleanNode(node, opts) {
+        const children = Array.from(node.childNodes);
+        for (let child of children) {
+          if (child.nodeType === Node.COMMENT_NODE) {
+            node.removeChild(child);
+            continue;
+          }
+          if (child.nodeType !== Node.ELEMENT_NODE) {
+            if (child.nodeType !== Node.TEXT_NODE) node.removeChild(child);
+            continue;
+          }
+
+          let tag = child.tagName.toLowerCase();
+
+          if (tag.includes(":") || DROP_TAGS.has(tag)) {
+            node.removeChild(child);
+            continue;
+          }
+
+          if (tag === "img" && !opts.keepImages) {
+            node.removeChild(child);
+            continue;
+          }
+
+          // Recurse into the subtree first so decisions about this element
+          // (e.g. whether it's empty) reflect its already-cleaned children.
+          cleanNode(child, opts);
+
+          if (DIV_LIKE_TAGS.has(tag)) {
+            if (!opts.unwrapWrappers) {
+              // leave structure alone but still strip attrs below via allowed-tag fallback
+            }
+            const hasBlockChild = Array.from(child.children).some((el) =>
+              BLOCK_TAGS.has(el.tagName.toLowerCase()),
+            );
+            if (hasBlockChild) {
+              unwrapElement(child);
+            } else {
+              child = renameElement(child, "p");
+              tag = "p";
+            }
+          } else if (UNWRAP_ONLY_TAGS.has(tag)) {
+            if (opts.semanticTags) wrapWithStyleSemantics(child);
+            unwrapElement(child);
+            continue;
+          }
+
+          if (opts.semanticTags) {
+            if (tag === "b") {
+              child = renameElement(child, "strong");
+              tag = "strong";
+            } else if (tag === "i") {
+              child = renameElement(child, "em");
+              tag = "em";
+            } else if (tag === "strike") {
+              child = renameElement(child, "s");
+              tag = "s";
+            }
+          }
+
+          if (!ALLOWED_TAGS.has(tag)) {
+            unwrapElement(child);
+            continue;
+          }
+
+          filterAttributes(child, tag, opts);
+
+          if (
+            opts.removeEmpty &&
+            EMPTY_CHECK_TAGS.has(tag) &&
+            isEmptyElement(child)
+          ) {
+            if (child.parentNode) child.parentNode.removeChild(child);
+          }
+        }
+      }
+
+      function cleanHTMLToBody(rawHtml, opts) {
+        const pre = rawHtml
+          .replace(/<!--[\s\S]*?-->/g, "")
+          .replace(/<\?xml[\s\S]*?\?>/gi, "");
+        const doc = new DOMParser().parseFromString(pre, "text/html");
+        minimalSafetyClean(doc.body);
+        cleanNode(doc.body, opts);
+        return doc.body;
+      }
+
+      function cleanHTMLString(rawHtml, opts) {
+        return cleanHTMLToBody(rawHtml, opts).innerHTML;
+      }
+
+      function plainTextToHTML(text) {
+        const paragraphs = text.replace(/\r\n/g, "\n").split(/\n{2,}/);
+        return paragraphs
+          .map((para) => {
+            const lines = para.split("\n").map(escapeText).join("<br>");
+            return `<p>${lines || "<br>"}</p>`;
+          })
+          .join("");
+      }
+
+      /* =========================
+         Selection helpers
+         ========================= */
+      function saveSelection() {
+        const sel = window.getSelection();
+        if (sel && sel.rangeCount > 0 && editor.contains(sel.anchorNode)) {
+          savedRange = sel.getRangeAt(0).cloneRange();
+        }
+      }
+      function restoreSelection() {
+        if (!savedRange) return;
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(savedRange);
+      }
+      editor.addEventListener("keyup", saveSelection);
+      editor.addEventListener("mouseup", saveSelection);
+      editor.addEventListener("input", saveSelection);
+
+      /* =========================
+         Insert HTML at cursor
+         ========================= */
+      function insertHTMLAtCursor(html) {
+        editor.focus();
+        restoreSelection();
+        document.execCommand("insertHTML", false, html);
+        saveSelection();
+      }
+
+      /* =========================
+         Paste handling
+         ========================= */
+      editor.addEventListener("paste", (e) => {
+        e.preventDefault();
+        const clipboardData = e.clipboardData || window.clipboardData;
+        const mode = getPasteMode();
+
+        if (mode === "plain") {
+          const text = clipboardData.getData("text/plain");
+          insertHTMLAtCursor(plainTextToHTML(text));
+          updateStats();
+          return;
+        }
+
+        let html = clipboardData.getData("text/html");
+        if (!html) {
+          const text = clipboardData.getData("text/plain");
+          html = plainTextToHTML(text);
+          insertHTMLAtCursor(html);
+          updateStats();
+          return;
+        }
+
+        if (mode === "clean") {
+          html = cleanHTMLString(html, getCleanOptions());
+        } else {
+          // raw mode: safety-only clean, keep structure/styles as pasted
+          const body = new DOMParser().parseFromString(
+            html.replace(/<!--[\s\S]*?-->/g, ""),
+            "text/html",
+          ).body;
+          minimalSafetyClean(body);
+          html = body.innerHTML;
+        }
+        insertHTMLAtCursor(html);
+        updateStats();
+      });
+
+      editor.addEventListener("drop", (e) => {
+        if (
+          e.dataTransfer &&
+          e.dataTransfer.files &&
+          e.dataTransfer.files.length > 0
+        ) {
+          e.preventDefault();
+          loadFile(e.dataTransfer.files[0]);
+          return;
+        }
+        // Let text/html drag content flow through the same paste-cleaning pipeline
+        const html = e.dataTransfer ? e.dataTransfer.getData("text/html") : "";
+        const text = e.dataTransfer ? e.dataTransfer.getData("text/plain") : "";
+        if (html || text) {
+          e.preventDefault();
+          const mode = getPasteMode();
+          let cleaned;
+          if (mode === "plain" || !html) {
+            cleaned = plainTextToHTML(text);
+          } else if (mode === "clean") {
+            cleaned = cleanHTMLString(html, getCleanOptions());
+          } else {
+            const body = new DOMParser().parseFromString(
+              html,
+              "text/html",
+            ).body;
+            minimalSafetyClean(body);
+            cleaned = body.innerHTML;
+          }
+          insertHTMLAtCursor(cleaned);
+          updateStats();
+        }
+        editor.classList.remove("drag-over");
+      });
+      editor.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        editor.classList.add("drag-over");
+      });
+      editor.addEventListener("dragleave", () =>
+        editor.classList.remove("drag-over"),
+      );
+
+      /* =========================
+         Placeholder + stats
+         ========================= */
+      function isEditorEmpty() {
+        const html = editor.innerHTML.trim();
+        return html === "" || html === "<br>";
+      }
+      function updatePlaceholder() {
+        editor.classList.toggle("empty", isEditorEmpty());
+      }
+      function updateStats() {
+        updatePlaceholder();
+        const text = editor.innerText || editor.textContent || "";
+        const words = text.trim() === "" ? 0 : text.trim().split(/\s+/).length;
+        wordCountEl.textContent = `${words} word${words === 1 ? "" : "s"}`;
+        charCountEl.textContent = `${text.length} character${text.length === 1 ? "" : "s"}`;
+      }
+      editor.addEventListener("input", updateStats);
+      updateStats();
+
+      /* =========================
+         Formatting toolbar
+         ========================= */
+      function execCmd(cmd, value) {
+        editor.focus();
+        restoreSelection();
+        document.execCommand(cmd, false, value || null);
+        saveSelection();
+        updateStats();
+        updateToolbarState();
+      }
+
+      document.querySelectorAll(".tbtn[data-cmd]").forEach((btn) => {
+        btn.addEventListener("mousedown", (e) => e.preventDefault());
+        btn.addEventListener("click", () => execCmd(btn.dataset.cmd));
+      });
+
+      document
+        .getElementById("cmdHr")
+        .addEventListener("mousedown", (e) => e.preventDefault());
+      document
+        .getElementById("cmdHr")
+        .addEventListener("click", () => execCmd("insertHorizontalRule"));
+
+      document
+        .getElementById("cmdUndo")
+        .addEventListener("mousedown", (e) => e.preventDefault());
+      document
+        .getElementById("cmdUndo")
+        .addEventListener("click", () => execCmd("undo"));
+      document
+        .getElementById("cmdRedo")
+        .addEventListener("mousedown", (e) => e.preventDefault());
+      document
+        .getElementById("cmdRedo")
+        .addEventListener("click", () => execCmd("redo"));
+
+      document
+        .getElementById("cmdClearFormat")
+        .addEventListener("mousedown", (e) => e.preventDefault());
+      document
+        .getElementById("cmdClearFormat")
+        .addEventListener("click", () => {
+          editor.focus();
+          restoreSelection();
+          document.execCommand("removeFormat");
+          document.execCommand("unlink");
+          saveSelection();
+          updateStats();
+        });
+
+      document
+        .getElementById("cmdLink")
+        .addEventListener("mousedown", (e) => e.preventDefault());
+      document.getElementById("cmdLink").addEventListener("click", () => {
+        editor.focus();
+        restoreSelection();
+        const sel = window.getSelection();
+        const hasSelection =
+          sel && !sel.isCollapsed && editor.contains(sel.anchorNode);
+        const url = prompt("Enter URL:", "https://");
+        if (!url) return;
+        const safeUrl = /^\s*javascript:/i.test(url.trim()) ? "#" : url.trim();
+        editor.focus();
+        restoreSelection();
+        if (hasSelection) {
+          document.execCommand("createLink", false, safeUrl);
+        } else {
+          document.execCommand(
+            "insertHTML",
+            false,
+            `<a href="${escapeAttr(safeUrl)}">${escapeText(safeUrl)}</a>`,
+          );
+        }
+        saveSelection();
+        updateStats();
+      });
+
+      headingSelect.addEventListener("mousedown", saveSelection);
+      headingSelect.addEventListener("change", () => {
+        editor.focus();
+        restoreSelection();
+        document.execCommand("formatBlock", false, headingSelect.value);
+        saveSelection();
+        updateStats();
+      });
+
+      function normalizeBlockValue(value) {
+        if (!value) return "P";
+        const v = value.toString().toUpperCase().replace(/[<>]/g, "");
+        if (["H1", "H2", "H3", "H4", "H5", "H6", "BLOCKQUOTE"].includes(v))
+          return v === "H5" || v === "H6" ? "P" : v;
+        return "P";
+      }
+
+      function updateToolbarState() {
+        const stateMap = {
+          bold: "cmdBold",
+          italic: "cmdItalic",
+          underline: "cmdUnderline",
+          strikeThrough: "cmdStrike",
+          insertUnorderedList: "cmdUL",
+          insertOrderedList: "cmdOL",
+        };
+        Object.entries(stateMap).forEach(([cmd, id]) => {
+          try {
+            document
+              .getElementById(id)
+              .classList.toggle("active", document.queryCommandState(cmd));
+          } catch (e) {}
+        });
+        try {
+          headingSelect.value = normalizeBlockValue(
+            document.queryCommandValue("formatBlock"),
+          );
+        } catch (e) {}
+      }
+      document.addEventListener("selectionchange", () => {
+        if (document.activeElement === editor) updateToolbarState();
+      });
+
+      document.getElementById("reCleanBtn").addEventListener("click", () => {
+        if (getPasteMode() !== "clean") {
+          showToast("Set Paste Behaviour to “Clean formatting” first", true);
+          return;
+        }
+        const body = cleanHTMLToBody(editor.innerHTML, getCleanOptions());
+        editor.innerHTML = body.innerHTML;
+        updateStats();
+        showToast("Content cleaned up");
+      });
+
+      /* =========================
+         Tab switching (Visual / Source)
+         ========================= */
+      function switchTab(tab) {
+        if (tab === currentTab) return;
+        if (tab === "source") {
+          sourceCode.value = buildOutputHTML();
+          editor.classList.add("hidden");
+          visualToolbar.classList.add("hidden");
+          sourceCode.classList.remove("hidden");
+          tabSourceBtn.classList.add("active");
+          tabVisualBtn.classList.remove("active");
+        } else {
+          const body = new DOMParser().parseFromString(
+            sourceCode.value,
+            "text/html",
+          ).body;
+          minimalSafetyClean(body);
+          editor.innerHTML = body.innerHTML;
+          sourceCode.classList.add("hidden");
+          editor.classList.remove("hidden");
+          visualToolbar.classList.remove("hidden");
+          tabVisualBtn.classList.add("active");
+          tabSourceBtn.classList.remove("active");
+          updateStats();
+        }
+        currentTab = tab;
+      }
+      tabVisualBtn.addEventListener("click", () => switchTab("visual"));
+      tabSourceBtn.addEventListener("click", () => switchTab("source"));
+
+      /* =========================
+         Pretty-printer
+         ========================= */
+      function serializeAttrs(el) {
+        let out = "";
+        Array.from(el.attributes).forEach((attr) => {
+          out += ` ${attr.name}="${escapeAttr(attr.value)}"`;
+        });
+        return out;
+      }
+      function normalizeWhitespace(text) {
+        return text.replace(/\s+/g, " ");
+      }
+      function serializeInline(el) {
+        const tag = el.tagName.toLowerCase();
+        const attrs = serializeAttrs(el);
+        if (VOID_TAGS.has(tag)) return `<${tag}${attrs}>`;
+        return `<${tag}${attrs}>${serializeInlineChildren(el)}</${tag}>`;
+      }
+      function serializeInlineChildren(node) {
+        let out = "";
+        node.childNodes.forEach((child) => {
+          if (child.nodeType === Node.TEXT_NODE) {
+            out += escapeText(normalizeWhitespace(child.nodeValue));
+          } else if (child.nodeType === Node.ELEMENT_NODE) {
+            out += serializeInline(child);
+          }
+        });
+        return out;
+      }
+      function formatBlockElement(el, depth) {
+        const tag = el.tagName.toLowerCase();
+        const attrs = serializeAttrs(el);
+        const indent = "  ".repeat(depth);
+        if (VOID_TAGS.has(tag)) return `<${tag}${attrs}>`;
+        if (tag === "pre") {
+          return `<pre${attrs}>${escapeText(el.textContent)}</pre>`;
+        }
+        const hasBlockChild = Array.from(el.children).some((c) =>
+          BLOCK_TAGS.has(c.tagName.toLowerCase()),
+        );
+        if (!hasBlockChild) {
+          const inner = serializeInlineChildren(el).trim();
+          if (inner === "") return `<${tag}${attrs}></${tag}>`;
+          return `<${tag}${attrs}>${inner}</${tag}>`;
+        }
+        const inner = formatChildren(el, depth + 1);
+        return `<${tag}${attrs}>\n${inner}${indent}</${tag}>`;
+      }
+      function formatChildren(node, depth) {
+        let out = "";
+        const indent = "  ".repeat(depth);
+        node.childNodes.forEach((child) => {
+          if (child.nodeType === Node.COMMENT_NODE) return;
+          if (child.nodeType === Node.TEXT_NODE) {
+            const text = normalizeWhitespace(child.nodeValue).trim();
+            if (text === "") return;
+            out += `${indent}${escapeText(text)}\n`;
+            return;
+          }
+          if (child.nodeType !== Node.ELEMENT_NODE) return;
+          const tag = child.tagName.toLowerCase();
+          if (BLOCK_TAGS.has(tag)) {
+            out += `${indent}${formatBlockElement(child, depth)}\n`;
+          } else {
+            out += `${indent}${serializeInline(child)}\n`;
+          }
+        });
+        return out;
+      }
+      function prettyPrintFragment(container) {
+        const body = formatChildren(container, 0);
+        return body.replace(/\n$/, "");
+      }
+      function minifyHTML(html) {
+        return html.replace(/>\s+</g, "><").trim();
+      }
+      function indentBlock(str, spaces) {
+        const pad = " ".repeat(spaces);
+        return str
+          .split("\n")
+          .map((line) => (line ? pad + line : line))
+          .join("\n");
+      }
+
+      /* =========================
+         Build output HTML
+         ========================= */
+      function buildOutputHTML() {
+        const format = document.querySelector(
+          'input[name="outputFormat"]:checked',
+        ).value;
+        const clone = editor.cloneNode(true);
+        let bodyContent;
+        if (format === "pretty") {
+          bodyContent = prettyPrintFragment(clone);
+        } else {
+          bodyContent = minifyHTML(editor.innerHTML);
+        }
+
+        if (!optFullDoc.checked) {
+          return bodyContent + (format === "pretty" ? "\n" : "");
+        }
+
+        const title = escapeText(docTitle.value || "Document");
+        if (format === "pretty") {
+          return (
+            `<!DOCTYPE html>\n<html lang="en">\n  <head>\n` +
+            `    <meta charset="UTF-8" />\n    <meta name="viewport" content="width=device-width, initial-scale=1.0" />\n` +
+            `    <title>${title}<\/title>\n  <\/head>\n  <body>\n` +
+            `${indentBlock(bodyContent, 4)}\n  <\/body>\n<\/html>\n`
+          );
+        }
+        return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8" /><title>${title}<\/title><\/head><body>${bodyContent}<\/body><\/html>`;
+      }
+
+      /* =========================
+         Copy / Download / Clear
+         ========================= */
+      document
+        .getElementById("copyHtmlBtn")
+        .addEventListener("click", async () => {
+          const html = buildOutputHTML();
+          try {
+            await navigator.clipboard.writeText(html);
+            showToast("HTML copied to clipboard");
+          } catch (err) {
+            showToast("Copy failed: " + err.message, true);
+          }
+        });
+
+      document
+        .getElementById("copyRichBtn")
+        .addEventListener("click", async () => {
+          try {
+            const htmlBlob = new Blob([editor.innerHTML], {
+              type: "text/html",
+            });
+            const textBlob = new Blob(
+              [editor.innerText || editor.textContent],
+              { type: "text/plain" },
+            );
+            await navigator.clipboard.write([
+              new ClipboardItem({
+                "text/html": htmlBlob,
+                "text/plain": textBlob,
+              }),
+            ]);
+            showToast("Rich text copied to clipboard");
+          } catch (err) {
+            showToast("Copy failed: " + err.message, true);
+          }
+        });
+
+      document.getElementById("downloadBtn").addEventListener("click", () => {
+        const html = buildOutputHTML();
+        const filename = downloadName.value.trim() || "content.html";
+        const blob = new Blob([html], { type: "text/html" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast("HTML downloaded");
+      });
+
+      document.getElementById("clearBtn").addEventListener("click", () => {
+        if (isEditorEmpty() && sourceCode.value.trim() === "") return;
+        if (!confirm("Clear all content?")) return;
+        editor.innerHTML = "";
+        sourceCode.value = "";
+        updateStats();
+      });
+
+      /* =========================
+         File loading
+         ========================= */
+      function loadFile(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const content = e.target.result;
+          const body = new DOMParser().parseFromString(
+            content,
+            "text/html",
+          ).body;
+          minimalSafetyClean(body);
+          if (currentTab === "source") {
+            sourceCode.value = content;
+          } else {
+            editor.innerHTML = body.innerHTML;
+            updateStats();
+          }
+          showToast(`Loaded ${file.name}`);
+        };
+        reader.onerror = () => showToast("Failed to read file", true);
+        reader.readAsText(file);
+      }
+      const fileInput = document.getElementById("fileInput");
+      document
+        .getElementById("loadFileBtn")
+        .addEventListener("click", () => fileInput.click());
+      fileInput.addEventListener("change", (e) => {
+        if (e.target.files && e.target.files.length > 0)
+          loadFile(e.target.files[0]);
+        fileInput.value = "";
+      });
+
+      /* =========================
+         Init
+         ========================= */
+      updatePlaceholder();
+    </script>
+  </body>
+</html>
