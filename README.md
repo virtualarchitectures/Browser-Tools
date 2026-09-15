@@ -47,6 +47,7 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 
 - **[Colour Palette Extractor](colour-palette-extractor.html)** — extract the dominant colours from any image using k-means clustering; displays swatches with hex, RGB, and HSL values, and exports the palette as CSS variables or JSON
 - **[Image Background Removal](image-bg-removal.html)** — remove image backgrounds using a magic wand flood-fill tool with adjustable tolerance and edge feathering, then download as transparent PNG
+- **[Image Batch Editor](image-batch-editor.html)** — apply brightness, contrast, and grayscale/sepia/invert filters to a whole batch of images at once, choose an output format (keep original, JPEG, PNG, or WebP), then download them bundled into a single zip. Dependencies: `JSZip`
 - **[Image Crop Tool](image-crop.html)** — crop images with interactive selection, aspect ratio presets, and precise dimension controls
 - **[Image Diff Tool](image-diff.html)** — compare two images pixel-by-pixel with highlight, heatmap, greyscale, and signed difference modes; shows a stats summary and an interactive before/after slider
 - **[Image Resize Tool](image-resize.html)** — resize images by percentage or pixels with precise scale factor control for copying scale factor to other images
