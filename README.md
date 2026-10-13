@@ -124,6 +124,7 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 
 - **[Favicon Generator](favicon-generator.html)** — generate favicons in multiple sizes and formats including SVG, ICO, Apple Touch Icons, and Android icons. Dependencies: `JSZip`
 - **[HTML Editor](html-editor.html)** — write and format text, or paste in rich text copy and have it automatically cleaned into simple, semantic HTML; also supports pasting, hand-editing, and pretty-printing raw HTML source
+- **[QR Code Generator](qr-code-generator.html)** — create QR codes for URLs, text, Wi-Fi, contacts (vCard), email, phone, SMS, locations, and calendar events; customise module and corner shapes, colours, gradients, and add a centre logo; export as PNG, SVG, or JPEG, copy to clipboard, or batch-generate a zip of codes from a list. Dependencies: `qrcode-generator`, `JSZip`
 - **[Robots.txt Checker](robots-txt-checker.html)** — fetch and parse robots.txt files from websites and check whether specific URLs or paths are allowed or disallowed for different web crawlers
 
 ### Web Privacy & Security
