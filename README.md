@@ -22,6 +22,8 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 - **[CSV Cleaner](csv-cleaner.html)** — trim whitespace, collapse spaces, strip JSON artefacts, and find and replace across CSV data with regex support
 - **[CSV to JSON Converter](csv-to-json.html)** — convert CSV files to JSON format with support for dot notation parsing, multiple output formats (JSON Array, JSON Lines), and table preview
 - **[JSON to CSV Converter](json-to-csv.html)** — convert JSON, JSONL, and NDJSON files to CSV format with support for nested objects, array handling, and table preview
+- **[CSV Merger](csv-merge.html)** — join two CSV files on a key column (inner, left, right, full outer) or stack them by column name, preview the result, and download as CSV
+- **[JSON Viewer](json-viewer.html)** — explore JSON and JSON Lines as a collapsible tree with search, click-to-copy JSONPath, prettify, minify, and error positions
 - **[Table Editor](table-editor.html)** — create tables or load existing CSV files for editing, export to CSV, JSON, or JSON Lines format
 
 ### Data Visualisation
@@ -37,6 +39,7 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 ### Document Processing
 
 - **[OCR Reader](ocr-reader.html)** — extract text from images and PDF files using optical character recognition with side-by-side preview. Dependencies: `Tesseract.js` `pdf.js`
+- **[Markdown Editor](markdown-editor.html)** — write Markdown with a live side-by-side preview (headings, lists, tables, code, links), load `.md` files, and export as Markdown or standalone HTML
 
 ### Glitch
 
