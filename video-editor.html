@@ -24,7 +24,7 @@
 
       body {
         margin: 0 auto;
-        max-width: 1180px;
+        max-width: 1400px;
         padding: 20px;
         font-family:
           Helvetica,
@@ -184,13 +184,290 @@
         background: #000;
         border-radius: 12px;
         overflow: hidden;
-        margin-bottom: 20px;
+        margin-bottom: 8px;
       }
       #preview {
         display: block;
         width: 100%;
-        max-height: 480px;
+        height: 46vh;
+        min-height: 220px;
         background: #000;
+        cursor: pointer;
+      }
+
+      /* =========================
+         Toolbar
+         ========================= */
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 4px;
+        padding: 6px 0;
+      }
+      .toolbar .btn {
+        padding: 6px 8px;
+        font-size: 13px;
+        white-space: nowrap;
+      }
+      .toolbar-sep {
+        width: 1px;
+        height: 24px;
+        margin: 0 4px;
+        background: #e1e4e8;
+      }
+
+      /* =========================
+         Timeline
+         ========================= */
+      .timeline {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid #e1e4e8;
+        border-top-left-radius: 6px;
+        border-top-right-radius: 6px;
+        background: #f6f8fa;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+      #ruler-canvas {
+        display: block;
+        width: 100%;
+        height: 25px;
+        border-bottom: 1px solid #e1e4e8;
+        background: #ffffff;
+        cursor: ew-resize;
+        touch-action: pan-y;
+      }
+      #tracks-canvas {
+        display: block;
+        width: 100%;
+        cursor: crosshair;
+        touch-action: pan-y;
+      }
+      .timeline-resize-handle {
+        height: 5px;
+        background: #e1e4e8;
+        cursor: ns-resize;
+        touch-action: none;
+        transition: background 0.15s;
+      }
+      .timeline-resize-handle:hover,
+      .timeline-resize-handle.dragging {
+        background: #0366d6;
+      }
+
+      .scrollbar-container {
+        display: none;
+        padding: 4px 6px;
+        border: 1px solid #e1e4e8;
+        border-top: none;
+        border-bottom-left-radius: 6px;
+        border-bottom-right-radius: 6px;
+        background: #f6f8fa;
+      }
+      .scrollbar-container.visible {
+        display: block;
+      }
+      .scrollbar-track {
+        position: relative;
+        height: 8px;
+        border-radius: 4px;
+        background: #e1e4e8;
+        cursor: pointer;
+        touch-action: none;
+      }
+      .scrollbar-thumb {
+        position: absolute;
+        top: 0;
+        height: 100%;
+        min-width: 16px;
+        border-radius: 4px;
+        background: #959da5;
+        cursor: grab;
+        transition: background 0.1s;
+      }
+      .scrollbar-thumb:hover {
+        background: #586069;
+      }
+      .scrollbar-thumb.dragging {
+        background: #444d56;
+        cursor: grabbing;
+      }
+
+      .scroll-hint {
+        margin: 6px 0 2px;
+        color: #6a737d;
+        font-size: 12px;
+        text-align: right;
+      }
+
+      .selection-bar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px 20px;
+        padding: 6px 0 10px;
+        color: #586069;
+        font-size: 13px;
+      }
+      .selection-bar strong {
+        color: #24292e;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .shortcuts {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 12px;
+        margin-bottom: 16px;
+        padding-top: 10px;
+        border-top: 1px solid #e1e4e8;
+        color: #6a737d;
+        font-size: 12px;
+      }
+      .shortcuts kbd {
+        padding: 1px 5px;
+        border: 1px solid #d1d5da;
+        border-radius: 3px;
+        background: #f6f8fa;
+        color: #444d56;
+        font-family: inherit;
+        font-size: 11px;
+      }
+
+      /* =========================
+         Clips panel
+         ========================= */
+      .clips-panel {
+        margin-bottom: 16px;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        overflow: hidden;
+      }
+      .clips-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 12px;
+        border-bottom: 1px solid #e1e4e8;
+        background: #f6f8fa;
+        font-size: 13px;
+      }
+      .clips-toolbar .btn {
+        padding: 6px 10px;
+        font-size: 13px;
+      }
+      .clips-toolbar label {
+        color: #586069;
+        font-size: 13px;
+        font-weight: 400;
+      }
+      .clips-toolbar input[type="number"] {
+        width: 56px;
+        padding: 4px 6px;
+        font-size: 13px;
+      }
+      .clips-list {
+        max-height: 260px;
+        overflow-y: auto;
+      }
+      .clips-empty {
+        padding: 16px;
+        color: #6a737d;
+        font-size: 13px;
+        font-style: italic;
+        text-align: center;
+      }
+
+      .seg-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        padding: 5px 10px;
+        border-bottom: 1px solid #f1f3f5;
+        background: #ffffff;
+        font-size: 13px;
+      }
+      .seg-row:last-child {
+        border-bottom: none;
+      }
+      .seg-row.untracked {
+        background: #fafbfc;
+      }
+      .seg-row.dragging {
+        opacity: 0.35;
+      }
+      .seg-row.drag-over-top {
+        border-top: 2px solid #0366d6;
+      }
+      .seg-row.drag-over-bottom {
+        border-bottom: 2px solid #0366d6;
+      }
+      .seg-handle {
+        flex-shrink: 0;
+        width: 8px;
+        height: 18px;
+        border-left: 2px solid #c8d1da;
+        border-right: 2px solid #c8d1da;
+        cursor: grab;
+      }
+      .seg-handle:hover {
+        border-color: #586069;
+      }
+      .seg-index {
+        flex-shrink: 0;
+        min-width: 18px;
+        color: #6a737d;
+        font-size: 12px;
+        text-align: right;
+      }
+      .seg-swatch {
+        flex-shrink: 0;
+        width: 10px;
+        height: 22px;
+        border-radius: 2px;
+      }
+      .seg-label {
+        flex-shrink: 0;
+        min-width: 100px;
+        color: #586069;
+        font-size: 12px;
+        font-style: italic;
+      }
+      .seg-row input.seg-name {
+        flex-shrink: 0;
+        width: 100px;
+        padding: 2px 5px;
+        border-color: transparent;
+        border-radius: 3px;
+        background: transparent;
+        font-size: 13px;
+      }
+      .seg-row input.seg-name:focus {
+        border-color: #0366d6;
+        background: #ffffff;
+      }
+      .seg-time {
+        color: #586069;
+        font-family:
+          "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 12px;
+        white-space: nowrap;
+      }
+      .seg-dur {
+        flex: 1;
+        color: #6a737d;
+        font-family:
+          "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 12px;
+        white-space: nowrap;
+      }
+      .seg-btn {
+        padding: 2px 7px;
+        font-size: 12px;
+        line-height: 18px;
       }
 
       /* =========================
@@ -198,7 +475,7 @@
          ========================= */
       .controls-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr));
         gap: 20px;
         margin-bottom: 20px;
       }
@@ -212,20 +489,6 @@
         border: 1px solid #e1e4e8;
         border-radius: 12px;
         background: #ffffff;
-      }
-
-      .trim-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-        gap: 16px 24px;
-        margin-bottom: 12px;
-      }
-      .trim-field .field-row {
-        margin-bottom: 8px;
-      }
-      .trim-field input[type="range"] {
-        width: 100%;
-        margin-bottom: 8px;
       }
 
       .field-row {
@@ -292,12 +555,6 @@
         color: #586069;
         font-size: 13px;
         min-width: 48px;
-      }
-
-      .hint {
-        margin-top: 8px;
-        color: #586069;
-        font-size: 13px;
       }
 
       .hint-inline {
@@ -420,11 +677,11 @@
     <a href="index.html" class="back-link">← Back to Browser Tools</a>
     <h1>Video Editor</h1>
     <p class="intro">
-      Trim, resize, rotate, flip, change speed and volume, and convert video
-      entirely in your browser using <strong>FFmpeg</strong> compiled to
-      WebAssembly. Nothing is uploaded. All processing happens on your device.
-      The conversion engine (~30&nbsp;MB) downloads the first time you convert a
-      file.
+      Cut, rearrange and split video on a timeline, then resize, rotate, flip,
+      change speed and volume, and convert it entirely in your browser using
+      <strong>FFmpeg</strong> compiled to WebAssembly. Nothing is uploaded. All
+      processing happens on your device. The conversion engine (~30&nbsp;MB)
+      downloads the first time you convert a file.
     </p>
 
     <div class="status hidden" id="status"></div>
@@ -449,71 +706,288 @@
 
     <div id="editor" class="hidden">
       <div class="video-container">
-        <video id="preview" controls></video>
+        <video
+          id="preview"
+          playsinline
+          aria-label="Timeline preview. Click to play or pause."
+        ></video>
+      </div>
+
+      <div class="toolbar" id="toolbar">
+        <button
+          class="btn primary"
+          id="btn-play"
+          type="button"
+          title="Play (Space)"
+        >
+          Play
+        </button>
+        <button class="btn" id="btn-pause" type="button" title="Pause (Space)">
+          Pause
+        </button>
+        <button
+          class="btn"
+          id="btn-stop"
+          type="button"
+          title="Stop and return to the start (Esc)"
+        >
+          Stop
+        </button>
+        <button
+          class="btn"
+          id="btn-seg-start"
+          type="button"
+          title="Move playhead to start of current segment"
+        >
+          |&lt;
+        </button>
+        <button
+          class="btn"
+          id="btn-seg-end"
+          type="button"
+          title="Move playhead to end of current segment"
+        >
+          &gt;|
+        </button>
+        <button
+          class="btn"
+          id="btn-loop"
+          type="button"
+          title="Toggle loop playback (L)"
+          aria-pressed="false"
+        >
+          Loop
+        </button>
+        <div class="toolbar-sep"></div>
+        <button
+          class="btn"
+          id="btn-mark-in"
+          type="button"
+          title="Start the selection at the playhead (I)"
+        >
+          Mark In
+        </button>
+        <button
+          class="btn"
+          id="btn-mark-out"
+          type="button"
+          title="End the selection at the playhead (O)"
+        >
+          Mark Out
+        </button>
+        <div class="toolbar-sep"></div>
+        <button
+          class="btn"
+          id="btn-split"
+          type="button"
+          title="Split at the playhead (S)"
+        >
+          Split
+        </button>
+        <button
+          class="btn"
+          id="btn-cut"
+          type="button"
+          title="Cut selection (Ctrl+X)"
+        >
+          Cut
+        </button>
+        <button
+          class="btn"
+          id="btn-copy"
+          type="button"
+          title="Copy selection (Ctrl+C)"
+        >
+          Copy
+        </button>
+        <button
+          class="btn"
+          id="btn-paste"
+          type="button"
+          title="Paste at the playhead (Ctrl+V)"
+        >
+          Paste
+        </button>
+        <button
+          class="btn"
+          id="btn-delete"
+          type="button"
+          title="Delete selection (Del)"
+        >
+          Delete
+        </button>
+        <button
+          class="btn"
+          id="btn-trim"
+          type="button"
+          title="Keep only the selection"
+        >
+          Trim
+        </button>
+        <div class="toolbar-sep"></div>
+        <button
+          class="btn"
+          id="btn-clips"
+          type="button"
+          title="Toggle Clips panel"
+          aria-expanded="false"
+        >
+          Clips
+        </button>
+        <div class="toolbar-sep"></div>
+        <button
+          class="btn"
+          id="btn-zoom-fit"
+          type="button"
+          title="Fit the whole timeline in view (0)"
+        >
+          Fit
+        </button>
+        <button class="btn" id="btn-zoom-in" type="button" title="Zoom in (+)">
+          Zoom +
+        </button>
+        <button
+          class="btn"
+          id="btn-zoom-out"
+          type="button"
+          title="Zoom out (-)"
+        >
+          Zoom -
+        </button>
+        <button
+          class="btn"
+          id="btn-zoom-sel"
+          type="button"
+          title="Zoom to selection (Z)"
+        >
+          Zoom Sel
+        </button>
+        <div class="toolbar-sep"></div>
+        <button class="btn" id="btn-undo" type="button" title="Undo (Ctrl+Z)">
+          Undo
+        </button>
+        <button class="btn" id="btn-redo" type="button" title="Redo (Ctrl+Y)">
+          Redo
+        </button>
+      </div>
+
+      <div class="timeline" id="timeline">
+        <canvas
+          id="ruler-canvas"
+          role="img"
+          aria-label="Time ruler. Click or drag to move the playhead."
+        ></canvas>
+        <canvas
+          id="tracks-canvas"
+          role="img"
+          aria-label="Video and audio tracks. Drag to select, click to place the playhead."
+        ></canvas>
+      </div>
+      <div class="timeline-resize-handle" id="timeline-resize-handle"></div>
+      <div class="scrollbar-container" id="scrollbar-container">
+        <div class="scrollbar-track" id="scrollbar-track">
+          <div class="scrollbar-thumb" id="scrollbar-thumb"></div>
+        </div>
+      </div>
+      <div class="scroll-hint">
+        Scroll to zoom &nbsp;|&nbsp; Drag to select &nbsp;|&nbsp; Click to place
+        playhead &nbsp;|&nbsp; Double-click to select a segment
+      </div>
+
+      <div class="selection-bar" id="selection-bar">
+        <span>Playhead: <strong id="sel-cursor">0:00.00</strong></span>
+        <span>Selection Start: <strong id="sel-start">&mdash;</strong></span>
+        <span>Selection End: <strong id="sel-end">&mdash;</strong></span>
+        <span>Selection Length: <strong id="sel-length">&mdash;</strong></span>
+        <span>Timeline Length: <strong id="sel-total">&mdash;</strong></span>
+      </div>
+
+      <div class="shortcuts">
+        <span><kbd>Space</kbd> Play / Pause</span>
+        <span><kbd>Esc</kbd> Stop &amp; clear</span>
+        <span><kbd>L</kbd> Toggle loop</span>
+        <span><kbd>I</kbd> / <kbd>O</kbd> Mark in / out</span>
+        <span><kbd>S</kbd> Split</span>
+        <span><kbd>&larr;</kbd> <kbd>&rarr;</kbd> Nudge 1/30 s</span>
+        <span><kbd>Shift+&larr;/&rarr;</kbd> Nudge 1 s</span>
+        <span><kbd>Ctrl+&larr;/&rarr;</kbd> Nudge 0.01 s</span>
+        <span><kbd>Ctrl+Z</kbd> Undo</span>
+        <span><kbd>Ctrl+Y</kbd> Redo</span>
+        <span><kbd>Ctrl+X/C/V</kbd> Cut / Copy / Paste</span>
+        <span><kbd>Del</kbd> Delete selection</span>
+        <span><kbd>Ctrl+A</kbd> Select all</span>
+        <span><kbd>+</kbd> / <kbd>-</kbd> Zoom</span>
+        <span><kbd>0</kbd> Fit view</span>
+        <span><kbd>Z</kbd> Zoom to selection</span>
+      </div>
+
+      <div class="clips-panel hidden" id="clips-panel">
+        <div class="clips-toolbar">
+          <button
+            class="btn"
+            id="btn-split-selection"
+            type="button"
+            title="Create a clip from the current selection"
+          >
+            Clip from Selection
+          </button>
+          <button
+            class="btn"
+            id="btn-split-cursor"
+            type="button"
+            title="Split the segment at the playhead"
+          >
+            Split at Playhead
+          </button>
+          <label for="split-n">Split into</label>
+          <input type="number" id="split-n" value="4" min="2" max="128" />
+          <label for="split-n">equal clips</label>
+          <button
+            class="btn"
+            id="btn-split-equal"
+            type="button"
+            title="Divide the timeline into equal clips"
+          >
+            Split
+          </button>
+          <div class="toolbar-sep"></div>
+          <button
+            class="btn"
+            id="btn-shuffle"
+            type="button"
+            title="Randomise segment order"
+          >
+            Shuffle
+          </button>
+          <button
+            class="btn"
+            id="btn-assemble"
+            type="button"
+            title="Remove untracked segments, keeping only clips in their current order"
+          >
+            Assemble Clips
+          </button>
+          <button
+            class="btn"
+            id="btn-clips-clear"
+            type="button"
+            title="Remove all clip definitions"
+          >
+            Clear Clips
+          </button>
+        </div>
+        <div class="clips-list" id="clips-list"></div>
+        <div class="clips-empty" id="clips-empty">
+          No clips defined. Use Split or Clip from Selection to create clips.
+        </div>
       </div>
 
       <div class="controls-grid">
-        <div class="panel">
-          <h2>Trim</h2>
-          <div class="trim-grid">
-            <div class="trim-field">
-              <div class="field-row">
-                <label for="trim-start">Start</label>
-                <input
-                  type="number"
-                  id="trim-start"
-                  min="0"
-                  step="0.01"
-                  value="0"
-                />
-                <span class="unit">sec</span>
-              </div>
-              <input
-                type="range"
-                id="trim-start-range"
-                min="0"
-                max="0"
-                step="0.01"
-                value="0"
-              />
-              <button class="btn" id="btn-start-now" type="button">
-                Use current position
-              </button>
-            </div>
-            <div class="trim-field">
-              <div class="field-row">
-                <label for="trim-end">End</label>
-                <input
-                  type="number"
-                  id="trim-end"
-                  min="0"
-                  step="0.01"
-                  value="0"
-                />
-                <span class="unit">sec</span>
-              </div>
-              <input
-                type="range"
-                id="trim-end-range"
-                min="0"
-                max="0"
-                step="0.01"
-                value="0"
-              />
-              <button class="btn" id="btn-end-now" type="button">
-                Use current position
-              </button>
-            </div>
-          </div>
-          <p class="hint" id="trim-summary">Full video selected.</p>
-        </div>
-
         <div class="panel" id="transform-panel">
           <h2>Transform</h2>
           <div class="field-row">
             <label class="checkbox"
-              ><input type="checkbox" id="resize-enable" /> Resize
-              output</label
+              ><input type="checkbox" id="resize-enable" /> Resize output</label
             >
             <select id="resize-preset">
               <option value="">Custom</option>
@@ -527,13 +1001,7 @@
             <label for="resize-width">Width</label>
             <input type="number" id="resize-width" min="2" step="2" disabled />
             <label for="resize-height">Height</label>
-            <input
-              type="number"
-              id="resize-height"
-              min="2"
-              step="2"
-              disabled
-            />
+            <input type="number" id="resize-height" min="2" step="2" disabled />
           </div>
           <div class="field-row">
             <label class="checkbox"
@@ -640,6 +1108,9 @@
         <button class="btn primary" id="btn-convert" type="button">
           Convert Video
         </button>
+        <button class="btn" id="btn-convert-sel" type="button">
+          Convert Selection
+        </button>
         <button class="btn hidden" id="btn-cancel" type="button">Cancel</button>
       </div>
 
@@ -680,9 +1151,96 @@
       let sourceDuration = 0;
       let sourceWidth = 0;
       let sourceHeight = 0;
+      let sourceHasAudio = null; // Unknown until FFmpeg has read the file
+      let sourceFps = 0;
+      let loadToken = 0; // Invalidates background work for a previous file
 
       let outputBlobURL = null;
       let converting = false;
+      let expectedOutputDuration = 0;
+
+      // Arrangement: segments in playback/display order. Editing never touches
+      // the file; each segment is a range of it, in source seconds.
+      // Each segment: {type:'clip'|'untracked', start, end, name?, color?}
+      let segments = [];
+      let editVersion = 0;
+      let lastTotal = 0;
+      let undoStack = [];
+      let redoStack = [];
+      let clipboard = null;
+      let segDragSrcIdx = null;
+      let _colorIdx = 0;
+      let _clipNum = 0;
+
+      // Selection, playhead and view are all in timeline seconds
+      let selStart = -1;
+      let selEnd = -1;
+      let cursorPos = 0;
+      let viewStart = 0;
+      let viewEnd = 10;
+
+      let isPlaying = false;
+      let loopEnabled = false;
+      let playIdx = 0;
+      let playFrom = 0;
+      let playRangeStart = 0;
+      let playRangeEnd = 0;
+      let pendingSeek = null;
+
+      let isDragging = false;
+      let dragStartTime = 0;
+      let isScrubbing = false;
+      let resumeAfterScrub = false;
+      let sbDragging = false;
+      let sbDragStartX = 0;
+      let sbDragStartView = 0;
+      let isResizing = false;
+      let resizeStartY = 0;
+      let resizeStartH = 0;
+
+      let peaks = null; // {min, max, rate}
+      let waveformMessage = "";
+      let waveformVersion = 0;
+
+      let thumbVideo = null;
+      let thumbCache = new Map();
+      let thumbWanted = [];
+      let thumbBusy = false;
+      let thumbVersion = 0;
+
+      let timelineWidth = 0;
+      let tracksHeight = 150;
+      let canvasScale = 1;
+      let animFrameId = null;
+      let lastLayerKey = "";
+      let lastDrawnCursor = -1;
+
+      const CLIP_COLORS = [
+        "#e36209",
+        "#6f42c1",
+        "#d73a49",
+        "#0598bc",
+        "#28a745",
+        "#b08800",
+        "#005cc5",
+        "#22863a",
+      ];
+      const MIN_SEGMENT = 0.04; // About one frame; anything shorter is dropped
+      const PLAY_EDGE = 0.015; // Cuts fire this early; about one animation frame
+      const FRAME_STEP = 1 / 30;
+      const MIN_VIEW_SPAN = 0.05;
+      const MAX_UNDO = 50;
+      const RULER_HEIGHT = 24;
+      const VIDEO_LANE_RATIO = 0.6;
+      const CLIP_BAND_HEIGHT = 14;
+      const PEAKS_PER_SEC = 200;
+      const MAX_PEAKS = 2000000;
+      const WAVEFORM_SAMPLE_RATE = 8000;
+      const MAX_WAVEFORM_BYTES = 1.5 * 1024 * 1024 * 1024;
+      const THUMB_BASE = 0.1; // Finest thumbnail grid step, in seconds
+      const THUMB_HEIGHT = 72;
+      const MAX_THUMBS = 3000;
+      const THUMB_SEEK_TIMEOUT = 2000;
 
       /* =========================
          Element refs
@@ -694,11 +1252,16 @@
       const editor = document.getElementById("editor");
       const preview = document.getElementById("preview");
 
-      const trimStartInput = document.getElementById("trim-start");
-      const trimEndInput = document.getElementById("trim-end");
-      const trimStartRange = document.getElementById("trim-start-range");
-      const trimEndRange = document.getElementById("trim-end-range");
-      const trimSummary = document.getElementById("trim-summary");
+      const timelineEl = document.getElementById("timeline");
+      const tracksCanvas = document.getElementById("tracks-canvas");
+      const tracksLayer = document.createElement("canvas");
+      const rulerCanvas = document.getElementById("ruler-canvas");
+      const scrollbarContainer = document.getElementById("scrollbar-container");
+      const sbTrack = document.getElementById("scrollbar-track");
+      const sbThumb = document.getElementById("scrollbar-thumb");
+      const clipsPanel = document.getElementById("clips-panel");
+      const clipsList = document.getElementById("clips-list");
+      const clipsEmpty = document.getElementById("clips-empty");
 
       const resizeEnable = document.getElementById("resize-enable");
       const resizePreset = document.getElementById("resize-preset");
@@ -722,6 +1285,7 @@
       const mp3BitrateSelect = document.getElementById("mp3-bitrate-select");
 
       const btnConvert = document.getElementById("btn-convert");
+      const btnConvertSel = document.getElementById("btn-convert-sel");
       const btnCancel = document.getElementById("btn-cancel");
       const progressPanel = document.getElementById("progress-panel");
       const progressBar = document.getElementById("progress-bar");
@@ -800,9 +1364,11 @@
         setProgress(0, "Loading FFmpeg engine (~30 MB, first time only)…");
         ffmpeg = new FFmpeg();
         ffmpeg.on("log", ({ message }) => appendLog(message));
-        ffmpeg.on("progress", ({ progress }) => {
-          if (progress >= 0 && progress <= 1) {
-            setProgress(progress, "Processing…");
+        // The event's own progress value is relative to the source duration,
+        // so measure against the length of the output instead.
+        ffmpeg.on("progress", ({ time }) => {
+          if (converting && expectedOutputDuration > 0 && time > 0) {
+            setProgress(time / 1e6 / expectedOutputDuration, "Processing…");
           }
         });
         const coreBaseURL =
@@ -876,6 +1442,42 @@
         });
       }
 
+      function waitForVideoMetadata() {
+        return new Promise((resolve, reject) => {
+          const onLoaded = () => {
+            preview.removeEventListener("error", onError);
+            resolve();
+          };
+          const onError = () => {
+            preview.removeEventListener("loadedmetadata", onLoaded);
+            reject(new Error("unsupported"));
+          };
+          preview.addEventListener("loadedmetadata", onLoaded, { once: true });
+          preview.addEventListener("error", onError, { once: true });
+        });
+      }
+
+      function resetTimeline() {
+        segments = [{ type: "untracked", start: 0, end: sourceDuration }];
+        undoStack = [];
+        redoStack = [];
+        clipboard = null;
+        _colorIdx = 0;
+        _clipNum = 0;
+        clearSelection();
+        cursorPos = 0;
+        viewStart = 0;
+        viewEnd = sourceDuration;
+        lastTotal = sourceDuration;
+        editVersion++;
+        thumbCache = new Map();
+        thumbWanted = [];
+        thumbBusy = false;
+        thumbVersion++;
+        renderClipsList();
+        updateUI();
+      }
+
       async function loadFile(file) {
         if (
           !file.type.startsWith("video/") &&
@@ -886,16 +1488,32 @@
         }
         hideStatus();
         resetOutput();
+        pause();
+        const token = ++loadToken;
 
         if (sourceURL) URL.revokeObjectURL(sourceURL);
         currentFile = file;
+        sourceHasAudio = null;
+        sourceFps = 0;
         sourceURL = URL.createObjectURL(file);
         preview.src = sourceURL;
 
-        await new Promise((resolve) => {
-          preview.addEventListener("loadedmetadata", resolve, { once: true });
-        });
+        try {
+          await waitForVideoMetadata();
+        } catch (err) {
+          if (token !== loadToken) return;
+          currentFile = null;
+          dropZone.classList.remove("hidden");
+          fileInfo.classList.add("hidden");
+          editor.classList.add("hidden");
+          showStatus(
+            "This browser cannot play this file, so it cannot be edited on the timeline.",
+            "error",
+          );
+          return;
+        }
         sourceDuration = await resolveDuration(preview);
+        if (token !== loadToken) return;
         sourceWidth = preview.videoWidth || 0;
         sourceHeight = preview.videoHeight || 0;
 
@@ -908,14 +1526,6 @@
         document.getElementById("info-resolution").textContent =
           sourceWidth + " × " + sourceHeight;
 
-        trimStartInput.value = "0";
-        trimEndInput.value = sourceDuration.toFixed(2);
-        trimStartRange.max = sourceDuration;
-        trimEndRange.max = sourceDuration;
-        trimStartRange.value = "0";
-        trimEndRange.value = sourceDuration;
-        updateTrimSummary();
-
         resizeWidth.value = sourceWidth;
         resizeHeight.value = sourceHeight;
 
@@ -924,69 +1534,1450 @@
         editor.classList.remove("hidden");
         outputSection.classList.add("hidden");
 
+        resetTimeline();
+        setupThumbVideo();
+        startAnimation();
+        loadWaveform(file, token);
+
         // Warm up the engine in the background so it is likely ready by the
         // time the user has finished choosing options.
-        ensureFFmpegLoaded().catch((err) => {
-          console.error(err);
-        });
+        ensureFFmpegLoaded()
+          .then(() => {
+            if (!converting) progressPanel.classList.add("hidden");
+          })
+          .catch((err) => {
+            console.error(err);
+          });
       }
 
       /* =========================
-         Trim controls
+         Arrangement helpers
          ========================= */
-      function updateTrimSummary() {
-        const start = parseFloat(trimStartInput.value) || 0;
-        const end = parseFloat(trimEndInput.value) || 0;
-        const dur = Math.max(0, end - start);
-        if (start <= 0.001 && end >= sourceDuration - 0.001) {
-          trimSummary.textContent =
-            "Full video selected (" + formatTime(sourceDuration) + ").";
-        } else {
-          trimSummary.textContent =
-            "Trimmed clip: " +
-            formatTime(dur) +
-            " (from " +
-            formatTime(start) +
-            " to " +
-            formatTime(end) +
-            ").";
+      function nextClipColor() {
+        return CLIP_COLORS[_colorIdx++ % CLIP_COLORS.length];
+      }
+
+      function hexToRgba(hex, alpha) {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return `rgba(${r},${g},${b},${alpha})`;
+      }
+
+      function newClip(start, end) {
+        return {
+          type: "clip",
+          color: nextClipColor(),
+          name: "Clip " + ++_clipNum,
+          start,
+          end,
+        };
+      }
+
+      function clipCount() {
+        return segments.filter((s) => s.type === "clip").length;
+      }
+
+      function hasSelection() {
+        return selStart >= 0 && selEnd > selStart;
+      }
+
+      function clearSelection() {
+        selStart = -1;
+        selEnd = -1;
+      }
+
+      // Returns [{seg, idx, arrStart, arrEnd}] with cumulative timeline times
+      function getArrangementInfo() {
+        let t = 0;
+        return segments.map((seg, idx) => {
+          const dur = seg.end - seg.start;
+          const item = { seg, idx, arrStart: t, arrEnd: t + dur };
+          t += dur;
+          return item;
+        });
+      }
+
+      function arrangementDuration() {
+        return segments.reduce((sum, s) => sum + (s.end - s.start), 0);
+      }
+
+      // Maps a timeline time to its segment and source position. The very end
+      // of the timeline maps just inside the last segment so it shows that
+      // segment's final frame rather than the frame after the cut.
+      function locateTime(t) {
+        const info = getArrangementInfo();
+        const item =
+          info.find((i) => t < i.arrEnd - 1e-6) || info[info.length - 1];
+        const offset = Math.max(0, t - item.arrStart);
+        return {
+          idx: item.idx,
+          source: Math.min(item.seg.start + offset, item.seg.end - 0.001),
+        };
+      }
+
+      // Copies of the part of the arrangement between two timeline times, cut
+      // at those times. Slivers shorter than a frame are dropped.
+      function rangePieces(from, to) {
+        const pieces = [];
+        for (const { seg, arrStart, arrEnd } of getArrangementInfo()) {
+          const a = Math.max(from, arrStart);
+          const b = Math.min(to, arrEnd);
+          if (b - a < MIN_SEGMENT) continue;
+          pieces.push({
+            ...seg,
+            start: seg.start + (a - arrStart),
+            end: seg.start + (b - arrStart),
+          });
+        }
+        return pieces;
+      }
+
+      function mergeAdjacentUntracked() {
+        const merged = [];
+        for (const seg of segments) {
+          const prev = merged[merged.length - 1];
+          if (
+            prev &&
+            prev.type === "untracked" &&
+            seg.type === "untracked" &&
+            Math.abs(prev.end - seg.start) < 1e-6
+          ) {
+            prev.end = seg.end;
+          } else {
+            merged.push({ ...seg });
+          }
+        }
+        segments = merged;
+      }
+
+      function snapshotSegments() {
+        return segments.map((s) => ({ ...s }));
+      }
+
+      // Every arrangement change goes through here so that it can be undone.
+      // Selections are timeline times, so they do not survive an edit.
+      function editSegments(mutate) {
+        pause();
+        hideStatus();
+        undoStack.push(snapshotSegments());
+        if (undoStack.length > MAX_UNDO) undoStack.shift();
+        redoStack = [];
+        mutate();
+        clearSelection();
+        afterArrangementChange();
+      }
+
+      function afterArrangementChange() {
+        mergeAdjacentUntracked();
+        editVersion++;
+        const total = arrangementDuration();
+        const wasFit = viewStart <= 0 && viewEnd >= lastTotal - 1e-6;
+        const span = Math.min(viewEnd - viewStart, total);
+        viewStart = wasFit ? 0 : Math.min(viewStart, total - span);
+        viewEnd = wasFit ? total : viewStart + span;
+        lastTotal = total;
+        renderClipsList();
+        updateUI();
+        seekCursor(Math.min(cursorPos, total));
+      }
+
+      /* =========================
+         Edit operations
+         ========================= */
+      function doCopy() {
+        if (!hasSelection()) return;
+        clipboard = rangePieces(selStart, selEnd);
+        updateUI();
+      }
+
+      function doDelete() {
+        if (!hasSelection()) return;
+        const from = selStart;
+        const kept = [
+          ...rangePieces(0, from),
+          ...rangePieces(selEnd, arrangementDuration()),
+        ];
+        if (kept.length === 0) {
+          showStatus("The timeline cannot be empty.", "error");
+          return;
+        }
+        editSegments(() => {
+          segments = kept;
+          cursorPos = from;
+        });
+      }
+
+      function doCut() {
+        doCopy();
+        doDelete();
+      }
+
+      function doPaste() {
+        if (!clipboard || clipboard.length === 0) return;
+        const at = cursorPos;
+        const total = arrangementDuration();
+        const pasted = clipboard.reduce((s, c) => s + (c.end - c.start), 0);
+        editSegments(() => {
+          segments = [
+            ...rangePieces(0, at),
+            ...clipboard.map((c) => ({ ...c })),
+            ...rangePieces(at, total),
+          ];
+          cursorPos = at + pasted;
+        });
+      }
+
+      function doTrim() {
+        if (!hasSelection()) return;
+        const kept = rangePieces(selStart, selEnd);
+        if (kept.length === 0) return;
+        editSegments(() => {
+          segments = kept;
+          cursorPos = 0;
+        });
+        zoomFit();
+      }
+
+      function restoreFrom(fromStack, toStack) {
+        if (fromStack.length === 0) return;
+        pause();
+        hideStatus();
+        toStack.push(snapshotSegments());
+        segments = fromStack.pop();
+        clearSelection();
+        afterArrangementChange();
+      }
+
+      // Split the segment under the playhead. Untracked footage becomes two
+      // clips; a clip becomes two clips with suffixed names.
+      function splitAtCursor() {
+        const t = cursorPos;
+        const found = getArrangementInfo().find(
+          ({ arrStart, arrEnd }) =>
+            t > arrStart + MIN_SEGMENT && t < arrEnd - MIN_SEGMENT,
+        );
+        if (!found) {
+          showStatus("Move the playhead inside a segment to split.", "error");
+          return;
+        }
+        const { seg, idx, arrStart } = found;
+        const splitAt = seg.start + (t - arrStart);
+        editSegments(() => {
+          const left = newClip(seg.start, splitAt);
+          const right = newClip(splitAt, seg.end);
+          if (seg.type === "clip") {
+            left.color = seg.color;
+            left.name = seg.name + "a";
+            right.name = seg.name + "b";
+            _clipNum -= 2;
+          }
+          segments.splice(idx, 1, left, right);
+        });
+      }
+
+      // Create a clip from the selection. Whatever surrounds it keeps its type.
+      function clipFromSelection() {
+        if (!hasSelection()) return;
+        const from = selStart;
+        const to = selEnd;
+        const inside = rangePieces(from, to);
+        if (inside.length !== 1) {
+          showStatus("Selection must fall within a single segment.", "error");
+          return;
+        }
+        const total = arrangementDuration();
+        editSegments(() => {
+          segments = [
+            ...rangePieces(0, from),
+            newClip(inside[0].start, inside[0].end),
+            ...rangePieces(to, total),
+          ];
+        });
+      }
+
+      function splitIntoEqualParts() {
+        const n = parseInt(document.getElementById("split-n").value, 10);
+        if (isNaN(n) || n < 2) {
+          showStatus("Enter a number of parts (minimum 2).", "error");
+          return;
+        }
+        const partLen = arrangementDuration() / n;
+        editSegments(() => {
+          const parts = [];
+          for (let i = 0; i < n; i++) {
+            parts.push(...rangePieces(i * partLen, (i + 1) * partLen));
+          }
+          _clipNum = 0;
+          segments = parts.map((p) => newClip(p.start, p.end));
+        });
+      }
+
+      function shuffleSegments() {
+        if (segments.length < 2) return;
+        editSegments(() => {
+          for (let i = segments.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [segments[i], segments[j]] = [segments[j], segments[i]];
+          }
+        });
+      }
+
+      // Keep only the clips, in their current order
+      function assembleClips() {
+        if (clipCount() === 0) return;
+        editSegments(() => {
+          segments = segments.filter((s) => s.type === "clip");
+          cursorPos = 0;
+        });
+        zoomFit();
+      }
+
+      function clearClips() {
+        editSegments(() => {
+          segments = segments.map(({ start, end }) => ({
+            type: "untracked",
+            start,
+            end,
+          }));
+        });
+      }
+
+      function moveSegment(from, to) {
+        editSegments(() => {
+          const [moved] = segments.splice(from, 1);
+          segments.splice(to, 0, moved);
+        });
+      }
+
+      function untrackSegment(idx) {
+        editSegments(() => {
+          const { start, end } = segments[idx];
+          segments[idx] = { type: "untracked", start, end };
+        });
+      }
+
+      function defineAsClip(idx) {
+        editSegments(() => {
+          const { start, end } = segments[idx];
+          segments[idx] = newClip(start, end);
+        });
+      }
+
+      function selectSegment(idx) {
+        const item = getArrangementInfo()[idx];
+        if (!item) return;
+        pause();
+        selStart = item.arrStart;
+        selEnd = item.arrEnd;
+        seekCursor(item.arrStart);
+        updateUI();
+      }
+
+      function markIn() {
+        const total = arrangementDuration();
+        if (cursorPos >= total - MIN_SEGMENT) return;
+        const end = selEnd > cursorPos ? selEnd : total;
+        selStart = cursorPos;
+        selEnd = end;
+        updateUI();
+      }
+
+      function markOut() {
+        if (cursorPos <= MIN_SEGMENT) return;
+        const start = selStart >= 0 && selStart < cursorPos ? selStart : 0;
+        selStart = start;
+        selEnd = cursorPos;
+        updateUI();
+      }
+
+      /* =========================
+         Playback
+         =========================
+         One <video> plays the source file. Cuts are performed by watching its
+         position and jumping to the next segment's source range. */
+      function play() {
+        if (isPlaying || !currentFile) return;
+        const sel = hasSelection();
+        playRangeStart = sel ? selStart : 0;
+        playRangeEnd = sel ? selEnd : arrangementDuration();
+        const resume =
+          cursorPos >= playRangeStart && cursorPos < playRangeEnd - MIN_SEGMENT;
+        playFrom = resume ? cursorPos : playRangeStart;
+        startPlaybackAt(playFrom);
+      }
+
+      function startPlaybackAt(t) {
+        const { idx, source } = locateTime(t);
+        pendingSeek = null;
+        playIdx = idx;
+        cursorPos = t;
+        preview.currentTime = source;
+        isPlaying = true;
+        resumePreview();
+        updatePlaybackButtons();
+      }
+
+      function resumePreview() {
+        preview.play().catch((err) => {
+          // A pause() issued during the play() request rejects it harmlessly
+          if (err.name === "AbortError") return;
+          console.error(err);
+          isPlaying = false;
+          updatePlaybackButtons();
+          showStatus("Playback failed: " + err.message, "error");
+        });
+      }
+
+      function pause() {
+        if (!isPlaying) return;
+        isPlaying = false;
+        preview.pause();
+        updatePlaybackButtons();
+      }
+
+      function togglePlay() {
+        if (isPlaying) pause();
+        else play();
+      }
+
+      function toggleLoop() {
+        loopEnabled = !loopEnabled;
+        const btn = document.getElementById("btn-loop");
+        btn.classList.toggle("primary", loopEnabled);
+        btn.setAttribute("aria-pressed", String(loopEnabled));
+      }
+
+      function tickPlayback() {
+        if (!isPlaying) return;
+        const seg = segments[playIdx];
+        const { arrStart } = getArrangementInfo()[playIdx];
+        const pos = arrStart + (preview.currentTime - seg.start);
+        const atSegEnd =
+          preview.ended || preview.currentTime >= seg.end - PLAY_EDGE;
+
+        if (
+          pos >= playRangeEnd - PLAY_EDGE ||
+          (atSegEnd && playIdx === segments.length - 1)
+        ) {
+          if (loopEnabled) {
+            startPlaybackAt(playRangeStart);
+          } else {
+            pause();
+            seekCursor(playFrom);
+          }
+          return;
+        }
+
+        if (atSegEnd) {
+          const next = segments[++playIdx];
+          // Segments that are contiguous in the source play through unbroken
+          if (Math.abs(next.start - seg.end) > PLAY_EDGE) {
+            preview.currentTime = next.start;
+          }
+          if (preview.paused) resumePreview();
+        }
+        cursorPos = Math.max(0, pos);
+      }
+
+      // Seek requests are coalesced so that scrubbing shows the latest position
+      // instead of queuing a seek for every pointer move.
+      function requestPreviewSeek(source) {
+        pendingSeek = source;
+        if (!preview.seeking) applyPendingSeek();
+      }
+
+      function applyPendingSeek() {
+        if (pendingSeek === null) return;
+        const t = pendingSeek;
+        pendingSeek = null;
+        if (Math.abs(preview.currentTime - t) > 0.0005) {
+          preview.currentTime = t;
         }
       }
 
-      function clampTrim() {
-        let start = Math.max(
-          0,
-          Math.min(parseFloat(trimStartInput.value) || 0, sourceDuration),
-        );
-        let end = Math.max(
-          0,
-          Math.min(parseFloat(trimEndInput.value) || 0, sourceDuration),
-        );
-        if (end <= start) end = Math.min(sourceDuration, start + 0.1);
-        trimStartInput.value = start.toFixed(2);
-        trimEndInput.value = end.toFixed(2);
-        trimStartRange.value = start;
-        trimEndRange.value = end;
-        updateTrimSummary();
+      function seekCursor(t) {
+        const total = arrangementDuration();
+        cursorPos = Math.max(0, Math.min(t, total));
+        if (isPlaying) startPlaybackAt(cursorPos);
+        else requestPreviewSeek(locateTime(cursorPos).source);
       }
 
-      trimStartInput.addEventListener("change", clampTrim);
-      trimEndInput.addEventListener("change", clampTrim);
-      trimStartRange.addEventListener("input", () => {
-        trimStartInput.value = parseFloat(trimStartRange.value).toFixed(2);
-        clampTrim();
+      function scrollViewTo(t) {
+        const span = viewEnd - viewStart;
+        const total = arrangementDuration();
+        if (t < viewStart || t > viewEnd) {
+          viewStart = Math.max(0, Math.min(t - span * 0.1, total - span));
+          viewEnd = viewStart + span;
+        }
+      }
+
+      // Move the playhead to the start or end of the segment it sits in
+      function moveCursorToSegmentBoundary(toEnd) {
+        const t = cursorPos;
+        const info = getArrangementInfo();
+        const found =
+          (toEnd
+            ? info.find((i) => t >= i.arrStart && t < i.arrEnd)
+            : info.find((i) => t > i.arrStart && t <= i.arrEnd)) ||
+          info.find((i) => t >= i.arrStart && t <= i.arrEnd);
+        if (!found) return;
+        seekCursor(toEnd ? found.arrEnd : found.arrStart);
+        scrollViewTo(cursorPos);
+      }
+
+      preview.addEventListener("seeked", applyPendingSeek);
+      preview.addEventListener("click", togglePlay);
+      // rAF stops in background tabs; timeupdate keeps cuts working there
+      preview.addEventListener("timeupdate", tickPlayback);
+      preview.addEventListener("ended", tickPlayback);
+
+      /* =========================
+         Waveform peaks
+         =========================
+         Peaks are kept instead of the decoded audio. Decoding through a low
+         sample rate context resamples as it goes, so long videos need a small
+         fraction of the memory a full-rate decode would. */
+      async function loadWaveform(file, token) {
+        peaks = null;
+        if (file.size > MAX_WAVEFORM_BYTES) {
+          waveformMessage = "Waveform unavailable for files this large";
+          waveformVersion++;
+          return;
+        }
+        waveformMessage = "Loading waveform…";
+        waveformVersion++;
+        try {
+          const decoder = new OfflineAudioContext(1, 1, WAVEFORM_SAMPLE_RATE);
+          const decoded = await decoder.decodeAudioData(
+            await file.arrayBuffer(),
+          );
+          if (token !== loadToken) return;
+          const result = await computePeaks(decoded, token);
+          if (token !== loadToken) return;
+          peaks = result;
+          waveformMessage = "";
+        } catch (err) {
+          if (token !== loadToken) return;
+          console.warn("Waveform unavailable:", err);
+          waveformMessage = "No audio track, or audio format not supported";
+        }
+        waveformVersion++;
+      }
+
+      async function computePeaks(decoded, token) {
+        const rate = Math.min(PEAKS_PER_SEC, MAX_PEAKS / decoded.duration);
+        const count = Math.ceil(decoded.duration * rate);
+        const min = new Float32Array(count);
+        const max = new Float32Array(count);
+        const samplesPerPeak = decoded.sampleRate / rate;
+
+        for (let ch = 0; ch < decoded.numberOfChannels; ch++) {
+          const data = decoded.getChannelData(ch);
+          for (let i = 0; i < count; i++) {
+            const a = Math.floor(i * samplesPerPeak);
+            const b = Math.min(
+              data.length,
+              Math.floor((i + 1) * samplesPerPeak),
+            );
+            let lo = min[i];
+            let hi = max[i];
+            for (let s = a; s < b; s++) {
+              if (data[s] < lo) lo = data[s];
+              if (data[s] > hi) hi = data[s];
+            }
+            min[i] = lo;
+            max[i] = hi;
+            // Yield regularly so long files do not freeze the page
+            if (i % 50000 === 49999) {
+              await new Promise((resolve) => setTimeout(resolve));
+              if (token !== loadToken) return null;
+            }
+          }
+        }
+        return { min, max, rate };
+      }
+
+      /* =========================
+         Thumbnails
+         =========================
+         Frames are extracted on demand by a second, hidden <video>. They live
+         on a power-of-two grid of THUMB_BASE steps: drawing asks for the grid
+         cell at the current zoom and falls back to coarser cells it already
+         has, so a rough strip appears at once and sharpens as frames arrive.
+         thumbWanted holds what is on screen now, so scrolling reprioritises
+         extraction automatically. */
+      function setupThumbVideo() {
+        thumbVideo = document.createElement("video");
+        thumbVideo.muted = true;
+        thumbVideo.preload = "auto";
+        thumbVideo.src = sourceURL;
+      }
+
+      function seekThumbVideo(video, t) {
+        return new Promise((resolve) => {
+          const finish = (ok) => {
+            clearTimeout(timer);
+            video.removeEventListener("seeked", onSeeked);
+            resolve(ok);
+          };
+          const onSeeked = () => finish(true);
+          const timer = setTimeout(() => finish(false), THUMB_SEEK_TIMEOUT);
+          video.addEventListener("seeked", onSeeked);
+          video.currentTime = t;
+        });
+      }
+
+      function captureThumb(video) {
+        const canvas = document.createElement("canvas");
+        canvas.height = THUMB_HEIGHT;
+        canvas.width = Math.max(1, Math.round(THUMB_HEIGHT * videoAspect()));
+        canvas
+          .getContext("2d")
+          .drawImage(video, 0, 0, canvas.width, canvas.height);
+        return canvas;
+      }
+
+      async function pumpThumbs() {
+        if (thumbBusy || !thumbVideo || thumbVideo.readyState < 1) return;
+        const key = thumbWanted.find((k) => !thumbCache.has(k));
+        if (key === undefined) return;
+
+        thumbBusy = true;
+        const token = loadToken;
+        const video = thumbVideo;
+        const t = Math.min(key * THUMB_BASE, sourceDuration - 0.05);
+        const ok = await seekThumbVideo(video, Math.max(0, t));
+        if (token !== loadToken) return;
+
+        // A failed frame stays cached as null so it is not retried forever
+        thumbCache.set(
+          key,
+          ok && video.readyState >= 2 ? captureThumb(video) : null,
+        );
+        if (thumbCache.size > MAX_THUMBS) {
+          thumbCache.delete(thumbCache.keys().next().value);
+        }
+        thumbVersion++;
+        thumbBusy = false;
+      }
+
+      function videoAspect() {
+        return sourceWidth && sourceHeight
+          ? sourceWidth / sourceHeight
+          : 16 / 9;
+      }
+
+      // Best available thumbnail for a source time, trying the wanted grid step
+      // first and then each coarser one.
+      function lookupThumb(t, units) {
+        const idx = Math.floor(t / THUMB_BASE);
+        const coarsest = Math.ceil(sourceDuration / THUMB_BASE);
+        for (let u = units; u <= coarsest; u *= 2) {
+          const thumb = thumbCache.get(Math.floor(idx / u) * u);
+          if (thumb) return thumb;
+        }
+        return null;
+      }
+
+      /* =========================
+         Timeline coordinates / sizing
+         ========================= */
+      function xToTime(x) {
+        return viewStart + (x / timelineWidth) * (viewEnd - viewStart);
+      }
+
+      function timeToX(t) {
+        return ((t - viewStart) / (viewEnd - viewStart)) * timelineWidth;
+      }
+
+      function eventTime(e, canvas) {
+        const rect = canvas.getBoundingClientRect();
+        const t = xToTime(e.clientX - rect.left);
+        return Math.max(0, Math.min(t, arrangementDuration()));
+      }
+
+      function resizeCanvases() {
+        timelineWidth = timelineEl.clientWidth;
+        canvasScale = window.devicePixelRatio || 1;
+        const w = Math.round(timelineWidth * canvasScale);
+        const h = Math.round(tracksHeight * canvasScale);
+        if (tracksCanvas.width !== w || tracksCanvas.height !== h) {
+          tracksCanvas.width = w;
+          tracksCanvas.height = h;
+          tracksCanvas.style.height = tracksHeight + "px";
+          tracksLayer.width = w;
+          tracksLayer.height = h;
+          rulerCanvas.width = w;
+          rulerCanvas.height = Math.round(RULER_HEIGHT * canvasScale);
+        }
+      }
+
+      /* =========================
+         Drawing
+         ========================= */
+      function drawFilmstrip(c, { seg, arrStart }, x1, x2, laneH) {
+        const pxPerSec = timelineWidth / (viewEnd - viewStart);
+        const tileW = laneH * videoAspect();
+        const tileSec = tileW / pxPerSec;
+
+        let units = 1;
+        while (units * THUMB_BASE < tileSec) units *= 2;
+
+        c.save();
+        c.beginPath();
+        c.rect(x1, 0, x2 - x1, laneH);
+        c.clip();
+
+        // Tiles are anchored to the segment start so they scroll with it
+        const first = Math.max(
+          0,
+          Math.floor((xToTime(x1) - arrStart) / tileSec),
+        );
+        for (let i = first; ; i++) {
+          const tileX = timeToX(arrStart + i * tileSec);
+          const source = seg.start + i * tileSec;
+          if (tileX > x2 || source >= seg.end) break;
+          const key = Math.floor(source / THUMB_BASE / units) * units;
+          if (!thumbCache.has(key) && !thumbWanted.includes(key)) {
+            thumbWanted.push(key);
+          }
+          const thumb = lookupThumb(source, units);
+          if (thumb) c.drawImage(thumb, tileX, 0, tileW, laneH);
+        }
+        c.restore();
+      }
+
+      function drawWaveformSegment(c, { seg, arrStart }, x1, x2, top, laneH) {
+        if (!peaks) return;
+        const center = top + laneH / 2;
+        const halfH = laneH / 2 - 2;
+        const secPerPx = (viewEnd - viewStart) / timelineWidth;
+        const { min, max, rate } = peaks;
+
+        c.fillStyle = "#0366d6";
+        for (let px = Math.floor(x1); px < Math.ceil(x2); px++) {
+          const source = seg.start + (xToTime(px) - arrStart);
+          const a = Math.max(0, Math.floor(Math.max(source, seg.start) * rate));
+          const b = Math.min(
+            min.length,
+            Math.max(
+              a + 1,
+              Math.ceil(Math.min(source + secPerPx, seg.end) * rate),
+            ),
+          );
+          let lo = 0;
+          let hi = 0;
+          for (let i = a; i < b; i++) {
+            if (min[i] < lo) lo = min[i];
+            if (max[i] > hi) hi = max[i];
+          }
+          c.fillRect(
+            px,
+            center - hi * halfH,
+            1,
+            Math.max(1, (hi - lo) * halfH),
+          );
+        }
+      }
+
+      function drawClipBand(c, seg, x1, x2, laneH) {
+        c.fillStyle = hexToRgba(seg.color, 0.16);
+        c.fillRect(x1, 0, x2 - x1, laneH);
+        c.fillStyle = seg.color;
+        c.fillRect(x1, 0, x2 - x1, CLIP_BAND_HEIGHT);
+        if (x2 - x1 > 24) {
+          c.save();
+          c.beginPath();
+          c.rect(x1, 0, x2 - x1 - 4, CLIP_BAND_HEIGHT);
+          c.clip();
+          c.fillStyle = "#ffffff";
+          c.font = "600 10px Helvetica, Arial, sans-serif";
+          c.textAlign = "left";
+          c.textBaseline = "middle";
+          c.fillText(seg.name, x1 + 4, CLIP_BAND_HEIGHT / 2 + 0.5);
+          c.restore();
+        }
+      }
+
+      // Everything except the playhead, drawn off-screen so that the playhead
+      // can move every frame without rebuilding the tracks.
+      function renderTracksLayer() {
+        const c = tracksLayer.getContext("2d");
+        c.setTransform(canvasScale, 0, 0, canvasScale, 0, 0);
+        const W = timelineWidth;
+        const H = tracksHeight;
+        const videoH = Math.round(H * VIDEO_LANE_RATIO);
+        const audioTop = videoH + 1;
+        const audioH = H - audioTop;
+
+        c.fillStyle = "#24292e";
+        c.fillRect(0, 0, W, videoH);
+        c.fillStyle = "#e1e4e8";
+        c.fillRect(0, videoH, W, 1);
+        c.fillStyle = "#f6f8fa";
+        c.fillRect(0, audioTop, W, audioH);
+        c.fillStyle = "#d1d5da";
+        c.fillRect(0, audioTop + Math.round(audioH / 2), W, 1);
+
+        thumbWanted = [];
+        const info = getArrangementInfo();
+        for (const item of info) {
+          const x1 = Math.max(0, timeToX(item.arrStart));
+          const x2 = Math.min(W, timeToX(item.arrEnd));
+          if (x2 <= x1) continue;
+          drawFilmstrip(c, item, x1, x2, videoH);
+          drawWaveformSegment(c, item, x1, x2, audioTop, audioH);
+          if (item.seg.type === "clip") {
+            drawClipBand(c, item.seg, x1, x2, videoH);
+          }
+        }
+
+        if (waveformMessage) {
+          c.fillStyle = "#586069";
+          c.font = "12px Helvetica, Arial, sans-serif";
+          c.textAlign = "center";
+          c.textBaseline = "middle";
+          c.fillText(waveformMessage, W / 2, audioTop + audioH / 2);
+        }
+
+        // Segment boundaries read against both the film and the waveform
+        c.fillStyle = "#ffffff";
+        for (const { arrStart } of info) {
+          if (arrStart <= 0) continue;
+          const x = Math.round(timeToX(arrStart));
+          if (x >= 0 && x <= W) c.fillRect(x - 1, 0, 2, H);
+        }
+
+        if (hasSelection()) {
+          const x1 = Math.max(0, timeToX(selStart));
+          const x2 = Math.min(W, timeToX(selEnd));
+          if (x2 > x1) {
+            c.fillStyle = "rgba(3,102,214,0.28)";
+            c.fillRect(x1, 0, x2 - x1, H);
+            c.fillStyle = "#0366d6";
+            c.fillRect(x1, 0, 1, H);
+            c.fillRect(x2 - 1, 0, 1, H);
+          }
+        }
+      }
+
+      function drawTracks() {
+        const c = tracksCanvas.getContext("2d");
+        c.setTransform(1, 0, 0, 1, 0, 0);
+        c.drawImage(tracksLayer, 0, 0);
+        c.setTransform(canvasScale, 0, 0, canvasScale, 0, 0);
+
+        if (cursorPos >= viewStart && cursorPos <= viewEnd) {
+          const x = timeToX(cursorPos);
+          c.strokeStyle = "#d73a49";
+          c.lineWidth = 1.5;
+          c.beginPath();
+          c.moveTo(x, 0);
+          c.lineTo(x, tracksHeight);
+          c.stroke();
+          c.fillStyle = "#d73a49";
+          c.beginPath();
+          c.moveTo(x - 5, 0);
+          c.lineTo(x + 5, 0);
+          c.lineTo(x, 9);
+          c.closePath();
+          c.fill();
+        }
+      }
+
+      function rulerLabel(t, interval) {
+        const rounded = Math.round(t * 100) / 100;
+        const m = Math.floor(rounded / 60);
+        const s = rounded - m * 60;
+        const decimals = interval >= 1 ? 0 : interval >= 0.1 ? 1 : 2;
+        const width = decimals ? decimals + 3 : 2;
+        return `${m}:${s.toFixed(decimals).padStart(width, "0")}`;
+      }
+
+      function drawRuler() {
+        const c = rulerCanvas.getContext("2d");
+        c.setTransform(canvasScale, 0, 0, canvasScale, 0, 0);
+        const W = timelineWidth;
+        const H = RULER_HEIGHT;
+        c.fillStyle = "#ffffff";
+        c.fillRect(0, 0, W, H);
+
+        const rawInterval = (viewEnd - viewStart) / (W / 80);
+        const nice = [
+          0.01, 0.02, 0.05, 0.1, 0.2, 0.25, 0.5, 1, 2, 5, 10, 15, 30, 60, 120,
+          300, 600, 1800, 3600,
+        ];
+        const interval =
+          nice.find((n) => n >= rawInterval) || nice[nice.length - 1];
+
+        c.strokeStyle = "#c8d1da";
+        c.fillStyle = "#586069";
+        c.font = "10px Helvetica, Arial, sans-serif";
+        c.textAlign = "center";
+        c.textBaseline = "alphabetic";
+        c.lineWidth = 1;
+
+        const first = Math.ceil(viewStart / interval);
+        for (let i = first; i * interval <= viewEnd + 1e-9; i++) {
+          const t = i * interval;
+          const x = Math.round(timeToX(t)) + 0.5;
+          c.beginPath();
+          c.moveTo(x, H - 5);
+          c.lineTo(x, H);
+          c.stroke();
+          const labelX = Math.max(16, Math.min(W - 16, x));
+          c.fillText(rulerLabel(t, interval), labelX, H - 7);
+        }
+      }
+
+      function updateSelectionBar() {
+        document.getElementById("sel-cursor").textContent =
+          formatTime(cursorPos);
+        const sel = hasSelection();
+        document.getElementById("sel-start").textContent = sel
+          ? formatTime(selStart)
+          : "—";
+        document.getElementById("sel-end").textContent = sel
+          ? formatTime(selEnd)
+          : "—";
+        document.getElementById("sel-length").textContent = sel
+          ? formatTime(selEnd - selStart)
+          : "—";
+        document.getElementById("sel-total").textContent = formatTime(
+          arrangementDuration(),
+        );
+      }
+
+      function updateScrollbar() {
+        const total = arrangementDuration();
+        const span = viewEnd - viewStart;
+        const zoomed = span < total - 1e-4;
+        scrollbarContainer.classList.toggle("visible", zoomed);
+        if (zoomed && sbTrack.clientWidth > 0) {
+          const trackW = sbTrack.clientWidth;
+          const thumbW = Math.max(16, (span / total) * trackW);
+          const left = (viewStart / total) * trackW;
+          sbThumb.style.width = thumbW + "px";
+          sbThumb.style.left = Math.min(left, trackW - thumbW) + "px";
+        }
+      }
+
+      function startAnimation() {
+        if (animFrameId) return;
+        const loop = () => {
+          animFrameId = requestAnimationFrame(loop);
+          if (timelineEl.clientWidth === 0) return;
+          resizeCanvases();
+          tickPlayback();
+          if (isPlaying && !isDragging && !sbDragging) scrollViewTo(cursorPos);
+          pumpThumbs();
+
+          const layerKey = [
+            timelineWidth,
+            tracksHeight,
+            canvasScale,
+            viewStart,
+            viewEnd,
+            selStart,
+            selEnd,
+            editVersion,
+            thumbVersion,
+            waveformVersion,
+          ].join();
+          const layerChanged = layerKey !== lastLayerKey;
+          if (layerChanged) {
+            lastLayerKey = layerKey;
+            renderTracksLayer();
+            drawRuler();
+            updateScrollbar();
+          }
+          if (layerChanged || cursorPos !== lastDrawnCursor) {
+            lastDrawnCursor = cursorPos;
+            drawTracks();
+            updateSelectionBar();
+          }
+        };
+        animFrameId = requestAnimationFrame(loop);
+      }
+
+      /* =========================
+         Timeline pointer interaction
+         ========================= */
+      tracksCanvas.addEventListener("pointerdown", (e) => {
+        if (!currentFile) return;
+        e.preventDefault();
+        pause();
+        const t = eventTime(e, tracksCanvas);
+        if (e.shiftKey) {
+          // Shift+click: extend or create a selection from the playhead
+          const anchor = selStart >= 0 ? selStart : cursorPos;
+          selStart = Math.min(anchor, t);
+          selEnd = Math.max(anchor, t);
+          seekCursor(t);
+          updateUI();
+          return;
+        }
+        tracksCanvas.setPointerCapture(e.pointerId);
+        isDragging = true;
+        dragStartTime = t;
+        selStart = t;
+        selEnd = t;
+        seekCursor(t);
       });
-      trimEndRange.addEventListener("input", () => {
-        trimEndInput.value = parseFloat(trimEndRange.value).toFixed(2);
-        clampTrim();
+
+      tracksCanvas.addEventListener("pointermove", (e) => {
+        if (!isDragging) return;
+        const t = eventTime(e, tracksCanvas);
+        selStart = Math.min(dragStartTime, t);
+        selEnd = Math.max(dragStartTime, t);
+        seekCursor(t);
       });
-      document.getElementById("btn-start-now").addEventListener("click", () => {
-        trimStartInput.value = preview.currentTime.toFixed(2);
-        clampTrim();
+
+      function endTracksDrag() {
+        if (!isDragging) return;
+        isDragging = false;
+        // A pointer that barely moved is a click, not a selection
+        const secPerPx = (viewEnd - viewStart) / timelineWidth;
+        if (selEnd - selStart < 3 * secPerPx) clearSelection();
+        updateUI();
+      }
+      tracksCanvas.addEventListener("pointerup", endTracksDrag);
+      tracksCanvas.addEventListener("pointercancel", endTracksDrag);
+
+      tracksCanvas.addEventListener("dblclick", (e) => {
+        const t = eventTime(e, tracksCanvas);
+        const item = getArrangementInfo().find((i) => t < i.arrEnd);
+        if (item) selectSegment(item.idx);
       });
-      document.getElementById("btn-end-now").addEventListener("click", () => {
-        trimEndInput.value = preview.currentTime.toFixed(2);
-        clampTrim();
+
+      // Ruler: scrub the playhead; playback resumes on release
+      rulerCanvas.addEventListener("pointerdown", (e) => {
+        if (!currentFile) return;
+        e.preventDefault();
+        rulerCanvas.setPointerCapture(e.pointerId);
+        isScrubbing = true;
+        resumeAfterScrub = isPlaying;
+        pause();
+        clearSelection();
+        seekCursor(eventTime(e, rulerCanvas));
+        updateUI();
+      });
+      rulerCanvas.addEventListener("pointermove", (e) => {
+        if (isScrubbing) seekCursor(eventTime(e, rulerCanvas));
+      });
+      function endScrub() {
+        if (!isScrubbing) return;
+        isScrubbing = false;
+        if (resumeAfterScrub) play();
+      }
+      rulerCanvas.addEventListener("pointerup", endScrub);
+      rulerCanvas.addEventListener("pointercancel", endScrub);
+
+      function handleTimelineWheel(e) {
+        if (!currentFile) return;
+        e.preventDefault();
+        const total = arrangementDuration();
+        const span = viewEnd - viewStart;
+
+        // Sideways trackpad gestures pan instead of zooming
+        if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+          const shift = (e.deltaX / timelineWidth) * span;
+          viewStart = Math.max(0, Math.min(viewStart + shift, total - span));
+          viewEnd = viewStart + span;
+          return;
+        }
+
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const tFixed = xToTime(x);
+        const factor = e.deltaY > 0 ? 1.35 : 0.74;
+        const newSpan = Math.max(MIN_VIEW_SPAN, Math.min(total, span * factor));
+        viewStart = Math.max(
+          0,
+          Math.min(tFixed - (x / timelineWidth) * newSpan, total - newSpan),
+        );
+        viewEnd = viewStart + newSpan;
+      }
+      tracksCanvas.addEventListener("wheel", handleTimelineWheel, {
+        passive: false,
+      });
+      rulerCanvas.addEventListener("wheel", handleTimelineWheel, {
+        passive: false,
+      });
+
+      // Scrollbar
+      sbThumb.addEventListener("pointerdown", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        sbThumb.setPointerCapture(e.pointerId);
+        sbDragging = true;
+        sbDragStartX = e.clientX;
+        sbDragStartView = viewStart;
+        sbThumb.classList.add("dragging");
+      });
+      sbThumb.addEventListener("pointermove", (e) => {
+        if (!sbDragging) return;
+        const total = arrangementDuration();
+        const span = viewEnd - viewStart;
+        const dt = ((e.clientX - sbDragStartX) / sbTrack.clientWidth) * total;
+        viewStart = Math.max(0, Math.min(total - span, sbDragStartView + dt));
+        viewEnd = viewStart + span;
+      });
+      function endScrollbarDrag() {
+        sbDragging = false;
+        sbThumb.classList.remove("dragging");
+      }
+      sbThumb.addEventListener("pointerup", endScrollbarDrag);
+      sbThumb.addEventListener("pointercancel", endScrollbarDrag);
+      sbTrack.addEventListener("pointerdown", (e) => {
+        const rect = sbTrack.getBoundingClientRect();
+        const ratio = (e.clientX - rect.left) / rect.width;
+        const total = arrangementDuration();
+        const span = viewEnd - viewStart;
+        viewStart = Math.max(
+          0,
+          Math.min(total - span, ratio * total - span / 2),
+        );
+        viewEnd = viewStart + span;
+      });
+
+      // Track height handle
+      const resizeHandle = document.getElementById("timeline-resize-handle");
+      resizeHandle.addEventListener("pointerdown", (e) => {
+        e.preventDefault();
+        resizeHandle.setPointerCapture(e.pointerId);
+        isResizing = true;
+        resizeStartY = e.clientY;
+        resizeStartH = tracksHeight;
+        resizeHandle.classList.add("dragging");
+      });
+      resizeHandle.addEventListener("pointermove", (e) => {
+        if (!isResizing) return;
+        const h = resizeStartH + e.clientY - resizeStartY;
+        tracksHeight = Math.max(90, Math.min(420, h));
+      });
+      function endResize() {
+        isResizing = false;
+        resizeHandle.classList.remove("dragging");
+      }
+      resizeHandle.addEventListener("pointerup", endResize);
+      resizeHandle.addEventListener("pointercancel", endResize);
+
+      /* =========================
+         Zoom
+         ========================= */
+      function setViewSpan(newSpan) {
+        const total = arrangementDuration();
+        const span = Math.max(MIN_VIEW_SPAN, Math.min(total, newSpan));
+        const center = (viewStart + viewEnd) / 2;
+        viewStart = Math.max(0, Math.min(center - span / 2, total - span));
+        viewEnd = viewStart + span;
+      }
+
+      function zoomIn() {
+        setViewSpan((viewEnd - viewStart) * 0.5);
+      }
+
+      function zoomOut() {
+        setViewSpan((viewEnd - viewStart) * 2);
+      }
+
+      function zoomFit() {
+        viewStart = 0;
+        viewEnd = arrangementDuration();
+      }
+
+      function zoomToSelection() {
+        if (!hasSelection()) return;
+        const pad = (selEnd - selStart) * 0.05;
+        viewStart = Math.max(0, selStart - pad);
+        viewEnd = Math.min(arrangementDuration(), selEnd + pad);
+      }
+
+      /* =========================
+         Clips list
+         ========================= */
+      function addSegmentButton(row, label, title, onClick, disabled) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "btn seg-btn";
+        btn.textContent = label;
+        btn.title = title;
+        btn.disabled = !!disabled;
+        btn.addEventListener("click", onClick);
+        row.appendChild(btn);
+      }
+
+      function renderClipsList() {
+        clipsList.innerHTML = "";
+        clipsEmpty.classList.toggle(
+          "hidden",
+          clipCount() > 0 || segments.length > 1,
+        );
+
+        getArrangementInfo().forEach(({ seg, idx, arrStart, arrEnd }) => {
+          const isClip = seg.type === "clip";
+          const row = document.createElement("div");
+          row.className = "seg-row" + (isClip ? "" : " untracked");
+          row.dataset.idx = idx;
+          row.innerHTML = `
+            <span class="seg-handle" title="Drag to reorder" draggable="true"></span>
+            <span class="seg-index">${idx + 1}</span>
+            <span class="seg-swatch"></span>
+            ${
+              isClip
+                ? '<input class="seg-name" type="text" aria-label="Clip name" />'
+                : '<span class="seg-label">Untracked</span>'
+            }
+            <span class="seg-time">${formatTime(arrStart)} to ${formatTime(arrEnd)}</span>
+            <span class="seg-dur">${formatTime(arrEnd - arrStart)}</span>
+          `;
+          row.querySelector(".seg-swatch").style.background = isClip
+            ? seg.color
+            : "#e1e4e8";
+
+          const handle = row.querySelector(".seg-handle");
+          handle.addEventListener("dragstart", (e) => {
+            segDragSrcIdx = idx;
+            e.dataTransfer.effectAllowed = "move";
+            e.dataTransfer.setData("text/plain", String(idx));
+            e.dataTransfer.setDragImage(row, 0, 0);
+            setTimeout(() => row.classList.add("dragging"), 0);
+          });
+          handle.addEventListener("dragend", () => {
+            row.classList.remove("dragging");
+            clearDragMarkers();
+            segDragSrcIdx = null;
+          });
+
+          if (isClip) {
+            const nameInput = row.querySelector(".seg-name");
+            nameInput.value = seg.name;
+            nameInput.addEventListener("change", () => {
+              seg.name = nameInput.value;
+              editVersion++;
+            });
+          }
+
+          addSegmentButton(
+            row,
+            "Up",
+            "Move earlier in the timeline",
+            () => moveSegment(idx, idx - 1),
+            idx === 0,
+          );
+          addSegmentButton(
+            row,
+            "Down",
+            "Move later in the timeline",
+            () => moveSegment(idx, idx + 1),
+            idx === segments.length - 1,
+          );
+          addSegmentButton(row, "Play", "Play this segment", () => {
+            selectSegment(idx);
+            play();
+          });
+          addSegmentButton(row, "Sel", "Select on timeline", () =>
+            selectSegment(idx),
+          );
+          if (isClip) {
+            addSegmentButton(row, "Clear", "Convert back to untracked", () =>
+              untrackSegment(idx),
+            );
+          } else {
+            addSegmentButton(row, "Define", "Define as clip", () =>
+              defineAsClip(idx),
+            );
+          }
+
+          clipsList.appendChild(row);
+        });
+      }
+
+      function clearDragMarkers() {
+        clipsList
+          .querySelectorAll(".seg-row")
+          .forEach((r) =>
+            r.classList.remove("drag-over-top", "drag-over-bottom"),
+          );
+      }
+
+      clipsList.addEventListener("dragover", (e) => {
+        if (segDragSrcIdx === null) return;
+        e.preventDefault();
+        const row = e.target.closest(".seg-row");
+        clearDragMarkers();
+        if (!row || parseInt(row.dataset.idx, 10) === segDragSrcIdx) return;
+        const rect = row.getBoundingClientRect();
+        const isUpper = e.clientY < rect.top + rect.height / 2;
+        row.classList.add(isUpper ? "drag-over-top" : "drag-over-bottom");
+      });
+
+      clipsList.addEventListener("drop", (e) => {
+        if (segDragSrcIdx === null) return;
+        e.preventDefault();
+        clearDragMarkers();
+        const row = e.target.closest(".seg-row");
+        const from = segDragSrcIdx;
+        segDragSrcIdx = null;
+        if (!row) return;
+        const over = parseInt(row.dataset.idx, 10);
+        if (over === from) return;
+        const rect = row.getBoundingClientRect();
+        const isUpper = e.clientY < rect.top + rect.height / 2;
+        const target = isUpper ? over : over + 1;
+        moveSegment(from, target > from ? target - 1 : target);
+      });
+
+      /* =========================
+         UI state
+         ========================= */
+      function updateUI() {
+        const sel = hasSelection();
+        const setDisabled = (id, disabled) => {
+          document.getElementById(id).disabled = disabled;
+        };
+        ["btn-cut", "btn-copy", "btn-delete", "btn-trim"].forEach((id) =>
+          setDisabled(id, !sel),
+        );
+        setDisabled("btn-paste", !clipboard);
+        setDisabled("btn-zoom-sel", !sel);
+        setDisabled("btn-undo", undoStack.length === 0);
+        setDisabled("btn-redo", redoStack.length === 0);
+        setDisabled("btn-split-selection", !sel);
+        setDisabled("btn-shuffle", segments.length < 2);
+        setDisabled("btn-assemble", clipCount() === 0);
+        setDisabled("btn-clips-clear", clipCount() === 0);
+        setDisabled("btn-convert-sel", !sel || converting);
+        updatePlaybackButtons();
+      }
+
+      function updatePlaybackButtons() {
+        document.getElementById("btn-play").disabled = isPlaying;
+        document.getElementById("btn-pause").disabled = !isPlaying;
+        document.getElementById("btn-stop").disabled = !isPlaying;
+      }
+
+      /* =========================
+         Toolbar wiring
+         ========================= */
+      const toolbarActions = {
+        "btn-play": play,
+        "btn-pause": pause,
+        "btn-stop": stopPlayback,
+        "btn-seg-start": () => moveCursorToSegmentBoundary(false),
+        "btn-seg-end": () => moveCursorToSegmentBoundary(true),
+        "btn-loop": toggleLoop,
+        "btn-mark-in": markIn,
+        "btn-mark-out": markOut,
+        "btn-split": splitAtCursor,
+        "btn-cut": doCut,
+        "btn-copy": doCopy,
+        "btn-paste": doPaste,
+        "btn-delete": doDelete,
+        "btn-trim": doTrim,
+        "btn-zoom-fit": zoomFit,
+        "btn-zoom-in": zoomIn,
+        "btn-zoom-out": zoomOut,
+        "btn-zoom-sel": zoomToSelection,
+        "btn-undo": () => restoreFrom(undoStack, redoStack),
+        "btn-redo": () => restoreFrom(redoStack, undoStack),
+        "btn-split-selection": clipFromSelection,
+        "btn-split-cursor": splitAtCursor,
+        "btn-split-equal": splitIntoEqualParts,
+        "btn-shuffle": shuffleSegments,
+        "btn-assemble": assembleClips,
+        "btn-clips-clear": clearClips,
+      };
+      for (const [id, action] of Object.entries(toolbarActions)) {
+        document.getElementById(id).addEventListener("click", action);
+      }
+
+      function stopPlayback() {
+        pause();
+        seekCursor(0);
+        scrollViewTo(0);
+      }
+
+      document.getElementById("btn-clips").addEventListener("click", (e) => {
+        const open = clipsPanel.classList.toggle("hidden") === false;
+        e.currentTarget.setAttribute("aria-expanded", String(open));
+      });
+
+      // Keep focus off the toolbar buttons when clicked so Space keeps meaning
+      // play / pause. Keyboard users can still Tab to them.
+      document
+        .getElementById("toolbar")
+        .addEventListener("mousedown", (e) => e.preventDefault());
+
+      /* =========================
+         Keyboard shortcuts
+         ========================= */
+      document.addEventListener("keydown", (e) => {
+        if (!currentFile) return;
+        if (e.target.closest("input, select, textarea")) return;
+        const mod = e.ctrlKey || e.metaKey;
+
+        if (e.key === " ") {
+          if (e.target.closest("button, a")) return;
+          e.preventDefault();
+          togglePlay();
+        } else if (e.key === "Escape") {
+          clearSelection();
+          stopPlayback();
+          updateUI();
+        } else if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+          if (isPlaying) return;
+          e.preventDefault();
+          const dir = e.key === "ArrowLeft" ? -1 : 1;
+          const step = e.shiftKey ? 1 : mod ? 0.01 : FRAME_STEP;
+          seekCursor(cursorPos + dir * step);
+          scrollViewTo(cursorPos);
+        } else if (mod && e.key.toLowerCase() === "z") {
+          e.preventDefault();
+          if (e.shiftKey) restoreFrom(redoStack, undoStack);
+          else restoreFrom(undoStack, redoStack);
+        } else if (mod && e.key === "y") {
+          e.preventDefault();
+          restoreFrom(redoStack, undoStack);
+        } else if (mod && e.key === "a") {
+          e.preventDefault();
+          selStart = 0;
+          selEnd = arrangementDuration();
+          updateUI();
+        } else if (mod && e.key === "x") {
+          e.preventDefault();
+          doCut();
+        } else if (mod && e.key === "c") {
+          e.preventDefault();
+          doCopy();
+        } else if (mod && e.key === "v") {
+          e.preventDefault();
+          doPaste();
+        } else if (mod) {
+          return;
+        } else if (e.key === "Delete" || e.key === "Backspace") {
+          if (!hasSelection()) return;
+          e.preventDefault();
+          doDelete();
+        } else if (e.key === "l" || e.key === "L") {
+          toggleLoop();
+        } else if (e.key === "i" || e.key === "I") {
+          markIn();
+        } else if (e.key === "o" || e.key === "O") {
+          markOut();
+        } else if (e.key === "s" || e.key === "S") {
+          splitAtCursor();
+        } else if (e.key === "z" || e.key === "Z") {
+          zoomToSelection();
+        } else if (e.key === "+" || e.key === "=") {
+          zoomIn();
+        } else if (e.key === "-") {
+          zoomOut();
+        } else if (e.key === "0") {
+          zoomFit();
+        }
       });
 
       /* =========================
@@ -1025,16 +3016,28 @@
       /* =========================
          Speed & audio controls
          ========================= */
+      // The element cannot amplify, so volumes above 100% preview at 100%
+      function syncPreviewAudio() {
+        preview.playbackRate = parseFloat(speedRange.value);
+        preview.volume = Math.min(1, parseFloat(volumeRange.value));
+        preview.muted = muteCheck.checked;
+      }
+
       speedRange.addEventListener("input", () => {
         speedValue.textContent = parseFloat(speedRange.value).toFixed(2) + "x";
+        syncPreviewAudio();
       });
       volumeRange.addEventListener("input", () => {
         volumeValue.textContent =
           Math.round(parseFloat(volumeRange.value) * 100) + "%";
+        syncPreviewAudio();
       });
       muteCheck.addEventListener("change", () => {
         volumeRange.disabled = muteCheck.checked;
+        syncPreviewAudio();
       });
+      // Assigning a new source resets the element's playback rate
+      preview.addEventListener("loadedmetadata", syncPreviewAudio);
 
       /* =========================
          Output format controls
@@ -1071,6 +3074,13 @@
         return factors.map((f) => "atempo=" + f.toFixed(4)).join(",");
       }
 
+      function buildAudioFilters(opts) {
+        const af = [];
+        if (opts.speed !== 1) af.push(buildAtempoChain(opts.speed));
+        if (opts.volume !== 1) af.push(`volume=${opts.volume}`);
+        return af;
+      }
+
       function buildVideoFilters(opts) {
         const vf = [];
         if (opts.rotate === 90) vf.push("transpose=1");
@@ -1089,8 +3099,6 @@
 
       function collectOptions() {
         return {
-          trimStart: parseFloat(trimStartInput.value) || 0,
-          trimEnd: parseFloat(trimEndInput.value) || sourceDuration,
           resize: resizeEnable.checked,
           width: parseInt(resizeWidth.value, 10) || sourceWidth,
           height: parseInt(resizeHeight.value, 10) || sourceHeight,
@@ -1111,21 +3119,75 @@
         mp4: { high: 18, medium: 23, low: 28 },
       };
 
-      function buildArgs(inputName, opts) {
-        const args = [];
-        if (opts.trimStart > 0.001) args.push("-ss", opts.trimStart.toFixed(3));
-        args.push("-i", inputName);
-        const trimDuration = opts.trimEnd - opts.trimStart;
-        if (trimDuration < sourceDuration - opts.trimStart - 0.001) {
-          args.push("-t", trimDuration.toFixed(3));
+      // Merge ranges that are contiguous in the source so that splits which
+      // are never rearranged do not add extra FFmpeg inputs.
+      function toSourceRanges(pieces) {
+        const ranges = [];
+        for (const { start, end } of pieces) {
+          const last = ranges[ranges.length - 1];
+          if (last && Math.abs(last.end - start) < 0.001) last.end = end;
+          else ranges.push({ start, end });
         }
+        return ranges;
+      }
+
+      // A cut between two frames would keep both, so every range would round up
+      // and the output would grow with each cut. Snapping to whole frames keeps
+      // it the length of the timeline. Seeking half a frame early and stopping
+      // just short of the end frame means millisecond rounding cannot move a
+      // frame in or out of the range.
+      function snapToFrames(start, end) {
+        if (!sourceFps) return { seek: start, length: end - start };
+        const first = Math.round(start * sourceFps);
+        const last = Math.round(end * sourceFps);
+        return {
+          seek: Math.max(0, (first - 0.5) / sourceFps),
+          length: Math.max(1, last - first) / sourceFps - 0.001,
+        };
+      }
+
+      // Each range is its own seeked input, which means unused footage is never
+      // decoded and ranges can be joined in any order.
+      function buildInputArgs(inputName, ranges) {
+        const args = [];
+        for (const { start, end } of ranges) {
+          const { seek, length } = snapToFrames(start, end);
+          if (start > 0.001) args.push("-ss", seek.toFixed(3));
+          // Always set a length, even at the end of the file: audio running past
+          // the last frame would stretch the segment and duplicate a frame.
+          args.push("-t", length.toFixed(3));
+          args.push("-i", inputName);
+        }
+        return args;
+      }
+
+      // concat infers a segment's length from its last timestamp, so each
+      // input has to start at zero or every cut lengthens the output.
+      function buildConcat(ranges, useVideo, useAudio) {
+        const chains = [];
+        let pads = "";
+        ranges.forEach((_, i) => {
+          if (useVideo) {
+            chains.push(`[${i}:v:0]setpts=PTS-STARTPTS[v${i}]`);
+            pads += `[v${i}]`;
+          }
+          if (useAudio) {
+            chains.push(`[${i}:a:0]asetpts=PTS-STARTPTS[a${i}]`);
+            pads += `[a${i}]`;
+          }
+        });
+        const v = useVideo ? 1 : 0;
+        const a = useAudio ? 1 : 0;
+        return `${chains.join(";")};${pads}concat=n=${ranges.length}:v=${v}:a=${a}`;
+      }
+
+      function buildArgs(inputName, ranges, opts) {
+        const args = buildInputArgs(inputName, ranges);
 
         if (opts.format === "mp3") {
-          args.push("-vn");
-          const af = [];
-          if (opts.speed !== 1) af.push(buildAtempoChain(opts.speed));
-          if (opts.volume !== 1) af.push(`volume=${opts.volume}`);
-          if (af.length) args.push("-af", af.join(","));
+          const concat = buildConcat(ranges, false, true);
+          const graph = [concat, ...buildAudioFilters(opts)].join(",");
+          args.push("-filter_complex", graph + "[aout]", "-map", "[aout]");
           args.push("-c:a", "libmp3lame", "-b:a", opts.mp3Bitrate);
           args.push("output.mp3");
           return {
@@ -1143,7 +3205,7 @@
           }
           vf.push(`fps=${opts.gifFps}`);
           const filterComplex =
-            vf.join(",") +
+            [buildConcat(ranges, true, false), ...vf].join(",") +
             ",split[a][b];[a]palettegen=stats_mode=diff[p];[b][p]paletteuse=dither=bayer";
           args.push("-filter_complex", filterComplex, "-loop", "0");
           args.push("output.gif");
@@ -1157,14 +3219,18 @@
 
         // mp4
         const vf = buildVideoFilters(opts);
-        if (vf.length) args.push("-vf", vf.join(","));
-        if (opts.mute) {
-          args.push("-an");
+        const useAudio = sourceHasAudio && !opts.mute;
+        const concat = buildConcat(ranges, true, useAudio);
+        if (useAudio) {
+          const af = buildAudioFilters(opts);
+          const graph =
+            `${concat}[vc][ac];[vc]${vf.join(",") || "null"}[vout];` +
+            `[ac]${af.join(",") || "anull"}[aout]`;
+          args.push("-filter_complex", graph);
+          args.push("-map", "[vout]", "-map", "[aout]");
         } else {
-          const af = [];
-          if (opts.speed !== 1) af.push(buildAtempoChain(opts.speed));
-          if (opts.volume !== 1) af.push(`volume=${opts.volume}`);
-          if (af.length) args.push("-af", af.join(","));
+          const graph = [concat, ...vf].join(",") + "[vout]";
+          args.push("-filter_complex", graph, "-map", "[vout]");
         }
 
         const crf = CRF_MAP.mp4[opts.quality];
@@ -1178,7 +3244,7 @@
           "-pix_fmt",
           "yuv420p",
         );
-        if (!opts.mute) args.push("-c:a", "aac", "-b:a", "128k");
+        if (useAudio) args.push("-c:a", "aac", "-b:a", "128k");
         args.push("-movflags", "+faststart", "output.mp4");
         return {
           args,
@@ -1186,6 +3252,19 @@
           mimeType: "video/mp4",
           outExt: "mp4",
         };
+      }
+
+      // FFmpeg prints a file's streams when run with no output. It then exits
+      // with an error, which is expected here.
+      async function probeSource(inputName) {
+        const lines = [];
+        const collect = ({ message }) => lines.push(message);
+        ffmpeg.on("log", collect);
+        await ffmpeg.exec(["-i", inputName]);
+        ffmpeg.off("log", collect);
+        sourceHasAudio = lines.some((l) => /Stream #.*Audio:/.test(l));
+        const fps = lines.join("\n").match(/Stream #.*Video:.* ([\d.]+) fps/);
+        sourceFps = fps ? parseFloat(fps[1]) : 0;
       }
 
       /* =========================
@@ -1201,12 +3280,14 @@
         outputInfo.textContent = "";
       }
 
-      btnConvert.addEventListener("click", async () => {
-        if (!currentFile || converting) return;
+      async function convert(ranges, suffix) {
+        if (!currentFile || converting || ranges.length === 0) return;
+        pause();
         hideStatus();
         resetOutput();
         converting = true;
         btnConvert.disabled = true;
+        btnConvertSel.disabled = true;
         btnConvert.textContent = "Converting…";
         btnCancel.classList.remove("hidden");
         progressPanel.classList.remove("hidden");
@@ -1222,8 +3303,15 @@
           setProgress(0, "Writing input file…");
           await ffmpeg.writeFile(inputName, await fetchFile(currentFile));
 
-          const built = buildArgs(inputName, opts);
+          if (sourceHasAudio === null) await probeSource(inputName);
+          if (opts.format === "mp3" && !sourceHasAudio) {
+            throw new Error("this video has no audio track.");
+          }
+
+          const built = buildArgs(inputName, ranges, opts);
           outputName = built.outputName;
+          const length = ranges.reduce((s, r) => s + (r.end - r.start), 0);
+          expectedOutputDuration = length / opts.speed;
           setProgress(0, "Running FFmpeg…");
           const exitCode = await ffmpeg.exec(built.args);
           if (exitCode !== 0) {
@@ -1236,7 +3324,7 @@
 
           const data = await ffmpeg.readFile(built.outputName);
           const blob = new Blob([data.buffer], { type: built.mimeType });
-          showOutput(blob, built.outExt);
+          showOutput(blob, built.outExt, suffix);
           setProgress(1, "Done.");
           showStatus("Conversion complete.", "success");
         } catch (err) {
@@ -1257,7 +3345,16 @@
           btnConvert.disabled = false;
           btnConvert.textContent = "Convert Video";
           btnCancel.classList.add("hidden");
+          updateUI();
         }
+      }
+
+      btnConvert.addEventListener("click", () =>
+        convert(toSourceRanges(segments), "edited"),
+      );
+      btnConvertSel.addEventListener("click", () => {
+        if (!hasSelection()) return;
+        convert(toSourceRanges(rangePieces(selStart, selEnd)), "selection");
       });
 
       btnCancel.addEventListener("click", async () => {
@@ -1268,10 +3365,10 @@
         showStatus("Conversion cancelled.", "info");
       });
 
-      function showOutput(blob, ext) {
+      function showOutput(blob, ext, suffix) {
         outputBlobURL = URL.createObjectURL(blob);
         const baseName = currentFile.name.replace(/\.[^.]+$/, "");
-        const downloadName = baseName + "-edited." + ext;
+        const downloadName = baseName + "-" + suffix + "." + ext;
 
         outputPreview.innerHTML = "";
         let el;
@@ -1294,6 +3391,11 @@
         btnDownload.download = downloadName;
         outputSection.classList.remove("hidden");
       }
+
+      /* =========================
+         Initialization
+         ========================= */
+      updatePlaybackButtons();
     </script>
   </body>
 </html>
