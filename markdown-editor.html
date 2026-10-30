@@ -1,0 +1,510 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Markdown Editor</title>
+    <style>
+      /* =========================
+         CSS Styles
+         ========================= */
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family:
+          Helvetica,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Arial,
+          sans-serif;
+        line-height: 1.6;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        color: #24292e;
+        background: #ffffff;
+      }
+      h1 {
+        border-bottom: 1px solid #eaecef;
+        padding-bottom: 0.3em;
+        margin-top: 0;
+        font-size: 32px;
+        font-weight: 600;
+      }
+      .back-link {
+        display: inline-block;
+        margin-bottom: 16px;
+        color: #0366d6;
+        text-decoration: none;
+        font-size: 14px;
+      }
+      .back-link:hover {
+        text-decoration: underline;
+      }
+      .btn {
+        background: #fafbfc;
+        color: #24292e;
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+        cursor: pointer;
+        font-size: 14px;
+        line-height: 20px;
+        font-family: inherit;
+      }
+      .btn:hover {
+        background: #f3f4f6;
+      }
+      .btn.primary {
+        background: #0366d6;
+        color: #fff;
+      }
+      .btn.primary:hover {
+        background: #0256c5;
+      }
+      label.btn {
+        display: inline-block;
+        margin: 0;
+      }
+      input[type="file"] {
+        display: none;
+      }
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+      .status {
+        font-size: 13px;
+        color: #586069;
+        margin-left: auto;
+      }
+      .editor-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+      @media (max-width: 800px) {
+        .editor-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      .pane-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #586069;
+        margin-bottom: 4px;
+      }
+      textarea {
+        width: 100%;
+        height: 560px;
+        padding: 12px;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 13px;
+        resize: vertical;
+      }
+      textarea.dragover {
+        border-color: #0366d6;
+        background: #f6f8fa;
+      }
+      .preview {
+        height: 560px;
+        overflow: auto;
+        padding: 12px 16px;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        background: #fff;
+      }
+
+      /* Rendered markdown */
+      .preview h1,
+      .preview h2 {
+        border-bottom: 1px solid #eaecef;
+        padding-bottom: 0.3em;
+      }
+      .preview h1 {
+        font-size: 28px;
+      }
+      .preview h2 {
+        font-size: 22px;
+      }
+      .preview h3 {
+        font-size: 18px;
+      }
+      .preview code {
+        background: #f6f8fa;
+        padding: 0.2em 0.4em;
+        border-radius: 3px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 85%;
+      }
+      .preview pre {
+        background: #f6f8fa;
+        padding: 12px;
+        border-radius: 6px;
+        overflow: auto;
+      }
+      .preview pre code {
+        background: none;
+        padding: 0;
+        font-size: 13px;
+      }
+      .preview blockquote {
+        margin: 0;
+        padding: 0 1em;
+        color: #586069;
+        border-left: 4px solid #e1e4e8;
+      }
+      .preview table {
+        border-collapse: collapse;
+      }
+      .preview th,
+      .preview td {
+        border: 1px solid #e1e4e8;
+        padding: 6px 12px;
+      }
+      .preview th {
+        background: #f6f8fa;
+      }
+      .preview hr {
+        border: none;
+        border-top: 1px solid #e1e4e8;
+      }
+      .preview a {
+        color: #0366d6;
+      }
+      .error {
+        display: none;
+        background: #ffeef0;
+        border: 1px solid #fdaeb7;
+        color: #86181d;
+        padding: 10px 12px;
+        border-radius: 6px;
+        margin-bottom: 12px;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- =========================
+         HTML Structure
+         ========================= -->
+    <a href="index.html" class="back-link">← Back to Browser Tools</a>
+    <h1>Markdown Editor</h1>
+
+    <div class="toolbar">
+      <label class="btn" for="file-input">Open .md file</label>
+      <input type="file" id="file-input" accept=".md,.markdown,.txt,text/markdown,text/plain" />
+      <button class="btn primary" id="download-md-btn">Download .md</button>
+      <button class="btn" id="download-html-btn">Download .html</button>
+      <button class="btn" id="copy-html-btn">Copy HTML</button>
+      <button class="btn" id="clear-btn">Clear</button>
+      <span class="status" id="status" aria-live="polite"></span>
+    </div>
+
+    <div class="error" id="error" role="alert"></div>
+
+    <div class="editor-grid">
+      <div>
+        <div class="pane-label">Markdown</div>
+        <textarea id="editor" aria-label="Markdown source" spellcheck="false"></textarea>
+      </div>
+      <div>
+        <div class="pane-label">Preview</div>
+        <div class="preview" id="preview" aria-live="polite"></div>
+      </div>
+    </div>
+
+    <script>
+      /* =========================
+         JavaScript
+         ========================= */
+
+      // State variables
+      const $ = (id) => document.getElementById(id);
+      const SAMPLE = `# Markdown Editor
+
+Write on the left, see the result on the right.
+
+## Formatting
+
+**Bold**, *italic*, ~~strikethrough~~ and \`inline code\`.
+
+- Bullet one
+- Bullet two
+  - Nested bullet
+
+1. First
+2. Second
+
+> A blockquote
+
+| Name | Value |
+| ---- | ----- |
+| a    | 1     |
+| b    | 2     |
+
+\`\`\`js
+const greeting = "hello";
+\`\`\`
+
+[A link](https://example.com)
+
+---
+`;
+
+      // Utility functions
+      function escapeHtml(s) {
+        return s
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      // Only allow safe URL schemes in links
+      function safeUrl(url) {
+        const u = url.trim();
+        return /^(https?:|mailto:|#|\/|\.\/|\.\.\/)/i.test(u) || !/^[a-z][a-z0-9+.-]*:/i.test(u)
+          ? u
+          : "#";
+      }
+
+      // Inline formatting. Text is escaped first, so raw HTML in the source is never emitted.
+      function renderInline(text) {
+        const codes = [];
+        let s = escapeHtml(text).replace(/`([^`]+)`/g, (_, c) => {
+          codes.push("<code>" + c + "</code>");
+          return "\u0000" + (codes.length - 1) + "\u0000";
+        });
+        s = s
+          .replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, (_, alt, url) =>
+            '<img src="' + safeUrl(url) + '" alt="' + alt + '" style="max-width:100%">')
+          .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_, label, url) =>
+            '<a href="' + safeUrl(url) + '" rel="noopener noreferrer">' + label + "</a>")
+          .replace(/\*\*([^*]+)\*\*|__([^_]+)__/g, (_, a, b) => "<strong>" + (a || b) + "</strong>")
+          .replace(/\*([^*\s][^*]*)\*|\b_([^_]+)_\b/g, (_, a, b) => "<em>" + (a || b) + "</em>")
+          .replace(/~~([^~]+)~~/g, "<del>$1</del>");
+        return s.replace(/\u0000(\d+)\u0000/g, (_, i) => codes[+i]);
+      }
+
+      function splitRow(line) {
+        return line.trim().replace(/^\||\|$/g, "").split("|").map((c) => c.trim());
+      }
+
+      // Block-level renderer: processes the source line by line
+      function renderMarkdown(src) {
+        const lines = src.replace(/\r\n?/g, "\n").split("\n");
+        const out = [];
+        let i = 0;
+
+        while (i < lines.length) {
+          const line = lines[i];
+
+          // Fenced code block
+          const fence = /^```\s*(\w*)/.exec(line);
+          if (fence) {
+            const code = [];
+            i++;
+            while (i < lines.length && !/^```/.test(lines[i])) code.push(lines[i++]);
+            i++;
+            out.push("<pre><code>" + escapeHtml(code.join("\n")) + "</code></pre>");
+            continue;
+          }
+
+          if (!line.trim()) {
+            i++;
+            continue;
+          }
+
+          // Heading
+          const h = /^(#{1,6})\s+(.*?)\s*#*$/.exec(line);
+          if (h) {
+            out.push("<h" + h[1].length + ">" + renderInline(h[2]) + "</h" + h[1].length + ">");
+            i++;
+            continue;
+          }
+
+          // Horizontal rule
+          if (/^\s*([-*_])(\s*\1){2,}\s*$/.test(line)) {
+            out.push("<hr>");
+            i++;
+            continue;
+          }
+
+          // Table: header row followed by a separator row
+          if (line.includes("|") && /^\s*\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?\s*$/.test(lines[i + 1] || "")) {
+            const head = splitRow(line);
+            i += 2;
+            const body = [];
+            while (i < lines.length && lines[i].includes("|") && lines[i].trim()) body.push(splitRow(lines[i++]));
+            out.push(
+              "<table><thead><tr>" + head.map((c) => "<th>" + renderInline(c) + "</th>").join("") +
+              "</tr></thead><tbody>" +
+              body.map((r) => "<tr>" + r.map((c) => "<td>" + renderInline(c) + "</td>").join("") + "</tr>").join("") +
+              "</tbody></table>",
+            );
+            continue;
+          }
+
+          // Blockquote
+          if (/^>\s?/.test(line)) {
+            const q = [];
+            while (i < lines.length && /^>\s?/.test(lines[i])) q.push(lines[i++].replace(/^>\s?/, ""));
+            out.push("<blockquote>" + renderMarkdown(q.join("\n")) + "</blockquote>");
+            continue;
+          }
+
+          // Lists (with simple indentation-based nesting)
+          if (/^\s*([-*+]|\d+\.)\s+/.test(line)) {
+            const items = [];
+            while (i < lines.length && /^\s*([-*+]|\d+\.)\s+/.test(lines[i])) {
+              const m = /^(\s*)([-*+]|\d+\.)\s+(.*)$/.exec(lines[i++]);
+              items.push({ depth: Math.floor(m[1].length / 2), ordered: /\d/.test(m[2]), text: m[3] });
+            }
+            out.push(renderList(items));
+            continue;
+          }
+
+          // Paragraph: gather consecutive plain lines
+          const para = [];
+          while (
+            i < lines.length &&
+            lines[i].trim() &&
+            !/^(#{1,6}\s|```|>\s?|\s*([-*+]|\d+\.)\s+)/.test(lines[i])
+          ) {
+            para.push(lines[i++]);
+          }
+          if (!para.length) para.push(lines[i++]);
+          out.push("<p>" + renderInline(para.join("\n")).replace(/\n/g, "<br>") + "</p>");
+        }
+        return out.join("\n");
+      }
+
+      function renderList(items) {
+        let html = "";
+        const stack = [];
+        items.forEach((it) => {
+          const tag = it.ordered ? "ol" : "ul";
+          while (stack.length > it.depth + 1) html += "</li></" + stack.pop() + ">";
+          if (stack.length === it.depth + 1) {
+            html += "</li>";
+          } else {
+            while (stack.length < it.depth + 1) {
+              html += "<" + tag + ">";
+              stack.push(tag);
+            }
+          }
+          html += "<li>" + renderInline(it.text);
+        });
+        while (stack.length) html += "</li></" + stack.pop() + ">";
+        return html;
+      }
+
+      // Event handlers
+      function showError(message) {
+        const el = $("error");
+        el.textContent = message;
+        el.style.display = message ? "block" : "none";
+      }
+
+      function update() {
+        const src = $("editor").value;
+        try {
+          $("preview").innerHTML = renderMarkdown(src);
+          const words = src.trim() ? src.trim().split(/\s+/).length : 0;
+          $("status").textContent = words + " words, " + src.length + " characters";
+        } catch (err) {
+          console.error("Error:", err);
+          showError("Failed to render: " + err.message);
+        }
+        try {
+          localStorage.setItem("markdown-editor-draft", src);
+        } catch (_) {
+          /* storage unavailable; draft is simply not saved */
+        }
+      }
+
+      function loadFile(file) {
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          $("editor").value = e.target.result;
+          update();
+        };
+        reader.onerror = () => showError("Could not read " + file.name);
+        reader.readAsText(file);
+      }
+
+      function downloadFile(content, filename, mimeType) {
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      function fullHtml() {
+        return (
+          '<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="UTF-8">\n' +
+          '<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>Document</title>\n' +
+          "<style>body{font-family:Helvetica,Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px;line-height:1.6;color:#24292e}" +
+          "pre,code{background:#f6f8fa;border-radius:3px}pre{padding:12px;overflow:auto}code{padding:.2em .4em}pre code{padding:0}" +
+          "blockquote{margin:0;padding:0 1em;color:#586069;border-left:4px solid #e1e4e8}" +
+          "table{border-collapse:collapse}th,td{border:1px solid #e1e4e8;padding:6px 12px}</style>\n</head>\n<body>\n" +
+          renderMarkdown($("editor").value) +
+          "\n</body>\n</html>\n"
+        );
+      }
+
+      $("editor").addEventListener("input", update);
+      $("file-input").addEventListener("change", (e) => loadFile(e.target.files[0]));
+      $("download-md-btn").addEventListener("click", () =>
+        downloadFile($("editor").value, "document.md", "text/markdown"));
+      $("download-html-btn").addEventListener("click", () =>
+        downloadFile(fullHtml(), "document.html", "text/html"));
+      $("copy-html-btn").addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(renderMarkdown($("editor").value));
+          $("status").textContent = "HTML copied";
+        } catch (err) {
+          showError("Copy failed: " + err.message);
+        }
+      });
+      $("clear-btn").addEventListener("click", () => {
+        $("editor").value = "";
+        update();
+      });
+
+      const editor = $("editor");
+      editor.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        editor.classList.add("dragover");
+      });
+      editor.addEventListener("dragleave", () => editor.classList.remove("dragover"));
+      editor.addEventListener("drop", (e) => {
+        e.preventDefault();
+        editor.classList.remove("dragover");
+        loadFile(e.dataTransfer.files[0]);
+      });
+
+      // Initialization: restore the last draft if there is one, otherwise show the sample
+      let draft = null;
+      try {
+        draft = localStorage.getItem("markdown-editor-draft");
+      } catch (_) {
+        /* storage unavailable */
+      }
+      editor.value = draft !== null ? draft : SAMPLE;
+      update();
+    </script>
+  </body>
+</html>
