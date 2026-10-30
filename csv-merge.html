@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CSV Merger</title>
+    <style>
+      /* =========================
+         CSS Styles
+         ========================= */
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family:
+          Helvetica,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Arial,
+          sans-serif;
+        line-height: 1.6;
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 20px;
+        color: #24292e;
+        background: #ffffff;
+      }
+      h1 {
+        border-bottom: 1px solid #eaecef;
+        padding-bottom: 0.3em;
+        margin-top: 0;
+        font-size: 32px;
+        font-weight: 600;
+      }
+      .back-link {
+        display: inline-block;
+        margin-bottom: 16px;
+        color: #0366d6;
+        text-decoration: none;
+        font-size: 14px;
+      }
+      .back-link:hover {
+        text-decoration: underline;
+      }
+      .btn {
+        background: #fafbfc;
+        color: #24292e;
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+        cursor: pointer;
+        font-size: 14px;
+        line-height: 20px;
+        font-family: inherit;
+      }
+      .btn:hover {
+        background: #f3f4f6;
+      }
+      .btn.primary {
+        background: #0366d6;
+        color: #fff;
+      }
+      .btn.primary:hover {
+        background: #0256c5;
+      }
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .panel {
+        background: #f6f8fa;
+        padding: 16px;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+        margin-bottom: 16px;
+      }
+      .panel h2 {
+        margin: 0 0 12px;
+        font-size: 16px;
+        font-weight: 600;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+      @media (max-width: 700px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      .drop-zone {
+        border: 2px dashed #e1e4e8;
+        border-radius: 6px;
+        background: #fff;
+        padding: 20px;
+        text-align: center;
+        color: #586069;
+        cursor: pointer;
+      }
+      .drop-zone:hover,
+      .drop-zone.dragover {
+        border-color: #0366d6;
+        background: #f6f8fa;
+      }
+      .drop-zone:focus-visible {
+        outline: 2px solid #0366d6;
+      }
+      input[type="file"] {
+        display: none;
+      }
+      .file-info {
+        margin-top: 8px;
+        font-size: 13px;
+        color: #586069;
+      }
+      .options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        align-items: flex-end;
+      }
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-size: 14px;
+      }
+      select {
+        padding: 7px 8px;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        font-size: 14px;
+        background: #fff;
+        font-family: inherit;
+        min-width: 180px;
+      }
+      .actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+      }
+      .status {
+        font-size: 14px;
+        color: #586069;
+        margin-bottom: 8px;
+      }
+      .error {
+        display: none;
+        background: #ffeef0;
+        border: 1px solid #fdaeb7;
+        color: #86181d;
+        padding: 10px 12px;
+        border-radius: 6px;
+        margin-bottom: 16px;
+        font-size: 14px;
+      }
+      .table-wrap {
+        overflow: auto;
+        max-height: 420px;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        background: #fff;
+      }
+      table {
+        border-collapse: collapse;
+        font-size: 13px;
+        width: 100%;
+      }
+      th,
+      td {
+        border-bottom: 1px solid #e1e4e8;
+        padding: 4px 8px;
+        text-align: left;
+        white-space: nowrap;
+        max-width: 280px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      th {
+        position: sticky;
+        top: 0;
+        background: #f6f8fa;
+        font-weight: 600;
+      }
+      .hidden {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- =========================
+         HTML Structure
+         ========================= -->
+    <a href="index.html" class="back-link">← Back to Browser Tools</a>
+    <h1>CSV Merger</h1>
+
+    <div class="error" id="error" role="alert"></div>
+
+    <div class="grid">
+      <div class="panel">
+        <h2>Left file</h2>
+        <div class="drop-zone" id="drop-a" tabindex="0" role="button">
+          Drop a CSV here or click to choose
+        </div>
+        <input type="file" id="file-a" accept=".csv,.tsv,.txt,text/csv" />
+        <div class="file-info" id="info-a">No file loaded</div>
+      </div>
+      <div class="panel">
+        <h2>Right file</h2>
+        <div class="drop-zone" id="drop-b" tabindex="0" role="button">
+          Drop a CSV here or click to choose
+        </div>
+        <input type="file" id="file-b" accept=".csv,.tsv,.txt,text/csv" />
+        <div class="file-info" id="info-b">No file loaded</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Merge options</h2>
+      <div class="options">
+        <div class="field">
+          <label for="mode">Mode</label>
+          <select id="mode">
+            <option value="join">Join on key column</option>
+            <option value="stack">Stack (append rows)</option>
+          </select>
+        </div>
+        <div class="field join-opt">
+          <label for="join-type">Join type</label>
+          <select id="join-type">
+            <option value="inner">Inner (matching rows only)</option>
+            <option value="left">Left (all left rows)</option>
+            <option value="right">Right (all right rows)</option>
+            <option value="outer">Full outer (all rows)</option>
+          </select>
+        </div>
+        <div class="field join-opt">
+          <label for="key-a">Left key column</label>
+          <select id="key-a" disabled></select>
+        </div>
+        <div class="field join-opt">
+          <label for="key-b">Right key column</label>
+          <select id="key-b" disabled></select>
+        </div>
+        <button class="btn primary" id="merge-btn" disabled>Merge</button>
+      </div>
+    </div>
+
+    <div id="result" class="hidden">
+      <div class="actions">
+        <button class="btn primary" id="download-btn">Download CSV</button>
+        <button class="btn" id="copy-btn">Copy CSV</button>
+      </div>
+      <div class="status" id="status"></div>
+      <div class="table-wrap">
+        <table id="preview"></table>
+      </div>
+    </div>
+
+    <script>
+      /* =========================
+         JavaScript
+         ========================= */
+
+      // State variables
+      const PREVIEW_ROWS = 200;
+      const data = { a: null, b: null }; // { name, headers, rows }
+      let mergedCsv = "";
+
+      const $ = (id) => document.getElementById(id);
+
+      // Utility functions
+
+      // Detect delimiter by counting candidates in the first line
+      function detectDelimiter(text) {
+        const first = text.split(/\r?\n/, 1)[0];
+        const counts = [",", "\t", ";"].map((d) => [d, first.split(d).length]);
+        counts.sort((x, y) => y[1] - x[1]);
+        return counts[0][0];
+      }
+
+      // RFC 4180 parser: handles quoted fields, escaped quotes and embedded newlines
+      function parseCsv(text, delimiter) {
+        const rows = [];
+        let row = [];
+        let field = "";
+        let inQuotes = false;
+        for (let i = 0; i < text.length; i++) {
+          const c = text[i];
+          if (inQuotes) {
+            if (c === '"') {
+              if (text[i + 1] === '"') {
+                field += '"';
+                i++;
+              } else {
+                inQuotes = false;
+              }
+            } else {
+              field += c;
+            }
+          } else if (c === '"') {
+            inQuotes = true;
+          } else if (c === delimiter) {
+            row.push(field);
+            field = "";
+          } else if (c === "\n" || c === "\r") {
+            if (c === "\r" && text[i + 1] === "\n") i++;
+            row.push(field);
+            rows.push(row);
+            row = [];
+            field = "";
+          } else {
+            field += c;
+          }
+        }
+        if (field !== "" || row.length) {
+          row.push(field);
+          rows.push(row);
+        }
+        return rows.filter((r) => !(r.length === 1 && r[0] === ""));
+      }
+
+      function escapeCsvField(value) {
+        const s = value == null ? "" : String(value);
+        return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+      }
+
+      function toCsv(headers, rows) {
+        return [headers, ...rows]
+          .map((r) => r.map(escapeCsvField).join(","))
+          .join("\r\n");
+      }
+
+      function showError(message) {
+        const el = $("error");
+        el.textContent = message;
+        el.style.display = message ? "block" : "none";
+      }
+
+      // File loading
+      function loadFile(side, file) {
+        if (!file) return;
+        showError("");
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            let text = e.target.result.replace(/^﻿/, "");
+            const parsed = parseCsv(text, detectDelimiter(text));
+            if (parsed.length < 1) throw new Error("File is empty");
+            const headers = parsed[0].map((h, i) => h.trim() || "column_" + (i + 1));
+            const rows = parsed.slice(1);
+            data[side] = { name: file.name, headers, rows };
+            $("info-" + side).textContent =
+              file.name + " - " + rows.length + " rows, " + headers.length + " columns";
+            fillKeySelect(side);
+            updateControls();
+          } catch (err) {
+            console.error("Error:", err);
+            showError("Failed to read " + file.name + ": " + err.message);
+          }
+        };
+        reader.onerror = () => showError("Could not read " + file.name);
+        reader.readAsText(file);
+      }
+
+      function fillKeySelect(side) {
+        const sel = $("key-" + side);
+        sel.innerHTML = "";
+        data[side].headers.forEach((h, i) => {
+          const opt = document.createElement("option");
+          opt.value = i;
+          opt.textContent = h;
+          sel.appendChild(opt);
+        });
+        sel.disabled = false;
+      }
+
+      function updateControls() {
+        $("merge-btn").disabled = !(data.a && data.b);
+        const join = $("mode").value === "join";
+        document
+          .querySelectorAll(".join-opt")
+          .forEach((el) => el.classList.toggle("hidden", !join));
+      }
+
+      // Merge logic
+
+      // Build output headers for both sides, suffixing duplicates from the right file
+      function joinTables(joinType, keyA, keyB) {
+        const A = data.a;
+        const B = data.b;
+        const used = new Set(A.headers);
+        const bCols = B.headers.map((h, i) => ({ i, h })).filter((c) => c.i !== keyB);
+        const bNames = bCols.map((c) => {
+          let name = c.h;
+          while (used.has(name)) name += "_right";
+          used.add(name);
+          return name;
+        });
+        const headers = [...A.headers, ...bNames];
+
+        // Index right rows by key
+        const index = new Map();
+        B.rows.forEach((row, ri) => {
+          const k = (row[keyB] ?? "").trim();
+          if (!index.has(k)) index.set(k, []);
+          index.get(k).push(ri);
+        });
+
+        const out = [];
+        const matchedB = new Set();
+        const blankB = bCols.map(() => "");
+        A.rows.forEach((rowA) => {
+          const k = (rowA[keyA] ?? "").trim();
+          const matches = index.get(k);
+          const padA = A.headers.map((_, i) => rowA[i] ?? "");
+          if (matches) {
+            matches.forEach((ri) => {
+              matchedB.add(ri);
+              out.push([...padA, ...bCols.map((c) => B.rows[ri][c.i] ?? "")]);
+            });
+          } else if (joinType === "left" || joinType === "outer") {
+            out.push([...padA, ...blankB]);
+          }
+        });
+
+        if (joinType === "right" || joinType === "outer") {
+          B.rows.forEach((rowB, ri) => {
+            if (matchedB.has(ri)) return;
+            const row = A.headers.map(() => "");
+            row[keyA] = rowB[keyB] ?? ""; // keep the key value in the left key column
+            out.push([...row, ...bCols.map((c) => rowB[c.i] ?? "")]);
+          });
+        }
+        return { headers, rows: out };
+      }
+
+      // Stack: union of columns matched by name
+      function stackTables() {
+        const headers = [...data.a.headers];
+        data.b.headers.forEach((h) => {
+          if (!headers.includes(h)) headers.push(h);
+        });
+        const mapRows = (t) =>
+          t.rows.map((r) =>
+            headers.map((h) => {
+              const idx = t.headers.indexOf(h);
+              return idx === -1 ? "" : (r[idx] ?? "");
+            }),
+          );
+        return { headers, rows: [...mapRows(data.a), ...mapRows(data.b)] };
+      }
+
+      function renderPreview(headers, rows) {
+        const table = $("preview");
+        table.innerHTML = "";
+        const thead = table.createTHead().insertRow();
+        headers.forEach((h) => {
+          const th = document.createElement("th");
+          th.textContent = h;
+          thead.appendChild(th);
+        });
+        const tbody = table.createTBody();
+        rows.slice(0, PREVIEW_ROWS).forEach((r) => {
+          const tr = tbody.insertRow();
+          r.forEach((v) => {
+            const td = tr.insertCell();
+            td.textContent = v;
+            td.title = v;
+          });
+        });
+      }
+
+      // Event handlers
+      function merge() {
+        showError("");
+        try {
+          const mode = $("mode").value;
+          const result =
+            mode === "join"
+              ? joinTables($("join-type").value, +$("key-a").value, +$("key-b").value)
+              : stackTables();
+          mergedCsv = toCsv(result.headers, result.rows);
+          renderPreview(result.headers, result.rows);
+          $("status").textContent =
+            result.rows.length + " rows, " + result.headers.length + " columns" +
+            (result.rows.length > PREVIEW_ROWS ? " (showing first " + PREVIEW_ROWS + ")" : "");
+          $("result").classList.remove("hidden");
+        } catch (err) {
+          console.error("Error:", err);
+          showError("Merge failed: " + err.message);
+        }
+      }
+
+      function downloadFile(content, filename, mimeType) {
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      // Wire up a drop zone + hidden file input for each side
+      ["a", "b"].forEach((side) => {
+        const zone = $("drop-" + side);
+        const input = $("file-" + side);
+        zone.addEventListener("click", () => input.click());
+        zone.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            input.click();
+          }
+        });
+        zone.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          zone.classList.add("dragover");
+        });
+        zone.addEventListener("dragleave", () => zone.classList.remove("dragover"));
+        zone.addEventListener("drop", (e) => {
+          e.preventDefault();
+          zone.classList.remove("dragover");
+          loadFile(side, e.dataTransfer.files[0]);
+        });
+        input.addEventListener("change", (e) => loadFile(side, e.target.files[0]));
+      });
+
+      $("mode").addEventListener("change", updateControls);
+      $("merge-btn").addEventListener("click", merge);
+      $("download-btn").addEventListener("click", () =>
+        downloadFile(mergedCsv, "merged.csv", "text/csv"),
+      );
+      $("copy-btn").addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(mergedCsv);
+          $("copy-btn").textContent = "Copied";
+          setTimeout(() => ($("copy-btn").textContent = "Copy CSV"), 1500);
+        } catch (err) {
+          showError("Copy failed: " + err.message);
+        }
+      });
+
+      // Initialization
+      updateControls();
+    </script>
+  </body>
+</html>
