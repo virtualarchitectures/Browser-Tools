@@ -67,7 +67,7 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 
 ### Media
 
-- **[Audio Editor](audio-editor.html)** — edit audio files in the browser with multichannel waveform display, cut/copy/paste, trim, silence, normalize, reverse, fade in/out, amplify, speed/pitch change, loop playback, clip splitting and drag-and-drop reordering with shuffle and assemble clips, and WAV or MP3 export. Dependencies: `JSZip`, `ffmpeg.wasm` (vendored wrapper in `ffmpeg-wasm/`, core engine from jsDelivr)
+- **[Audio Editor](audio-editor.html)** — edit audio files in the browser with multichannel waveform display, cut/copy/paste, trim, silence, normalize, reverse, fade in/out, amplify, speed/pitch change, loop playback, clip splitting and drag-and-drop reordering with shuffle and assemble clips, and WAV or MP3 export. Dependencies: `ffmpeg.wasm` `JSZip`
 - **[Frame Extractor](frame-extractor.html)** — extract frames from a video at a regular interval with adjustable time range, output format, and quality controls. Dependencies: `JSZip`
 - **[Multi-Webcam Viewer](webcam-viewer.html)** — view multiple webcam feeds simultaneously with support for YouTube embeds, direct video streams (MP4, M3U8, HLS), and iframe-compatible sources. Dependencies: `hls.js`
 - **[Scene Detection Tool](scene-detection.html)** — automatically detect scene changes in videos using frame analysis with adjustable sensitivity, minimum scene duration, and sample rate controls
