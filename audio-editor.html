@@ -4,8 +4,16 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Audio Editor</title>
-    <!-- JSZip: bundle multiple clip WAV files into a single download -->
+    <!-- JSZip: bundle multiple clip files into a single download -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <!--
+      ffmpeg.wasm: MP3 encoding and speed/pitch processing. The wrapper and its worker chunk
+      (ffmpeg-wasm/*) are vendored locally (browsers refuse cross-origin Worker scripts); the
+      ~30 MB core engine is fetched from jsDelivr the first time it is needed. Single-threaded
+      core only, so no COOP/COEP headers are required. Same setup as video-editor.html.
+    -->
+    <script src="ffmpeg-wasm/ffmpeg.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/dist/umd/index.js"></script>
     <style>
       /* =========================
          CSS Styles
@@ -585,13 +593,23 @@
       <button class="btn"         id="btn-undo"      disabled title="Undo (Ctrl+Z)">Undo</button>
       <button class="btn"         id="btn-redo"      disabled title="Redo (Ctrl+Y)">Redo</button>
       <div class="toolbar-sep"></div>
+      <select class="export-select" id="export-format" title="Export format">
+        <option value="wav">WAV</option>
+        <option value="mp3">MP3</option>
+      </select>
       <select class="export-select" id="export-bit-depth" title="WAV bit depth for export">
         <option value="16">16-bit</option>
         <option value="24">24-bit</option>
         <option value="32f">32-bit float</option>
       </select>
-      <button class="btn primary" id="btn-export"    disabled title="Export full audio as WAV">Export WAV</button>
-      <button class="btn"         id="btn-export-sel" disabled title="Export selection as WAV">Export Selection</button>
+      <select class="export-select" id="export-mp3-bitrate" title="MP3 bitrate for export" style="display:none">
+        <option value="128k">128 kbps</option>
+        <option value="192k" selected>192 kbps</option>
+        <option value="256k">256 kbps</option>
+        <option value="320k">320 kbps</option>
+      </select>
+      <button class="btn primary" id="btn-export"    disabled title="Export full audio">Export</button>
+      <button class="btn"         id="btn-export-sel" disabled title="Export selection">Export Selection</button>
     </div>
 
     <!-- Effects panel (Amplify + Speed) -->
@@ -2091,7 +2109,7 @@
         segments = merged;
       }
 
-      // Export clips as a zip of WAV files
+      // Export clips as a zip of audio files (WAV or MP3)
       async function exportClips() {
         const clips = segments.filter(s => s.type === 'clip');
         if (clips.length === 0) return showStatus('No clips to export.', 'error');
@@ -2100,12 +2118,13 @@
         try {
           const zip = new JSZip();
           const sr  = audioBuffer.sampleRate;
-          clips.forEach((clip, idx) => {
+          for (let idx = 0; idx < clips.length; idx++) {
+            const clip     = clips[idx];
             const buf      = sliceBuffer(audioBuffer, Math.round(clip.start * sr), Math.round(clip.end * sr));
-            const wav      = encodeWAV(buf, getExportBitDepth());
+            const enc      = await encodeForExport(buf);
             const safeName = clip.name.replace(/[^a-zA-Z0-9_\-]/g, '_');
-            zip.file(`${String(idx + 1).padStart(2,'0')}_${safeName}.wav`, wav);
-          });
+            zip.file(`${String(idx + 1).padStart(2,'0')}_${safeName}.${enc.ext}`, enc.data);
+          }
           const blob = await zip.generateAsync({ type: 'blob' });
           const url  = URL.createObjectURL(blob);
           const a    = document.createElement('a');
@@ -2359,13 +2378,24 @@
         showStatus(msg, 'info');
       }
 
-      function exportVariation(idx) {
+      async function exportVariation(idx) {
         const v = variations[idx];
         if (!v) return;
-        const a = document.createElement('a');
-        a.href     = v.url;
-        a.download = filename + '_' + v.name.replace(/\s+/g, '_') + '.wav';
-        a.click();
+        const base = filename + '_' + v.name.replace(/\s+/g, '_');
+        if (getExportFormat() === 'wav' && getExportBitDepth() === 16 && v.url) {
+          const a = document.createElement('a');
+          a.href = v.url; a.download = base + '.wav'; a.click();
+          return;
+        }
+        showLoading(true);
+        try {
+          const enc = await encodeForExport(v.buf);
+          downloadBlob(new Blob([enc.data], { type: enc.mime }), base + '.' + enc.ext);
+        } catch (err) {
+          showStatus('Export failed: ' + err.message, 'error');
+        } finally {
+          showLoading(false);
+        }
       }
 
       function clearVariations() {
@@ -2381,11 +2411,12 @@
         showLoading(true);
         try {
           const zip = new JSZip();
-          variations.forEach((v, i) => {
-            const wav      = encodeWAV(v.buf, getExportBitDepth());
+          for (let i = 0; i < variations.length; i++) {
+            const v        = variations[i];
+            const enc      = await encodeForExport(v.buf);
             const safeName = v.name.replace(/[^a-zA-Z0-9_\-]/g, '_');
-            zip.file(`${String(i + 1).padStart(2, '0')}_${safeName}.wav`, wav);
-          });
+            zip.file(`${String(i + 1).padStart(2, '0')}_${safeName}.${enc.ext}`, enc.data);
+          }
           const blob = await zip.generateAsync({ type: 'blob' });
           const url  = URL.createObjectURL(blob);
           const a    = document.createElement('a');
@@ -2485,15 +2516,16 @@
         showLoading(true);
         setEffectButtonsDisabled(true);
         try {
-          const offCtx = new OfflineAudioContext(srcBuf.numberOfChannels, outLen, srcBuf.sampleRate);
-          const src    = offCtx.createBufferSource();
-          src.buffer   = srcBuf;
-          src.playbackRate.value = rate;
-          src.connect(offCtx.destination);
-          src.start(0);
-
-          const rendered       = await offCtx.startRendering();
-          const renderedInCtx  = cloneBuffer(rendered);
+          // Speed and pitch change together (like a tape): reinterpret the
+          // sample rate, then resample back to the original rate.
+          const sr = srcBuf.sampleRate;
+          const outBytes = await runFFmpeg(
+            encodeWAV(srcBuf, '32f'),
+            ['-af', `asetrate=${Math.round(sr * rate)},aresample=${sr}`, '-c:a', 'pcm_f32le'],
+            'wav'
+          );
+          const decoded = await audioCtx.decodeAudioData(outBytes.buffer.slice(outBytes.byteOffset, outBytes.byteOffset + outBytes.byteLength));
+          const renderedInCtx = cloneBuffer(decoded);
           pushUndo();
 
           if (sel) {
@@ -2639,22 +2671,94 @@
         return ab;
       }
 
-      function exportBuffer(buf, suffix) {
-        showStatus('Encoding WAV...', 'info');
-        setTimeout(() => {
-          try {
-            const wavData = encodeWAV(buf, getExportBitDepth());
-            const blob    = new Blob([wavData], { type: 'audio/wav' });
-            const url     = URL.createObjectURL(blob);
-            const a       = document.createElement('a');
-            a.href = url; a.download = filename + suffix + '.wav'; a.click();
-            URL.revokeObjectURL(url);
-            showStatus('Exported as ' + a.download, 'info');
-          } catch (err) {
-            showStatus('Export failed: ' + err.message, 'error');
-          }
-        }, 50);
+      // -------------------------------------------------------
+      // FFmpeg (ffmpeg.wasm) — MP3 encoding and speed processing
+      // -------------------------------------------------------
+      let ffmpeg = null;
+      let ffmpegLoadPromise = null;
+      let ffmpegQueue = Promise.resolve();   // ffmpeg runs one command at a time
+
+      function ensureFFmpeg() {
+        if (!ffmpegLoadPromise) {
+          ffmpegLoadPromise = (async () => {
+            const { FFmpeg } = FFmpegWASM;
+            const { toBlobURL } = FFmpegUtil;
+            const ff = new FFmpeg();
+            const base = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/umd';
+            await ff.load({
+              coreURL: await toBlobURL(`${base}/ffmpeg-core.js`, 'text/javascript'),
+              wasmURL: await toBlobURL(`${base}/ffmpeg-core.wasm`, 'application/wasm'),
+            });
+            ffmpeg = ff;
+          })().catch(err => { ffmpegLoadPromise = null; throw err; });
+        }
+        return ffmpegLoadPromise;
       }
+
+      // Run ffmpeg on in-memory WAV data. Returns a Uint8Array of the output file.
+      function runFFmpeg(wavData, args, outExt) {
+        const job = ffmpegQueue.then(async () => {
+          showStatus('Loading FFmpeg engine (~30 MB, first time only)...', 'info');
+          await ensureFFmpeg();
+          const inName = 'input.wav', outName = 'output.' + outExt;
+          await ffmpeg.writeFile(inName, new Uint8Array(wavData));
+          try {
+            const code = await ffmpeg.exec(['-i', inName, ...args, outName]);
+            if (code !== 0) throw new Error('FFmpeg exited with code ' + code);
+            return await ffmpeg.readFile(outName);
+          } finally {
+            try { await ffmpeg.deleteFile(inName); } catch (e) {}
+            try { await ffmpeg.deleteFile(outName); } catch (e) {}
+          }
+        });
+        ffmpegQueue = job.catch(() => {});
+        return job;
+      }
+
+      function getExportFormat() { return document.getElementById('export-format').value; }
+
+      function downloadBlob(blob, name) {
+        const url = URL.createObjectURL(blob);
+        const a   = document.createElement('a');
+        a.href = url; a.download = name; a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        return name;
+      }
+
+      // Encode a buffer in the selected format. Returns {data, ext, mime}.
+      async function encodeForExport(buf) {
+        if (getExportFormat() === 'mp3') {
+          const bitrate = document.getElementById('export-mp3-bitrate').value;
+          const args = ['-codec:a', 'libmp3lame', '-b:a', bitrate,
+                        '-ac', String(Math.min(buf.numberOfChannels, 2))];  // MP3 supports mono/stereo only
+          if (buf.sampleRate > 48000) args.push('-ar', '48000');
+          const data = await runFFmpeg(encodeWAV(buf, '32f'), args, 'mp3');
+          return { data, ext: 'mp3', mime: 'audio/mpeg' };
+        }
+        return { data: encodeWAV(buf, getExportBitDepth()), ext: 'wav', mime: 'audio/wav' };
+      }
+
+      async function exportBuffer(buf, suffix) {
+        const fmt = getExportFormat().toUpperCase();
+        showStatus('Encoding ' + fmt + '...', 'info');
+        showLoading(true);
+        try {
+          const enc  = await encodeForExport(buf);
+          const name = downloadBlob(new Blob([enc.data], { type: enc.mime }), filename + suffix + '.' + enc.ext);
+          showStatus('Exported as ' + name, 'info');
+        } catch (err) {
+          showStatus('Export failed: ' + err.message, 'error');
+        } finally {
+          showLoading(false);
+        }
+      }
+
+      function syncExportControls() {
+        const mp3 = getExportFormat() === 'mp3';
+        document.getElementById('export-bit-depth').style.display   = mp3 ? 'none' : '';
+        document.getElementById('export-mp3-bitrate').style.display = mp3 ? '' : 'none';
+      }
+      document.getElementById('export-format').addEventListener('change', syncExportControls);
 
       function doExport() {
         if (!audioBuffer) return;
