@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PDF Finder</title>
+    <style>
+      /* =========================
+         CSS Styles
+         ========================= */
+
+      /* Reset and base styles */
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Arial, sans-serif;
+        line-height: 1.6;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        color: #24292e;
+        background: #ffffff;
+      }
+      h1 {
+        border-bottom: 1px solid #eaecef;
+        padding-bottom: 0.3em;
+        margin-top: 0;
+        font-size: 32px;
+        font-weight: 600;
+      }
+      h2 {
+        margin-top: 0;
+        margin-bottom: 12px;
+        font-size: 20px;
+        font-weight: 600;
+      }
+      a {
+        color: #0366d6;
+      }
+
+      /* Header */
+      .back-link {
+        display: inline-block;
+        margin-bottom: 16px;
+        color: #0366d6;
+        text-decoration: none;
+        font-size: 14px;
+      }
+      .back-link:hover {
+        text-decoration: underline;
+      }
+      .intro {
+        color: #586069;
+        margin-bottom: 8px;
+      }
+      .credit {
+        font-size: 13px;
+        color: #586069;
+        margin-top: 0;
+        margin-bottom: 16px;
+      }
+
+      /* Buttons */
+      .btn {
+        display: inline-block;
+        background: #fafbfc;
+        color: #24292e;
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid rgba(27, 31, 35, 0.15);
+        cursor: pointer;
+        font-size: 14px;
+        line-height: 20px;
+        text-decoration: none;
+        font-family: inherit;
+        text-align: center;
+      }
+      .btn:hover {
+        background: #f3f4f6;
+      }
+      .btn.primary {
+        background: #0366d6;
+        color: #fff;
+      }
+      .btn.primary:hover {
+        background: #0256c5;
+      }
+      .btn.secondary {
+        background: #fafbfc;
+        color: #24292e;
+      }
+      .btn.secondary:hover {
+        background: #f3f4f6;
+      }
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .btn.primary:disabled:hover {
+        background: #0366d6;
+      }
+      .btn.secondary:disabled:hover {
+        background: #fafbfc;
+      }
+      .btn.small {
+        padding: 4px 8px;
+        font-size: 12px;
+        line-height: 16px;
+      }
+
+      /* Panels */
+      .panel {
+        background: #f6f8fa;
+        padding: 16px;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+        margin-bottom: 16px;
+      }
+      .panel ul {
+        margin: 0;
+        padding-left: 20px;
+        font-size: 14px;
+      }
+      .panel li {
+        margin-bottom: 4px;
+      }
+      code {
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
+          monospace;
+        font-size: 12px;
+        background: #ffffff;
+        border: 1px solid #e1e4e8;
+        border-radius: 4px;
+        padding: 1px 4px;
+      }
+
+      /* Form fields */
+      .field {
+        margin-bottom: 16px;
+      }
+      .field label {
+        display: block;
+        font-weight: 600;
+        font-size: 14px;
+        margin-bottom: 6px;
+      }
+      .field input[type="email"] {
+        width: 100%;
+        max-width: 400px;
+        padding: 6px 12px;
+        font-size: 16px;
+        font-family: inherit;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        background: #ffffff;
+        color: #24292e;
+      }
+      .field input[type="email"]:focus {
+        outline: none;
+        border-color: #0366d6;
+      }
+      .field-description {
+        font-size: 12px;
+        color: #586069;
+        margin-top: 4px;
+      }
+
+      /* Drop zone */
+      .drop-zone {
+        border: 2px dashed #e1e4e8;
+        border-radius: 6px;
+        padding: 32px 16px;
+        text-align: center;
+        background: #fafbfc;
+        margin-bottom: 16px;
+        transition: border-color 0.2s, background 0.2s;
+      }
+      .drop-zone.dragover {
+        border-color: #0366d6;
+        background: #f0f6ff;
+      }
+      .drop-zone p {
+        margin: 8px 0 0;
+        color: #586069;
+        font-size: 13px;
+      }
+      input[type="file"] {
+        display: none;
+      }
+
+      /* Controls */
+      .controls {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+      }
+      .controls select {
+        padding: 7px 12px;
+        font-size: 14px;
+        font-family: inherit;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        background: #ffffff;
+        color: #24292e;
+      }
+      .spacer {
+        flex: 1;
+      }
+
+      /* Status messages */
+      .status {
+        font-size: 14px;
+        color: #586069;
+        margin-bottom: 12px;
+        min-height: 1.6em;
+      }
+      .status.error {
+        color: #cb2431;
+      }
+      .summary {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        font-size: 13px;
+        color: #586069;
+        margin-bottom: 12px;
+      }
+      .summary strong {
+        color: #24292e;
+      }
+      .progress {
+        width: 100%;
+        height: 6px;
+        background: #e1e4e8;
+        border-radius: 3px;
+        overflow: hidden;
+        margin-bottom: 12px;
+      }
+      .progress-bar {
+        height: 100%;
+        width: 0;
+        background: #0366d6;
+        transition: width 0.2s;
+      }
+
+      /* Results table */
+      .table-wrapper {
+        overflow-x: auto;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+        background: #ffffff;
+      }
+      .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+      .data-table th {
+        background: #0366d6;
+        color: #ffffff;
+        text-align: left;
+        padding: 10px 12px;
+        font-weight: 600;
+        border: 1px solid #0366d6;
+        white-space: nowrap;
+      }
+      .data-table td {
+        padding: 8px 12px;
+        border: 1px solid #e1e4e8;
+        vertical-align: top;
+      }
+      .data-table tbody tr:nth-child(even) {
+        background: #fafbfc;
+      }
+      .col-title {
+        min-width: 240px;
+      }
+      .col-authors {
+        min-width: 160px;
+        max-width: 240px;
+        overflow-wrap: anywhere;
+      }
+      .col-year {
+        white-space: nowrap;
+      }
+      .filename {
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
+          monospace;
+        font-size: 12px;
+        display: block;
+        margin-bottom: 4px;
+        overflow-wrap: anywhere;
+      }
+      .doi-text {
+        display: block;
+        font-size: 12px;
+        color: #586069;
+        overflow-wrap: anywhere;
+      }
+      .actions {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 170px;
+      }
+
+      /* Unpaywall status badges */
+      .badge {
+        display: inline-block;
+        font-size: 12px;
+        line-height: 16px;
+        padding: 4px 8px;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+        background: #f6f8fa;
+        color: #586069;
+        text-align: center;
+      }
+      .badge.pending {
+        border-color: #f9c513;
+        background: #fffbdd;
+        color: #735c0f;
+      }
+      .badge.error {
+        border-color: #f97583;
+        background: #ffeef0;
+        color: #86181d;
+      }
+      .oa-meta {
+        font-size: 11px;
+        color: #586069;
+      }
+
+      .empty-state {
+        color: #586069;
+        font-style: italic;
+        padding: 16px;
+        text-align: center;
+      }
+
+      /* Mobile */
+      @media (max-width: 600px) {
+        body {
+          padding: 16px;
+        }
+        h1 {
+          font-size: 26px;
+        }
+        .spacer {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- =========================
+         HTML Structure
+         ========================= -->
+
+    <a href="index.html" class="back-link">← Back to Browser Tools</a>
+    <h1>PDF Finder</h1>
+
+    <p class="intro">
+      Upload a CSV of article references to generate consistent filenames and
+      quick links for locating full-text PDFs. Open access PDFs are looked up
+      automatically via the
+      <a href="https://unpaywall.org/products/api" target="_blank" rel="noopener noreferrer">Unpaywall API</a>
+      when a DOI and email address are provided.
+    </p>
+    <p class="credit">
+      Adapted from
+      <a href="https://github.com/noah-schroeder/fulltextfinder" target="_blank" rel="noopener noreferrer">Full Text Finder</a>
+      by Noah Schroeder.
+    </p>
+
+    <div class="panel">
+      <h2>How it works</h2>
+      <ul>
+        <li>
+          The CSV should have a header row. Recognised columns (case
+          insensitive): <code>title</code>, <code>authors</code>,
+          <code>doi</code> and <code>year</code>. Only <code>title</code> is
+          required, but a DOI gives the best results.
+        </li>
+        <li>
+          Authors may be separated by semicolons, e.g.
+          <code>Smith, John; Doe, Jane</code>. Suggested filenames use the first
+          two surnames and the year, e.g. <code>SmithDoe2021.pdf</code>.
+        </li>
+        <li>
+          Unpaywall requires an email address with each request. It is sent
+          only to api.unpaywall.org and is not stored anywhere else.
+        </li>
+        <li>
+          Browsers cannot save files to a chosen folder automatically. Copy the
+          suggested filename, open the PDF, and save it manually.
+        </li>
+      </ul>
+    </div>
+
+    <div class="field">
+      <label for="emailInput">Email for Unpaywall (optional)</label>
+      <input type="email" id="emailInput" placeholder="you@example.com" autocomplete="email" />
+      <div class="field-description">
+        Without an email, DOI and Google Scholar links are still provided but
+        open access PDFs are not looked up.
+      </div>
+    </div>
+
+    <div class="drop-zone" id="dropZone">
+      <label for="fileInput" class="btn primary">Load CSV</label>
+      <input type="file" id="fileInput" accept=".csv,text/csv" />
+      <p>or drag and drop a CSV file here</p>
+    </div>
+
+    <div class="status" id="status" role="status" aria-live="polite"></div>
+
+    <div id="resultsSection" hidden>
+      <div class="progress" id="progress" hidden>
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+
+      <div class="summary" id="summary"></div>
+
+      <div class="controls">
+        <select id="filterSelect" aria-label="Filter results">
+          <option value="all">Show all</option>
+          <option value="found">Open access PDF found</option>
+          <option value="missing">No open access PDF</option>
+          <option value="nodoi">No DOI</option>
+        </select>
+        <button class="btn secondary" id="retryBtn" disabled>Retry failed lookups</button>
+        <div class="spacer"></div>
+        <button class="btn primary" id="downloadBtn">Download CSV</button>
+        <button class="btn secondary" id="clearBtn">Clear</button>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="data-table" id="resultsTable">
+          <thead>
+            <tr>
+              <th scope="col" class="col-title">Title</th>
+              <th scope="col" class="col-authors">Authors</th>
+              <th scope="col" class="col-year">Year</th>
+              <th scope="col">Suggested Filename</th>
+              <th scope="col">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="resultsBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <script>
+      /* =========================
+         JavaScript
+         ========================= */
+
+      // State variables
+      const emailInput = document.getElementById("emailInput");
+      const fileInput = document.getElementById("fileInput");
+      const dropZone = document.getElementById("dropZone");
+      const statusEl = document.getElementById("status");
+      const resultsSection = document.getElementById("resultsSection");
+      const resultsBody = document.getElementById("resultsBody");
+      const summaryEl = document.getElementById("summary");
+      const progressEl = document.getElementById("progress");
+      const progressBar = document.getElementById("progressBar");
+      const filterSelect = document.getElementById("filterSelect");
+      const retryBtn = document.getElementById("retryBtn");
+      const downloadBtn = document.getElementById("downloadBtn");
+      const clearBtn = document.getElementById("clearBtn");
+
+      const EMAIL_STORAGE_KEY = "pdf-finder-email";
+      const MAX_CONCURRENT_LOOKUPS = 4;
+
+      let articles = [];
+      let sourceFilename = "references";
+      // Incremented on each load/clear so stale lookups can be ignored
+      let runId = 0;
+
+      // Utility functions
+
+      function setStatus(message, isError = false) {
+        statusEl.textContent = message;
+        statusEl.classList.toggle("error", isError);
+      }
+
+      function isValidEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+      }
+
+      function getEmail() {
+        const email = emailInput.value.trim();
+        return isValidEmail(email) ? email : "";
+      }
+
+      // RFC 4180 style CSV parser that handles quoted fields, escaped quotes
+      // and newlines inside quotes
+      function parseCSV(text) {
+        const rows = [];
+        let row = [];
+        let field = "";
+        let inQuotes = false;
+
+        // Strip byte order mark
+        if (text.charCodeAt(0) === 0xfeff) text = text.slice(1);
+
+        for (let i = 0; i < text.length; i++) {
+          const char = text[i];
+          if (inQuotes) {
+            if (char === '"') {
+              if (text[i + 1] === '"') {
+                field += '"';
+                i++;
+              } else {
+                inQuotes = false;
+              }
+            } else {
+              field += char;
+            }
+          } else if (char === '"') {
+            inQuotes = true;
+          } else if (char === ",") {
+            row.push(field);
+            field = "";
+          } else if (char === "\n" || char === "\r") {
+            if (char === "\r" && text[i + 1] === "\n") i++;
+            row.push(field);
+            if (row.some((f) => f.trim() !== "")) rows.push(row);
+            row = [];
+            field = "";
+          } else {
+            field += char;
+          }
+        }
+        row.push(field);
+        if (row.some((f) => f.trim() !== "")) rows.push(row);
+        return rows;
+      }
+
+      // Find the index of the first header matching any of the candidate names
+      function findColumn(headers, candidates) {
+        const normalised = headers.map((h) =>
+          h.trim().toLowerCase().replace(/[\s_-]+/g, " ")
+        );
+        for (const candidate of candidates) {
+          const index = normalised.indexOf(candidate);
+          if (index !== -1) return index;
+        }
+        return -1;
+      }
+
+      // Normalise DOIs supplied as bare values, "doi:" prefixes or doi.org URLs
+      function normaliseDoi(value) {
+        if (!value) return "";
+        let doi = value.trim();
+        doi = doi.replace(/^https?:\/\/(dx\.)?doi\.org\//i, "");
+        doi = doi.replace(/^doi:\s*/i, "");
+        try {
+          doi = decodeURIComponent(doi);
+        } catch (e) {
+          // Leave undecodable strings unchanged
+        }
+        return /^10\.\d{4,9}\/\S+$/.test(doi) ? doi : "";
+      }
+
+      // Extract surnames from an author string. Supports "Last, First; ..."
+      // and "First Last; ..." as well as "and" separated lists
+      function parseSurnames(authors) {
+        if (!authors) return [];
+        const separator = authors.includes(";") ? /;/ : /\s+and\s+|\s*&\s*/i;
+        return authors
+          .split(separator)
+          .map((author) => author.trim())
+          .filter(Boolean)
+          .map((author) => {
+            const commaIndex = author.indexOf(",");
+            if (commaIndex !== -1) return author.slice(0, commaIndex).trim();
+            const parts = author.split(/\s+/);
+            return parts[parts.length - 1];
+          })
+          .map((name) =>
+            name
+              .normalize("NFD")
+              .replace(/[̀-ͯ]/g, "")
+              .replace(/[^A-Za-z0-9]/g, "")
+          )
+          .filter(Boolean);
+      }
+
+      // Build a filename from the first two author surnames and the year
+      function generateFilename(authors, year) {
+        const surnames = parseSurnames(authors);
+        const namePart = surnames.slice(0, 2).join("") || "UnknownAuthors";
+        const yearMatch = String(year || "").match(/\b(1[5-9]|20)\d{2}\b/);
+        return `${namePart}${yearMatch ? yearMatch[0] : ""}.pdf`;
+      }
+
+      function scholarUrl(title) {
+        const query = title || "academic article";
+        return `https://scholar.google.com/scholar?q=${encodeURIComponent(
+          query
+        )}&as_filetype=pdf`;
+      }
+
+      function doiUrl(doi) {
+        return `https://doi.org/${doi}`;
+      }
+
+      function createLinkButton(text, href, primary = false) {
+        const a = document.createElement("a");
+        a.className = `btn small ${primary ? "primary" : "secondary"}`;
+        a.href = href;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        a.textContent = text;
+        return a;
+      }
+
+      function createBadge(text, type = "") {
+        const span = document.createElement("span");
+        span.className = `badge ${type}`.trim();
+        span.textContent = text;
+        return span;
+      }
+
+      // CSV field escaping for export
+      function csvEscape(value) {
+        const str = String(value ?? "");
+        return /[",\r\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
+      }
+
+      function downloadFile(content, filename, mimeType) {
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+
+      // Rendering
+
+      // Render the Unpaywall slot for one article according to its status
+      function renderUnpaywall(article) {
+        const slot = article.unpaywallSlot;
+        slot.innerHTML = "";
+
+        switch (article.status) {
+          case "found": {
+            slot.appendChild(
+              createLinkButton("Open PDF (Unpaywall)", article.pdfUrl, true)
+            );
+            const meta = document.createElement("span");
+            meta.className = "oa-meta";
+            const parts = [];
+            if (article.hostType)
+              parts.push(article.hostType === "publisher" ? "Publisher" : "Repository");
+            if (article.version) parts.push(article.version);
+            if (article.license) parts.push(article.license);
+            meta.textContent = parts.join(" · ");
+            if (parts.length) slot.appendChild(meta);
+            break;
+          }
+          case "landing":
+            slot.appendChild(
+              createLinkButton("OA landing page", article.landingUrl, true)
+            );
+            break;
+          case "missing":
+            slot.appendChild(createBadge("No OA PDF found"));
+            break;
+          case "pending":
+            slot.appendChild(createBadge("Checking Unpaywall...", "pending"));
+            break;
+          case "error": {
+            const badge = createBadge(article.error || "Lookup failed", "error");
+            slot.appendChild(badge);
+            break;
+          }
+          case "nodoi":
+            slot.appendChild(createBadge("No DOI"));
+            break;
+          case "noemail":
+            slot.appendChild(createBadge("Enter email to check Unpaywall"));
+            break;
+          default:
+            break;
+        }
+      }
+
+      function renderTable() {
+        resultsBody.innerHTML = "";
+
+        articles.forEach((article, index) => {
+          const tr = document.createElement("tr");
+          article.row = tr;
+
+          const titleCell = document.createElement("td");
+          titleCell.className = "col-title";
+          titleCell.textContent = article.title || "(untitled)";
+          if (article.doi) {
+            const doiText = document.createElement("span");
+            doiText.className = "doi-text";
+            doiText.textContent = article.doi;
+            titleCell.appendChild(doiText);
+          }
+
+          const authorsCell = document.createElement("td");
+          authorsCell.className = "col-authors";
+          authorsCell.textContent = article.authors || "";
+
+          const yearCell = document.createElement("td");
+          yearCell.className = "col-year";
+          yearCell.textContent = article.year || "";
+
+          // Filename with copy button
+          const filenameCell = document.createElement("td");
+          const filenameText = document.createElement("span");
+          filenameText.className = "filename";
+          filenameText.textContent = article.filename;
+          const copyBtn = document.createElement("button");
+          copyBtn.type = "button";
+          copyBtn.className = "btn small secondary";
+          copyBtn.textContent = "Copy";
+          copyBtn.setAttribute("aria-label", `Copy filename ${article.filename}`);
+          copyBtn.addEventListener("click", () => copyFilename(article, copyBtn));
+          filenameCell.append(filenameText, copyBtn);
+
+          // Actions: Unpaywall result, DOI link, Google Scholar search
+          const actionsCell = document.createElement("td");
+          const actions = document.createElement("div");
+          actions.className = "actions";
+          const unpaywallSlot = document.createElement("div");
+          unpaywallSlot.className = "actions";
+          unpaywallSlot.style.minWidth = "0";
+          article.unpaywallSlot = unpaywallSlot;
+          actions.appendChild(unpaywallSlot);
+          if (article.doi) {
+            actions.appendChild(createLinkButton("DOI link", doiUrl(article.doi)));
+          }
+          actions.appendChild(
+            createLinkButton("Find PDF (Scholar)", scholarUrl(article.title))
+          );
+          actionsCell.appendChild(actions);
+
+          tr.append(titleCell, authorsCell, yearCell, filenameCell, actionsCell);
+          resultsBody.appendChild(tr);
+          renderUnpaywall(article);
+        });
+
+        applyFilter();
+      }
+
+      function updateSummary() {
+        const counts = { found: 0, landing: 0, missing: 0, error: 0, nodoi: 0, pending: 0 };
+        articles.forEach((a) => {
+          if (a.status in counts) counts[a.status]++;
+        });
+        const withDoi = articles.filter((a) => a.doi).length;
+        const checked = counts.found + counts.landing + counts.missing + counts.error;
+
+        summaryEl.innerHTML = "";
+        const items = [
+          ["Articles", articles.length],
+          ["With DOI", withDoi],
+          ["OA PDF found", counts.found],
+          ["OA landing page only", counts.landing],
+          ["Not found", counts.missing],
+          ["Errors", counts.error],
+        ];
+        items.forEach(([label, value]) => {
+          const span = document.createElement("span");
+          span.append(`${label}: `);
+          const strong = document.createElement("strong");
+          strong.textContent = value;
+          span.appendChild(strong);
+          summaryEl.appendChild(span);
+        });
+
+        // Progress bar for lookups in flight
+        const lookupTotal = articles.filter((a) => a.lookupQueued).length;
+        if (lookupTotal > 0 && counts.pending > 0) {
+          progressEl.hidden = false;
+          progressBar.style.width = `${(checked / lookupTotal) * 100}%`;
+        } else {
+          progressEl.hidden = true;
+        }
+
+        retryBtn.disabled = counts.error === 0 || counts.pending > 0;
+      }
+
+      function applyFilter() {
+        const filter = filterSelect.value;
+        articles.forEach((article) => {
+          let visible = true;
+          if (filter === "found") visible = article.status === "found" || article.status === "landing";
+          else if (filter === "missing")
+            visible = ["missing", "error", "noemail"].includes(article.status);
+          else if (filter === "nodoi") visible = !article.doi;
+          article.row.hidden = !visible;
+        });
+      }
+
+      // Unpaywall lookups
+
+      async function lookupArticle(article, email, currentRun) {
+        const url = `https://api.unpaywall.org/v2/${encodeURIComponent(
+          article.doi
+        )}?email=${encodeURIComponent(email)}`;
+
+        try {
+          const response = await fetch(url);
+          if (currentRun !== runId) return;
+
+          if (response.status === 404) {
+            article.status = "missing";
+          } else if (!response.ok) {
+            article.status = "error";
+            article.error =
+              response.status === 422
+                ? "Invalid DOI or email (422)"
+                : `Unpaywall error ${response.status}`;
+          } else {
+            const data = await response.json();
+            if (currentRun !== runId) return;
+            const location = data.best_oa_location;
+            if (location && location.url_for_pdf) {
+              article.status = "found";
+              article.pdfUrl = location.url_for_pdf;
+            } else if (location && location.url) {
+              article.status = "landing";
+              article.landingUrl = location.url;
+            } else {
+              article.status = "missing";
+            }
+            if (location) {
+              article.hostType = location.host_type || "";
+              article.version = location.version || "";
+              article.license = location.license || "";
+            }
+            article.oaStatus = data.oa_status || "";
+          }
+        } catch (error) {
+          if (currentRun !== runId) return;
+          console.error("Unpaywall request failed:", error);
+          article.status = "error";
+          article.error = "Network error";
+        }
+
+        renderUnpaywall(article);
+        updateSummary();
+        applyFilter();
+      }
+
+      // Process a queue of articles with a fixed concurrency limit to avoid
+      // flooding the Unpaywall API
+      async function runLookups(queue, email) {
+        const currentRun = runId;
+        queue.forEach((article) => {
+          article.status = "pending";
+          article.lookupQueued = true;
+          article.error = "";
+          renderUnpaywall(article);
+        });
+        updateSummary();
+        if (queue.length === 0) return;
+
+        setStatus(`Checking ${queue.length} DOI${queue.length === 1 ? "" : "s"} with Unpaywall...`);
+        let next = 0;
+        const worker = async () => {
+          while (next < queue.length && currentRun === runId) {
+            const article = queue[next++];
+            await lookupArticle(article, email, currentRun);
+          }
+        };
+        await Promise.all(
+          Array.from({ length: Math.min(MAX_CONCURRENT_LOOKUPS, queue.length) }, worker)
+        );
+        if (currentRun === runId) setStatus("Unpaywall lookups complete.");
+      }
+
+      // Event handlers
+
+      function copyFilename(article, button) {
+        navigator.clipboard
+          .writeText(article.filename)
+          .then(() => {
+            button.textContent = "Copied!";
+            setTimeout(() => (button.textContent = "Copy"), 2000);
+          })
+          .catch((err) => {
+            console.error("Copy failed:", err);
+            button.textContent = "Copy failed";
+            setTimeout(() => (button.textContent = "Copy"), 2000);
+          });
+      }
+
+      function handleFile(file) {
+        if (!file) return;
+        if (!/\.csv$/i.test(file.name) && file.type !== "text/csv") {
+          setStatus("Please select a CSV file.", true);
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            processCSV(e.target.result, file.name);
+          } catch (error) {
+            console.error("Error:", error);
+            setStatus("Failed to process CSV: " + error.message, true);
+          }
+        };
+        reader.onerror = () => setStatus("Failed to read file.", true);
+        reader.readAsText(file);
+      }
+
+      function processCSV(text, filename) {
+        const rows = parseCSV(text);
+        if (rows.length < 2) {
+          setStatus("The CSV file has no data rows.", true);
+          return;
+        }
+
+        const headers = rows[0];
+        const titleCol = findColumn(headers, ["title", "article title", "document title", "ti"]);
+        const authorsCol = findColumn(headers, ["authors", "author", "author names", "au"]);
+        const doiCol = findColumn(headers, ["doi", "di"]);
+        const yearCol = findColumn(headers, ["year", "publication year", "pub year", "py", "date"]);
+
+        if (titleCol === -1 && doiCol === -1) {
+          setStatus(
+            "Could not find a title or DOI column. Check the CSV has a header row with a 'title' or 'doi' column.",
+            true
+          );
+          return;
+        }
+
+        runId++;
+        sourceFilename = filename.replace(/\.csv$/i, "");
+        const email = getEmail();
+        const get = (row, col) => (col === -1 ? "" : (row[col] || "").trim());
+
+        articles = rows.slice(1).map((row) => {
+          const rawDoi = get(row, doiCol);
+          const doi = normaliseDoi(rawDoi);
+          const authors = get(row, authorsCol);
+          const year = get(row, yearCol);
+          return {
+            title: get(row, titleCol),
+            authors,
+            year,
+            rawDoi,
+            doi,
+            filename: generateFilename(authors, year),
+            status: !doi ? "nodoi" : email ? "pending" : "noemail",
+            pdfUrl: "",
+            landingUrl: "",
+            hostType: "",
+            version: "",
+            license: "",
+            oaStatus: "",
+            error: "",
+            lookupQueued: false,
+          };
+        });
+
+        const missingCols = [];
+        if (titleCol === -1) missingCols.push("title");
+        if (authorsCol === -1) missingCols.push("authors");
+        if (doiCol === -1) missingCols.push("doi");
+        if (yearCol === -1) missingCols.push("year");
+
+        resultsSection.hidden = false;
+        renderTable();
+        updateSummary();
+
+        let message = `Loaded ${articles.length} article${articles.length === 1 ? "" : "s"} from ${filename}.`;
+        if (missingCols.length) message += ` Columns not found: ${missingCols.join(", ")}.`;
+        if (!email && articles.some((a) => a.doi))
+          message += " Enter an email address to check Unpaywall.";
+        setStatus(message);
+
+        if (email) runLookups(articles.filter((a) => a.doi), email);
+      }
+
+      // Drag and drop
+      ["dragenter", "dragover"].forEach((type) =>
+        dropZone.addEventListener(type, (e) => {
+          e.preventDefault();
+          dropZone.classList.add("dragover");
+        })
+      );
+      ["dragleave", "drop"].forEach((type) =>
+        dropZone.addEventListener(type, (e) => {
+          e.preventDefault();
+          dropZone.classList.remove("dragover");
+        })
+      );
+      dropZone.addEventListener("drop", (e) => {
+        handleFile(e.dataTransfer.files[0]);
+      });
+
+      fileInput.addEventListener("change", (e) => {
+        handleFile(e.target.files[0]);
+        fileInput.value = "";
+      });
+
+      // Remember the email locally and check any unchecked DOIs once one is entered
+      emailInput.addEventListener("change", () => {
+        const email = getEmail();
+        try {
+          if (email) localStorage.setItem(EMAIL_STORAGE_KEY, email);
+          else localStorage.removeItem(EMAIL_STORAGE_KEY);
+        } catch (e) {
+          // Storage unavailable, ignore
+        }
+        if (emailInput.value.trim() && !email) {
+          setStatus("Please enter a valid email address.", true);
+          return;
+        }
+        if (email) {
+          const unchecked = articles.filter((a) => a.status === "noemail");
+          if (unchecked.length) runLookups(unchecked, email);
+        }
+      });
+
+      filterSelect.addEventListener("change", applyFilter);
+
+      retryBtn.addEventListener("click", () => {
+        const email = getEmail();
+        if (!email) {
+          setStatus("Enter a valid email address to retry lookups.", true);
+          return;
+        }
+        runLookups(articles.filter((a) => a.status === "error"), email);
+      });
+
+      // Export results with the original fields plus lookup results
+      downloadBtn.addEventListener("click", () => {
+        const header = [
+          "title",
+          "authors",
+          "year",
+          "doi",
+          "suggested_filename",
+          "unpaywall_status",
+          "oa_status",
+          "pdf_url",
+          "landing_url",
+          "host_type",
+          "version",
+          "license",
+          "doi_url",
+          "scholar_url",
+        ];
+        const lines = [header.join(",")];
+        articles.forEach((a) => {
+          lines.push(
+            [
+              a.title,
+              a.authors,
+              a.year,
+              a.doi || a.rawDoi,
+              a.filename,
+              a.status,
+              a.oaStatus,
+              a.pdfUrl,
+              a.landingUrl,
+              a.hostType,
+              a.version,
+              a.license,
+              a.doi ? doiUrl(a.doi) : "",
+              scholarUrl(a.title),
+            ]
+              .map(csvEscape)
+              .join(",")
+          );
+        });
+        downloadFile(lines.join("\r\n"), `${sourceFilename}-pdf-links.csv`, "text/csv");
+      });
+
+      clearBtn.addEventListener("click", () => {
+        runId++;
+        articles = [];
+        resultsBody.innerHTML = "";
+        summaryEl.innerHTML = "";
+        resultsSection.hidden = true;
+        progressEl.hidden = true;
+        filterSelect.value = "all";
+        setStatus("");
+      });
+
+      // Initialisation: restore a previously used email address
+      try {
+        const savedEmail = localStorage.getItem(EMAIL_STORAGE_KEY);
+        if (savedEmail) emailInput.value = savedEmail;
+      } catch (e) {
+        // Storage unavailable, ignore
+      }
+    </script>
+  </body>
+</html>

@@ -105,6 +105,10 @@ Navigate to [https://virtualarchitectures.github.io/Browser-Tools/](https://virt
 
 - **[Presentation Annotator](annotated-presentation.html)** — add alt text and markdown annotations to presentation slide images with template-based export and live preview. Dependencies: `Marked`
 
+### Research
+
+- **[PDF Finder](pdf-finder.html)** — upload a CSV of article references to generate suggested filenames and find full-text PDFs via Unpaywall open access lookups, DOI links and Google Scholar searches, with CSV export
+
 ### Software Development
 
 - **[Claude Code Response Cleanup](claude-code-response-cleanup.html)** — fix wrapped-line whitespace, and join lines from Claude Code terminal output into clean readable text
