@@ -308,31 +308,39 @@
         min-width: 170px;
       }
 
-      /* Unpaywall status badges */
-      .badge {
-        display: inline-block;
-        font-size: 12px;
-        line-height: 16px;
-        padding: 4px 8px;
-        border-radius: 6px;
-        border: 1px solid #e1e4e8;
-        background: #f6f8fa;
-        color: #586069;
-        text-align: center;
+      /* Colour-coded action buttons
+         green: open access found and Scholar search, blue: DOI link,
+         yellow: lookup in progress, grey: lookup failed or unavailable */
+      .actions .btn {
+        display: block;
+        width: 100%;
       }
-      .badge.pending {
-        border-color: #f9c513;
+      .btn.found {
+        background: #2ea44f;
+        color: #ffffff;
+      }
+      .btn.found:hover {
+        background: #2c974b;
+      }
+      .btn.doi {
+        background: #0366d6;
+        color: #ffffff;
+      }
+      .btn.doi:hover {
+        background: #0256c5;
+      }
+      .btn.pending,
+      .btn.pending:hover {
         background: #fffbdd;
+        border-color: #f9c513;
         color: #735c0f;
+        cursor: default;
       }
-      .badge.error {
-        border-color: #f97583;
-        background: #ffeef0;
-        color: #86181d;
-      }
-      .oa-meta {
-        font-size: 11px;
+      .btn.unavailable,
+      .btn.unavailable:hover {
+        background: #e1e4e8;
         color: #586069;
+        cursor: not-allowed;
       }
 
       .empty-state {
@@ -612,9 +620,10 @@
         return `https://doi.org/${doi}`;
       }
 
-      function createLinkButton(text, href, primary = false) {
+      // Link styled as a button; variant sets the colour (found, doi, scholar)
+      function createLinkButton(text, href, variant) {
         const a = document.createElement("a");
-        a.className = `btn small ${primary ? "primary" : "secondary"}`;
+        a.className = `btn small ${variant}`;
         a.href = href;
         a.target = "_blank";
         a.rel = "noopener noreferrer";
@@ -622,9 +631,11 @@
         return a;
       }
 
-      function createBadge(text, type = "") {
+      // Non-clickable button-shaped status (pending or unavailable)
+      function createStatusButton(text, variant) {
         const span = document.createElement("span");
-        span.className = `badge ${type}`.trim();
+        span.className = `btn small ${variant}`;
+        span.setAttribute("aria-disabled", "true");
         span.textContent = text;
         return span;
       }
@@ -655,42 +666,32 @@
         slot.innerHTML = "";
 
         switch (article.status) {
-          case "found": {
+          case "found":
             slot.appendChild(
-              createLinkButton("Open PDF (Unpaywall)", article.pdfUrl, true)
+              createLinkButton("Open PDF (Unpaywall)", article.pdfUrl, "found")
             );
-            const meta = document.createElement("span");
-            meta.className = "oa-meta";
-            const parts = [];
-            if (article.hostType)
-              parts.push(article.hostType === "publisher" ? "Publisher" : "Repository");
-            if (article.version) parts.push(article.version);
-            if (article.license) parts.push(article.license);
-            meta.textContent = parts.join(" · ");
-            if (parts.length) slot.appendChild(meta);
             break;
-          }
           case "landing":
             slot.appendChild(
-              createLinkButton("OA landing page", article.landingUrl, true)
+              createLinkButton("OA landing page", article.landingUrl, "found")
             );
             break;
-          case "missing":
-            slot.appendChild(createBadge("No OA PDF found"));
-            break;
           case "pending":
-            slot.appendChild(createBadge("Checking Unpaywall...", "pending"));
+            slot.appendChild(createStatusButton("Checking Unpaywall...", "pending"));
             break;
-          case "error": {
-            const badge = createBadge(article.error || "Lookup failed", "error");
-            slot.appendChild(badge);
+          case "missing":
+            slot.appendChild(createStatusButton("No OA PDF found", "unavailable"));
             break;
-          }
+          case "error":
+            slot.appendChild(
+              createStatusButton(article.error || "Lookup failed", "unavailable")
+            );
+            break;
           case "nodoi":
-            slot.appendChild(createBadge("No DOI"));
+            slot.appendChild(createStatusButton("Unpaywall (no DOI)", "unavailable"));
             break;
           case "noemail":
-            slot.appendChild(createBadge("Enter email to check Unpaywall"));
+            slot.appendChild(createStatusButton("Unpaywall (no email)", "unavailable"));
             break;
           default:
             break;
@@ -745,10 +746,12 @@
           article.unpaywallSlot = unpaywallSlot;
           actions.appendChild(unpaywallSlot);
           if (article.doi) {
-            actions.appendChild(createLinkButton("DOI link", doiUrl(article.doi)));
+            actions.appendChild(createLinkButton("DOI link", doiUrl(article.doi), "doi"));
+          } else {
+            actions.appendChild(createStatusButton("No DOI link", "unavailable"));
           }
           actions.appendChild(
-            createLinkButton("Find PDF (Scholar)", scholarUrl(article.title))
+            createLinkButton("Find PDF (Scholar)", scholarUrl(article.title), "found")
           );
           actionsCell.appendChild(actions);
 
