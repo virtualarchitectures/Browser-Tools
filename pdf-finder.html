@@ -395,13 +395,15 @@
           required, but a DOI gives the best results.
         </li>
         <li>
-          Authors may be separated by semicolons, e.g.
-          <code>Smith, John; Doe, Jane</code>. Suggested filenames use the first
-          two surnames and the year, e.g. <code>SmithDoe2021.pdf</code>.
+          Authors may be separated by semicolons or pipes, e.g.
+          <code>Smith, John; Doe, Jane</code> or
+          <code>John Smith|Jane Doe</code>. Suggested filenames use the first
+          author's surname and the year, e.g. <code>Smith2021.pdf</code>.
         </li>
         <li>
           Unpaywall requires an email address with each request. It is sent
-          only to api.unpaywall.org and is not stored anywhere else.
+          only to api.unpaywall.org and is not saved, so it needs to be entered
+          again each visit.
         </li>
         <li>
           Browsers cannot save files to a chosen folder automatically. Copy the
@@ -412,7 +414,7 @@
 
     <div class="field">
       <label for="emailInput">Email for Unpaywall (optional)</label>
-      <input type="email" id="emailInput" placeholder="you@example.com" autocomplete="email" />
+      <input type="email" id="emailInput" placeholder="you@example.com" autocomplete="off" />
       <div class="field-description">
         Without an email, DOI and Google Scholar links are still provided but
         open access PDFs are not looked up.
@@ -483,7 +485,6 @@
       const downloadBtn = document.getElementById("downloadBtn");
       const clearBtn = document.getElementById("clearBtn");
 
-      const EMAIL_STORAGE_KEY = "pdf-finder-email";
       const MAX_CONCURRENT_LOOKUPS = 4;
 
       let articles = [];
@@ -599,12 +600,41 @@
               .replace(/[^A-Za-z0-9]/g, "")
           )
           .filter(Boolean);
+        while (end > 1 && INITIALS.test(words[end - 1])) end--;
+        return end < words.length ? words.slice(0, end).join(" ") : words[words.length - 1] || "";
       }
 
-      // Build a filename from the first two author surnames and the year
+      // Extract the first author's surname from an author list. Supports
+      // "Smith, John; Doe, Jane", "John Smith; Jane Doe", "John Smith and Jane Doe",
+      // "Smith J.; Doe A.", "Smith, J., Doe, A." and "John Smith, Jane Doe"
+      function firstAuthorSurname(authors) {
+        if (!authors) return "";
+        // Authors may be separated by semicolons, pipes, line breaks, "and" or "&"
+        const first = authors.split(/[;|\r\n]|\s+and\s+|\s*&\s*/i)[0].trim();
+        const commaIndex = first.indexOf(",");
+        let surname;
+        if (commaIndex === -1) {
+          surname = surnameFromWords(first);
+        } else {
+          const beforeComma = first.slice(0, commaIndex).trim();
+          const words = beforeComma.split(/\s+/);
+          // "John Smith, Jane Doe" or "Smith J, Doe A": the comma separates
+          // authors rather than surname and given name. Lowercase particles
+          // ("van der Berg, Anna") indicate a surname before the comma.
+          surname =
+            words.length > 1 && /^[A-Z]/.test(words[0])
+              ? surnameFromWords(beforeComma)
+              : beforeComma;
+        }
+        return surname
+          .normalize("NFD")
+          .replace(/[̀-ͯ]/g, "")
+          .replace(/[^A-Za-z0-9]/g, "");
+      }
+
+      // Build a filename from the first author's surname and the year
       function generateFilename(authors, year) {
-        const surnames = parseSurnames(authors);
-        const namePart = surnames.slice(0, 2).join("") || "UnknownAuthors";
+        const namePart = firstAuthorSurname(authors) || "UnknownAuthor";
         const yearMatch = String(year || "").match(/\b(1[5-9]|20)\d{2}\b/);
         return `${namePart}${yearMatch ? yearMatch[0] : ""}.pdf`;
       }
@@ -1018,15 +1048,10 @@
         fileInput.value = "";
       });
 
-      // Remember the email locally and check any unchecked DOIs once one is entered
+      // Check any unchecked DOIs once an email is entered. The email is held
+      // only in the input field and is never saved
       emailInput.addEventListener("change", () => {
         const email = getEmail();
-        try {
-          if (email) localStorage.setItem(EMAIL_STORAGE_KEY, email);
-          else localStorage.removeItem(EMAIL_STORAGE_KEY);
-        } catch (e) {
-          // Storage unavailable, ignore
-        }
         if (emailInput.value.trim() && !email) {
           setStatus("Please enter a valid email address.", true);
           return;
@@ -1103,10 +1128,9 @@
         setStatus("");
       });
 
-      // Initialisation: restore a previously used email address
+      // Initialisation: remove any email saved by an earlier version of this tool
       try {
-        const savedEmail = localStorage.getItem(EMAIL_STORAGE_KEY);
-        if (savedEmail) emailInput.value = savedEmail;
+        localStorage.removeItem("pdf-finder-email");
       } catch (e) {
         // Storage unavailable, ignore
       }
