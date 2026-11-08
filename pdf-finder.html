@@ -578,28 +578,15 @@
         return /^10\.\d{4,9}\/\S+$/.test(doi) ? doi : "";
       }
 
-      // Extract surnames from an author string. Supports "Last, First; ..."
-      // and "First Last; ..." as well as "and" separated lists
-      function parseSurnames(authors) {
-        if (!authors) return [];
-        const separator = authors.includes(";") ? /;/ : /\s+and\s+|\s*&\s*/i;
-        return authors
-          .split(separator)
-          .map((author) => author.trim())
-          .filter(Boolean)
-          .map((author) => {
-            const commaIndex = author.indexOf(",");
-            if (commaIndex !== -1) return author.slice(0, commaIndex).trim();
-            const parts = author.split(/\s+/);
-            return parts[parts.length - 1];
-          })
-          .map((name) =>
-            name
-              .normalize("NFD")
-              .replace(/[̀-ͯ]/g, "")
-              .replace(/[^A-Za-z0-9]/g, "")
-          )
-          .filter(Boolean);
+      // Initials such as "J", "J.", "JA", "J.A.K." or "J.-P.". Three capitals
+      // without full stops (e.g. "DOE") are treated as a surname, not initials
+      const INITIALS = /^(?:[A-Z]\.?-?){1,2}$|^(?:[A-Z]\.-?){3}$/;
+
+      // Surname from a name without a comma: "John Smith" -> "Smith",
+      // "Smith J." / "Smith JA" -> "Smith"
+      function surnameFromWords(name) {
+        const words = name.split(/\s+/).filter(Boolean);
+        let end = words.length;
         while (end > 1 && INITIALS.test(words[end - 1])) end--;
         return end < words.length ? words.slice(0, end).join(" ") : words[words.length - 1] || "";
       }
